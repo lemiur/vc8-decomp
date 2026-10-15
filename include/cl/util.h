@@ -20,4 +20,8 @@ int __cdecl IsRunningUnderIDE(HANDLE*);
 unsigned short* __cdecl strqcpy(unsigned short*, const unsigned short*);
 int __cdecl initscreenline();
 
+// PDB ?cmderr@@YAXIZZ; all retail paths call done(2), which calls the
+// canonical CRT exit import. The real body is still an open dependency.
+__declspec(noreturn) void __cdecl cmderr(unsigned int, ...);
+
 #endif
