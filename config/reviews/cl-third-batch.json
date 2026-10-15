@@ -1,0 +1,554 @@
+{
+  "schema_version": 1,
+  "reviewer": "independent audit lane /root/audit",
+  "review_date": "2026-10-15",
+  "scope_sha256": "eaf9032e6f90dc8085cb927253a0640692a39d041b514ccebd791c558e4e212c",
+  "approved_function_count": 42,
+  "enabled_source_bytes_expected": 1461,
+  "authority_limit": "Semantic source-rule approval only. The fresh gate remains sole authority for byte/referent/boundary/provenance admission and banked counts.",
+  "prior_review": {
+    "path": "config/reviews/cl-second-batch.json",
+    "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+    "use": "Historical first25 rationale retained unchanged. Current complete source/header scope is re-reviewed and rebound; only current policy rows authorize source admission."
+  },
+  "checks": {
+    "R1": "All project entities remain in guarded canonical headers. Full ProcessChannel and PipeProcessChannel definitions now occupy the same canonical mpcl.h as the earlier necessary ProcessChannel forward declaration; no separate prefix view exists. worklist_s/source_s, flag_s and passinfo_s remain correct struct forward declarations where unused layouts are unresolved. Real SDK/CRT headers own HANDLE, WCHAR, SECURITY_ATTRIBUTES, DWORD and CRT types. No copied SDK structs, duplicate conflicting definitions or invented layouts are introduced.",
+    "R2": "Rechecked all canonical header declarations and single DATA definitions. Prior Watson enum/pointer and RedirStderr evidence remains. New public pPCHBaseAddress419640 and pPCHAstExtraBaseAddress4188ec are actual void* storage in clmain owner11 with zero initial state. MappingAttributes41a014 is the complete actual SDK12B SECURITY_ATTRIBUTES object passed by address to CreateFileMappingA; it is not three fake field globals. MappingHandle41a02c and MappingView41a028 have direct actual HANDLE/LPVOID API-result/store/use evidence in util_watson owner5. Invented data/helper/member spellings remain explicit, with no claim to absent public names. No known interior address is separated from a real enclosing object.",
+    "R4": "Prior complete Queue60B/action_t24B typed layout still holds. New ProcessChannel base8B and Pipe derived16B layouts follow actual allocation16B, vptr0 and process HANDLE4/write HANDLE8/read HANDLEc stores and their real API uses. Source uses actual typed members throughout. SECURITY_ATTRIBUTES is the real SDK type; its independently replayed offsetof/sizeof witness is pinned below, but parked Initialize receives no approval. Pipe.read char-buffer advancement, registry BYTE* buffer conversion and serialized integer-to-HANDLE conversion are real API boundaries with dynamic counts, not raw object offsets or fake layout casts.",
+    "R13": "Independently reopened retail base RTTI/vtable block415708 and derived415718. Base vptr table41570c has exactly3 actual purecall slots; derived41571c slots are write40a8e3/read40a906/close40a243, followed by non-vtable UTF16 data. Source declares exactly these virtuals, no virtual destructor, dummy virtual, padding slot or guessed RTTI. Caller slot0 write and slot1 read are independently decoded; actual public virtual signatures and full object allocation support the class model. Queue/action_t have no fabricated virtuals.",
+    "R17": "Read every enabled actual body in the frozen45-function scope. New string/cursor values, real API output locals,64-WCHAR buffer,4B protocol command and real channel remaining/bytes-read variables all have observed purposes. Shared empty_nosync predicate remains consistently modeled. No fake locals, volatile carriers, padding, compiler-steering blocks, handwritten /GS state, arbitrary virtual slots, stub dependencies or fabricated data setters. Real external CRT/Win32 dependencies and real recovered NT_err/read_int/expect_int bodies participate. Compiler-generated cookie code is a consequence of the actual buffer. Append_nosync, strqlen and Initialize remain explicitly unreviewed/pending.",
+    "R18": "All approved bodies are ordinary native VC8 C++/C89 source with authentic installed declarations. No inline assembly, byte-emission body, binary include or Microsoft byte array masquerades as recovered source. The separate sizeof/offsetof witness exports derived metadata solely for infrastructure and contributes no matched-source counts. Invented mapping-helper spelling is explicit rather than falsely presented as a recovered PDB name. No exceptions are requested."
+  },
+  "method": "Read every added real source body and all changed canonical headers; byte-for-byte normalized comparison confirms central source/header snapshot equals the reviewed frozen source commits. Independently decoded complete bounded retail bodies for all17 new enabled functions, actual vtable blocks and full object allocation stores. Read authentic era API/CRT declarations and resolved actual import descriptors. No decompiler source, partial object model or public-gap boundary inference is used.",
+  "source_scope": [
+    {
+      "path": "matching/cl/clmain.cpp",
+      "sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c"
+    },
+    {
+      "path": "matching/cl/dos.cpp",
+      "sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1"
+    },
+    {
+      "path": "matching/cl/merr.c",
+      "sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44"
+    },
+    {
+      "path": "matching/cl/mpcl.cpp",
+      "sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b"
+    },
+    {
+      "path": "matching/cl/util.cpp",
+      "sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908"
+    },
+    {
+      "path": "matching/cl/util_watson.cpp",
+      "sha256": "925fd5c3251e435e68e3cc77b70c5cc568ff55661de55738f5d48d80cb0fd76a"
+    },
+    {
+      "path": "include/cl/clmain.h",
+      "sha256": "2f879ee972bd895219c92776b1a8548a2c65025115354636d1727646e3cb38d7"
+    },
+    {
+      "path": "include/cl/dos.h",
+      "sha256": "fdc4938b6ccf951dd8b0b75e009689adeb43f68df0c2aa5f83cd7d15bf2037be"
+    },
+    {
+      "path": "include/cl/merr.h",
+      "sha256": "4dccb09d73fd0f57e0ff33ca7512df03e2b99dc94433d91f1874d04ac74bf644"
+    },
+    {
+      "path": "include/cl/mpcl.h",
+      "sha256": "1c2a197ec146f73628d4bdde93ff05a82e56f4f72fe39f42388d4bf8d337b81e"
+    },
+    {
+      "path": "include/cl/util.h",
+      "sha256": "a017ab95071e9ba4689f489ebe0d3d956160fc76ede6c522fa187d7b1e3c1a1f"
+    },
+    {
+      "path": "include/cl/util_watson.h",
+      "sha256": "9d5d72da161094d439f39d77f6be491082b9c33230a63ddf3d4e41bd2d908e72"
+    }
+  ],
+  "channel_layout": {
+    "base": "ProcessChannel vptr0/process HANDLE4; actual derived field8 proves base extent8.",
+    "derived": "Actual xnew size16 at40b0b0/40b0b2; stores process+4 at40b0c7, actual derived vptr41571c at40b0ca, write_handle+8 at40b0d0 and read_handle+c at40b0d3.",
+    "vtable": "Base RTTI415b78 then purecall40be92 repeated3; derived RTTI415bc0 then exact write/read/close targets. Following415728 is UTF16 data0050004d, not an additional slot. No virtual destructor.",
+    "alias": "read_int and read_size_t public identities share40a0a2; source chooses the real int interpretation and counts the shared body once, without claiming exclusive original caller spelling."
+  },
+  "layout_witnesses": [
+    {
+      "path": "E:\\vc8-decomp\\build\\toolchain-layout\\security-attributes-sp1-v1\\layout-witness.json",
+      "sha256": "daf53a8a6b7006817af98cd8620507e541b8dc443ed0a658b6c130923f1a2023"
+    }
+  ],
+  "layout_witness_audit": {
+    "type": "SECURITY_ATTRIBUTES",
+    "size": 12,
+    "fields": [
+      {
+        "name": "nLength",
+        "offset": 0,
+        "size": 4
+      },
+      {
+        "name": "lpSecurityDescriptor",
+        "offset": 4,
+        "size": 4
+      },
+      {
+        "name": "bInheritHandle",
+        "offset": 8,
+        "size": 4
+      }
+    ],
+    "proof": "Independently verified all78 source-input hashes,31 toolchain pins and object/image/map hashes; manually parsed raw PE export directory to locate exact28B DWORD[7] array, yielding12,0,4,4,4,8,4. Inspected probe source: only actual sizeof/offsetof expressions, no numeric layout expectations. Independently observed fresh pinned-compiler replay766ae78af9c44868acd54b52e6ed778d reproduced identical probe and values with SDK/tool inputs snapshotted before and after. Real WinBase.h field definition and CreateFileMappingA argument were independently inspected. This infrastructure metadata is not recovered function bytes. Initialize still has a stop marker and receives no source approval in this scope."
+  },
+  "abi_preprocessing_and_lines": "Reviewed native C++/C89 context, actual era declarations and changed project headers. /Zc:wchar_t- preserves public PAG/PBG spellings. Actual /GS emission follows the genuine64-element WCHAR buffer; no manual cookie helper is invented. Source byte-buffer and integer/HANDLE casts occur only at real API boundaries. No approved body uses asserts, __LINE__, __FILE__ or padding to invent line mappings. Original filenames/extensions, parameter/local/member/helper spellings remain unresolved where comments say so. Compiler source-context flags/rooting are validated separately by the fresh gate.",
+  "new_referent_evidence": "Direct fullccpath thunk40bbbe independently decodes exactly JMP[40d274], actual MSVCR80.dll!_get_wpgmptr. New CRT IATs wcscat_s40d264/wcscpy_s40d298/wcslen40d290/wcsrchr40d2dc/_wtoi40d270 were independently resolved. New Windows imports GetFileType40d118/GetConsoleMode40d11c/GetEnvironmentVariableW40d14c/VirtualFree40d140 and actual pipe/wait/raise APIs come from real PE import records. VS_UNICODE_OUTPUT is the actual36B UTF16 literal at414990. Referent normalization and payload equality remain gate obligations, not masked-source assertions.",
+  "functions": [
+    {
+      "binary": "cl",
+      "va": "0x4015a8",
+      "symbol": "?error_report_prompt@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete9B: push1, call the actual cdecl enum setter, pop one argument and return. flag_s* is an authentic unused parameter; no layout is invented."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015b1",
+      "symbol": "?error_report_queue@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete9B: push2, call the actual cdecl enum setter, pop one argument and return. Canonical flag_s forward declaration only."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015ba",
+      "symbol": "?error_report_send@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete9B: push3, call the actual cdecl enum setter, pop one argument and return. Actual setter body participates in compilation."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015c3",
+      "symbol": "?error_report_none@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete9B: push0, call the actual cdecl enum setter, pop one argument and return. Canonical enum values are source names invented explicitly."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40218a",
+      "symbol": "?IsRunningUnderIDE@@YAHXZ",
+      "size": 22,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete22B no-argument IDE query: actual GetEnvironmentVariableW of VS_UNICODE_OUTPUT with null buffer/zero length, return nonzero result as int Boolean. This is the separate public overload, with no invented output parameter."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4024a8",
+      "symbol": "?fullccpath@@YAPAGXZ",
+      "size": 23,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete23B fullccpath: initialize the real wchar_t* output local to0, pass its address to actual era _get_wpgmptr, ignore errno result and return the output pointer. Public PAG return plus /Zc:wchar_t- and real stdlib.h prototype establish the ABI. Retail direct call4024b4 reaches public __get_wpgmptr40bbbe, a complete6B JMP through IAT40d274 to MSVCR80.dll!_get_wpgmptr. Thunk is an external dependency, not recovered-source bytes."
+    },
+    {
+      "binary": "cl",
+      "va": "0x402c06",
+      "symbol": "?release_filelife_heap@@YAXXZ",
+      "size": 20,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete20B release_filelife_heap: pass the actual public void* pPCHBaseAddress419640, zero size and MEM_RELEASE0x8000 to real VirtualFree, then return. Actual typed canonical global is zero-initialized in owner clmain.obj; no guard, pointer reset or fabricated data access is added."
+    },
+    {
+      "binary": "cl",
+      "va": "0x402c1a",
+      "symbol": "?release_ast_extra_heap@@YAXXZ",
+      "size": 20,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete20B release_ast_extra_heap: same observed VirtualFree contract using the distinct actual public void* pPCHAstExtraBaseAddress4188ec, initially0. Definition and declaration are canonical in clmain.cpp/clmain.h. No inferred partial object or fake setter."
+    },
+    {
+      "binary": "cl",
+      "va": "0x408f04",
+      "symbol": "?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z",
+      "size": 23,
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete23B: compare exception code with0x80000003; for other codes write4 through the real third int* argument; return0. passinfo_s* is authentic but unused. Actual era EXCEPTION_BREAKPOINT/EXCEPTION_CONTINUE_SEARCH macros match observed values."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4092d4",
+      "symbol": "?screen_length@@YAHXZ",
+      "size": 92,
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete92B: CreateFileW of16B UTF16 CONOUT$ literal with read|write and OPEN_EXISTING; failure returns25. Query real CONSOLE_SCREEN_BUFFER_INFO, always close successful handle, query failure returns25; otherwise signed SHORT Bottom-Top+1 clamped to at least1. info, console, success and height all have observed roles."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4092be",
+      "symbol": "?redirect@@YAXXZ",
+      "size": 22,
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete22B: read public int RedirStderr; if nonzero call actual _dup2(1,2), perform caller cleanup and return. Real public-data root preserves its externally escaped mutable identity under LTCG; no volatile, fake caller, setter, exported shim or source alteration is used."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40c661",
+      "symbol": "__matherr",
+      "size": 3,
+      "source_path": "matching/cl/merr.c",
+      "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior independently reviewed3B CRT body remains unchanged. It includes actual cruntime.h+math.h under authentic _CRTBLD and uses __CRTDECL; no copied type/prototype. Unused real parameter is required by installed lineage."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a25f",
+      "symbol": "?thread_print@@YAXPBGZZ",
+      "size": 1,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior independently reviewed1B no-op remains unchanged. Decorated const unsigned short* variadic signature and caller cleanup corroborate the authentic empty body."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a2dc",
+      "symbol": "?env_size@@YAIPBG@Z",
+      "size": 45,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior independently reviewed45B typed environment traversal remains unchanged. All20 instructions and internal branches were independently decoded; a real cursor supplies loads and final pointer difference."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a3a1",
+      "symbol": "?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "size": 38,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete38B Queue try_head_nosync: test actual tail against sentinel; empty returns0, otherwise unlink sentinel.next, clear returned node.next, reset tail when removing last node, decrement count and return node. All field offsets correspond to the full typed model."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a475",
+      "symbol": "?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 33,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete33B Queue add_head_nosync: if empty set tail=item, link item before current sentinel.next, update head and preincrement real count. this in ECX and ret4 corroborate thiscall with one pointer argument."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a458",
+      "symbol": "?size@?$Queue@Uaction_t@@@@QBEHXZ",
+      "size": 29,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete29B const Queue size: enter actual critical section at this+4, preserve the real count at+0x38 across leave, return it. mutable CRITICAL_SECTION permits the real API operations without casting away const."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40aa29",
+      "symbol": "?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 53,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete53B Queue add_tail: enter critical section, point item.next to actual sentinel, link from old tail, update tail/count, preserve return count across leave and return with ret4. No fake lifetime carrier is introduced."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40aa5e",
+      "symbol": "?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 41,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete41B Queue add_head: enter lock, invoke the real recovered add_head_nosync member with item and this, preserve its actual returned count across leave, return with ret4. No stub or fabricated callee participates."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a3c7",
+      "symbol": "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "size": 84,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete84B Queue head: load the real EnterCriticalSection IAT into a register, enter lock; while empty, leave, Sleep(0), then reenter. Unlink node, clear its next, repair tail, decrement count, leave and return node. Both indirect register calls are fed by the independently identified IAT load."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a0a2",
+      "symbol": "?read_int@ProcessChannel@@QAEHXZ",
+      "size": 20,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete20B ProcessChannel read_int: actual this-vptr slot1 read into a real4B int local, then return it. Actual public read_int and read_size_t share this retail entry; original caller spelling is ambiguous, no exclusive identity is asserted, and only one span is counted. The local is a real virtual-read output, not a dummy spill."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a243",
+      "symbol": "?close@PipeProcessChannel@@UAEXXZ",
+      "size": 23,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete23B PipeProcessChannel close: load actual CloseHandle IAT into a register, call it first with read_handle at+c then write_handle at+8. Real imported target drives both indirect register calls; no virtual destructor or extra cleanup is invented."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a2c4",
+      "symbol": "?NT_err@@YAHH@Z",
+      "size": 24,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete24B NT_err: actual cdecl int argument; if0 call real RaiseException(1,0,0,0), then return the argument. Real helper has public identity and complete source body, not a synthetic stub. Plain ret and caller cleanup corroborate cdecl."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a8e3",
+      "symbol": "?write@PipeProcessChannel@@UAEXPBXK@Z",
+      "size": 35,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete35B virtual Pipe write: actual WriteFile(write_handle,buffer,size,&written,0), then actual NT_err of returned BOOL. written is a genuine DWORD output, which the compiler naturally coalesces with dead incoming size storage; no fake home or probe variable is inserted. ECX/ret8 and PBXK public type support const void*/unsigned long args."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a906",
+      "symbol": "?read@PipeProcessChannel@@UAEXPAXK@Z",
+      "size": 56,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete56B virtual Pipe read: track real remaining byte count, ReadFile into actual buffer using the size argument as bytes-read output, call genuine NT_err, subtract bytes and advance buffer by dynamic actual byte count until remaining0. static_cast<char*>(buffer)+size is ordinary byte-buffer advancement at the Win32 void* boundary, never a fixed object-member offset or layout stand-in. Full loop backedge/exit and ret8 decoded."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a0b6",
+      "symbol": "?expect_int@ProcessChannel@@QAEXH@Z",
+      "size": 27,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete27B expect_int: invoke the actual shared read_int/read_size_t entry, compare with its real int argument and RaiseException(1,0,0,0) on mismatch. Both public alias spellings at the shared callee address remain explicit; no duplicate source span is admitted. Actual ret4 supports thiscall with one int."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a8a6",
+      "symbol": "?kill@ProcessChannel@@QAEXXZ",
+      "size": 61,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete61B kill: write a real4B protocol command0x29a through actual virtual slot0, call real expect_int(0x298), WaitForSingleObject(process_handle,INFINITE), then CloseHandle(process_handle). Each local/API/callee has an observed role; no guessed protocol fields or arbitrary padding are introduced."
+    },
+    {
+      "binary": "cl",
+      "va": "0x408276",
+      "symbol": "?nextbase@@YAHH@Z",
+      "size": 26,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior independently reviewed26B scalar nextbase semantics remain unchanged:1->2,2->3,otherwise1. The only source expansion is real CRT includes and independent utility declarations in its canonical unit/header."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4082dc",
+      "symbol": "?xfree@@YAXPAX@Z",
+      "size": 14,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete14B xfree: test actual void* argument; null returns, nonnull tail-jumps through the real MSVCR80 free IAT. Actual era stdlib.h provides void __cdecl free(void*). No new parameter interpretation or private CRT stub is invented."
+    },
+    {
+      "binary": "cl",
+      "va": "0x407f99",
+      "symbol": "?gobblewhite@@YAPAGPAG@Z",
+      "size": 33,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete33B gobblewhite: examine a real unsigned-short element; stop on zero or real iswspace result0, otherwise advance by one element and repeat. Return the actual cursor. Era wctype.h supplies canonical wint_t/API declarations; no custom classifier or offset access."
+    },
+    {
+      "binary": "cl",
+      "va": "0x408145",
+      "symbol": "?strrchars@@YAPAGPAGPBG@Z",
+      "size": 55,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete55B strrchars: iterate the actual unsigned-short character set; invoke real wcsrchr on the same input string for each character; retain the furthest nonnull returned pointer, or0. Comparisons are between pointers into the same input string, not unrelated objects. Both real cursors and found/last values have observed uses; no dummy state."
+    },
+    {
+      "binary": "cl",
+      "va": "0x407fba",
+      "symbol": "?concat@@YAPAGPAGIPBG@Z",
+      "size": 43,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete43B concat: if actual source pointer is nonnull invoke era wcscat_s(destination,capacity,source), then return destination+wcslen(destination). capacity is the actual unsigned32 size argument. The function name does not justify changing the observed call or error handling."
+    },
+    {
+      "binary": "cl",
+      "va": "0x407fe5",
+      "symbol": "?append@@YAPAGPAGIPBG@Z",
+      "size": 43,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete43B append: if actual source pointer is nonnull invoke era wcscpy_s, then return destination+wcslen(destination). This observed copy operation is retained despite the natural-language function name. No fabricated append behavior, extra checks or fake locals."
+    },
+    {
+      "binary": "cl",
+      "va": "0x407f69",
+      "symbol": "?IsOutputToConsole@@YAHPAX@Z",
+      "size": 48,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete48B console predicate: call GetFileType(HANDLE), remove actual FILE_TYPE_REMOTE bit, require FILE_TYPE_CHAR, then return GetConsoleMode(HANDLE,&realDWORDoutput)!=0. The mode local is a genuine API output buffer even though its value is not consumed afterward. Both return paths are fully decoded."
+    },
+    {
+      "binary": "cl",
+      "va": "0x407f08",
+      "symbol": "?IsRunningUnderIDE@@YAHPAPAX@Z",
+      "size": 97,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete97B IDE handle query: real64-element WCHAR buffer, first GetEnvironmentVariableW queries whether VS_UNICODE_OUTPUT exists, second fills the buffer with capacity64; _wtoi result is stored as the actual HANDLE output and return1, otherwise0. Integer-to-HANDLE cast is a real serialized-handle API boundary, not an object offset. Actual buffer triggers compiler-generated /GS cookie load/check; no manual cookie code or artificial local is present."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409934",
+      "symbol": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ",
+      "size": 6,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "925fd5c3251e435e68e3cc77b70c5cc568ff55661de55738f5d48d80cb0fd76a",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior6B getter semantics unchanged. Canonical enum datum remains supported by direct4B accesses, owner contribution and positive preceding SECURITY_ATTRIBUTES boundary. Invented original data spelling remains explicit."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40993a",
+      "symbol": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
+      "size": 12,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "925fd5c3251e435e68e3cc77b70c5cc568ff55661de55738f5d48d80cb0fd76a",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior12B setter semantics unchanged: write real enum argument to canonical datum and return true inAL. Parameter mode is an invented natural spelling, not claimed PDB parameter provenance."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409946",
+      "symbol": "?ErrorReportingSetDlls@@YA_NPBG@Z",
+      "size": 12,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "925fd5c3251e435e68e3cc77b70c5cc568ff55661de55738f5d48d80cb0fd76a",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete12B setter: copy actual const unsigned short* stack argument to canonical pointer datum417be8, return true inAL. Public PBG signature, direct pointer-sized copy, DBI owner and actual initializer support type/ownership."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409952",
+      "symbol": "?ErrorReportingSetFormalAppName@@YA_NPBG@Z",
+      "size": 12,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "925fd5c3251e435e68e3cc77b70c5cc568ff55661de55738f5d48d80cb0fd76a",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete12B setter: copy actual const unsigned short* stack argument to canonical pointer datum417bec, return true inAL. It shares the independently checked empty wide literal initializer but is a distinct canonical pointer definition."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40995e",
+      "symbol": "?ErrorReportingCheckOptIn@@YA_NXZ",
+      "size": 110,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "925fd5c3251e435e68e3cc77b70c5cc568ff55661de55738f5d48d80cb0fd76a",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete110B registry query: RegOpenKeyExA of the actual43-character key, KEY_READ and HKEY_CURRENT_USER; on success query26-character value name into real DWORD type/value/size outputs with size4; close key; return value==1 only on success and REG_DWORD. BYTE* cast is the documented API buffer boundary, with no offset arithmetic or fake spill. All locals have actual address-taking/result-lifetime evidence; failed queries never consume uninitialized outputs."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409acb",
+      "symbol": "?ErrorReportingDisabled@@YA_NXZ",
+      "size": 36,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "925fd5c3251e435e68e3cc77b70c5cc568ff55661de55738f5d48d80cb0fd76a",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete36B Disabled: signed enum mode<=0 or>3 returns true, modes1/2 return false, mode3 calls the actual110B CheckOptIn and returns its logical negation. Three observed terminal returns and real call are preserved; nested guards are natural control flow, with no artificial blocks or values."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409a58",
+      "symbol": "?ErrorReportingCreateMapping@@YA_NXZ",
+      "size": 83,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "925fd5c3251e435e68e3cc77b70c5cc568ff55661de55738f5d48d80cb0fd76a",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete83B mapping helper: actual CreateFileMappingA(INVALID_HANDLE_VALUE,&realSDKattributes,PAGE_READWRITE,0,0x9c9c,0); store actual HANDLE, returnfalse on failure. MapViewOfFile(handle,FILE_MAP_WRITE|FILE_MAP_READ,0,0,0); store LPVOID; on failure close handle, zero that real handle and returnfalse; otherwise true. Independent full CFG has three real terminal returns. Function spelling and original linkage are explicitly invented/unresolved, supported ABI is no arguments/plain caller-owned cleanup with boolAL observed by its real caller; no public-name recovery is claimed."
+    }
+  ],
+  "pending": [
+    {
+      "binary": "cl",
+      "va": "0x40a41b",
+      "source_path": "matching/cl/mpcl.cpp",
+      "status": "NO-REVIEW-MATCH-PENDING",
+      "reason": "Current disabled diagnostic candidate; append/strqlen are not exact and Initialize retains a stop marker pending strict member gate admission. No exception or source approval is issued."
+    },
+    {
+      "binary": "cl",
+      "va": "0x408010",
+      "source_path": "matching/cl/util.cpp",
+      "status": "NO-REVIEW-MATCH-PENDING",
+      "reason": "Current disabled diagnostic candidate; append/strqlen are not exact and Initialize retains a stop marker pending strict member gate admission. No exception or source approval is issued."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409aab",
+      "source_path": "matching/cl/util_watson.cpp",
+      "status": "NO-REVIEW-MATCH-PENDING",
+      "reason": "Current disabled diagnostic candidate; append/strqlen are not exact and Initialize retains a stop marker pending strict member gate admission. No exception or source approval is issued."
+    }
+  ]
+}
