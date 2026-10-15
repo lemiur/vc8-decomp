@@ -4,6 +4,8 @@ Every invocation checks all five pinned retail images before admitting any sourc
 Candidate requests and evidence live in config/gate-allow.json. A fresh build is
 requested from match.py with --output-dir, --manifest and --build-id. Manifests
 are observations, never authority for bytes, referents, boundaries or code rules.
+Execution trusts the local compiler and repository build runner. Configured and
+observed runtime files are hashed; Windows SxS binding is not retraced per build.
 """
 from __future__ import annotations
 
@@ -351,6 +353,8 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
     out.mkdir(parents=True, exist_ok=False)
     record = {"schema_version": 1, "gate_kind": "retail-splice", "run_id": run_id,
               "observed_at": datetime.now(timezone.utc).isoformat(),
+              "build_provenance": {"trust_boundary": "trusted local compiler and repository build runner",
+                  "runtime_scope": "configured and previously observed runtime files are hashed; Windows SxS policy may change; dynamic binding is not retraced per build"},
               "status": "RED", "authority": None, "binaries": {}, "errors": []}
     selected = BINARIES if binary == "all" else (binary,)
     try:
