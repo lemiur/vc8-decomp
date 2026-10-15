@@ -616,6 +616,28 @@ class GateTests(unittest.TestCase):
                 with self.assertRaisesRegex(gate.GateError, "provenance hash"):
                     gate.load_entry_alias(binding, image, root)
 
+    def test_shared_entry_resolves_only_the_reviewed_call_without_counting_helper(self):
+        helper = b"\x85\xc0\x74\x02\x90\xc3\xc3"
+        retail = Image(0x1000, b"\xe8" + struct.pack("<i", 16 - 5) + b"\xc3" + bytes(10) + helper)
+        emitted = Image(0x4000, b"\xe8" + struct.pack("<i", 24 - 5) + b"\xc3" + bytes(18) + helper)
+        identity = "entry-alias:alias_a|alias_b"
+        binding = {"kind": "entry-alias", "aliases": ["alias_a", "alias_b"], "va": 0x1010, "size": len(helper),
+                   "bytes_sha256": gate.digest(helper), "proof": {"path": "proof", "sha256": "a" * 64}, "evidence": "fixture"}
+        aliases = gate.MapIdentities()
+        aliases[0x4018] = set(binding["aliases"])
+        aliases.rows = [{"name": name, "va": 0x4018, "is_function": flag, "object_name": "CRT:helper.obj"}
+                        for name, flag in (("alias_a", True), ("alias_b", False))]
+        verified = {identity: {"binding": binding, "source_rows": copy.deepcopy(aliases.rows)}}
+        boundary = {"status": "verified", "evidence": "complete synthetic caller"}
+        claim = {"candidate_va": 0x4000, "retail_va": 0x1000, "size": 6, "boundary": boundary,
+                 "bytes_sha256": gate.digest(emitted.data[:6]), "referents": [
+                     {"offset": 1, "width": 4, "kind": "rel32", "target": 0x4018, "identity": identity, "resolved": True}]}
+        request = {"retail_va": 0x1000, "size": 6, "boundary": boundary}
+        code, refs = gate.compare_candidate(retail, emitted, claim, request, {identity: binding}, aliases, entry_aliases=verified)
+        self.assertEqual((code, refs), (retail.data[:6], 1))
+        with self.assertRaisesRegex(gate.GateError, "not independently verified"):
+            gate.compare_candidate(retail, emitted, claim, request, {identity: binding}, aliases)
+
     def test_current_r2_review_must_pin_exact_entry_alias_proof(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
