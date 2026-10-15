@@ -110,6 +110,13 @@ def extract(iso, output, seven_zip, config):
           "include": [(output / "include").as_posix(), sdk + "/include"],
           "lib": [(output / "lib").as_posix(), sdk + "/lib"],
           "limitations": ["PlatformSDK headers and libraries borrowed from installed SP1; not a complete RTM SDK", "SxS runtime binding not traced; private RTM CRT files supplied"]}
+    previous = data["toolchains"].get("rtm", {})
+    if previous.get("source_iso_sha256") == tc["source_iso_sha256"] and previous.get("bin") == tc["bin"]:
+        for field in ("observed_runtime_files", "runtime_observation"):
+            if field in previous:
+                tc[field] = previous[field]
+        if tc.get("runtime_observation"):
+            tc["limitations"][-1] = "Previously observed CRT bytes retained; repeat runtime trace after assembly policy changes."
     tc["files"] = inventory(tc)
     data["toolchains"]["rtm"] = tc
     config.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")

@@ -13,6 +13,7 @@ from pathlib import Path
 import subprocess
 import struct
 import sys
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/toolchains.json"
@@ -93,6 +94,12 @@ def inventory(toolchain):
             if found.is_file():
                 out.append({"path": found.as_posix(), "size": found.stat().st_size,
                             "version": None, "sha256": sha256(found)})
+    seen = {str(Path(item["path"]).resolve()).casefold() for item in out}
+    for name in toolchain.get("observed_runtime_files", []):
+        found = Path(name)
+        if str(found.resolve()).casefold() not in seen:
+            out.append({"path": found.as_posix(), "size": found.stat().st_size,
+                        "version": file_version(found), "sha256": sha256(found)})
     return out
 
 
@@ -110,6 +117,96 @@ def verify_toolchain(toolchain):
     if not required <= pinned:
         raise ValueError("toolchain core executables are not all pinned")
     return True
+
+
+def trace_tool_runtime(toolchain, tool, args, output):
+    """Observe loaded DLL files of a child tool through Windows debug events.
+
+    Every event is continued; no memory or executable changes are made. This
+    observes actual SxS resolution, unlike inspecting an available CRT folder.
+    The log and observation are local evidence, not function match admission.
+    """
+    verify_toolchain(toolchain)
+    exe = Path(toolchain["bin"]) / tool
+    pinned = {str(Path(item["path"]).resolve()).casefold() for item in toolchain["files"]}
+    if str(exe.resolve()).casefold() not in pinned:
+        raise ValueError("requested executable is not pinned: " + str(exe))
+    if os.name != "nt":
+        raise OSError("runtime tracing requires Windows")
+    output = Path(output).resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    pointer_size = ctypes.sizeof(ctypes.c_void_p)
+
+    class DebugInfo(ctypes.Union):
+        _fields_ = [("alignment", ctypes.c_void_p),
+                    ("raw", ctypes.c_ubyte * (160 if pointer_size == 8 else 84))]
+
+    class DebugEvent(ctypes.Structure):
+        _fields_ = [("code", ctypes.c_uint32), ("pid", ctypes.c_uint32),
+                    ("tid", ctypes.c_uint32), ("info", DebugInfo)]
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.WaitForDebugEvent.argtypes = [ctypes.POINTER(DebugEvent), ctypes.c_uint32]
+    kernel.WaitForDebugEvent.restype = ctypes.c_int
+    kernel.ContinueDebugEvent.argtypes = [ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32]
+    kernel.ContinueDebugEvent.restype = ctypes.c_int
+    kernel.GetFinalPathNameByHandleW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_uint32, ctypes.c_uint32]
+    kernel.GetFinalPathNameByHandleW.restype = ctypes.c_uint32
+    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+    kernel.CloseHandle.restype = ctypes.c_int
+    kernel.DebugActiveProcessStop.argtypes = [ctypes.c_uint32]
+    kernel.DebugActiveProcessStop.restype = ctypes.c_int
+    modules = {}
+    command = [str(exe), *map(str, args)]
+    log_path = output / "runtime-command.log"
+    with log_path.open("wb") as log:
+        # DEBUG_ONLY_THIS_PROCESS is 0x2 (installed PlatformSDK WinBase.h).
+        process = subprocess.Popen(command, cwd=output, env=toolchain_environment(toolchain),
+                                   stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
+                                   creationflags=subprocess.CREATE_NO_WINDOW | 0x2)
+        deadline = time.monotonic() + 120
+        try:
+            while True:
+                if time.monotonic() > deadline:
+                    raise TimeoutError("runtime trace exceeded 120 seconds")
+                event = DebugEvent()
+                if not kernel.WaitForDebugEvent(ctypes.byref(event), 1000):
+                    if ctypes.get_last_error() == 121:  # ERROR_SEM_TIMEOUT
+                        continue
+                    raise ctypes.WinError(ctypes.get_last_error())
+                raw = bytes(event.info.raw)
+                if event.code in (3, 6):  # CREATE_PROCESS / LOAD_DLL
+                    handle = int.from_bytes(raw[:pointer_size], "little")
+                    if handle:
+                        try:
+                            buffer = ctypes.create_unicode_buffer(32768)
+                            if kernel.GetFinalPathNameByHandleW(handle, buffer, len(buffer), 0):
+                                path = Path(buffer.value.removeprefix("\\\\?\\"))
+                                modules[str(path).casefold()] = {
+                                    "path": path.as_posix(), "version": file_version(path), "sha256": sha256(path)}
+                        finally:
+                            kernel.CloseHandle(handle)
+                status = 0x10002  # DBG_CONTINUE
+                if event.code == 1 and int.from_bytes(raw[:4], "little") != 0x80000003:
+                    status = 0x80010001  # DBG_EXCEPTION_NOT_HANDLED; preserve tool exceptions
+                if not kernel.ContinueDebugEvent(event.pid, event.tid, status):
+                    raise ctypes.WinError(ctypes.get_last_error())
+                if event.code == 5:  # EXIT_PROCESS
+                    break
+            exit_code = process.wait(timeout=5)
+        finally:
+            if process.poll() is None:
+                # Detach on an observer failure so a pending debug event cannot
+                # prevent the child from completing termination.
+                kernel.DebugActiveProcessStop(process.pid)
+                process.terminate()
+                process.wait(timeout=5)
+    verify_toolchain(toolchain)
+    result = {"toolchain": toolchain["name"], "command": command, "returncode": exit_code,
+              "method": "read-only Windows child debug-event module observation", "modules": list(modules.values()),
+              "log_path": str(log_path), "log_sha256": sha256(log_path)}
+    (output / "runtime-observations.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    return result
 
 
 PROBES = {
@@ -193,13 +290,15 @@ def run_probes(toolchain, output, matrix=False):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("inventory", "verify", "probe"))
+    parser.add_argument("action", choices=("inventory", "verify", "probe", "trace"))
     parser.add_argument("--toolchain", default="sp1")
     parser.add_argument("--config", type=Path, default=CONFIG)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--matrix", action="store_true", help="also compile one-control-at-a-time C ABI/flag variants")
     parser.add_argument("--repeat", type=int, choices=range(1, 5), default=2,
                         help="fresh builds to compare for stable .text (default: 2)")
+    parser.add_argument("--tool", default="cl.exe", help="pinned executable for trace (default: cl.exe)")
+    parser.add_argument("--tool-arg", action="append", help="one argument for trace; default: /?")
     args = parser.parse_args()
     tc = load_toolchain(args.toolchain, args.config)
     if args.action == "inventory":
@@ -210,6 +309,11 @@ def main():
     elif args.action == "verify":
         verify_toolchain(tc)
         print("Toolchain pins verified: " + args.toolchain)
+    elif args.action == "trace":
+        output = args.out or ROOT / "build/toolchain" / args.toolchain / "runtime"
+        result = trace_tool_runtime(tc, args.tool, args.tool_arg or ["/?"], output)
+        print("Observed %d loaded files; command exit %d; %s" %
+              (len(result["modules"]), result["returncode"], output / "runtime-observations.json"))
     else:
         output = args.out or ROOT / "build" / "toolchain" / args.toolchain
         runs = [run_probes(tc, output, args.matrix) for _ in range(args.repeat)]
