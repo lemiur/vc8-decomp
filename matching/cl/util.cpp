@@ -88,3 +88,13 @@ unsigned short* __cdecl append(unsigned short* destination, unsigned int capacit
         wcscpy_s(destination, capacity, source);
     return destination + wcslen(destination);
 }
+
+// FUNCTION: cl 0x407f69
+// SYMBOL: ?IsOutputToConsole@@YAHPAX@Z
+int __cdecl IsOutputToConsole(HANDLE output)
+{
+    DWORD mode;
+    if ((GetFileType(output) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR)
+        return 0;
+    return GetConsoleMode(output, &mode) != 0;
+}
