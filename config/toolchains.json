@@ -187,6 +187,12 @@
           "sha256": "42a96eb7aac53303254d4a5e061e94429d436dab353ff37774314c31dee4e6f2"
         },
         {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/PlatformSDK/lib/advapi32.lib",
+          "size": 153384,
+          "version": null,
+          "sha256": "6c48cbfa0d4c01a86790b869f008c8af08cba4fc6b6d4ec617463e4be14b7acd"
+        },
+        {
           "path": "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcp80.dll",
           "size": 548864,
           "version": "8.0.50727.9680",
@@ -360,6 +366,12 @@
           "size": 196054,
           "version": null,
           "sha256": "42a96eb7aac53303254d4a5e061e94429d436dab353ff37774314c31dee4e6f2"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/PlatformSDK/lib/advapi32.lib",
+          "size": 153384,
+          "version": null,
+          "sha256": "6c48cbfa0d4c01a86790b869f008c8af08cba4fc6b6d4ec617463e4be14b7acd"
         },
         {
           "path": "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcp80.dll",

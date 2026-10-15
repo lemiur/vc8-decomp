@@ -89,7 +89,7 @@ def inventory(toolchain):
             out.append({"path": found.as_posix(), "size": found.stat().st_size,
                         "version": file_version(found), "sha256": sha256(found)})
     for folder in map(Path, toolchain.get("lib", [])):
-        for name in ("msvcrt.lib", "msvcprt.lib", "oldnames.lib", "kernel32.lib"):
+        for name in ("msvcrt.lib", "msvcprt.lib", "oldnames.lib", "kernel32.lib", "advapi32.lib"):
             found = folder / name
             if found.is_file():
                 out.append({"path": found.as_posix(), "size": found.stat().st_size,
