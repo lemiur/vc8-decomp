@@ -121,6 +121,58 @@ class PEContracts(unittest.TestCase):
         with self.assertRaisesRegex(PEError, "duplicate"):
             self.image(data).base_relocations()
 
+    def test_highadj_adjustment_is_not_a_second_relocation(self):
+        data = image_bytes()
+        directory(data, 5, 0x1100, 12)
+        struct.pack_into("<IIHH", data, 0x300, 0x1000, 12, 0x4020, 0xF123)
+        self.assertEqual(self.image(data).base_relocations(),
+                         [dict(rva=0x1020, va=0x401020, type=4, width=2, adjustment=-3805)])
+        # A final HIGHADJ entry cannot borrow the next block's header WORD.
+        struct.pack_into("<HH", data, 0x308, 0, 0x4020)
+        with self.assertRaisesRegex(PEError, "missing HIGHADJ"):
+            self.image(data).base_relocations()
+
+    def test_exports_preserve_aliases_ordinals_and_forwarders(self):
+        data = image_bytes()
+        directory(data, 0, 0x1100, 0x100)
+        struct.pack_into("<IIIIII", data, 0x310, 5, 3, 2, 0x1140, 0x1150, 0x1160)
+        struct.pack_into("<III", data, 0x340, 0x1000, 0x1180, 0x1020)
+        struct.pack_into("<II", data, 0x350, 0x1190, 0x11A0)
+        struct.pack_into("<HH", data, 0x360, 0, 0)
+        data[0x380:0x38A] = b"other.Foo\0"
+        data[0x390:0x396] = b"Alpha\0"
+        data[0x3A0:0x3A6] = b"Alias\0"
+        records = self.image(data).export_records()
+        self.assertEqual(records[0]["ordinal"], 5)
+        self.assertEqual(records[0]["names"], ["Alpha", "Alias"])
+        self.assertEqual(records[1]["forwarder"], "other.Foo")
+        self.assertIsNone(records[1]["va"])
+        self.assertEqual(records[2]["names"], [])
+        self.assertEqual(self.image(data).exports, {"Alpha": 0x401000, "Alias": 0x401000})
+        struct.pack_into("<H", data, 0x360, 4)
+        with self.assertRaisesRegex(PEError, "outside address table"):
+            self.image(data).export_records()
+
+    def test_fixed_version_resource_and_corrupt_signature(self):
+        data = image_bytes()
+        directory(data, 2, 0x1100, 0x200)
+        for raw, identity, child in [(0x300, 16, 0x80000020), (0x320, 1, 0x80000040),
+                                      (0x340, 1033, 0x60)]:
+            struct.pack_into("<H", data, raw + 14, 1)
+            struct.pack_into("<II", data, raw + 16, identity, child)
+        key = "VS_VERSION_INFO\0".encode("utf-16-le")
+        fixed_at = (6 + len(key) + 3) & ~3
+        blob = bytearray(fixed_at + 52)
+        struct.pack_into("<HHH", blob, 0, len(blob), 52, 0)
+        blob[6:6 + len(key)] = key
+        struct.pack_into("<IIII", blob, fixed_at, 0xFEEF04BD, 0x10000, 14 << 16, (50727 << 16) | 762)
+        struct.pack_into("<IIII", data, 0x360, 0x1180, len(blob), 0, 0)
+        data[0x380:0x380 + len(blob)] = blob
+        self.assertEqual(self.image(data).version, "14.0.50727.762")
+        data[0x380 + fixed_at] = 0
+        with self.assertRaisesRegex(PEError, "invalid fixed file version"):
+            self.image(data).version
+
     def test_named_and_ordinal_imports(self):
         data = image_bytes()
         directory(data, 1, 0x1100, 40)

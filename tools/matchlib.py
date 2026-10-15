@@ -322,10 +322,12 @@ class PEImage:
             if at + 8 > len(blob):
                 raise PEError("truncated base relocation block")
             page, length = struct.unpack_from("<II", blob, at)
-            if length < 8 or length % 2 or at + length > len(blob):
+            if page & 0xFFF or length < 8 or length % 4 or at + length > len(blob):
                 raise PEError("invalid base relocation block")
-            for entry_at in range(at + 8, at + length, 2):
+            entry_at = at + 8
+            while entry_at < at + length:
                 word = struct.unpack_from("<H", blob, entry_at)[0]
+                entry_at += 2
                 kind, offset = word >> 12, word & 0xFFF
                 if kind == 0:  # ABSOLUTE padding has no referent.
                     continue
@@ -335,7 +337,13 @@ class PEImage:
                 sites.add(site)
                 width = {1: 2, 2: 2, 3: 4, 4: 2, 10: 8}.get(kind)
                 self.rva_to_offset(site, width or 1)
-                result.append(dict(rva=site, va=self.base + site, type=kind, width=width))
+                record = dict(rva=site, va=self.base + site, type=kind, width=width)
+                if kind == 4:  # HIGHADJ consumes a second WORD, which is NOT a relocation.
+                    if entry_at + 2 > at + length:
+                        raise PEError("missing HIGHADJ adjustment word")
+                    record["adjustment"] = struct.unpack_from("<h", blob, entry_at)[0]
+                    entry_at += 2
+                result.append(record)
             at += length
         return sorted(result, key=lambda item: item["rva"])
 
@@ -379,6 +387,60 @@ class PEImage:
                 raise PEError("ambiguous unqualified import: " + name)
             result[name] = record["va"]
         return result
+
+    def export_records(self):
+        """Read EAT slots, preserving ordinal-only exports, aliases and forwarders.
+
+        Forwarders have va=None and a forwarder string; they are not local code.
+        Names are exact export spellings, not signature or ownership evidence.
+        """
+        rva, size = self.directory(0)
+        if not rva and not size:
+            return []
+        if not rva or size < 40:
+            raise PEError("invalid export directory")
+        self.read_rva(rva, size)
+        directory = self.read_rva(rva, 40)
+        ordinal_base, function_count, name_count, functions_rva, names_rva, ordinals_rva = struct.unpack_from("<IIIIII", directory, 16)
+        addresses = self.read_rva(functions_rva, function_count * 4) if function_count else b""
+        name_table = self.read_rva(names_rva, name_count * 4) if name_count else b""
+        ordinal_table = self.read_rva(ordinals_rva, name_count * 2) if name_count else b""
+        names, spellings = {}, set()
+        for index in range(name_count):
+            ordinal_index = struct.unpack_from("<H", ordinal_table, index * 2)[0]
+            if ordinal_index >= function_count:
+                raise PEError("export name ordinal is outside address table")
+            name = self.cstring(struct.unpack_from("<I", name_table, index * 4)[0])
+            if name in spellings:
+                raise PEError("duplicate export name")
+            spellings.add(name)
+            names.setdefault(ordinal_index, []).append(name)
+        result = []
+        for index in range(function_count):
+            target = struct.unpack_from("<I", addresses, index * 4)[0]
+            if not target:
+                if index in names:
+                    raise PEError("named export has an empty address slot")
+                continue
+            forwarder = None
+            if rva <= target < rva + size:
+                forwarder = self.cstring(target, rva + size - target)
+                va = None
+            else:
+                # An export can name a zero-filled datum, so require an image
+                # mapping here rather than wrongly requiring file-backed bytes.
+                va = self.rva_to_va(target)
+                if self.section_of(va) is None:
+                    raise PEError("export target is not in a section")
+            result.append(dict(ordinal=ordinal_base + index, names=names.get(index, []),
+                               rva=target, va=va, forwarder=forwarder))
+        return result
+
+    @property
+    def exports(self):
+        """Named local export VAs. Use export_records() to include forwarders."""
+        return {name: record["va"] for record in self.export_records() if record["va"] is not None
+                for name in record["names"]}
 
     def metadata(self):
         return dict(filename=Path(self.path).name, size=len(self.data), sha256=self.sha256(),
