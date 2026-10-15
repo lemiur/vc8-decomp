@@ -32,3 +32,27 @@ unsigned short* __cdecl gobblewhite(unsigned short* text)
         ++text;
     return text;
 }
+
+// FUNCTION: cl 0x408010
+// SYMBOL: ?strqlen@@YAHPBG@Z
+// stop: complete candidate; quote test and backslash-counter codegen differ.
+int __cdecl strqlen(const unsigned short* text)
+{
+    int length = 0;
+    int backslashes = 0;
+    int quote = 0;
+
+    while (*text) {
+        if (iswspace(*text))
+            quote = 1;
+        int character = *text;
+        if (character == '"')
+            length += backslashes + 1;
+        backslashes = character == '\\' ? backslashes + 1 : 0;
+        ++length;
+        ++text;
+    }
+    if (quote)
+        length += backslashes + 2;
+    return length;
+}

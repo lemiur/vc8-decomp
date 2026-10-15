@@ -9,5 +9,6 @@ int __cdecl nextbase(int);
 // the still-unresolved native wchar_t compiler setting.
 unsigned short* __cdecl gobblewhite(unsigned short*);
 void __cdecl xfree(void*);
+int __cdecl strqlen(const unsigned short*);
 
 #endif
