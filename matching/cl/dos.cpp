@@ -11,3 +11,22 @@ int FallThroughFilter(unsigned long exception_code, passinfo_s *pass, int *statu
         *status = 4;
     return EXCEPTION_CONTINUE_SEARCH;
 }
+
+// FUNCTION: cl 0x4092d4
+// SYMBOL: ?screen_length@@YAHXZ
+int screen_length()
+{
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    HANDLE console = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE,
+        0, NULL, OPEN_EXISTING, 0, NULL);
+    if (console == INVALID_HANDLE_VALUE)
+        return 25;
+
+    BOOL success = GetConsoleScreenBufferInfo(console, &info);
+    CloseHandle(console);
+    if (!success)
+        return 25;
+
+    int height = info.srWindow.Bottom - info.srWindow.Top + 1;
+    return height > 0 ? height : 1;
+}

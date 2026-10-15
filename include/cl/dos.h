@@ -5,5 +5,6 @@
 struct passinfo_s;
 
 int FallThroughFilter(unsigned long exception_code, passinfo_s *pass, int *status);
+int screen_length();
 
 #endif
