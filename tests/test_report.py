@@ -118,6 +118,16 @@ class LedgerTests(unittest.TestCase):
             self.assertEqual(raised.exception.code, 2)
             self.assertEqual(target.read_bytes(), original)
 
+    def test_missing_import_cannot_silently_drop_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "ledger.tsv"
+            ledger.write(target, [observation()])
+            original = target.read_bytes()
+            with self.assertRaises(SystemExit) as raised:
+                ledger.main(["--ledger", str(target), "import", str(Path(directory) / "missing.tsv")])
+            self.assertEqual(raised.exception.code, 2)
+            self.assertEqual(target.read_bytes(), original)
+
 
 class ReportTests(unittest.TestCase):
     def test_match_diagnostics_are_pending_and_never_admissions(self):
