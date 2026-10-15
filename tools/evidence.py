@@ -214,6 +214,20 @@ def reusable_project(source, binary, binary_hash):
     return source, manifest, hashlib.sha256(raw).hexdigest()
 
 
+def snapshot_scripts(source, destination):
+    """Run exactly the source bytes hashed, even if the checkout is rebased."""
+    destination = Path(destination)
+    destination.mkdir()
+    hashes = {}
+    for path in sorted(Path(source).glob("*.java")):
+        raw = path.read_bytes()
+        (destination / path.name).write_bytes(raw)
+        hashes[path.name] = hashlib.sha256(raw).hexdigest()
+    if not hashes:
+        raise ValueError("no Ghidra Java scripts found")
+    return hashes
+
+
 def import_ghidra(args):
     project, entry, primary, image = project_paths(args.binary, args.config)
     home = Path(args.ghidra_home or os.environ.get("GHIDRA_HOME", ""))
@@ -251,9 +265,9 @@ def import_ghidra(args):
         manifest["pdb_path"] = str(pdb)
         manifest["pdb_sha256"] = expected
     manifest_path = out / "manifest.json"
-    script = ROOT / "tools/ghidra"
-    manifest["scripts_sha256"] = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-                                  for path in sorted(script.glob("*.java"))}
+    script = out / "script-snapshot"
+    manifest["scripts_sha256"] = snapshot_scripts(ROOT / "tools/ghidra", script)
+    manifest["script_snapshot"] = str(script)
     java = str(Path(args.java_home) / "bin/java.exe") if args.java_home else shutil.which("java")
     if not java:
         raise ValueError("Java not found; provide --java-home")

@@ -47,6 +47,9 @@ hashes. The loaded program's executable hash must match the configured retail
 image. Running imports cannot be reused: Ghidra saves a newly imported program
 after its post-scripts return, so stopping an import during body export may lose
 its in-memory analysis. Never stop such an import just to release a project lock.
+Each invocation copies Java scripts into its fresh ignored `script-snapshot/`,
+hashes those exact bytes, and invokes that snapshot. Checkout rebases cannot
+change the scripts used by an already launched run.
 
 The requested analyzer is 12.1.3. The locally found and executed installation is
 12.0.1 at `E:/Downloads/ghidra_12.0.1_PUBLIC_20260114/ghidra_12.0.1_PUBLIC`.

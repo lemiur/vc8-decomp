@@ -119,6 +119,19 @@ class EvidenceTests(unittest.TestCase):
             self.assertEqual(metadata, manifest)
             self.assertEqual(digest, hashlib.sha256(path.read_bytes()).hexdigest())
 
+    def test_script_snapshot_survives_checkout_changes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "source"
+            source.mkdir()
+            script = source / "Export.java"
+            script.write_bytes(b"original source\r\n")
+            (source / "README.md").write_text("not executable")
+            hashes = evidence.snapshot_scripts(source, root / "snapshot")
+            script.write_bytes(b"changed by rebase\n")
+            self.assertEqual((root / "snapshot/Export.java").read_bytes(), b"original source\r\n")
+            self.assertEqual(hashes, {"Export.java": hashlib.sha256(b"original source\r\n").hexdigest()})
+
 
 if __name__ == "__main__":
     unittest.main()
