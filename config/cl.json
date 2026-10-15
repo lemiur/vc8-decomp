@@ -7,9 +7,11 @@
   "units": {
     "matching/cl/util.cpp": {
       "compile_flags": [
-        "/O1"
+        "/O1",
+        "/Zc:wchar_t-",
+        "/GF"
       ],
-      "evidence": "Actual SP1 /GL + /LTCG nextbase compile emits all 26 retail bytes with /O1; /O2 differs. This leaf does not establish flags for the rest of util.obj."
+      "evidence": "Actual SP1 /GL + /LTCG nextbase compile emits all 26 retail bytes with /O1; /O2 differs. This leaf does not establish flags for the rest of util.obj. Genuine era wchar.h and SDK-wide source requires typedef-wchar mode; /GF preserves the observed pooled VS_UNICODE_OUTPUT literal. The GS-protected helper derives its cookie operations from the real WCHAR[64] buffer."
     },
     "matching/cl/mpcl.cpp": {
       "compile_flags": [
@@ -43,7 +45,9 @@
     "matching/cl/clmain.cpp": {
       "compile_flags": [
         "/O1",
-        "/Ob1"
+        "/Ob1",
+        "/GF",
+        "/Zc:wchar_t-"
       ],
       "evidence": "Same source/object probes require the real setter /INCLUDE root to preserve observed cdecl stack ABI; /O1 /Ob1 emits four complete 9-byte retail call wrappers."
     },
