@@ -200,23 +200,47 @@ def analysis_timed_out(log_path):
         return any("REPORT: Analysis timed out at " in line for line in log)
 
 
+def reusable_project(source, binary, binary_hash):
+    """Only reuse a completed, saved import; never terminate an unsaved import."""
+    source = Path(source).resolve()
+    raw = (source / "manifest.json").read_bytes()
+    manifest = json.loads(raw.decode("utf-8-sig"))
+    if manifest.get("status") not in ("complete", "complete_with_analysis_timeout"):
+        raise ValueError("source import is not complete; stopping it may lose unsaved analysis")
+    if manifest.get("binary") != binary or manifest.get("binary_sha256") != binary_hash:
+        raise ValueError("saved project binary identity mismatch")
+    if not (source / "vc8.gpr").is_file() or not any((source / "vc8.rep/idata").rglob("*.gbf")):
+        raise ValueError("source project has no saved program database")
+    return source, manifest, hashlib.sha256(raw).hexdigest()
+
+
 def import_ghidra(args):
     project, entry, primary, image = project_paths(args.binary, args.config)
     home = Path(args.ghidra_home or os.environ.get("GHIDRA_HOME", ""))
     version = ghidra_version(home)
     symbols, symbol_file = load_symbols(primary, args.binary, image)
+    binary_hash = hashlib.sha256(image.read_bytes()).hexdigest()
+    source_info = reusable_project(args.source_run, args.binary, binary_hash) if args.source_run else None
     out = primary / "build/ghidra" / args.binary / uuid.uuid4().hex
     out.mkdir(parents=True)
     seed = out / "public-starts.tsv"
     seed.write_text("".join("%x\t%s\n" % (number(row["va"]), row["name"].replace("\t", " ").replace("\n", " "))
                             for row in symbols.get("functions", [])), encoding="utf-8")
     manifest = {"schema_version": 1, "binary": args.binary, "binary_path": str(image),
-                "binary_sha256": hashlib.sha256(image.read_bytes()).hexdigest(),
+                "binary_sha256": binary_hash,
                 "ghidra_home": str(home), "ghidra_version": version,
                 "requested_version": "12.1.3", "version_deviation": version != "12.1.3",
                 "symbol_map": str(symbol_file), "symbol_map_sha256": symbols["_input_sha256"],
                 "pdb_application": "not_requested", "status": "running", "export_limit": args.limit,
-                "analysis_timeout_seconds": args.analysis_timeout}
+                "analysis_timeout_seconds": args.analysis_timeout, "decompile_workers": args.workers}
+    if source_info:
+        source, source_manifest, source_hash = source_info
+        manifest.update(source_run=str(source), source_manifest_sha256=source_hash,
+                        pdb_application="inherited_from_saved_project",
+                        inherited_pdb_application=source_manifest.get("pdb_application"),
+                        pdb_sha256=source_manifest.get("pdb_sha256"),
+                        symbol_map_application="context_only; project symbol state inherited",
+                        analysis="disabled; saved project reused read-only")
     pdb = Path(args.pdb) if args.pdb else None
     if pdb:
         expected = symbols.get("identity", {}).get("pdb_sha256")
@@ -226,7 +250,6 @@ def import_ghidra(args):
         manifest["pdb_path"] = str(pdb)
         manifest["pdb_sha256"] = expected
     manifest_path = out / "manifest.json"
-    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     script = ROOT / "tools/ghidra"
     manifest["scripts_sha256"] = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                                   for path in sorted(script.glob("*.java"))}
@@ -239,12 +262,17 @@ def import_ghidra(args):
     # avoids its cmd.exe expansion bug on image paths containing '(x86)'.
     command = [java, *vmargs, "-Xmx2G", "-XX:ParallelGCThreads=2", "-XX:CICompilerCount=2", "-cp",
                str(home / "Ghidra/Framework/Utility/lib/Utility.jar"), "ghidra.Ghidra",
-               "ghidra.app.util.headless.AnalyzeHeadless", str(out), "vc8", "-import", str(image),
-               "-scriptPath", str(script), "-preScript", "PrepareEvidence.java", str(pdb) if pdb else "-",
-               str(out / "pdb-status.json"), "-postScript", "CreateFunctions.java", str(seed),
-               str(out / "create-functions.tsv"), "-postScript", "ExportEvidence.java", str(out),
-               str(args.limit), "-analysisTimeoutPerFile", str(args.analysis_timeout), "-max-cpu", "2"]
+               "ghidra.app.util.headless.AnalyzeHeadless"]
+    if source_info:
+        command += [str(source), "vc8", "-process", entry["filename"], "-noanalysis", "-readOnly", "-scriptPath", str(script)]
+    else:
+        command += [str(out), "vc8", "-import", str(image), "-scriptPath", str(script),
+                    "-preScript", "PrepareEvidence.java", str(pdb) if pdb else "-", str(out / "pdb-status.json"),
+                    "-postScript", "CreateFunctions.java", str(seed), str(out / "create-functions.tsv")]
+    command += ["-postScript", "ExportEvidence.java", str(out), str(args.limit), str(args.workers),
+                "-analysisTimeoutPerFile", str(args.analysis_timeout), "-max-cpu", "2"]
     manifest["command"] = command
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     environment = os.environ.copy()
     if args.java_home:
         environment["JAVA_HOME_OVERRIDE"] = args.java_home
@@ -252,11 +280,15 @@ def import_ghidra(args):
     with (out / "headless.log").open("w", encoding="utf-8") as log:
         result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=environment, check=False)
     pdb_status_path = out / "pdb-status.json"
-    pdb_status = read_json(pdb_status_path).get("status") if pdb_status_path.is_file() else "missing"
+    pdb_status = ("inherited_from_saved_project" if source_info else
+                  read_json(pdb_status_path).get("status") if pdb_status_path.is_file() else "missing")
     manifest["pdb_application"] = pdb_status
-    success = (result.returncode == 0 and (out / "export-complete.json").is_file()
-               and (out / "create-functions.tsv").is_file()
-               and pdb_status == ("applied_local_validated_pdb" if pdb else "not_requested"))
+    completion_path = out / "export-complete.json"
+    completion = read_json(completion_path) if completion_path.is_file() else {}
+    success = (result.returncode == 0 and completion.get("binary_sha256") == binary_hash
+               and completion.get("ghidra_version") == version
+               and (bool(source_info) or ((out / "create-functions.tsv").is_file()
+                    and pdb_status == ("applied_local_validated_pdb" if pdb else "not_requested"))))
     timed_out = analysis_timed_out(out / "headless.log")
     manifest.update(status=("complete_with_analysis_timeout" if timed_out else "complete") if success else "failed",
                     returncode=result.returncode, analysis_timed_out=timed_out)
@@ -275,17 +307,24 @@ def main(argv=None):
         cmd.add_argument("--config", type=Path)
         cmd.add_argument("--max-lines", type=int, choices=range(4, 61), default=60, metavar="4..60")
         cmd.add_argument("--max-bytes", type=byte_count, default=4096, metavar="1..200000")
-    cmd = sub.add_parser("ghidra-import", help="fresh isolated project and ignored export; never admits matches")
-    cmd.add_argument("--binary", required=True)
-    cmd.add_argument("--config", type=Path)
-    cmd.add_argument("--ghidra-home")
-    cmd.add_argument("--java-home")
-    cmd.add_argument("--pdb", help="local PDB verified against validated symbols map")
-    cmd.add_argument("--limit", type=int, default=0, help="export first N function bodies; 0 exports all")
-    cmd.add_argument("--analysis-timeout", type=int, default=600)
+    for verb in ("ghidra-import", "ghidra-export"):
+        cmd = sub.add_parser(verb, help="fresh ignored export; never admits matches")
+        cmd.add_argument("--binary", required=True)
+        cmd.add_argument("--config", type=Path)
+        cmd.add_argument("--ghidra-home")
+        cmd.add_argument("--java-home")
+        cmd.add_argument("--limit", type=int, default=0, help="export first N function bodies; 0 exports all")
+        cmd.add_argument("--analysis-timeout", type=int, default=600)
+        cmd.add_argument("--workers", type=int, choices=range(1, 5), default=4)
+        if verb == "ghidra-export":
+            cmd.add_argument("--source-run", type=Path, required=True, help="completed, saved import run reused with -noanalysis -readOnly")
+            cmd.set_defaults(pdb=None)
+        else:
+            cmd.add_argument("--pdb", help="local PDB verified against validated symbols map")
+            cmd.set_defaults(source_run=None)
     args = parser.parse_args(argv)
     try:
-        if args.verb == "ghidra-import":
+        if args.verb in ("ghidra-import", "ghidra-export"):
             if args.limit < 0:
                 raise ValueError("--limit must be nonnegative")
             return import_ghidra(args)

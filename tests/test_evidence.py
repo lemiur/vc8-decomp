@@ -97,6 +97,28 @@ class EvidenceTests(unittest.TestCase):
             log.write_text("ERROR REPORT: Analysis timed out at 600 secs\n")
             self.assertTrue(evidence.analysis_timed_out(log))
 
+    def test_reuse_rejects_unsaved_import_and_wrong_binary(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder)
+            path = source / "manifest.json"
+            path.write_text(json.dumps({"status": "running"}))
+            with self.assertRaisesRegex(ValueError, "unsaved analysis"):
+                evidence.reusable_project(source, "cl", "hash")
+            path.write_text(json.dumps({"status": "complete", "binary": "c2", "binary_sha256": "hash"}))
+            with self.assertRaisesRegex(ValueError, "identity mismatch"):
+                evidence.reusable_project(source, "cl", "hash")
+            manifest = {"status": "complete", "binary": "cl", "binary_sha256": "hash"}
+            path.write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(ValueError, "no saved program"):
+                evidence.reusable_project(source, "cl", "hash")
+            (source / "vc8.gpr").write_bytes(b"project")
+            (source / "vc8.rep/idata").mkdir(parents=True)
+            (source / "vc8.rep/idata/db.1.gbf").write_bytes(b"fixture")
+            reused, metadata, digest = evidence.reusable_project(source, "cl", "hash")
+            self.assertEqual(reused, source.resolve())
+            self.assertEqual(metadata, manifest)
+            self.assertEqual(digest, hashlib.sha256(path.read_bytes()).hexdigest())
+
 
 if __name__ == "__main__":
     unittest.main()
