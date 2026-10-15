@@ -14,6 +14,7 @@ import subprocess
 import struct
 import sys
 import time
+import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/toolchains.json"
@@ -209,6 +210,79 @@ def trace_tool_runtime(toolchain, tool, args, output):
     return result
 
 
+LAYOUT_FIELDS = ("nLength", "lpSecurityDescriptor", "bInheritHandle")
+LAYOUT_SYMBOL = "vc8_layout_SECURITY_ATTRIBUTES"
+
+
+def build_layout_witness(toolchain, output, config_path=CONFIG):
+    """Build an independently extractable SDK aggregate layout witness.
+
+    The exported DWORD array contains sizeof(type), then ordered offset/width
+    pairs. No expected numeric layout is injected into the source or bytes.
+    Gate/audit must independently extract the array and approve its named record.
+    """
+    import ltcg
+    from matchlib import PEImage
+    verify_toolchain(toolchain)
+    output = Path(output).resolve()
+    if output.exists() and any(output.iterdir()):
+        raise ValueError("layout output must be empty for a fresh build")
+    output.mkdir(parents=True, exist_ok=True)
+    source = output / "layout.cpp"
+    expressions = ["sizeof(SECURITY_ATTRIBUTES)"]
+    for field in LAYOUT_FIELDS:
+        expressions += ["offsetof(SECURITY_ATTRIBUTES, %s)" % field,
+                        "sizeof(((SECURITY_ATTRIBUTES *)0)->%s)" % field]
+    source.write_text('#include <windows.h>\n#include <stddef.h>\n'
+                      'extern "C" __declspec(dllexport) const unsigned long ' + LAYOUT_SYMBOL +
+                      '[] = {\n    ' + ',\n    '.join(expressions) + '\n};\n', encoding="ascii")
+    inputs = {str(source): sha256(source)}
+    config_path = Path(config_path).resolve()
+    inputs[str(config_path)] = sha256(config_path)
+    commands = []
+    obj = output / "layout.obj"
+    flags = ["/nologo", "/c", "/showIncludes", "/O1", "/MD", "/EHsc", "/GL"]
+    toolroot = Path(toolchain["bin"]).parent
+    env = toolchain_environment(toolchain)
+    compiled = ltcg.run_command([str(Path(toolchain["bin"]) / "cl.exe"), *flags,
+                                 "/Fo" + str(obj), str(source)], output, env, commands, [obj])
+    if not obj.is_file():
+        raise ValueError("layout compiler did not produce a fresh object")
+    for line in (compiled.stdout + compiled.stderr).splitlines():
+        if "Note: including file:" in line:
+            header = Path(line.split("Note: including file:", 1)[1].strip()).resolve()
+            inputs[str(header)] = sha256(header)
+    if len(inputs) <= 2:
+        raise ValueError("layout compiler did not report included SDK headers")
+    image_path, map_path = ltcg.link(toolroot, [obj], ["_" + LAYOUT_SYMBOL], output, env, commands)
+    image = PEImage(image_path)
+    exports = [entry for entry in image.export_records() if LAYOUT_SYMBOL in entry.get("names", [])]
+    if len(exports) != 1 or exports[0].get("va") is None:
+        raise ValueError("layout export did not resolve to one image-backed array")
+    array_va = exports[0]["va"]
+    count = 1 + len(LAYOUT_FIELDS) * 2
+    values = struct.unpack("<" + "I" * count, image.read_va(array_va, count * 4))
+    observations = {"size": values[0], "members": {field: {"offset": values[1 + index * 2],
+                       "size": values[2 + index * 2]} for index, field in enumerate(LAYOUT_FIELDS)}}
+    for path, digest in inputs.items():
+        if sha256(path) != digest:
+            raise ValueError("layout input changed during build: " + path)
+    verify_toolchain(toolchain)
+    artifacts = [{"path": str(path), "sha256": sha256(path), "kind": kind}
+                 for path, kind in ((obj, "ltcg-object"), (image_path, "linked-image"), (map_path, "linker-map"))]
+    result = {"schema_version": 1, "kind": "offsetof-sizeof", "binary": "cl", "build_id": str(uuid.uuid4()),
+              "status": "built", "type": "SECURITY_ATTRIBUTES", "fields": list(LAYOUT_FIELDS),
+              "source_inputs": [{"path": path, "sha256": digest} for path, digest in sorted(inputs.items())],
+              "toolchain_name": toolchain["name"], "toolchain": toolchain["files"], "commands": commands,
+              "artifacts": artifacts, "image": {"path": str(image_path), "sha256": sha256(image_path)},
+              "symbol": LAYOUT_SYMBOL, "export": {"va": array_va, "size": count * 4},
+              "observations": observations,
+              "purpose": "Compiler-produced aggregate layout witness only; no function or byte matching count"}
+    record = output / "layout-witness.json"
+    record.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    return result, record
+
+
 PROBES = {
     "c": "__declspec(dllexport) int probe(int x) { return x * 3 + 7; }\n",
     "cpp": 'extern "C" __declspec(dllexport) int probe(int x) { try { if (x) throw x; } catch (int v) { return v + 7; } return 0; }\n',
@@ -290,7 +364,7 @@ def run_probes(toolchain, output, matrix=False):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("inventory", "verify", "probe", "trace"))
+    parser.add_argument("action", choices=("inventory", "verify", "probe", "trace", "layout"))
     parser.add_argument("--toolchain", default="sp1")
     parser.add_argument("--config", type=Path, default=CONFIG)
     parser.add_argument("--out", type=Path)
@@ -309,6 +383,10 @@ def main():
     elif args.action == "verify":
         verify_toolchain(tc)
         print("Toolchain pins verified: " + args.toolchain)
+    elif args.action == "layout":
+        output = args.out or ROOT / "build/toolchain-layout" / args.toolchain / str(uuid.uuid4())
+        result, record = build_layout_witness(tc, output, args.config)
+        print("Compiled %s layout: %s; record: %s" % (result["type"], result["observations"], record))
     elif args.action == "trace":
         output = args.out or ROOT / "build/toolchain" / args.toolchain / "runtime"
         result = trace_tool_runtime(tc, args.tool, args.tool_arg or ["/?"], output)

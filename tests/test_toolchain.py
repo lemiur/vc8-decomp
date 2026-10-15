@@ -78,6 +78,26 @@ class ToolchainTests(unittest.TestCase):
             self.assertEqual(len(files), 1)
             self.assertEqual(files[0]["sha256"], probe.sha256(path))
 
+    def test_layout_witness_rejects_stale_output(self):
+        with tempfile.TemporaryDirectory() as temp:
+            (Path(temp) / "stale.dll").write_bytes(b"not attributable")
+            with mock.patch.object(probe, "verify_toolchain"):
+                with self.assertRaisesRegex(ValueError, "layout output must be empty"):
+                    probe.build_layout_witness({}, temp)
+
+    def test_layout_witness_requires_included_header_provenance(self):
+        import ltcg
+        with tempfile.TemporaryDirectory() as temp:
+            config = Path(temp) / "toolchains.json"
+            config.write_text("{}")
+            def fake_compile(argv, cwd, env, commands, produced):
+                Path(produced[0]).write_bytes(b"test object; not source admission")
+                return probe.subprocess.CompletedProcess(argv, 0, "", "")
+            tc = {"bin": temp, "runtime": [], "include": [], "lib": []}
+            with mock.patch.object(probe, "verify_toolchain"), mock.patch.object(ltcg, "run_command", side_effect=fake_compile):
+                with self.assertRaisesRegex(ValueError, "did not report included SDK headers"):
+                    probe.build_layout_witness(tc, Path(temp) / "fresh", config)
+
     def test_failed_compile_removes_stale_output_and_skips_link(self):
         with tempfile.TemporaryDirectory() as temp:
             for language in ("c", "cpp"):
