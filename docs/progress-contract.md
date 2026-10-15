@@ -64,7 +64,7 @@ tracked ledger. The latest successful observation per binary, address and
 function-source hash is retained; repeated gates of unchanged source do not
 grow the ledger indefinitely. Observation IDs hash canonical content.
 `python tools/ledger.py import OTHER.tsv ...` merges histories by identity,
-rejects conflicting observations for the same function/build, and compacts
+rejects missing inputs and conflicting observations for the same function/build, and compacts
 achieved source revisions. Regenerate history and reports during integration;
 do not replace a concurrent ledger wholesale. An import of TSV history is a
 history merge, not an independent rerun of its original byte gate.

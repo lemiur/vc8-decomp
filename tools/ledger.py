@@ -146,6 +146,8 @@ def main(argv=None):
         rows = read(args.ledger)
         if args.command == "import":
             for path in args.inputs:
+                if not path.is_file():
+                    raise ValueError("history input is missing or not a file: " + str(path))
                 incoming = read(path)
                 rows = merge(rows, incoming)
             write(args.ledger, rows)
