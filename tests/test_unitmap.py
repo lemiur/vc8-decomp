@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -144,6 +145,38 @@ class UnitMapTests(unittest.TestCase):
         config["binaries"]["cl"]["binary_sha256"] = "1234"
         with self.assertRaisesRegex(unitmap.EvidenceError, "SHA-256"):
             unitmap.apply_lanes(mapped, config)
+
+    def test_embedded_source_inventory_requires_hash_and_never_infers_owner(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            binary = Path(temporary) / "input.bin"
+            payload = b"\0F:\\src\\file.c\0F:\\src\\object.obj\0" + "F:\\src\\wide.cpp".encode("utf-16le") + b"\0\0"
+            binary.write_bytes(payload)
+            identity = {"binary_path": str(binary), "binary_sha256": hashlib.sha256(payload).hexdigest()}
+            inventory = unitmap.source_path_inventory(identity, [{"raw_offset": 0, "raw_size": len(payload), "rva": 4096}])
+            self.assertEqual(inventory["unique_paths"], 2)
+            self.assertEqual({f["path"] for f in inventory["paths"]}, {"F:\\src\\file.c", "F:\\src\\wide.cpp"})
+            self.assertTrue(all(f["rva"] == 4096 + f["file_offset"] for f in inventory["paths"]))
+            identity["binary_sha256"] = "wrong"
+            with self.assertRaisesRegex(unitmap.EvidenceError, "SHA-256 mismatch"):
+                unitmap.source_path_inventory(identity, [])
+
+    def test_cli_filtered_lane_is_an_exact_function_list(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            data = self.fixture()
+            data["module_symbols"] = [{"module_index": 0, "rva": 4096, "kind": "procedure"}]
+            paths = {name: base / (name + ".json") for name in ("project", "symbols", "config", "output")}
+            paths["project"].write_text(json.dumps({"binaries": {"cl": {}}, "primary_checkout": temporary}))
+            paths["symbols"].write_text(json.dumps(data))
+            paths["config"].write_text(json.dumps({"binaries": {"cl": {"object_lanes": [{"id": "driver", "module_indices": [0]}]}}}))
+            args = ["--binary", "cl", "--lane", "driver"]
+            for name, path in paths.items():
+                args.extend(["--" + name, str(path)])
+            self.assertEqual(unitmap.main(args), 0)
+            result = json.loads(paths["output"].read_text())
+            self.assertEqual([f["name"] for f in result["functions"]], ["DriverMain"])
+            self.assertEqual([m["module_index"] for m in result["modules"]], [0])
+            self.assertEqual(result["selection"]["public_function_symbols"], 1)
 
 
 if __name__ == "__main__":

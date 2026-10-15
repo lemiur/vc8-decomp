@@ -17,6 +17,7 @@ from bisect import bisect_right
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 
 
@@ -165,6 +166,7 @@ def build_map(symbols, binary, assert_refs=None):
         source_refs = references.get(rva, [])
         function = {
             "name": symbol.get("name"), "rva": rva,
+            "va": symbol.get("va"), "size": symbol.get("size"),
             "section": symbol.get("section_index", symbol.get("section")), "offset": symbol.get("section_offset", symbol.get("offset")),
             "boundary_status": symbol.get("boundary_status", "unverified"),
             "boundary_provenance": symbol.get("boundary_provenance"),
@@ -245,6 +247,41 @@ def apply_lanes(mapped, configuration):
     mapped["object_lanes"] = lanes
 
 
+def source_path_inventory(identity, sections):
+    """Inventory literal paths only; never label them function/source owners."""
+    if not identity or not identity.get("binary_path") or not identity.get("binary_sha256"):
+        raise EvidenceError("source string inventory requires a pinned binary path and SHA-256")
+    try:
+        payload = Path(identity["binary_path"]).read_bytes()
+    except OSError as exc:
+        raise EvidenceError(f"cannot read source inventory binary: {exc}") from exc
+    digest = hashlib.sha256(payload).hexdigest()
+    if digest != identity["binary_sha256"]:
+        raise EvidenceError("source inventory binary SHA-256 mismatch")
+    path_pattern = re.compile(r"[A-Za-z]:[\\/][ -~]*\.(?:cpp|cxx|cc|c|hpp|hxx|hh|h|inl|asm|inc|y|yy|yxx|l)$", re.IGNORECASE)
+    findings = []
+    for encoding, pattern, width in (("ascii", rb"[\x20-\x7e]{4,}", 1), ("utf-16le", rb"(?:[\x20-\x7e]\x00){4,}", 2)):
+        for match in re.finditer(pattern, payload):
+            text_value = match[0].decode(encoding)
+            path_match = path_pattern.search(text_value)
+            if not path_match:
+                continue
+            offset = match.start() + path_match.start() * width
+            rva = None
+            for section in sections:
+                raw = integer(section["raw_offset"], "section raw offset")
+                size = integer(section["raw_size"], "section raw size")
+                if raw <= offset < raw + size:
+                    rva = integer(section["rva"], "section rva") + offset - raw
+                    break
+            findings.append({"path": path_match[0], "encoding": encoding, "file_offset": offset, "rva": rva,
+                             "evidence": "literal embedded source path; no code reference or ownership inferred"})
+    findings.sort(key=lambda f: (f["file_offset"], f["encoding"]))
+    return {"binary_sha256": digest, "unique_paths": len({f["path"].casefold() for f in findings}),
+            "occurrences": len(findings), "paths": findings,
+            "limitation": "ASCII absolute paths with C/C++/header/inline/assembly/grammar extensions only; bare names excluded; absence is not evidence of no source file."}
+
+
 def read_json(path):
     try:
         return json.loads(path.read_text(encoding="utf-8-sig"))
@@ -261,6 +298,7 @@ def main(argv=None):
     parser.add_argument("--assert-refs", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--lane", help="write the exact function records for one configured object lane")
+    parser.add_argument("--source-strings", action="store_true", help="inventory embedded source paths in the SHA-256-verified binary")
     args = parser.parse_args(argv)
     try:
         project = read_json(args.project)
@@ -269,7 +307,11 @@ def main(argv=None):
         source = args.symbols or Path(project["primary_checkout"]) / f"build/evidence/{args.binary}.symbols.json"
         stem = args.binary + (f".{args.lane}" if args.lane else "")
         output = args.output or args.project.resolve().parents[1] / f"build/evidence/{stem}.units.json"
-        mapped = build_map(read_json(source), args.binary, read_json(args.assert_refs) if args.assert_refs else None)
+        symbols = read_json(source)
+        mapped = build_map(symbols, args.binary, read_json(args.assert_refs) if args.assert_refs else None)
+        if args.source_strings:
+            mapped["embedded_source_paths"] = source_path_inventory(symbols.get("identity"), symbols.get("sections", []))
+            mapped["statistics"]["embedded_unique_source_paths"] = mapped["embedded_source_paths"]["unique_paths"]
         apply_lanes(mapped, read_json(args.config))
         lane = None
         if args.lane:
