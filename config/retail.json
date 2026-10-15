@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "identity_source": "Installed x86 VC8 SP1 binaries; PE version resource and RSDS debug record read 2026-10-15.",
+  "builds": {
+    "cl": {
+      "filename": "cl.exe",
+      "size": 117504,
+      "sha256": "71c93ca5bddc9b2816d0e053cac2b952f926f6b9321fab6b1ab6e8603621324c",
+      "machine": 332,
+      "image_base": 4194304,
+      "timestamp": 1165043454,
+      "version": "14.0.50727.762",
+      "pdb": {
+        "guid": "720089F2F35A4A128093E654DACA5226",
+        "age": 1,
+        "path": "cl.pdb"
+      }
+    },
+    "c1": {
+      "filename": "c1.dll",
+      "size": 630784,
+      "sha256": "be425bf69704a3717a0265574a357cc64e7daf42ae269c30ba5cda651e244254",
+      "machine": 332,
+      "image_base": 278921216,
+      "timestamp": 1165042677,
+      "version": "14.0.50727.762",
+      "pdb": {
+        "guid": "8C56BD7B882A4B22B2A1FC53891CB1F5",
+        "age": 1,
+        "path": "c1.pdb"
+      }
+    },
+    "c1xx": {
+      "filename": "c1xx.dll",
+      "size": 2285568,
+      "sha256": "391b9d99bfd3566922623b156e38b7e3f780f2a18fdaa440982ad09961297b0d",
+      "machine": 332,
+      "image_base": 273678336,
+      "timestamp": 1165044130,
+      "version": "14.0.50727.762",
+      "pdb": {
+        "guid": "0A900E6195D645CFAF11A3D6C3477C0C",
+        "age": 2,
+        "path": "c1xx.pdb"
+      }
+    },
+    "c2": {
+      "filename": "c2.dll",
+      "size": 2265088,
+      "sha256": "497d1ffe57f75db8b458167bdea475f3962829e139b355a2672a4ef51c716413",
+      "machine": 332,
+      "image_base": 279969792,
+      "timestamp": 1165043441,
+      "version": "14.0.50727.762",
+      "pdb": {
+        "guid": "8E3C6AD714BE4E55B528B0DBEB3BABD8",
+        "age": 1,
+        "path": "c2.pdb"
+      }
+    },
+    "link": {
+      "filename": "link.exe",
+      "size": 733440,
+      "sha256": "16beda175e8e83f45187c0cd18eed06d0ec26a401d0bbc3544074c57eeebaff5",
+      "machine": 332,
+      "image_base": 4194304,
+      "timestamp": 1165044606,
+      "version": "8.0.50727.762",
+      "pdb": {
+        "guid": "9906D3844D8A4D4B89557AC3D0D17195",
+        "age": 1,
+        "path": "link.pdb"
+      }
+    }
+  }
+}

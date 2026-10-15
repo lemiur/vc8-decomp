@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "binary": "link",
+  "language": "c++",
+  "dialect": "VC8 C++",
+  "status": "provisional",
+  "flags": {
+    "compile": [
+      "/nologo",
+      "/GL",
+      "/MD",
+      "/EHsc"
+    ],
+    "link": [
+      "/LTCG"
+    ]
+  },
+  "flag_evidence": {
+    "/GL": "Compiler-owned Rich header objects; independent probe confirmation pending.",
+    "/LTCG": "Required to consume /GL candidate objects.",
+    "/MD": "Dynamic CRT imports and startup objects; exact startup flags remain provisional.",
+    "/EHsc": "C++ exception support provisional; exact exception suboptions require probes."
+  },
+  "optimization_candidates": [
+    "/O1",
+    "/O2",
+    "/Oy",
+    "/GS",
+    "/Gy",
+    "/GF"
+  ],
+  "compiler_code": {
+    "whole_program": "LTCG C++"
+  },
+  "crt_code": {
+    "separate_profile_required": true,
+    "notes": "Do not apply compiler-owned /GL evidence to plain CRT C/C++/MASM objects. Era source provenance and flags need per-unit evidence."
+  },
+  "pgo": {
+    "required_for_retail_codegen": false,
+    "original_profile_available": false,
+    "candidate_flags_pinned": false
+  },
+  "notes": [
+    "No probe has pinned optimization, packing, calling convention, RTTI, or exception suboptions.",
+    "No function is admitted by this configuration; only the independent byte gate counts source."
+  ]
+}
