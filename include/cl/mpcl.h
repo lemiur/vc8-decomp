@@ -42,6 +42,10 @@ public:
     int add_head_nosync(T *);
 
 private:
+    // Reconstructed helper name/signature: the tail/sentinel predicate repeats
+    // in all three observed queue operations; no out-of-line copy is public.
+    bool empty_nosync() const { return tail == &sentinel; }
+
     int synchronized;
     CRITICAL_SECTION lock;
     T sentinel;

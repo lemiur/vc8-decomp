@@ -34,7 +34,7 @@ unsigned int __cdecl env_size(const unsigned short *environment)
 template<class T>
 T *Queue<T>::try_head_nosync()
 {
-    if (tail == &sentinel)
+    if (empty_nosync())
         return 0;
 
     T *first = sentinel.next;
@@ -53,7 +53,7 @@ template<class T>
 int Queue<T>::append_nosync(Queue<T> &other)
 {
     int result = 0;
-    if (other.tail != &other.sentinel) {
+    if (!other.empty_nosync()) {
         tail->next = other.sentinel.next;
         tail = other.tail;
         tail->next = &sentinel;
@@ -72,7 +72,7 @@ int Queue<T>::append_nosync(Queue<T> &other)
 template<class T>
 int Queue<T>::add_head_nosync(T *item)
 {
-    if (tail == &sentinel)
+    if (empty_nosync())
         tail = item;
     item->next = sentinel.next;
     sentinel.next = item;
