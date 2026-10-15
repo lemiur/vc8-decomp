@@ -97,6 +97,7 @@ def scan_referents(image, va, size, symbols=(), bindings=None):
     refs = {}
     relocation_sites = set()
     decoded_word_sites = set()
+    memory_accesses = {}
     names = {}
     for symbol in symbols:
         names.setdefault(symbol.va, []).append(symbol.name)
@@ -161,6 +162,10 @@ def scan_referents(image, va, size, symbols=(), bindings=None):
                 raise ValueError('unsupported relative branch width')
             add(off + ins.imm_offset, width, 'rel%d' % (width * 8), ins.operands[0].imm & 0xffffffff)
         for operand in ins.operands:
+            if operand.type == CS_OP_MEM and ins.disp_size == 4:
+                memory_accesses[off + ins.disp_offset] = {
+                    'width': operand.size, 'dynamic': bool(operand.mem.base or operand.mem.index),
+                    'address_only': ins.mnemonic == 'lea'}
             if operand.type == CS_OP_MEM and not operand.mem.base:
                 if ins.disp_size != 4:
                     raise ValueError('unsupported absolute memory operand width')
@@ -180,6 +185,35 @@ def scan_referents(image, va, size, symbols=(), bindings=None):
     if relocation_sites - decoded_word_sites:
         raise ValueError('PE relocation is not a decoded four-byte operand')
     ordered = [refs[offset] for offset in sorted(refs)]
+    for ref in ordered:
+        access = memory_accesses.get(ref['offset'])
+        if ref['kind'] != 'abs32' or not access or access['address_only']:
+            continue
+        matches = []
+        for identity, binding in (bindings or {}).items():
+            if binding.get('kind') != 'member' or access['dynamic']:
+                continue
+            base_identity = binding.get('base_identity')
+            base = (bindings or {}).get(base_identity, {})
+            offset = binding.get('offset', -1)
+            field_size, base_size = binding.get('size', 0), base.get('size', 0)
+            if not all(isinstance(value, int) for value in (offset, field_size, base_size)):
+                continue
+            if not (0 <= offset and 0 < access['width'] <= field_size and offset + field_size <= base_size):
+                continue
+            witness = base.get('layout_witness')
+            if not witness or binding.get('layout_witness') != witness:
+                continue
+            if set(names.get(ref['target'] - offset, [])) == {base_identity}:
+                matches.append(identity)
+        if len(matches) > 1:
+            raise ValueError('ambiguous typed member identity')
+        if matches:
+            ref['identity'], ref['resolved'] = matches[0], True
+        elif (bindings or {}).get(ref['identity'], {}).get('layout_witness'):
+            # A struct's first field shares its base address. Memory access is
+            # not proof of a whole-object identity; require the named field.
+            ref['identity'], ref['resolved'] = None, False
     if any(a['offset'] + a['width'] > b['offset'] for a, b in zip(ordered, ordered[1:])):
         raise ValueError('overlapping reference operands')
     return ordered
