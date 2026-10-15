@@ -7,6 +7,8 @@ Outputs schema-v1 JSON plus function/data/module TSVs. S_PUB32 records prove
 names and starts, not signatures or function lengths. A next-public address is
 only an upper bound; aliases remain separate rows. DBI section contributions
 identify object modules, which need not be original source units after LTCG.
+Exact-start old-FPO procedure lengths are retained only without contradictory
+overlaps or interior public starts; NewFPO frame-state ranges remain nonexact.
 No symbol map is emitted when PE/PDB identity validation fails.
 """
 
@@ -183,6 +185,102 @@ def read_dbi(data):
     return dict(age=age, symbol_stream=symbol_stream, modules=modules, contributions=contributions)
 
 
+def read_frame_ranges(msf, dbi_data):
+    """Read DBI FPO debug streams; NewFPO describes frame states, not bodies."""
+    sizes = unpack("<5i", dbi_data, 24)
+    optional_size, ec_size = unpack("<ii", dbi_data, 48)
+    require(optional_size % 2 == 0, "odd DBI optional debug header size")
+    start = 64 + sum(sizes) + ec_size
+    indices = unpack("<" + "H" * (optional_size // 2), dbi_data, start)
+    result = dict(fpo=[], new_fpo=[], debug_streams={}, optional_debug_stream_indices=list(indices))
+    for kind, stride, key in ((0, 16, "fpo"), (9, 32, "new_fpo")):
+        if kind >= len(indices) or indices[kind] == 0xFFFF:
+            continue
+        stream_index = indices[kind]
+        data = msf.stream(stream_index)
+        require(len(data) % stride == 0, "misaligned " + key + " stream")
+        result["debug_streams"][key] = dict(stream_index=stream_index, size=len(data))
+        for at in range(0, len(data), stride):
+            rva, size = unpack("<II", data, at)
+            row = dict(rva=rva, size=size, stream_index=stream_index, record_offset=at)
+            if kind == 0:
+                locals_words, params_words, bits = unpack("<IHH", data, at + 8)
+                row.update(locals_words=locals_words, params_words=params_words,
+                           prolog_size=bits & 0xFF, saved_register_count=(bits >> 8) & 7,
+                           has_seh=bool(bits & 0x800), uses_bp=bool(bits & 0x1000), frame_type=bits >> 14,
+                           provenance="DBI FPO_DATA.cbProcSize")
+            else:
+                local_size, param_size, max_stack_size, frame_func, prolog_size, saved_regs_size, flags = unpack("<IIIIHHI", data, at + 8)
+                row.update(local_size=local_size, param_size=param_size, max_stack_size=max_stack_size,
+                           frame_func=frame_func, prolog_size=prolog_size, saved_regs_size=saved_regs_size,
+                           flags=flags, provenance="DBI NewFPO frame-state range (not function extent)")
+            result[key].append(row)
+    return result
+
+
+def validate_address_mapping(msf, frames, sections):
+    """Reject OMAP; verify PDB/PE section identities without assuming resources stayed unchanged."""
+    indices = frames["optional_debug_stream_indices"]
+    for kind in (3, 4):
+        require(kind >= len(indices) or indices[kind] == 0xFFFF or not msf.stream(indices[kind]),
+                "PDB OMAP address translation is unsupported")
+    if len(indices) <= 5 or indices[5] == 0xFFFF:
+        return dict(status="section-header-stream-absent", omap_present=False)
+    data = msf.stream(indices[5])
+    require(len(data) == len(sections) * 40, "PDB/PE section counts disagree")
+    pdb_sections = []
+    for index, section in enumerate(sections):
+        name, virtual_size, rva, raw_size, raw_offset = unpack("<8sIIII", data, index * 40)
+        name = name.rstrip(b"\0").decode("latin-1")
+        require(name == section["name"] and rva == section["rva"], "PDB/PE section address mappings disagree")
+        pdb_sections.append(dict(index=index + 1, name=name, rva=rva, virtual_size=virtual_size,
+                                 raw_size=raw_size, raw_offset=raw_offset))
+    return dict(status="PDB/PE-section-names-and-RVAs-agree", omap_present=False,
+                section_header_stream=indices[5], pdb_sections=pdb_sections,
+                note="Section size differences are retained; postlink resources may differ.")
+
+
+def apply_fpo_boundaries(functions, sections, frames):
+    """Admit an old-FPO extent only with no contradictory boundary evidence."""
+    by_rva = {}
+    for frame in frames["fpo"]:
+        by_rva.setdefault(frame["rva"], []).append(frame)
+    starts = sorted({row["rva"] for row in functions})
+    section_by_index = {s["index"]: s for s in sections}
+    distinct_ranges = sorted({(r["rva"], r["rva"] + r["size"]) for r in frames["fpo"] if r["size"]})
+    for row in functions:
+        records = by_rva.get(row["rva"], [])
+        row["fpo_records"] = [dict(stream_index=r["stream_index"], record_offset=r["record_offset"],
+                                   rva=r["rva"], size=r["size"]) for r in records]
+        row["size_provenance"] = None
+        if not records:
+            continue
+        sizes = {r["size"] for r in records}
+        reason = None
+        if len(sizes) != 1 or 0 in sizes:
+            reason = "conflicting-or-zero-FPO-sizes"
+        else:
+            size = next(iter(sizes))
+            start, end = row["rva"], row["rva"] + size
+            section = section_by_index[row["section_index"]]
+            if not section["characteristics"] & 0x20000000:
+                reason = "FPO-range-not-executable"
+            elif end > section["rva"] + min(section["raw_size"], section["virtual_size"]):
+                reason = "FPO-range-outside-section-file-bytes"
+            elif any(start < other < end for other in starts):
+                reason = "interior-public-function-start"
+            elif any(other_start < end and start < other_end and (start, end) != (other_start, other_end)
+                     for other_start, other_end in distinct_ranges):
+                reason = "overlapping-distinct-FPO-ranges"
+            else:
+                row.update(size=size, boundary_status="pdb-fpo-procedure-size",
+                           boundary_provenance="PDB FPO_DATA.cbProcSize at exact public start; no padding added",
+                           size_provenance="PDB FPO_DATA.cbProcSize")
+        if reason:
+            row["boundary_status"] = "public-start-only-FPO-conflict"
+            row["fpo_boundary_rejection"] = reason
+
+
 def read_publics(data):
     result = []
     cursor = 0
@@ -209,7 +307,10 @@ def extract(binary_path, pdb_path):
     version, signature, age = unpack("<III", info)
     require(version == 20000404 and len(info) >= 28, "unsupported PDB info version")
     info_guid = guid_string(info[12:28])
-    dbi = read_dbi(msf.stream(3))
+    dbi_data = msf.stream(3)
+    dbi = read_dbi(dbi_data)
+    frames = read_frame_ranges(msf, dbi_data)
+    address_mapping = validate_address_mapping(msf, frames, pe["sections"])
     rsds = pe["rsds"]
     require(info_guid == rsds["guid"], "PDB GUID disagrees with binary RSDS")
     require(dbi["age"] == rsds["age"], "PDB DBI age disagrees with binary RSDS")
@@ -244,6 +345,7 @@ def extract(binary_path, pdb_path):
         (functions if public["flags"] & 2 else data).append(row)
     for group in (functions, data, unresolved):
         group.sort(key=lambda r: (r["rva"] if r["rva"] is not None else 0xFFFFFFFF, r["name"]))
+    apply_fpo_boundaries(functions, pe["sections"], frames)
     # Upper bounds include all distinct publics, including data labels in code.
     for section in sections.values():
         same_section = [r for r in functions + data if r["section_index"] == section["index"]]
@@ -257,21 +359,25 @@ def extract(binary_path, pdb_path):
                               image_base=pe["image_base"], timestamp=pe["timestamp"], rsds=rsds,
                               pdb_info=dict(version=version, signature=signature, guid=info_guid, age=age),
                               dbi_age=dbi["age"], verified=True,
+                              address_mapping=address_mapping,
                               age_verdict="exact" if age == rsds["age"] else "stripped-public-info-age-plus-one"),
                 limitations=["Public names do not prove signatures or calling conventions.",
                              "Public starts and next_public_rva do not prove function lengths.",
                              "DBI modules are object attribution, not guaranteed source-file ownership.",
                              "Public-symbol totals are not a complete function or byte denominator."],
                 sections=pe["sections"], modules=dbi["modules"], section_contributions=dbi["contributions"],
+                frame_ranges=frames,
                 functions=functions, data=data, unresolved=unresolved,
                 summary=dict(functions=len(functions), data=len(data), unresolved=len(unresolved),
                              modules=len(dbi["modules"]), contributions=len(dbi["contributions"]),
-                             functions_with_module=sum(r["module"] is not None for r in functions)))
+                             functions_with_module=sum(r["module"] is not None for r in functions),
+                             functions_with_fpo_size=sum(r["size"] is not None for r in functions),
+                             unique_functions_with_fpo_size=len({r["rva"] for r in functions if r["size"] is not None})))
 
 
 TSV_FIELDS = ("name", "rva", "va", "section", "section_index", "section_offset", "size", "boundary_status",
               "boundary_provenance", "next_public_rva", "module", "module_index", "module_evidence", "public_flags",
-              "symbol_record_offset")
+              "symbol_record_offset", "size_provenance")
 
 
 def write_map(result, directory):
