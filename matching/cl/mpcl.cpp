@@ -122,9 +122,33 @@ int Queue<T>::add_head(T *item)
     return result;
 }
 
+// FUNCTION: cl 0x40A3C7
+// SYMBOL: ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ
+// Complete observed CFG: 84 decoded bytes through ret 0x40A41A. Empty
+// queues release the lock, Sleep(0), and reacquire it before checking again.
+template<class T>
+T *Queue<T>::head()
+{
+    EnterCriticalSection(&lock);
+    while (empty_nosync()) {
+        LeaveCriticalSection(&lock);
+        Sleep(0);
+        EnterCriticalSection(&lock);
+    }
+    T *result = sentinel.next;
+    sentinel.next = result->next;
+    result->next = 0;
+    if (tail == result)
+        tail = &sentinel;
+    --count;
+    LeaveCriticalSection(&lock);
+    return result;
+}
+
 template action_t *Queue<action_t>::try_head_nosync();
 template int Queue<action_t>::append_nosync(Queue<action_t> &);
 template int Queue<action_t>::add_head_nosync(action_t *);
 template int Queue<action_t>::size() const;
 template int Queue<action_t>::add_tail(action_t *);
 template int Queue<action_t>::add_head(action_t *);
+template action_t *Queue<action_t>::head();
