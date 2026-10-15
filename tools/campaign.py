@@ -46,7 +46,15 @@ def export_state(directory, expected_binary=None, expected_sha256=None):
                 raise ValueError("invalid Ghidra completion census")
         if completion["functions"] != completion["decompiled"] + completion["failed"]:
             raise ValueError("inconsistent Ghidra completion census")
-        result.update(complete=True, counts={key: completion[key] for key in ("functions", "decompiled", "failed")},
+        counts = {key: completion[key] for key in ("functions", "decompiled", "failed")}
+        for key in ("timed_out", "workers"):
+            if key in completion:
+                if type(completion[key]) is not int or completion[key] < 0:
+                    raise ValueError("invalid Ghidra timeout/worker census")
+                counts[key] = completion[key]
+        if counts.get("timed_out", 0) > counts["failed"]:
+            raise ValueError("Ghidra timeouts exceed failures")
+        result.update(complete=True, counts=counts,
                       completion=artifact(completion_path))
     return result
 
@@ -77,6 +85,19 @@ def ghidra_status(path, binaries, retail_hashes=None):
         state = {"binary": row["binary"], "purpose": row.get("purpose")}
         try:
             state.update(export_state(Path(row["manifest_authority"]).parent, row["binary"], (retail_hashes or {}).get(row["binary"])))
+            if state["complete"] and row.get("failure_classification"):
+                try:
+                    classification_path = Path(row["failure_classification"])
+                    classification = small_json(classification_path)
+                    if classification.get("export_manifest_sha256") != state["manifest"]["sha256"]:
+                        raise ValueError("failure classification is not bound to the current export manifest")
+                    if any(classification.get("completion", {}).get(key) != value for key, value in state["counts"].items()):
+                        raise ValueError("failure classification census disagrees with export completion")
+                    state["failure_classification"] = {"artifact": artifact(classification_path),
+                        "classes": classification.get("failure_classes", {}),
+                        "same_failure_addresses_as_original": classification.get("same_failure_addresses_as_original_serial_export")}
+                except (ValueError, OSError, KeyError, TypeError) as exc:
+                    state["classification_error"] = str(exc)
         except (ValueError, OSError, KeyError, TypeError) as exc:
             state.update(status="invalid", complete=False, error=str(exc))
         result["followups"].append(state)
@@ -243,7 +264,9 @@ def render(status, limit=8):
     ghidra = status["ghidra"]
     lines.append(f"Analyzer requested={ghidra.get('requested_version', '?')}; actual={ghidra.get('actual_version', '?')}.")
     for row in ghidra["followups"][:5]:
-        lines.append(f"- Refinement {row['binary']}: {row['status']}; complete={row.get('complete', False)}.")
+        values = row.get("counts", {})
+        details = f"{values.get('functions', '?')} / {values.get('decompiled', '?')} / {values.get('failed', '?')}; timed out={values.get('timed_out', '?')}" if row.get("complete") else "completion pending"
+        lines.append(f"- Refinement {row['binary']}: {row['status']}; {details}.")
     work = status["open_work"]
     lines.extend(["", f"Open source work: {len(work['pending'])}; annotated={work['annotated_functions']}; registered={work['registered_functions']}; rule-pending={work['rule_summary']['match_pending']}."])
     for row in work["pending"][:limit]:

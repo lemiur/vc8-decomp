@@ -31,6 +31,8 @@ The view combines these independent records:
   binary identity, and a valid body/decompiled/failed census. Nonzero decompiler
   failures can coexist with a completed export. Saved-project presence is checked.
   Follow-up manifests are reread live rather than trusting `status_at_snapshot`.
+  Completed refinements retain independent timeout/worker counts and optional
+  failure classifications bound to the current export manifest hash.
   These inferred evidence-body counts never become source-function denominators.
 - **Open source work:** a fresh in-process rule scan and the canonical candidate
   registries supply the census, independently of score-history rows. Disabled

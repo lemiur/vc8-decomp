@@ -16,7 +16,7 @@ HASH = "a" * 64
 class CampaignTests(unittest.TestCase):
     def export_fixture(self, directory, status="complete"):
         path = Path(directory)
-        (path / "manifest.json").write_text(json.dumps({"status": status, "returncode": 0,
+        (path / "manifest.json").write_text(json.dumps({"status": status, "returncode": 0, "binary": "cl",
             "binary_sha256": HASH, "ghidra_version": "12.0.1"}))
         (path / "export-complete.json").write_text(json.dumps({"binary_sha256": HASH,
             "ghidra_version": "12.0.1", "functions": 5, "decompiled": 3, "failed": 2}))
@@ -34,6 +34,22 @@ class CampaignTests(unittest.TestCase):
             result = campaign.export_state(path)
             self.assertFalse(result["complete"])
             self.assertEqual(result["status"], "running")
+
+    def test_live_completed_refinement_replaces_running_summary_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.export_fixture(directory)
+            completion = json.loads((path / "export-complete.json").read_text())
+            completion.update(timed_out=1, workers=4)
+            (path / "export-complete.json").write_text(json.dumps(completion))
+            summary = {"runs": [], "followup_exports": [{"binary": "cl", "status_at_snapshot": "running",
+                       "manifest_authority": str(path / "manifest.json")} ]}
+            summary_path = path / "summary.json"
+            summary_path.write_text(json.dumps(summary))
+            result = campaign.ghidra_status(summary_path, ["cl"], {"cl": HASH})
+            followup = result["followups"][0]
+            self.assertTrue(followup["complete"])
+            self.assertEqual(followup["status"], "complete")
+            self.assertEqual(followup["counts"]["timed_out"], 1)
 
     def test_completion_identity_mismatch_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
