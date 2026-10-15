@@ -70,6 +70,14 @@ class ToolchainTests(unittest.TestCase):
             self.assertEqual(len(files), 1)
             self.assertEqual(files[0]["sha256"], probe.sha256(path))
 
+    def test_inventory_pins_consumed_advapi_import_library(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "advapi32.lib"
+            path.write_bytes(b"import library hash contract")
+            files = probe.inventory({"bin": str(Path(temp) / "missing"), "lib": [temp]})
+            self.assertEqual(len(files), 1)
+            self.assertEqual(files[0]["sha256"], probe.sha256(path))
+
     def test_failed_compile_removes_stale_output_and_skips_link(self):
         with tempfile.TemporaryDirectory() as temp:
             for language in ("c", "cpp"):
