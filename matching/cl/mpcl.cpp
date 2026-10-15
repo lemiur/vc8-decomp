@@ -52,17 +52,18 @@ T *Queue<T>::try_head_nosync()
 template<class T>
 int Queue<T>::append_nosync(Queue<T> &other)
 {
-    if (other.tail == &other.sentinel)
-        return 0;
-
-    tail->next = other.sentinel.next;
-    tail = other.tail;
-    tail->next = &sentinel;
-    other.tail = &other.sentinel;
-    other.sentinel.next = &other.sentinel;
-    count += other.count;
-    other.count = 0;
-    return 1;
+    int result = 0;
+    if (other.tail != &other.sentinel) {
+        tail->next = other.sentinel.next;
+        tail = other.tail;
+        tail->next = &sentinel;
+        other.tail = &other.sentinel;
+        other.sentinel.next = &other.sentinel;
+        count += other.count;
+        other.count = 0;
+        result = 1;
+    }
+    return result;
 }
 
 // FUNCTION: cl 0x40A475
@@ -74,9 +75,8 @@ int Queue<T>::add_head_nosync(T *item)
     if (tail == &sentinel)
         tail = item;
     item->next = sentinel.next;
-    ++count;
     sentinel.next = item;
-    return count;
+    return ++count;
 }
 
 template action_t *Queue<action_t>::try_head_nosync();
