@@ -140,7 +140,7 @@ def scan_referents(image, va, code):
                 fixup_fields.add(ins.address - va + ins.imm_offset)
             if operand.type == X86_OP_MEM and ins.disp_size == 4:
                 fixup_fields.add(ins.address - va + ins.disp_offset)
-            if operand.type == X86_OP_MEM and not operand.mem.base and not operand.mem.index:
+            if operand.type == X86_OP_MEM and not operand.mem.base:
                 require(ins.disp_size == 4, "unsupported absolute memory operand")
                 offset = ins.address - va + ins.disp_offset
                 sites[offset] = {"offset": offset, "width": 4, "kind": "abs32",

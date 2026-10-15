@@ -401,6 +401,11 @@ class GateTests(unittest.TestCase):
         with self.assertRaisesRegex(gate.GateError, "read-only"):
             gate.verify_literal_storage(image, 0x1000, b"abc\0")
 
+    def test_fixed_base_indexed_operand_retains_static_referent(self):
+        image = Image(0x1000, b"\x8b\x04\x85\x20\x10\x00\x00\xc3" + bytes(28))
+        refs = gate.scan_referents(image, 0x1000, image.data[:8])
+        self.assertEqual(refs, [{"offset": 3, "width": 4, "kind": "abs32", "target": 0x1020}])
+
 
 if __name__ == "__main__":
     unittest.main()
