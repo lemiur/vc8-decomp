@@ -4,6 +4,8 @@ Every invocation checks all five pinned retail images before admitting any sourc
 Candidate requests and evidence live in config/gate-allow.json. A fresh build is
 requested from match.py with --output-dir, --manifest and --build-id. Manifests
 are observations, never authority for bytes, referents, boundaries or code rules.
+Execution trusts the local compiler and repository build runner. Configured and
+observed runtime files are hashed; Windows SxS binding is not retraced per build.
 """
 from __future__ import annotations
 
@@ -172,6 +174,70 @@ def scan_referents(image, va, code):
     return ordered
 
 
+def import_identity(image, target):
+    """Resolve an actual IAT slot, preserving DLL identity and exact export name."""
+    records = [item for item in image.import_records() if integer(item["va"]) == target]
+    require(len(records) == 1, "referent does not identify one PE import slot")
+    return records[0]["dll"].lower() + "!" + records[0]["name"]
+
+
+def literal_bytes(binding, claim):
+    """Derive a bounded literal object from an exact token in the hashed unit."""
+    token, encoding = binding.get("source_literal", ""), binding.get("encoding")
+    require(encoding in ("ascii", "utf-16le"), "unsupported literal encoding")
+    require(isinstance(token, str) and bool(re.fullmatch(r'L?"(?:\\.|[^"\\])*"', token)), "unsupported source literal expression")
+    require(token.startswith('L"') == (encoding == "utf-16le"), "literal prefix and encoding disagree")
+    path = Path(claim["source_path"])
+    require(digest(path.read_bytes()) == claim.get("source_sha256"), "literal source hash differs from build input")
+    source = path.read_text(encoding="utf-8-sig")
+    tokens = re.findall(r'//[^\n]*|/\*.*?\*/|L?"(?:\\.|[^"\\])*"', source, re.S)
+    require(token in [part for part in tokens if not part.startswith("//") and not part.startswith("/*")],
+            "literal token absent from hashed source expressions")
+    body = token[2:-1] if token.startswith('L"') else token[1:-1]
+    escapes = {"a": 7, "b": 8, "f": 12, "n": 10, "r": 13, "t": 9, "v": 11,
+               "\\": 92, "'": 39, '"': 34, "?": 63}
+    chars, position = [], 0
+    while position < len(body):
+        char = body[position]
+        position += 1
+        if char != "\\":
+            require(ord(char) < 128, "non-ASCII source literal requires execution-character-set evidence")
+            chars.append(ord(char))
+            continue
+        require(position < len(body), "incomplete source escape")
+        char = body[position]
+        position += 1
+        if char in escapes:
+            chars.append(escapes[char])
+        elif char in "01234567":
+            digits = char
+            while position < len(body) and len(digits) < 3 and body[position] in "01234567":
+                digits += body[position]
+                position += 1
+            chars.append(int(digits, 8))
+        elif char == "x":
+            start = position
+            while position < len(body) and body[position] in "0123456789abcdefABCDEF":
+                position += 1
+            require(position > start, "empty hex escape")
+            chars.append(int(body[start:position], 16))
+        else:
+            raise GateError("unsupported source literal escape")
+    require(all(value <= (127 if encoding == "ascii" else 0xffff) for value in chars), "literal code unit outside supported encoding")
+    chars.append(0)
+    data = bytes(chars) if encoding == "ascii" else b"".join(struct.pack("<H", value) for value in chars)
+    require(0 < len(data) <= 65536 and integer(binding.get("size", 0)) == len(data), "literal extent differs from source object")
+    require(digest(data) == binding.get("bytes_sha256"), "literal hash differs from source expression")
+    return data
+
+
+def verify_literal_storage(image, target, data):
+    require(any(integer(section["va"]) <= target and target + len(data) <= integer(section["va"]) + integer(section["rawsize"]) and
+                integer(section["chars"]) & 0x40000000 and not integer(section["chars"]) & 0x80000000
+                for section in image.sections), "literal storage is not a single read-only file-backed span")
+    require(image.read(target, len(data)) == data, "referenced literal bytes differ from source expression")
+
+
 def compare_candidate(retail, candidate_image, claim, request, identities, emitted_identities=None):
     """Return emitted source bytes with only independently resolved fixups."""
     va, built_va, size = map(integer, (request["retail_va"], claim["candidate_va"], request["size"]))
@@ -206,11 +272,25 @@ def compare_candidate(retail, candidate_image, claim, request, identities, emitt
             require(identity == "self+0x%x" % delta, "wrong internal referent identity")
             target = va + delta
         else:
-            require(emitted_identities is not None and emitted_identities.get(built["target"]) == {identity},
-                    "emitted external target does not independently identify advertised referent")
             binding = identities.get(identity, {})
             require(binding.get("evidence") and "va" in binding, "unproven external referent identity")
             target = integer(binding["va"])
+            kind = binding.get("kind", "symbol")
+            if kind == "import":
+                canonical = str(binding.get("dll", "")).lower() + "!" + str(binding.get("name", ""))
+                require(identity == canonical and built["kind"] == "abs32", "import identity or operand kind differs")
+                require(import_identity(candidate_image, built["target"]) == canonical and
+                        import_identity(retail, target) == canonical, "PE import DLL/name differs between source and retail")
+            elif kind == "literal":
+                data = literal_bytes(binding, claim)
+                require(identity == "literal:sha256:" + digest(data) and built["kind"] == "abs32", "literal identity or operand kind differs")
+                verify_literal_storage(candidate_image, built["target"], data)
+                verify_literal_storage(retail, target, data)
+            elif kind == "symbol":
+                require(emitted_identities is not None and emitted_identities.get(built["target"]) == {identity},
+                        "emitted external target does not independently identify advertised referent")
+            else:
+                raise GateError("unsupported external referent evidence kind")
         require(target == reference["target"], "ordered referent target differs from retail")
         offset, width = built["offset"], built["width"]
         value = target if built["kind"] == "abs32" else target - (va + offset + width)
@@ -351,6 +431,8 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
     out.mkdir(parents=True, exist_ok=False)
     record = {"schema_version": 1, "gate_kind": "retail-splice", "run_id": run_id,
               "observed_at": datetime.now(timezone.utc).isoformat(),
+              "build_provenance": {"trust_boundary": "trusted local compiler and repository build runner",
+                  "runtime_scope": "configured and previously observed runtime files are hashed; Windows SxS policy may change; dynamic binding is not retraced per build"},
               "status": "RED", "authority": None, "binaries": {}, "errors": []}
     selected = BINARIES if binary == "all" else (binary,)
     try:

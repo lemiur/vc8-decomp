@@ -7,6 +7,7 @@ import struct
 import tempfile
 import types
 import unittest
+from unittest.mock import patch
 
 MODULE = Path(__file__).resolve().parents[1] / "tools" / "gate.py"
 spec = importlib.util.spec_from_file_location("gate", MODULE)
@@ -29,6 +30,9 @@ class Image:
 
     def base_relocations(self):
         return self.relocations
+
+    def import_records(self):
+        return getattr(self, "import_entries", [])
 
     def sha256(self):
         return gate.digest(self.data)
@@ -261,6 +265,141 @@ class GateTests(unittest.TestCase):
             (config / "cl-candidates.json").write_text(json.dumps(descriptor))
             with self.assertRaisesRegex(gate.GateError, "must be a boolean"):
                 gate.load_registry(root)
+
+    def test_complete_source_admission_has_fresh_persisted_byte_witnesses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("config", "matching/cl", "tools", "toolbin"):
+                (root / name).mkdir(parents=True)
+            source = root / "matching/cl/unit.cpp"
+            source.write_text("// FUNCTION: cl 0x1000\nvoid fixture(void) {}\n")
+            source_hash = gate.digest(source.read_bytes())
+            function_hash = gate.digest(b"void fixture(void) {}")
+            boundary = {"status": "verified", "evidence": "synthetic one-instruction fixture"}
+            request = {"binary": "cl", "symbol": "_fixture", "retail_va": "0x1000", "size": 1,
+                       "unit": "matching/cl/unit.cpp", "source_span": {"start": 2, "end": 2}, "boundary": boundary}
+            (root / "config/gate-allow.json").write_text(json.dumps({"schema_version": 1, "candidates": [request]}))
+            for name in ("match.py", "rulecheck.py"):
+                (root / "tools" / name).write_text("# synthetic trusted-runner fixture\n")
+            compiler, linker = root / "toolbin/cl.exe", root / "toolbin/link.exe"
+            for tool in (compiler, linker):
+                tool.write_bytes(b"synthetic tool fixture")
+            def item(path, kind=None):
+                record = {"path": str(path), "sha256": gate.digest(path.read_bytes())}
+                if kind:
+                    record["kind"] = kind
+                return record
+            tools = [item(compiler), item(linker)]
+            (root / "config/toolchains.json").write_text(json.dumps({"toolchains": {"fixture": {"files": tools}}}))
+            def runner(argv, **kwargs):
+                if Path(argv[1]).name == "match.py":
+                    output = Path(argv[argv.index("--output-dir") + 1])
+                    token = argv[argv.index("--build-id") + 1]
+                    obj, image, mapfile = output / "source.obj", output / "candidate.dll", output / "candidate.map"
+                    obj.write_bytes(b"synthetic compiler object")
+                    image.write_bytes(b"\xc3")
+                    mapfile.write_text(" 0001:00000000 _fixture 00001000 f source.obj\n")
+                    manifest = {"schema_version": 1, "binary": "cl", "build_id": token, "status": "built",
+                        "source_inputs": [item(source)], "toolchain": tools,
+                        "commands": [{"argv": [str(compiler), "/GL", "/Fo" + str(obj), str(source)], "cwd": str(root), "returncode": 0, "produced": [str(obj)]},
+                                     {"argv": [str(linker), "/LTCG", "/OUT:" + str(image), "/MAP:" + str(mapfile), str(obj)], "cwd": str(root), "returncode": 0, "produced": [str(image), str(mapfile)]}],
+                        "artifacts": [item(obj, "ltcg-object"), item(image, "linked-image"), item(mapfile, "linker-map")],
+                        "candidates": [{"symbol": "_fixture", "retail_va": "0x1000", "candidate_va": "0x1000", "size": 1,
+                            "boundary": boundary, "source_path": str(source), "source_sha256": source_hash,
+                            "function_source_sha256": function_hash, "source_span": request["source_span"],
+                            "image_path": str(image), "image_sha256": gate.digest(image.read_bytes()),
+                            "bytes_sha256": gate.digest(b"\xc3"), "referents": []}]}
+                    Path(argv[argv.index("--manifest") + 1]).write_text(json.dumps(manifest))
+                else:
+                    report = {"schema_version": 1, "functions": [{"binary": "cl", "va": "0x1000",
+                        "source_path": str(source), "source_sha256": source_hash,
+                        "status": "RULE-ADMITTED", "admitted": True}]}
+                    Path(argv[-1]).write_text(json.dumps(report))
+                return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+            class Retail(Image):
+                def __init__(self, cfg):
+                    super().__init__(0x1000, b"\xc3")
+            module = types.SimpleNamespace(Retail=Retail, PEImage=lambda path: Image(0x1000, Path(path).read_bytes()),
+                                           load_binary_config=lambda *args, **kwargs: {})
+            with patch.object(gate.subprocess, "run", side_effect=runner):
+                result = gate.execute_gate("cl", root, module)
+            self.assertEqual(result["errors"], [])
+            self.assertEqual(result["status"], "GREEN")
+            record = result["binaries"]["cl"]
+            self.assertEqual((record["functions"], record["source_bytes"]), (1, 1))
+            self.assertEqual(record["input_sha256"], record["output_sha256"])
+            admission = record["admitted"][0]
+            self.assertEqual(admission["retail_file_offset"], 0)
+            self.assertEqual(admission["function_source_sha256"], function_hash)
+            self.assertEqual(gate.digest(Path(admission["manifest_path"]).read_bytes()), admission["manifest_sha256"])
+            self.assertIn("cl functions=1 source_bytes=1/1", result["authority"])
+
+    def referenced_data_fixture(self, data, opcode=b"\x68"):
+        images = []
+        for base in (0x1000, 0x4000):
+            code = opcode + struct.pack("<I", base + 32) + b"\xc3"
+            image = Image(base, code + bytes(32 - len(code)) + data)
+            image.sections = [{"va": base, "rawsize": len(code), "chars": 0x60000020},
+                              {"va": base + 32, "rawsize": len(data), "chars": 0x40000040}]
+            images.append(image)
+        retail, emitted = images
+        size = len(opcode) + 5
+        request = {"retail_va": 0x1000, "size": size,
+                   "boundary": {"status": "verified", "evidence": "synthetic decoded function"}}
+        claim = {"retail_va": 0x1000, "candidate_va": 0x4000, "size": size,
+                 "boundary": request["boundary"], "bytes_sha256": gate.digest(emitted.read(0x4000, size)),
+                 "referents": [{"offset": len(opcode), "width": 4, "kind": "abs32", "target": 0x4020,
+                                "identity": "", "resolved": True}]}
+        return retail, emitted, request, claim
+
+    def test_import_binding_requires_actual_dll_and_name_on_both_images(self):
+        retail, emitted, request, claim = self.referenced_data_fixture(bytes(4), b"\xff\x15")
+        identity = "msvcr80.dll!free"
+        claim["referents"][0]["identity"] = identity
+        retail.import_entries = [{"va": 0x1020, "dll": "MSVCR80.dll", "name": "free"}]
+        emitted.import_entries = [{"va": 0x4020, "dll": "msvcr80.dll", "name": "free"}]
+        binding = {identity: {"kind": "import", "dll": "MSVCR80.dll", "name": "free", "va": 0x1020, "evidence": "fixture imports"}}
+        code, count = gate.compare_candidate(retail, emitted, claim, request, binding, {})
+        self.assertEqual((code, count), (retail.read(0x1000, 7), 1))
+        for image, key, wrong in ((emitted, "dll", "other.dll"), (retail, "name", "malloc")):
+            old = image.import_entries[0][key]
+            image.import_entries[0][key] = wrong
+            with self.assertRaisesRegex(gate.GateError, "PE import DLL/name"):
+                gate.compare_candidate(retail, emitted, claim, request, binding, {})
+            image.import_entries[0][key] = old
+
+    def test_literal_binding_derives_full_extent_from_hashed_source_token(self):
+        data = "CONOUT$\0".encode("utf-16le")
+        retail, emitted, request, claim = self.referenced_data_fixture(data)
+        identity = "literal:sha256:" + gate.digest(data)
+        claim["referents"][0]["identity"] = identity
+        binding = {identity: {"kind": "literal", "encoding": "utf-16le", "size": 16,
+                              "bytes_sha256": gate.digest(data), "source_literal": 'L"CONOUT$"',
+                              "va": 0x1020, "evidence": "fixture complete string object"}}
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "unit.cpp"
+            source.write_text('const wchar_t *fixture(void) { return L"CONOUT$"; }\n')
+            claim.update(source_path=str(source), source_sha256=gate.digest(source.read_bytes()))
+            code, count = gate.compare_candidate(retail, emitted, claim, request, binding, {})
+            self.assertEqual((code, count), (retail.read(0x1000, 6), 1))
+            emitted.data = emitted.data[:-2] + b"X\0"
+            with self.assertRaisesRegex(gate.GateError, "literal bytes differ"):
+                gate.compare_candidate(retail, emitted, claim, request, binding, {})
+            emitted.data = emitted.data[:-2] + b"\0\0"
+            binding[identity]["size"] = 14
+            with self.assertRaisesRegex(gate.GateError, "extent differs"):
+                gate.compare_candidate(retail, emitted, claim, request, binding, {})
+            binding[identity]["size"] = 16
+            source.write_text('/* L"CONOUT$" */\nconst wchar_t *fixture(void) { return 0; }\n')
+            claim["source_sha256"] = gate.digest(source.read_bytes())
+            with self.assertRaisesRegex(gate.GateError, "absent from hashed source"):
+                gate.compare_candidate(retail, emitted, claim, request, binding, {})
+
+    def test_writable_storage_cannot_be_admitted_as_literal(self):
+        image = Image(0x1000, b"abc\0")
+        image.sections = [{"va": 0x1000, "rawsize": 4, "chars": 0xc0000040}]
+        with self.assertRaisesRegex(gate.GateError, "read-only"):
+            gate.verify_literal_storage(image, 0x1000, b"abc\0")
 
 
 if __name__ == "__main__":
