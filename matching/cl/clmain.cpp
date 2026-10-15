@@ -32,3 +32,7 @@ void __cdecl error_report_none(flag_s*)
 {
     ErrorReportingSetMode(ErrorReportingMode_None);
 }
+
+// DATA: cl 0x00417034
+// Public ?RedirStderr@@3HA; four file-backed bytes initialize the int to one.
+int RedirStderr = 1;

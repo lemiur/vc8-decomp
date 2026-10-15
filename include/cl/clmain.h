@@ -6,6 +6,10 @@
 // unresolved. Keep this the canonical declaration until field evidence exists.
 struct flag_s;
 
+// Public ?RedirStderr@@3HA proves int storage; the retail image initializes it
+// to one. DBI contribution attribution establishes clmain.obj ownership.
+extern int RedirStderr;
+
 void __cdecl error_report_prompt(flag_s*);
 void __cdecl error_report_queue(flag_s*);
 void __cdecl error_report_send(flag_s*);
