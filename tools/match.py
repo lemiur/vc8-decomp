@@ -90,8 +90,21 @@ def discover_symbol(annotation, symbols):
 
 
 def registry_entries(root, binary):
-    registry = read_json(root / 'config' / 'gate-allow.json', {})
-    return [entry for entry in registry.get('candidates', []) if entry.get('binary') == binary]
+    entries = []
+    seen = set()
+    for path in (root / 'config' / 'gate-allow.json', root / 'config' / (binary + '-candidates.json')):
+        registry = read_json(path, {})
+        if path.is_file() and registry.get('schema_version') != 1:
+            raise ValueError('unsupported candidate registry schema: ' + str(path))
+        for entry in registry.get('candidates', []):
+            if entry.get('binary') != binary:
+                continue
+            key = (entry['symbol'], integer(entry['retail_va']))
+            if key in seen or any(old['symbol'] == key[0] or integer(old['retail_va']) == key[1] for old in entries):
+                raise ValueError('duplicate candidate symbol or retail address across registries')
+            seen.add(key)
+            entries.append(entry)
+    return entries
 
 
 def load_settings(root, binary):
@@ -122,7 +135,7 @@ def compile_unit(source, output, toolroot, flags, env, commands, plain=False):
     return includes
 
 
-def build(root, binary, output_dir=None, manifest_path=None, build_id=None, units=None):
+def build(root, binary, output_dir=None, manifest_path=None, build_id=None, units=None, toolchain_name=None):
     project, settings = load_settings(root, binary)
     build_id = build_id or str(uuid.uuid4())
     out = Path(output_dir).resolve() if output_dir else root / 'build' / binary / build_id
@@ -134,9 +147,11 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
     env = ltcg.tool_environment(toolroot)
     toolchain_config = root / 'config' / 'toolchains.json'
     toolchain = None
+    if toolchain_name and not toolchain_config.is_file():
+        raise ValueError('explicit toolchain selection requires config/toolchains.json')
     if toolchain_config.is_file():
         from probe_toolchain import load_toolchain, toolchain_environment
-        toolchain = load_toolchain(settings.get('toolchain', 'sp1'), toolchain_config)
+        toolchain = load_toolchain(toolchain_name or settings.get('toolchain', 'sp1'), toolchain_config)
         toolroot = Path(toolchain['bin']).parent
         env = toolchain_environment(toolchain)
     configured_flags = settings.get('flags', {})
@@ -144,6 +159,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
     link_flags = settings.get('link_flags', configured_flags.get('link', []))
     tools = [toolroot / 'bin' / name for name in ('cl.exe', 'c1.dll', 'c1xx.dll', 'c2.dll', 'link.exe')]
     manifest = {'schema_version': 1, 'binary': binary, 'build_id': build_id,
+                'toolchain_name': toolchain_name or settings.get('toolchain', 'sp1'),
                 'status': 'building', 'source_inputs': [], 'toolchain': [], 'commands': [],
                 'artifacts': [], 'candidates': [], 'limitations': [
                     'Standalone LTCG context does not prove retail custom calling conventions.',
@@ -178,7 +194,8 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
             for tool in tools:
                 manifest['toolchain'].append({'path': str(tool.resolve()), 'sha256': ltcg.sha256(tool)})
         add_input(root / 'config' / 'project.json')
-        for config in (root / 'config' / (binary + '.json'), root / 'config' / 'gate-allow.json'):
+        for config in (root / 'config' / (binary + '.json'), root / 'config' / 'gate-allow.json',
+                       root / 'config' / (binary + '-candidates.json')):
             if config.exists():
                 add_input(config)
         selected = [source_path(root, unit) for unit in units] if units else sorted(
@@ -207,6 +224,10 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
             for index, unit in enumerate([source] + sorted(dependencies - {source})):
                 add_input(unit)
                 unit_flags = list(flags)
+                unit_options = settings.get('units', {}).get(unit.relative_to(root).as_posix(), {})
+                removed = {flag.lower() for flag in unit_options.get('remove_compile_flags', [])}
+                unit_flags = [flag for flag in unit_flags if flag.lower() not in removed]
+                unit_flags.extend(unit_options.get('compile_flags', []))
                 if unit.suffix.lower() != '.c' and not any(flag.lower().startswith('/eh') for flag in unit_flags):
                     unit_flags.append('/EHsc')
                 plain = group / ('discovery-%03d.obj' % index)
@@ -286,23 +307,79 @@ def compare_candidates(manifest, root, binary):
     project, settings = load_settings(root, binary)
     retail_path = settings.get('path') or str(Path(project['toolchain_root']) / 'bin' / settings['filename'])
     retail = PEImage(retail_path)
+    bindings = {}
+    for path in (root / 'config/gate-allow.json', root / 'config' / (binary + '-candidates.json')):
+        registry = read_json(path, {})
+        for name, record in registry.get('referents', {}).get(binary, {}).items():
+            if name in bindings and bindings[name] != record:
+                raise ValueError('conflicting referent identity binding: ' + name)
+            bindings[name] = record
     results = []
     for candidate in manifest['candidates']:
         size = candidate['size']
-        ours = PEImage(candidate['image_path']).read_va(candidate['candidate_va'], size) if size else b''
+        image = PEImage(candidate['image_path'])
+        ours = image.read_va(candidate['candidate_va'], size) if size else b''
         theirs = retail.read_va(candidate['retail_va'], size) if size else b''
-        equal = sum(a == b for a, b in zip(ours, theirs))
+        normalized = ours
+        referents_status = 'unresolved'
+        comparison_error = None
+        if size:
+            try:
+                source_refs = ltcg.scan_referents(image, candidate['candidate_va'], size,
+                    ltcg.read_map(Path(candidate['image_path']).with_suffix('.map')))
+                retail_refs = ltcg.scan_referents(retail, candidate['retail_va'], size)
+                normalized = relocate_for_comparison(candidate, ours, source_refs, retail_refs, bindings)
+                referents_status = 'resolved'
+            except (ValueError, ImportError) as error:
+                comparison_error = str(error)
+                referents_status = 'mismatch' if 'differs' in str(error) else 'unresolved'
+        equal = sum(a == b for a, b in zip(normalized, theirs))
+        exact = bool(size) and normalized == theirs and referents_status == 'resolved'
         results.append({'symbol': candidate['symbol'], 'retail_va': candidate['retail_va'],
                         'observed_at': datetime.now(timezone.utc).isoformat(),
                         'source_path': candidate['source_path'], 'source_sha256': candidate['source_sha256'],
                         'function_source_sha256': candidate['function_source_sha256'],
                         'build_id': manifest['build_id'], 'size': size,
                         'score': 100.0 * equal / size if size else None,
+                        'score_kind': 'resolved-referents' if referents_status == 'resolved' else 'raw-bytes',
                         'raw_bytes_equal': bool(size) and ours == theirs,
+                        'bytes_exact': exact,
                         'boundary_status': candidate['boundary'].get('status', 'unverified'),
-                        'referents_status': candidate['referents_status'], 'rule_status': 'pending',
-                        'status': 'MATCH-PENDING' if size and ours == theirs else 'DIFF' if size else 'UNRESOLVED'})
+                        'referents_status': referents_status, 'comparison_error': comparison_error, 'rule_status': 'pending',
+                        'status': 'MATCH-PENDING' if exact else 'DIFF' if size else 'UNRESOLVED'})
     return results
+
+
+def relocate_for_comparison(candidate, code, source_refs, retail_refs, bindings):
+    """Diagnostic relocation only after ordered encodings and identities agree.
+
+    These bytes are never spliced by this tool. The gate repeats every check
+    independently and additionally verifies rules and complete image identity.
+    """
+    shape = lambda refs: [(ref['offset'], ref['width'], ref['kind']) for ref in refs]
+    if shape(source_refs) != shape(retail_refs):
+        raise ValueError('ordered referent encoding differs from retail')
+    adjusted = bytearray(code)
+    for source, retail in zip(source_refs, retail_refs):
+        identity = source.get('identity')
+        if identity and identity.startswith('self+0x'):
+            offset = int(identity[7:], 16)
+            if not 0 <= offset < len(code) or source['target'] != candidate['candidate_va'] + offset:
+                raise ValueError('internal reference identity differs from candidate')
+            target = candidate['retail_va'] + offset
+        else:
+            record = bindings.get(identity)
+            if not record or not record.get('evidence'):
+                raise ValueError('unresolved retail identity: ' + str(identity))
+            target = integer(record['va'])
+        if target != retail['target']:
+            raise ValueError('ordered referent target differs from retail: ' + str(identity))
+        offset, width = source['offset'], source['width']
+        value = target if source['kind'] == 'abs32' else target - (candidate['retail_va'] + offset + width)
+        if source['kind'] != 'abs32' and not -(1 << (width * 8 - 1)) <= value < 1 << (width * 8 - 1):
+            raise ValueError('relative target cannot be encoded at retail address')
+        adjusted[offset:offset + width] = (value & ((1 << (width * 8)) - 1)).to_bytes(width, 'little')
+    return bytes(adjusted)
 
 
 def main(argv=None):
@@ -314,6 +391,7 @@ def main(argv=None):
     parser.add_argument('--output-dir')
     parser.add_argument('--manifest')
     parser.add_argument('--build-id')
+    parser.add_argument('--toolchain', help='isolated toolchains.json selection, e.g. sp1 or rtm')
     parser.add_argument('--root', type=Path, default=ROOT)
     args = parser.parse_args(argv)
     try:
@@ -327,7 +405,7 @@ def main(argv=None):
             units = [entry['unit'] for entry in registry_entries(root, args.binary) if entry['symbol'] == args.function]
             if not units:
                 parser.error('function has no configured unit in gate-allow.json')
-        manifest, path = build(root, args.binary, args.output_dir, args.manifest, args.build_id, units)
+        manifest, path = build(root, args.binary, args.output_dir, args.manifest, args.build_id, units, args.toolchain)
         print('Built %d candidate(s); manifest: %s' % (len(manifest['candidates']), path))
         if args.command != 'build':
             results = compare_candidates(manifest, root, args.binary)
@@ -342,7 +420,7 @@ def main(argv=None):
                     candidate = next(item for item in manifest['candidates'] if item['symbol'] == result['symbol'])
                     print_diff(root, args.binary, candidate)
         return 0
-    except (OSError, ValueError, RuntimeError, ImportError) as error:
+    except (OSError, ValueError, RuntimeError, ImportError, KeyError) as error:
         print('ERROR: ' + str(error), file=sys.stderr)
         return 1
 

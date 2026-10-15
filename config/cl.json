@@ -4,6 +4,25 @@
   "language": "c++",
   "dialect": "VC8 C++",
   "status": "provisional",
+  "units": {
+    "matching/cl/util.cpp": {
+      "compile_flags": ["/O1"],
+      "evidence": "Actual SP1 /GL + /LTCG nextbase compile emits all 26 retail bytes with /O1; /O2 differs. This leaf does not establish flags for the rest of util.obj."
+    },
+    "matching/cl/mpcl.cpp": {
+      "compile_flags": ["/O1"],
+      "evidence": "Actual SP1 /GL + /LTCG env_size compile emits all 45 retail bytes with /O1; /O2 differs at offset 13. The empty thread_print body is also exact but does not distinguish optimization flags."
+    },
+    "matching/cl/util_watson.cpp": {
+      "compile_flags": ["/O2"],
+      "evidence": "Actual /GL + /LTCG getter/setter probes emit retail code with either /O1 or /O2 after resolving their sole absolute data operands. /O2 is an experimental equivalent choice, not a pinned retail flag."
+    },
+    "matching/cl/merr.c": {
+      "remove_compile_flags": ["/EHsc"],
+      "compile_flags": ["/O1", "/D_CRTBLD", "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"],
+      "evidence": "Installed-era CRT return-zero source uses actual cruntime.h/math.h under _CRTBLD, matching authentic CRT build context. Actual /GL + /LTCG probe emits all three retail bytes. /O1 is an experimental control, not proof of original CRT flags; C++ EH options are excluded from this C unit."
+    }
+  },
   "flags": {
     "compile": [
       "/nologo",
