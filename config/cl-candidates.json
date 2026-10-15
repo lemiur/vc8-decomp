@@ -199,7 +199,8 @@
       },
       "dependencies": [
         "matching/cl/clmain.cpp",
-        "matching/cl/util_watson.cpp"
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
       ],
       "roots": [
         "?RedirStderr@@3HA"
@@ -224,7 +225,8 @@
       },
       "dependencies": [
         "matching/cl/clmain.cpp",
-        "matching/cl/util_watson.cpp"
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
       ],
       "roots": [
         "?RedirStderr@@3HA"
@@ -249,7 +251,8 @@
       },
       "dependencies": [
         "matching/cl/clmain.cpp",
-        "matching/cl/util_watson.cpp"
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
       ],
       "roots": [
         "?RedirStderr@@3HA"
@@ -868,7 +871,8 @@
       "dependencies": [
         "matching/cl/dos.cpp",
         "matching/cl/clmain.cpp",
-        "matching/cl/util_watson.cpp"
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
       ],
       "roots": [
         "?RedirStderr@@3HA",
@@ -916,7 +920,8 @@
       "dependencies": [
         "matching/cl/dos.cpp",
         "matching/cl/clmain.cpp",
-        "matching/cl/util_watson.cpp"
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
       ],
       "roots": [
         "?RedirStderr@@3HA",
@@ -925,6 +930,32 @@
       ],
       "compiler_context": {
         "evidence": "Actual CRT sys/timeb.h supplies the single canonical __timeb64 object type. Real object /INCLUDE root preserves externally observable address context alongside the already proven dos/Watson roots; no fake data or body."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??0CConsoleLock@@QAE@XZ",
+      "retail_va": "0x4014d5",
+      "size": 44,
+      "unit": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 84,
+        "end": 96
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode covers complete 44-byte constructor 0x4014d5..0x401500; all internal branches return locally. cmderr constructs at EBP-1, proving one-byte class extent; conditional ReleaseMutex cleanup corroborates the real bool and inline destructor."
+      },
+      "dependencies": [
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
+      ],
+      "roots": [
+        "?g_hMutex@@3PAXA",
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"
+      ],
+      "compiler_context": {
+        "evidence": "Canonical HANDLE g_hMutex has actual PDB public identity and unique mpcl.obj owner, with loader-zero storage. Its real data root preserves observed external mutability across the partial standalone source context. Real mpcl/Watson bodies are dependencies, setter root preserves previously proven standard ABI; no dummy code or exported controls."
       }
     }
   ],
@@ -1318,6 +1349,14 @@
         "dll": "MSVCR80.dll",
         "name": "_ftime64_s",
         "evidence": "Actual PE IAT slot binds MSVCR80.dll!_ftime64_s; source uses installed era CRT sys/timeb.h declaration, gate independently verifies candidate and retail import identity."
+      },
+      "?g_hMutex@@3PAXA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "HANDLE",
+        "size": 4,
+        "va": "0x41aaf0",
+        "evidence": "Actual public PDB ?g_hMutex@@3PAXA uniquely attributed to mpcl.obj; retail loader-zero tail contains the complete four-byte HANDLE slot. Canonical extern/definition in mpcl header/unit, actual constructor reads it and passes it to WaitForSingleObject. Source and retail MAP/public identities independently bound; data is not counted."
       }
     }
   }
