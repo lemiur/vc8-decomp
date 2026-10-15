@@ -15,6 +15,14 @@ struct _exception {
     double retval;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int __cdecl _matherr(struct _exception *pexcept);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
