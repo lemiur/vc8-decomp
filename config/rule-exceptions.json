@@ -3,19 +3,19 @@
   "reviews": [
     {
       "binary": "cl",
-      "va": "0x40c661",
-      "source_path": "matching/cl/merr.c",
-      "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
-      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "va": "0x4015a8",
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R1 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?error_report_prompt@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -23,9 +23,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R2 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?error_report_prompt@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -33,9 +33,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R4 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?error_report_prompt@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -43,9 +43,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R13 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?error_report_prompt@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -53,9 +53,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R17 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?error_report_prompt@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -63,9 +63,499 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R18 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?error_report_prompt@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015b1",
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?error_report_queue@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?error_report_queue@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?error_report_queue@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?error_report_queue@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?error_report_queue@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?error_report_queue@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015ba",
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?error_report_send@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?error_report_send@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?error_report_send@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?error_report_send@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?error_report_send@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?error_report_send@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015c3",
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?error_report_none@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?error_report_none@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?error_report_none@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?error_report_none@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?error_report_none@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?error_report_none@@YAXPAUflag_s@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x408f04",
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x4092d4",
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?screen_length@@YAHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?screen_length@@YAHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?screen_length@@YAHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?screen_length@@YAHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?screen_length@@YAHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?screen_length@@YAHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x4092be",
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?redirect@@YAXXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?redirect@@YAXXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?redirect@@YAXXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?redirect@@YAXXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?redirect@@YAXXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?redirect@@YAXXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40c661",
+      "source_path": "matching/cl/merr.c",
+      "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for __matherr; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for __matherr; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for __matherr; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for __matherr; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for __matherr; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for __matherr; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         }
@@ -75,17 +565,17 @@
       "binary": "cl",
       "va": "0x40a25f",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "564fb8aefd36123fccba27cab51caf8b6a7002427660786e635ba091c1f84ff3",
-      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R1 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?thread_print@@YAXPBGZZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -93,9 +583,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R2 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?thread_print@@YAXPBGZZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -103,9 +593,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R4 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?thread_print@@YAXPBGZZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -113,9 +603,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R13 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?thread_print@@YAXPBGZZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -123,9 +613,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R17 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?thread_print@@YAXPBGZZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -133,9 +623,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R18 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?thread_print@@YAXPBGZZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         }
@@ -145,17 +635,17 @@
       "binary": "cl",
       "va": "0x40a2dc",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "564fb8aefd36123fccba27cab51caf8b6a7002427660786e635ba091c1f84ff3",
-      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R1 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?env_size@@YAIPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -163,9 +653,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R2 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?env_size@@YAIPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -173,9 +663,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R4 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?env_size@@YAIPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -183,9 +673,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R13 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?env_size@@YAIPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -193,9 +683,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R17 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?env_size@@YAIPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -203,9 +693,429 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R18 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?env_size@@YAIPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a3a1",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a475",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a458",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40aa29",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40aa5e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a3c7",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         }
@@ -215,17 +1125,17 @@
       "binary": "cl",
       "va": "0x408276",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "5fab75d207a73fec3a914382dca1a16f23fb6342d3f94d97becdc46e0aaf3f08",
-      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "source_sha256": "97bd0df830cf4c4420683b5ca8bbec45bb11e3906735b5fd1eab9cfb2b523362",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R1 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?nextbase@@YAHH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -233,9 +1143,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R2 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?nextbase@@YAHH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -243,9 +1153,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R4 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?nextbase@@YAHH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -253,9 +1163,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R13 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?nextbase@@YAHH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -263,9 +1173,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R17 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?nextbase@@YAHH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -273,9 +1183,149 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R18 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?nextbase@@YAHH@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x4082dc",
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "97bd0df830cf4c4420683b5ca8bbec45bb11e3906735b5fd1eab9cfb2b523362",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?xfree@@YAXPAX@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?xfree@@YAXPAX@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?xfree@@YAXPAX@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?xfree@@YAXPAX@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?xfree@@YAXPAX@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?xfree@@YAXPAX@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x407f99",
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "97bd0df830cf4c4420683b5ca8bbec45bb11e3906735b5fd1eab9cfb2b523362",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?gobblewhite@@YAPAGPAG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?gobblewhite@@YAPAGPAG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?gobblewhite@@YAPAGPAG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?gobblewhite@@YAPAGPAG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?gobblewhite@@YAPAGPAG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?gobblewhite@@YAPAGPAG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         }
@@ -285,17 +1335,17 @@
       "binary": "cl",
       "va": "0x409934",
       "source_path": "matching/cl/util_watson.cpp",
-      "source_sha256": "12a3cca393db543c179d742b3afdf2214aa66571147b9e841a04f202027ec866",
-      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R1 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -303,9 +1353,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R2 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -313,9 +1363,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R4 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -323,9 +1373,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R13 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -333,9 +1383,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R17 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -343,9 +1393,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R18 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         }
@@ -355,17 +1405,17 @@
       "binary": "cl",
       "va": "0x40993a",
       "source_path": "matching/cl/util_watson.cpp",
-      "source_sha256": "12a3cca393db543c179d742b3afdf2214aa66571147b9e841a04f202027ec866",
-      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R1 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -373,9 +1423,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R2 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -383,9 +1433,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R4 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -393,9 +1443,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R13 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -403,9 +1453,9 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R17 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         },
@@ -413,9 +1463,289 @@
           "verdict": "pass",
           "evidence": [
             {
-              "path": "config/reviews/cl-first-pilot.json",
-              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
-              "description": "R18 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x409946",
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?ErrorReportingSetDlls@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?ErrorReportingSetDlls@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?ErrorReportingSetDlls@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?ErrorReportingSetDlls@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?ErrorReportingSetDlls@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?ErrorReportingSetDlls@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x409952",
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?ErrorReportingSetFormalAppName@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?ErrorReportingSetFormalAppName@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?ErrorReportingSetFormalAppName@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?ErrorReportingSetFormalAppName@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?ErrorReportingSetFormalAppName@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?ErrorReportingSetFormalAppName@@YA_NPBG@Z; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40995e",
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?ErrorReportingCheckOptIn@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?ErrorReportingCheckOptIn@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?ErrorReportingCheckOptIn@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?ErrorReportingCheckOptIn@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?ErrorReportingCheckOptIn@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?ErrorReportingCheckOptIn@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x409acb",
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R1 review for ?ErrorReportingDisabled@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R2 review for ?ErrorReportingDisabled@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R4 review for ?ErrorReportingDisabled@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R13 review for ?ErrorReportingDisabled@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R17 review for ?ErrorReportingDisabled@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-second-batch.json",
+              "sha256": "483e64a25c7aa2f1106c6e597c4fc1952e01d485670f0dacb224e42350d76eee",
+              "description": "R18 review for ?ErrorReportingDisabled@@YA_NXZ; current full source/header scope, explicit per-function semantics/ABI, canonical ownership/layout and actual era declaration evidence."
             }
           ]
         }
