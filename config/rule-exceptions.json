@@ -1,5 +1,426 @@
 {
   "schema_version": 1,
-  "reviews": [],
+  "reviews": [
+    {
+      "binary": "cl",
+      "va": "0x40c661",
+      "source_path": "matching/cl/merr.c",
+      "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
+      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R1 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R2 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R4 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R13 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R17 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R18 semantic review for matching/cl/merr.c 0x40c661; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a25f",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "564fb8aefd36123fccba27cab51caf8b6a7002427660786e635ba091c1f84ff3",
+      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R1 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R2 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R4 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R13 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R17 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R18 semantic review for matching/cl/mpcl.cpp 0x40a25f; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a2dc",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "564fb8aefd36123fccba27cab51caf8b6a7002427660786e635ba091c1f84ff3",
+      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R1 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R2 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R4 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R13 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R17 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R18 semantic review for matching/cl/mpcl.cpp 0x40a2dc; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x408276",
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "5fab75d207a73fec3a914382dca1a16f23fb6342d3f94d97becdc46e0aaf3f08",
+      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R1 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R2 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R4 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R13 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R17 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R18 semantic review for matching/cl/util.cpp 0x408276; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x409934",
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "12a3cca393db543c179d742b3afdf2214aa66571147b9e841a04f202027ec866",
+      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R1 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R2 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R4 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R13 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R17 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R18 semantic review for matching/cl/util_watson.cpp 0x409934; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40993a",
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "12a3cca393db543c179d742b3afdf2214aa66571147b9e841a04f202027ec866",
+      "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R1 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R2 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R4 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R13 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R17 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-first-pilot.json",
+              "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+              "description": "R18 semantic review for matching/cl/util_watson.cpp 0x40993a; shared rule analysis, per-function ABI/CFG and supported storage/lineage observations."
+            }
+          ]
+        }
+      }
+    }
+  ],
   "exceptions": []
 }

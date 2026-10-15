@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "reviewer": "independent audit lane /root/audit",
+  "review_date": "2026-10-15",
+  "scope_sha256": "85368790400ddcd06fedf807e31f020efe56285903f06a575c89987cb05486dd",
+  "retail": {
+    "binary": "cl",
+    "sha256": "71c93ca5bddc9b2816d0e053cac2b952f926f6b9321fab6b1ab6e8603621324c",
+    "image_base": "0x400000",
+    "version": "14.0.50727.762",
+    "pdb_guid": "720089F2F35A4A128093E654DACA5226",
+    "pdb_age": 1
+  },
+  "method": "Read every source and quoted header in the frozen six-function scope. Independently ran bounded direct retail disassembly for all six functions. Read installed CRT type/prototype/body and native calling-convention definitions and independently hashed lineage files. No decompiler output was used as source. This is source-rule admission evidence, not compiled-byte or gate admission.",
+  "shared_checks": {
+    "R1": "All project declarations are canonical guarded headers. util.h/mpcl.h contain canonical function declarations; util_watson.h contains the sole ErrorReportingMode enum and global declaration. merr.h now includes actual installed-era cruntime.h and math.h instead of hand-copying _exception or its prototype. The real header supplies its type, declaration, packing and native linkage. No duplicate layout views, local typedefs, keyword mismatches, guessed member layout or source padding occurs.",
+    "R2": "nextbase, thread_print, env_size and _matherr have no global references. Watson has one canonical extern enum declaration in util_watson.h and one DATA-annotated definition in its owning util_watson.cpp. DBI contribution module5 util_watson.obj contains the storage at0x41a020. Independently decoded getter/setter directly load/store exactly4B enum there. Independent API proof establishes preceding0x41a014..0x41a01f as an actual12B SECURITY_ATTRIBUTES passed to CreateFileMappingA, so this datum begins after that object. No contradictory whole-object use or known interior alias is evidenced. These positive facts support the standalone enum datum model. Original data spelling and broader original source organization remain unresolved explicitly; no proof against every hypothetical enclosing aggregate is asserted.",
+    "R4": "Scalar nextbase uses integer comparisons. thread_print is the authentic empty return. env_size traverses unsigned-short elements and subtracts typed pointers. _matherr receives its real era-header structure pointer without dereferencing it. Watson getter/setter use the canonical enum datum directly, supported by actual4B enum accesses and the preceding SECURITY_ATTRIBUTES boundary. No offset-cast model, known interior-address stand-in, raw member access or type-punning layout appears.",
+    "R13": "None of the six reviewed functions uses a class, virtual call, vtable, RTTI model or artificial virtual slot. The CRT and Win32 canonical header declarations do not introduce a fabricated project class. No vtable reconstruction is required.",
+    "R17": "Every body implements direct observed behavior. nextbase implements the three observed outcomes. Empty thread_print is the one-byte retail return. env_size cursor is a real traversal value used for loads and length. _matherr unused parameter comes from the actual era prototype. Watson getter returns its enum datum and setter writes the real enum argument and returns true inAL. No dummy locals, volatile carriers, forced padding, compiler-steering blocks, fake statements, arbitrary dispatch slots or probe residue remain.",
+    "R18": "All six bodies are C89 or VC8 C++ source. No inline assembly, emitted byte body, binary include, generated retail-byte initializer or pasted decompiler implementation occurs. CRT body/prototype lineage was independently read and hashed. Other bodies follow direct retail semantics. No rule exceptions are requested."
+  },
+  "preprocessing_and_lines": "Read all four guarded project headers. merr.h includes the actual installed cruntime.h and math.h; the authentic CRT build defines _CRTBLD and includes installed crt/src. math.h supplies packing and extern-C selection, and crtdefs.h native __CRTDECL resolves to __cdecl with no pure-managed build selected. No body uses asserts, __LINE__, __FILE__, conditional compilation or line padding. Other project guards are ordinary inclusion guards. Original compiler-unit filenames, parameter spellings and line positions are unresolved, as comments state. Header/build context is authentic lineage rather than a claim to exact original source revision.",
+  "functions": [
+    {
+      "va": "0x408276",
+      "symbol": "?nextbase@@YAHH@Z",
+      "source_path": "matching/cl/util.cpp",
+      "header_path": "include/cl/util.h",
+      "review_status": "all-six-match-rules-pass",
+      "identity_and_abi": "Public decorated identity encodes int __cdecl(int). Independent body reads dword [esp+4], returns EAX, and both exits are plain ret; caller 0x408e80 cleanup evidence is recorded by the pilot lane. PDB DBI module8 util.obj is actual object attribution; .cpp filename is reconstruction naming, not recovered source identity.",
+      "boundary_and_semantics": "Independently decoded exactly 26 bytes at 0x408276..0x40828f: conditional branch at 0x40827b targets 0x408281; returns at 0x408280 and 0x40828f cover both paths. Argument1 returns2; argument2 returns3; all other integers return1. No external referents or embedded data appear. These facts establish a complete local CFG without a public-symbol-gap boundary assumption."
+    },
+    {
+      "va": "0x40a25f",
+      "symbol": "?thread_print@@YAXPBGZZ",
+      "source_path": "matching/cl/mpcl.cpp",
+      "header_path": "include/cl/mpcl.h",
+      "review_status": "all-six-match-rules-pass",
+      "identity_and_abi": "Public decorated identity encodes void __cdecl(const unsigned short*, ...); PBG differs from native wchar_t spelling. Recorded caller observations use differing variadic argument counts with caller cleanup. Independent body is plain ret, agreeing with caller-owned stack cleanup. PDB DBI module4 mpcl.obj attribution is documented without claiming original .cpp filename or parameter names.",
+      "boundary_and_semantics": "Independently decoded the sole byte at entry 0x40a25f as ret. The body performs no loads, stores, calculations, external transfers or format processing. An empty source body is therefore the authentic observed behavior; inventing logging work would be unsupported."
+    },
+    {
+      "va": "0x40a2dc",
+      "symbol": "?env_size@@YAIPBG@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "header_path": "include/cl/mpcl.h",
+      "review_status": "all-six-match-rules-pass",
+      "identity_and_abi": "Public decorated identity encodes unsigned int __cdecl(const unsigned short*). Independent body reads its pointer from [esp+4], loads words, advances in two-byte steps and returns a character count in EAX via plain ret. Caller evidence supplied by the mpcl lane passes the GetEnvironmentStringsW block and allocates twice the returned count plus2; naming alone is not the ABI proof.",
+      "boundary_and_semantics": "Independently decoded 20 contiguous instructions over exactly45 bytes at 0x40a2dc..0x40a308. All conditional transfers stay inside the function. It skips each zero-terminated UTF16 entry, includes each entry terminator, stops at the final zero, subtracts the initial pointer and arithmetic-shifts by1 before ret. Empty input returns0. The nested loops and real cursor implement these observations without a missing body or artificial local."
+    },
+    {
+      "va": "0x40c661",
+      "symbol": "__matherr",
+      "source_path": "matching/cl/merr.c",
+      "header_path": "include/cl/merr.h",
+      "review_status": "all-six-match-rules-pass",
+      "identity_and_abi": "C public spelling alone is insufficient. Independently inspected installed crt/src/merr.c36..39, actual include/math.h39..46 and147..149 and native __CRTDECL selection in crtdefs.h. The reconstruction now includes real cruntime.h+math.h under _CRTBLD and uses __CRTDECL, rather than copying struct/prototype declarations. This establishes int __cdecl _matherr(struct _exception*), actual field types/order and C linkage; DBI ownership is merr.obj. Only this body is recovered.",
+      "boundary_and_semantics": "Independently decoded exactly3 bytes at 0x40c661..0x40c663 as zeroing EAX then plain ret, with no external referents. Installed-era source has the same return-zero body. This recovers _matherr only; no unrelated CRT definition is fabricated. Exact retail source revision remains unproved, and is not needed to claim the observed body and ABI."
+    },
+    {
+      "va": "0x409934",
+      "symbol": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ",
+      "source_path": "matching/cl/util_watson.cpp",
+      "review_status": "all-six-match-rules-pass",
+      "confirmed": "Independently decoded6 bytes: dword load from0x41a020 and ret. Mangling and EAX result support enum return. Unique DBI util_watson.obj contribution spans0x41a014..0x41a030; 0x41a020 is loader-zero storage. The preceding12 bytes are independently identified as SECURITY_ATTRIBUTES, so mode is outside that inner API object.",
+      "unresolved": "Original public data spelling, original parameter/local spellings and source organization remain unknown; invented names are explicit. There is no contradictory whole-object use. Positive API-object boundary and direct enum-width accesses support the canonical enum datum model; no assertion about all hypothetical outer aggregates is made."
+    },
+    {
+      "va": "0x40993a",
+      "symbol": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
+      "source_path": "matching/cl/util_watson.cpp",
+      "review_status": "all-six-match-rules-pass",
+      "confirmed": "Independently decoded12 bytes: stack enum argument, dword store to0x41a020, true inAL, then ret. This agrees with bool __cdecl(enum) and the getter's storage cell.",
+      "unresolved": "Shares the supported enum datum model and explicit original-name/layout uncertainty described by the getter. Parameter mode is a natural invented spelling, not recovered PDB parameter evidence. No rule exception is needed."
+    }
+  ],
+  "installed_lineage": [
+    {
+      "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src/merr.c",
+      "sha256": "250b49faa3afa8bb94b9dcf92d967fe2feb93bb1aae09f38eeaab9b043b80f9d",
+      "purpose": "Independently read _matherr native prototype and return-zero body."
+    },
+    {
+      "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/include/math.h",
+      "sha256": "3cdf840fdb5db5a4c98fb849b6247f0f74dbd3071620ab218634d2c9ab58b791",
+      "purpose": "Independently read canonical _exception fields and _matherr declaration."
+    },
+    {
+      "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src/crtassem.h",
+      "sha256": "65329b6bf669e1966086fef1fb09e8f2dfd9b6c447ceb2d48e4f5baf333e6e91",
+      "purpose": "Installed-era8.0.50727.762 lineage identity; exact retail source revision is not certified."
+    },
+    {
+      "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src/cruntime.h",
+      "sha256": "d1245829d64198109953651ca787743bdca7c0b1ad43397f5615966b08c0ff1c",
+      "purpose": "Actual CRT context requires _CRTBLD; included directly, not locally redefined."
+    },
+    {
+      "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/include/crtdefs.h",
+      "sha256": "0f51953203447b463edb22fd75519a38d50d008a84c306c419f5c483393eb6cd",
+      "purpose": "Native __CRTDECL and canonical packing selection independently inspected."
+    }
+  ],
+  "source_scope": [
+    {
+      "path": "matching/cl/merr.c",
+      "sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44"
+    },
+    {
+      "path": "matching/cl/mpcl.cpp",
+      "sha256": "564fb8aefd36123fccba27cab51caf8b6a7002427660786e635ba091c1f84ff3"
+    },
+    {
+      "path": "matching/cl/util.cpp",
+      "sha256": "5fab75d207a73fec3a914382dca1a16f23fb6342d3f94d97becdc46e0aaf3f08"
+    },
+    {
+      "path": "matching/cl/util_watson.cpp",
+      "sha256": "12a3cca393db543c179d742b3afdf2214aa66571147b9e841a04f202027ec866"
+    },
+    {
+      "path": "include/cl/merr.h",
+      "sha256": "4dccb09d73fd0f57e0ff33ca7512df03e2b99dc94433d91f1874d04ac74bf644"
+    },
+    {
+      "path": "include/cl/mpcl.h",
+      "sha256": "7230bb578d35267ed8d084befcbea5a70a0369a7fa3fe0f4b56a1bf5004b7d16"
+    },
+    {
+      "path": "include/cl/util.h",
+      "sha256": "005447b45e5363b01a0571154b22cd8a21ad712ac1eccb7de0ae5679b51f08d9"
+    },
+    {
+      "path": "include/cl/util_watson.h",
+      "sha256": "2759a0184711263927b8dbaf2c23cd0b095876ffc4acf6707635d99d2252fe96"
+    }
+  ],
+  "watson_positive_storage_evidence": {
+    "sdk_header": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/PlatformSDK/Include/WinBase.h",
+    "sdk_sha256": "8570a7e2a03356b951238bd8377c8109f0ee7d6aeaf67583f0926e5f704820ed",
+    "type_lines": "240..244",
+    "api_lines": "5424..5431",
+    "independent_retail_observations": [
+      "409aab clears DWORD at41a018;409ab2 writes12 at41a014;409abc writes1 at41a01c.",
+      "409a64 pushes41a014;409a69 pushes-1;409a6b calls IAT40d0c0 independently resolved as kernel32.dll!CreateFileMappingA.",
+      "SDK API second argument is LPSECURITY_ATTRIBUTES; native x86 structure is12B. Enum cell41a020 starts immediately after it.",
+      "Getter409934 reads DWORD41a020; setter40993e writes DWORD41a020 and returns bool true; enum type is established by decorated functions and argument/return instructions."
+    ]
+  }
+}
