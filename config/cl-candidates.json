@@ -898,6 +898,34 @@
       "compiler_context": {
         "evidence": "Parked complete quote-copy reconstruction; wide-character promotion and scheduling differ. No admission or exactness claim."
       }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?starttiming@@YAXXZ",
+      "retail_va": "0x4082b9",
+      "size": 13,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 165,
+        "end": 168
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode covers complete 13-byte body 0x4082b9..0x4082c5. Pushes the canonical timeb64 object to actual CRT _ftime64_s and returns; source owner actual four-unit /GL + /LTCG comparison is exact after both referents independently resolve."
+      },
+      "dependencies": [
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?RedirStderr@@3HA",
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
+        "?g_startTime@@3U__timeb64@@A"
+      ],
+      "compiler_context": {
+        "evidence": "Actual CRT sys/timeb.h supplies the single canonical __timeb64 object type. Real object /INCLUDE root preserves externally observable address context alongside the already proven dos/Watson roots; no fake data or body."
+      }
     }
   ],
   "referents": {
@@ -1271,6 +1299,25 @@
         "dll": "MSVCR80.dll",
         "name": "_isatty",
         "evidence": "Actual retail PE import slot resolves MSVCR80.dll!_isatty; gate independently verifies candidate PE import DLL/name and source uses canonical era io.h."
+      },
+      "?g_startTime@@3U__timeb64@@A": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "__timeb64",
+        "size": 16,
+        "va": "0x419fe8",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/timeb64-sp1-v1/layout-witness.json",
+          "sha256": "0ded27c705a9e4efe54b59e3687dc53198be14073c08daeec7962c80dba0b2b0"
+        },
+        "evidence": "Invented private object name, original name/grouping unresolved. Real _ftime64_s pointer API and independently decoded later time/millitm accesses prove one canonical CRT __timeb64 object. Compiler-produced era header witness proves size16/alignment8; data bytes are not counted."
+      },
+      "msvcr80.dll!_ftime64_s": {
+        "kind": "import",
+        "va": "0x40d21c",
+        "dll": "MSVCR80.dll",
+        "name": "_ftime64_s",
+        "evidence": "Actual PE IAT slot binds MSVCR80.dll!_ftime64_s; source uses installed era CRT sys/timeb.h declaration, gate independently verifies candidate and retail import identity."
       }
     }
   }
