@@ -15,13 +15,18 @@ unsigned int __cdecl env_size(const unsigned short *);
 
 struct worklist_s;
 struct source_s;
+class ProcessChannel;
 
 // Public action_t identity is recovered. Field identifiers below are
 // reconstructed, not PDB spellings. Both action_t constructors corroborate
 // fields 0x00..0x10; Queue methods corroborate the intrusive link at 0x14.
 struct action_t {
     action_t(int, worklist_s *, int);
+    action_t(ProcessChannel *);
     ~action_t();
+    int is_last_pass();
+    int is_active_pass();
+    void send(ProcessChannel *);
 
     int kind;
     worklist_s *worklist;
@@ -37,9 +42,18 @@ struct action_t {
 template<class T>
 class Queue {
 public:
+    // Remaining declarations are public PDB identities, with corresponding
+    // bodies and callers observed in mpcl.obj. Their bodies remain unrecovered.
+    Queue(int);
+    ~Queue();
     T *try_head_nosync();
+    T *head();
     int append_nosync(Queue<T> &);
+    int size() const;
     int add_head_nosync(T *);
+    void clean();
+    int add_tail(T *);
+    int add_head(T *);
 
 private:
     // Reconstructed helper name/signature: the tail/sentinel predicate repeats
