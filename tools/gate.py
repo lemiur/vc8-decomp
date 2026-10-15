@@ -277,15 +277,25 @@ def verify_linked_symbol(claim, manifest, artifacts, root):
     matches, identities = [], {}
     pattern = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+f\s+(.+?)\s*$")
     any_symbol = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})(?:\s+.*)?$")
-    compiled_objects = {Path(path).name.lower() for path in links[0].get("argv", [])
-                        if artifacts.get(str(resolve(path, root)), {}).get("kind") == "ltcg-object"}
+    compiled_objects = [str(resolve(path, root)) for path in links[0].get("argv", [])
+                        if artifacts.get(str(resolve(path, root)), {}).get("kind") == "ltcg-object"]
     for line in Path(maps[0]).read_text(encoding="utf-8", errors="replace").splitlines():
         symbol = any_symbol.match(line)
         if symbol:
             identities.setdefault(int(symbol[2], 16), set()).add(symbol[1])
         match = pattern.match(line)
         if match and match[1] == claim["symbol"]:
-            require(match[3].strip().lower() in compiled_objects, "candidate symbol is not attributed to compiled source object")
+            owners = [path for path in compiled_objects if Path(path).name.lower() == match[3].strip().lower()]
+            require(len(owners) == 1, "candidate symbol has no unique compiled source object owner")
+            compilers = [command for command in manifest["commands"] if owners[0] in
+                         {str(resolve(path, root)) for path in command.get("produced", [])} and
+                         Path(command["argv"][0]).name.lower() in ("cl", "cl.exe")]
+            require(len(compilers) == 1, "candidate object has ambiguous compiler attribution")
+            command = compilers[0]
+            source_args = {str(resolve(arg, resolve(command.get("cwd", ""), root))) for arg in command["argv"][1:]
+                           if not arg.startswith("/")}
+            require(str(resolve(claim["source_path"], root)) in source_args,
+                    "candidate object was compiled from a different source unit")
             matches.append(int(match[2], 16))
     require(matches == [integer(claim["candidate_va"])], "linked symbol identity/address does not match candidate")
     return identities
@@ -298,7 +308,7 @@ def check_rules(root, output_dir):
     report = output_dir / "rules.json"
     run = subprocess.run([sys.executable, str(checker), "matching", "--json", str(report)], cwd=root, capture_output=True, text=True)
     log.write_text(run.stdout + run.stderr, encoding="utf-8")
-    require(run.returncode == 0, "code rules failed; see " + str(log))
+    require(run.returncode in (0, 1), "code rule checker failed; see " + str(log))
     require(report.is_file(), "rule checker emitted no structured admissions")
     result = read_json(report)
     require(result.get("schema_version") == 1 and isinstance(result.get("functions"), list), "invalid rule admission report")
@@ -332,7 +342,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
             record["binaries"][name] = {"input_sha256": retail.sha256(), "fallback_sha256": digest(copied),
                 "output_sha256": None, "image_bytes": len(copied), "functions": 0, "source_bytes": 0,
                 "function_denominator": None, "function_denominator_caveat": "public symbols do not establish all function boundaries",
-                "source_byte_denominator": len(copied), "admitted": [], "status": "fallback-verified"}
+                "source_byte_denominator": len(copied), "admitted": [], "pending": [], "status": "fallback-verified"}
         for name in selected:
             requests = [r for r in registry.get("candidates", []) if r.get("binary") == name]
             require(len({r["symbol"] for r in requests}) == len(requests), "duplicate candidate admission requests")
@@ -354,12 +364,17 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 require(not requests, "candidate rebuild harness unavailable")
                 manifest = {"schema_version": 1, "binary": name, "build_id": run_id, "candidates": []}
             sources, artifacts = validate_manifest(manifest, name, run_id, build_dir, root)
-            claims = manifest["candidates"]
-            require({c["symbol"] for c in claims} == {r["symbol"] for r in requests} and len(claims) == len(requests),
-                    "candidate inventory differs from admission registry")
+            all_claims = manifest["candidates"]
+            require(len({c["symbol"] for c in all_claims}) == len(all_claims) and
+                    len({integer(c["retail_va"]) for c in all_claims}) == len(all_claims), "duplicate manifest candidate identity")
+            requested_symbols = {r["symbol"] for r in requests}
+            require(requested_symbols <= {c["symbol"] for c in all_claims}, "candidate inventory omits admission request")
+            claims = [c for c in all_claims if c["symbol"] in requested_symbols]
             rules = check_rules(root, build_dir) if claims else {"functions": []}
             image, spans = bytearray(retail_images[name].data), []
             result = record["binaries"][name]
+            result["pending"] = [{"symbol": c["symbol"], "retail_va": c["retail_va"],
+                                  "reason": "no gate admission request"} for c in all_claims if c["symbol"] not in requested_symbols]
             for claim in claims:
                 request = next(r for r in requests if r["symbol"] == claim["symbol"])
                 source = resolve(claim["source_path"], root)

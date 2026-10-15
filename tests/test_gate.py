@@ -178,7 +178,7 @@ class GateTests(unittest.TestCase):
                                  {"argv": [str(linker), "/LTCG", "/OUT:" + str(image), "/MAP:" + str(mapfile), str(obj)],
                                   "cwd": str(root), "returncode": 0, "produced": [str(image), str(mapfile)]}],
                     "artifacts": [item(obj, "ltcg-object"), item(image, "linked-image"), item(mapfile, "linker-map")],
-                    "candidates": [{"symbol": "_fixture", "candidate_va": "0x10001000", "image_path": str(image)}]}
+                    "candidates": [{"symbol": "_fixture", "candidate_va": "0x10001000", "image_path": str(image), "source_path": str(source)}]}
         return output, manifest
 
     def test_pinned_manifest_and_independent_map_identity(self):
@@ -228,6 +228,15 @@ class GateTests(unittest.TestCase):
         with self.assertRaisesRegex(gate.GateError, "independently identify"):
             gate.compare_candidate(self.retail, wrong, claim, self.request, self.identities,
                                    {0x5000: {"datum"}, 0x7000: {"different_callee"}})
+
+    def test_dependency_object_cannot_be_claimed_as_another_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output, manifest = self.manifest_fixture(root)
+            _, artifacts = gate.validate_manifest(manifest, "cl", "fresh", output, root)
+            manifest["candidates"][0]["source_path"] = str(root / "other.cpp")
+            with self.assertRaisesRegex(gate.GateError, "different source unit"):
+                gate.verify_linked_symbol(manifest["candidates"][0], manifest, artifacts, root)
 
 
 if __name__ == "__main__":
