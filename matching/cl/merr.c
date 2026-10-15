@@ -10,7 +10,7 @@
  */
 // FUNCTION: cl 0x40c661
 // SYMBOL: __matherr
-int __cdecl _matherr(struct _exception *pexcept)
+int __CRTDECL _matherr(struct _exception *pexcept)
 {
     return 0;
 }
