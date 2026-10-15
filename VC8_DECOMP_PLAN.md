@@ -107,8 +107,15 @@ Other facts:
 
 ### Phase 1: pilot on cl.exe (~320 functions)
 
-- It is small, has a single LTCG C++ object, and uses all the infrastructure. It proves the LTCG harness, the
+- It is small and uses all the infrastructure. It proves the LTCG harness, the
   gate and the bootstrap-compiler question end to end.
+- The Rich header's single LTCG C++ product does not establish a single original translation unit. The
+  public PDB retains seven nonempty compiler input modules with uniquely attributed public starts:
+  `mpcl.obj` (62), `util_watson.obj` (8), `loadui.obj` (3), `dos.obj` (7), `util.obj` (36),
+  `compile.obj` (13), and `clmain.obj` (71). `config.obj` has no public functions. Object attribution
+  supports provisional disjoint lanes; original source filenames and extensions remain unresolved.
+- The 267 cl public function entries have 265 unique starts because of aliases; public starts alone do not
+  establish function sizes or the complete function denominator.
 - Exit criterion: 100% matched under the rules.
 - Then attempt a **full relink** of cl.exe from source that reproduces the retail hash. This proves the final
   milestone (ordering, `.rdata` and import layout) is achievable before scaling.
