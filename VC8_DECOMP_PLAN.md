@@ -151,6 +151,13 @@ Other facts:
 
 ## 4. Operating rules for agents
 
+Current session ruling (supersedes conflicting model/context/slot instructions below): reasoning workers use
+Sol 6.1; keep agent contexts below 400k tokens and maintain twelve concurrent workers once matching begins.
+Luna 6.1 was requested for mechanical readers but is not exposed by the available agent tool; model fallback
+is pending user preference. The initial twelve lanes perform reasoning work using bounded evidence reads.
+The project adapter now lives in `AGENTS.md`; twelve isolated worktree slots replace the original three-slot
+proposal. Installed Ghidra 12.0.1 may be used with its version recorded because 12.1.3 was not located.
+
 - **Large files** (Ghidra exports, disassembly dumps, PDB dumps, the ledger, `decompiled\` output) are read
   only by **Haiku 5.5 subagents at max effort** (`model: haiku`, `effort: max`).
   - Each agent's context stays **below 100k tokens**: slice inputs into chunks of ≤ ~50k tokens (≈ 200 KB of
@@ -188,3 +195,5 @@ Other facts:
 2. Do you have VS2005 RTM (50727.42) for the bootstrap-compiler A/B?
 3. A naming and layout style ruling, once Phase 0 shows whether public symbols exist.
 4. Where the new repository should live (for example `E:\vc8-decomp`).
+
+   Resolved by the current workspace: `E:\vc8-decomp`.
