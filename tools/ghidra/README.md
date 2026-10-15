@@ -35,6 +35,9 @@ Each run writes a unique isolated project and outputs under the primary checkout
 ignored `build/ghidra/BINARY/RUN_ID/`. A manifest pins binary, PDB and symbol-map
 hashes, command, analyzer version, exit code, and completion status. A run is
 complete only with script completion outputs and the requested PDB status.
+An analysis timeout is recorded separately and changes the manifest status to
+`complete_with_analysis_timeout`; successful exports can still contain incomplete
+analysis evidence in that case.
 Failed runs remain for diagnosis; no stale output is reused.
 
 - `create-functions.tsv`: public starts, creation status, conflicts with a

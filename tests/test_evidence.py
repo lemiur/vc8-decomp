@@ -82,6 +82,14 @@ class EvidenceTests(unittest.TestCase):
             (home / "Ghidra/application.properties").write_text("application.version=12.0.1\n")
             self.assertEqual(evidence.ghidra_version(home), "12.0.1")
 
+    def test_export_completion_does_not_hide_analysis_timeout(self):
+        with tempfile.TemporaryDirectory() as folder:
+            log = Path(folder) / "headless.log"
+            log.write_text("INFO analysis complete\n")
+            self.assertFalse(evidence.analysis_timed_out(log))
+            log.write_text("ERROR REPORT: Analysis timed out at 600 secs\n")
+            self.assertTrue(evidence.analysis_timed_out(log))
+
 
 if __name__ == "__main__":
     unittest.main()

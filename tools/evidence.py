@@ -188,6 +188,11 @@ def ghidra_version(home):
     raise ValueError("Ghidra version unavailable")
 
 
+def analysis_timed_out(log_path):
+    with Path(log_path).open(encoding="utf-8", errors="replace") as log:
+        return any("REPORT: Analysis timed out at " in line for line in log)
+
+
 def import_ghidra(args):
     project, entry, primary, image = project_paths(args.binary, args.config)
     home = Path(args.ghidra_home or os.environ.get("GHIDRA_HOME", ""))
@@ -203,7 +208,8 @@ def import_ghidra(args):
                 "ghidra_home": str(home), "ghidra_version": version,
                 "requested_version": "12.1.3", "version_deviation": version != "12.1.3",
                 "symbol_map": str(symbol_file), "symbol_map_sha256": symbols["_input_sha256"],
-                "pdb_application": "not_requested", "status": "running", "export_limit": args.limit}
+                "pdb_application": "not_requested", "status": "running", "export_limit": args.limit,
+                "analysis_timeout_seconds": args.analysis_timeout}
     pdb = Path(args.pdb) if args.pdb else None
     if pdb:
         expected = symbols.get("identity", {}).get("pdb_sha256")
@@ -244,7 +250,9 @@ def import_ghidra(args):
     success = (result.returncode == 0 and (out / "export-complete.json").is_file()
                and (out / "create-functions.tsv").is_file()
                and pdb_status == ("applied_local_validated_pdb" if pdb else "not_requested"))
-    manifest.update(status="complete" if success else "failed", returncode=result.returncode)
+    timed_out = analysis_timed_out(out / "headless.log")
+    manifest.update(status=("complete_with_analysis_timeout" if timed_out else "complete") if success else "failed",
+                    returncode=result.returncode, analysis_timed_out=timed_out)
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     print("GHIDRA %s: %s" % (manifest["status"].upper(), manifest_path))
     return 0 if success else 1
