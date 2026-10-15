@@ -417,6 +417,14 @@ class GateTests(unittest.TestCase):
             identities = gate.verify_linked_symbol(manifest["candidates"][0], manifest, artifacts, root)
             self.assertEqual(identities[0x10001000], {"_fixture"})
 
+    def test_immediate_to_virtual_global_is_not_silently_omitted(self):
+        image = Image(0x1000, b"\x68\x30\x10\x00\x00\xc3")
+        image.sections.append({"va": 0x1020, "rawsize": 0, "vsize": 0x20, "chars": 0xc0000080})
+        refs = gate.scan_referents(image, 0x1000, image.data)
+        self.assertEqual(refs, [{"offset": 1, "width": 4, "kind": "abs32", "target": 0x1030}])
+        with self.assertRaisesRegex(gate.GateError, "read-only"):
+            gate.verify_literal_storage(image, 0x1030, b"x\0")
+
 
 if __name__ == "__main__":
     unittest.main()

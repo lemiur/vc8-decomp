@@ -146,12 +146,16 @@ def scan_referents(image, va, code):
                 sites[offset] = {"offset": offset, "width": 4, "kind": "abs32",
                                  "target": operand.mem.disp & 0xffffffff}
             elif operand.type == X86_OP_IMM and not branch and ins.imm_size == 4:
-                # EXEs may have no relocation table. Treat an immediate that
-                # names file-backed image storage conservatively as a referent.
+                # EXEs may have no relocation table. Initialized storage and
+                # zero-filled virtual globals both need referent identity proof.
                 target = operand.imm & 0xffffffff
                 try:
-                    image.read(target, 1)
+                    in_image = len(image.read(target, 1)) == 1
                 except (ValueError, KeyError):
+                    in_image = any(integer(section["va"]) <= target < integer(section["va"]) +
+                                   max(integer(section.get("vsize", 0)), integer(section["rawsize"]))
+                                   for section in image.sections)
+                if not in_image:
                     continue
                 offset = ins.address - va + ins.imm_offset
                 sites[offset] = {"offset": offset, "width": 4, "kind": "abs32", "target": target}
