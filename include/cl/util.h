@@ -11,5 +11,7 @@ unsigned short* __cdecl gobblewhite(unsigned short*);
 void __cdecl xfree(void*);
 int __cdecl strqlen(const unsigned short*);
 unsigned short* __cdecl strrchars(unsigned short*, const unsigned short*);
+unsigned short* __cdecl concat(unsigned short*, unsigned int, const unsigned short*);
+unsigned short* __cdecl append(unsigned short*, unsigned int, const unsigned short*);
 
 #endif

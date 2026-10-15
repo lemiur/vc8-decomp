@@ -70,3 +70,21 @@ unsigned short* __cdecl strrchars(unsigned short* text, const unsigned short* ch
     }
     return last;
 }
+
+// FUNCTION: cl 0x407fba
+// SYMBOL: ?concat@@YAPAGPAGIPBG@Z
+unsigned short* __cdecl concat(unsigned short* destination, unsigned int capacity, const unsigned short* source)
+{
+    if (source)
+        wcscat_s(destination, capacity, source);
+    return destination + wcslen(destination);
+}
+
+// FUNCTION: cl 0x407fe5
+// SYMBOL: ?append@@YAPAGPAGIPBG@Z
+unsigned short* __cdecl append(unsigned short* destination, unsigned int capacity, const unsigned short* source)
+{
+    if (source)
+        wcscpy_s(destination, capacity, source);
+    return destination + wcslen(destination);
+}
