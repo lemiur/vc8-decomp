@@ -56,6 +56,20 @@ class ToolchainTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "invalid probe PE"):
                 probe.section_hashes(path)
 
+    def test_runtime_trace_rejects_unpinned_program(self):
+        with mock.patch.object(probe, "verify_toolchain"):
+            with self.assertRaisesRegex(ValueError, "requested executable is not pinned"):
+                probe.trace_tool_runtime({"bin": "absent", "files": []}, "unlisted.exe", [], "unused")
+
+    def test_inventory_preserves_observed_runtime_dependency(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "observed-crt.dll"
+            path.write_bytes(b"observed runtime hash contract")
+            with mock.patch.object(probe, "file_version", return_value="test"):
+                files = probe.inventory({"bin": str(Path(temp) / "missing"), "observed_runtime_files": [str(path)]})
+            self.assertEqual(len(files), 1)
+            self.assertEqual(files[0]["sha256"], probe.sha256(path))
+
     def test_failed_compile_removes_stale_output_and_skips_link(self):
         with tempfile.TemporaryDirectory() as temp:
             for language in ("c", "cpp"):

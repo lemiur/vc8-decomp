@@ -185,11 +185,34 @@
           "size": 196054,
           "version": null,
           "sha256": "42a96eb7aac53303254d4a5e061e94429d436dab353ff37774314c31dee4e6f2"
+        },
+        {
+          "path": "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcp80.dll",
+          "size": 548864,
+          "version": "8.0.50727.9680",
+          "sha256": "ba5b61eb652f28cda1a80e2ee6839bd0bb043a098d0748f4817fb006b6887949"
+        },
+        {
+          "path": "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcr80.dll",
+          "size": 626688,
+          "version": "8.0.50727.9680",
+          "sha256": "a74e18c475e7853d6158ae668dcc3f6c30c7b9eb7bb2360a8b58d945c1e81fbb"
         }
       ],
       "limitations": [
-        "SxS runtime binding not traced; installed CRT payload pinned as available dependency"
-      ]
+        "Observed CRT dependency bytes pinned; future assembly policy changes require repeating runtime trace, not merely hashing old available files."
+      ],
+      "observed_runtime_files": [
+        "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcp80.dll",
+        "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcr80.dll"
+      ],
+      "runtime_observation": {
+        "date": "2026-10-15",
+        "method": "Windows child debug-event module file observation during successful /O1 /MD /EHsc /GL compile and /LTCG link",
+        "source_commit": "56c8732",
+        "source_unit": "matching/cl/util.cpp",
+        "binding": "WinSxS policy loads VC80 CRT 8.0.50727.9680 for both SP1 and RTM; private available CRT does not determine actual runtime"
+      }
     },
     "rtm": {
       "kind": "extracted-local-iso",
@@ -209,7 +232,7 @@
       ],
       "limitations": [
         "PlatformSDK headers and libraries borrowed from installed SP1; not a complete RTM SDK",
-        "SxS runtime binding not traced; private RTM CRT files supplied"
+        "Observed CRT dependency bytes pinned; future assembly policy changes require repeating runtime trace, not merely hashing old available files."
       ],
       "files": [
         {
@@ -337,8 +360,31 @@
           "size": 196054,
           "version": null,
           "sha256": "42a96eb7aac53303254d4a5e061e94429d436dab353ff37774314c31dee4e6f2"
+        },
+        {
+          "path": "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcp80.dll",
+          "size": 548864,
+          "version": "8.0.50727.9680",
+          "sha256": "ba5b61eb652f28cda1a80e2ee6839bd0bb043a098d0748f4817fb006b6887949"
+        },
+        {
+          "path": "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcr80.dll",
+          "size": 626688,
+          "version": "8.0.50727.9680",
+          "sha256": "a74e18c475e7853d6158ae668dcc3f6c30c7b9eb7bb2360a8b58d945c1e81fbb"
         }
-      ]
+      ],
+      "observed_runtime_files": [
+        "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcp80.dll",
+        "C:/Windows/WinSxS/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9680_none_d090cb7c44278b28/msvcr80.dll"
+      ],
+      "runtime_observation": {
+        "date": "2026-10-15",
+        "method": "Windows child debug-event module file observation during successful /O1 /MD /EHsc /GL compile and /LTCG link",
+        "source_commit": "56c8732",
+        "source_unit": "matching/cl/util.cpp",
+        "binding": "WinSxS policy loads VC80 CRT 8.0.50727.9680 for both SP1 and RTM; private available CRT does not determine actual runtime"
+      }
     }
   },
   "observations": {
