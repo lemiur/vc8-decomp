@@ -88,6 +88,7 @@ def load_registry(root):
         for candidate in document.get("candidates", []):
             name = candidate.get("binary")
             require(name in BINARIES and (only_binary is None or name == only_binary), "candidate descriptor names wrong binary")
+            require(type(candidate.get("gate_enabled", True)) is bool, "gate_enabled must be a boolean")
             symbol_key, address_key = (name, candidate["symbol"]), (name, integer(candidate["retail_va"]))
             require(symbol_key not in seen_symbols and address_key not in seen_addresses, "duplicate candidate admission descriptor")
             seen_symbols.add(symbol_key)
@@ -370,7 +371,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 "function_denominator": None, "function_denominator_caveat": "public symbols do not establish all function boundaries",
                 "source_byte_denominator": len(copied), "admitted": [], "pending": [], "status": "fallback-verified"}
         for name in selected:
-            requests = [r for r in registry.get("candidates", []) if r.get("binary") == name]
+            requests = [r for r in registry.get("candidates", []) if r.get("binary") == name and r.get("gate_enabled", True)]
             require(len({r["symbol"] for r in requests}) == len(requests), "duplicate candidate admission requests")
             build_dir = out / name
             build_dir.mkdir()
@@ -386,6 +387,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 require(run.returncode == 0, "fresh rebuild failed: " + name + "; see " + str(build_dir / "build.log"))
                 require(manifest_path.is_file(), "fresh rebuild produced no manifest")
                 manifest = read_json(manifest_path)
+                manifest_hash = digest(manifest_path.read_bytes())
             else:
                 require(not requests, "candidate rebuild harness unavailable")
                 manifest = {"schema_version": 1, "binary": name, "build_id": run_id, "candidates": []}
@@ -433,10 +435,19 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 result["admitted"].append({"symbol": claim["symbol"], "retail_va": request["retail_va"], "size": len(code),
                     "unit": request["unit"], "source_sha256": claim["source_sha256"], "build_id": run_id,
                     "function_source_sha256": function_hash,
+                    "source_span": span, "candidate_va": claim["candidate_va"], "image_path": str(image_path),
+                    "bytes_sha256": claim["bytes_sha256"], "retail_file_offset": offset,
+                    "spliced_bytes_sha256": digest(code), "manifest_path": str(manifest_path), "manifest_sha256": manifest_hash,
                     "image_sha256": claim["image_sha256"], "rules": {"status": "passed", "admission": admissions[0]},
                     "referents": refs, "referents_status": "resolved", "bytes_exact": True,
                     "artifacts": list(artifacts.values()),
                     "boundary": request["boundary"]})
+            # The rule review and comparison must describe the same headers,
+            # sources and toolchain that produced the fresh artifact.
+            for item in manifest.get("source_inputs", []) + manifest.get("toolchain", []) + manifest.get("artifacts", []):
+                checked_file(item, root)
+            if claims:
+                require(digest(manifest_path.read_bytes()) == manifest_hash, "build manifest changed during admission")
             output = build_dir / "splice.bin"
             output.write_bytes(image)
             result["output_sha256"] = digest(output.read_bytes())
