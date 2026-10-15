@@ -185,6 +185,14 @@ def import_identity(image, target):
     return records[0]["dll"].lower() + "!" + records[0]["name"]
 
 
+def import_thunk_identity(image, target):
+    code = image.read(target, 6)
+    require(code[:2] == b"\xff\x25", "import thunk is not an exact six-byte absolute IAT jump")
+    require(any(integer(section["va"]) <= target and target + 6 <= integer(section["va"]) + integer(section["rawsize"]) and
+                integer(section["chars"]) & 0x20000000 for section in image.sections), "import thunk is not executable file-backed code")
+    return import_identity(image, struct.unpack_from("<I", code, 2)[0])
+
+
 def literal_bytes(binding, claim):
     """Derive a bounded literal object from an exact token in the hashed unit."""
     token, encoding = binding.get("source_literal", ""), binding.get("encoding")
@@ -394,6 +402,12 @@ def compare_candidate(retail, candidate_image, claim, request, identities, emitt
                 require(identity == canonical and built["kind"] == "abs32", "import identity or operand kind differs")
                 require(import_identity(candidate_image, built["target"]) == canonical and
                         import_identity(retail, target) == canonical, "PE import DLL/name differs between source and retail")
+            elif kind == "import-thunk":
+                canonical = str(binding.get("dll", "")).lower() + "!" + str(binding.get("name", ""))
+                require(emitted_identities is not None and emitted_identities.get(built["target"]) == {identity},
+                        "emitted import thunk lacks exact MAP identity")
+                require(import_thunk_identity(candidate_image, built["target"]) == canonical and
+                        import_thunk_identity(retail, target) == canonical, "import thunk DLL/name differs between source and retail")
             elif kind == "literal":
                 data = literal_bytes(binding, claim)
                 require(identity == "literal:sha256:" + digest(data) and built["kind"] == "abs32", "literal identity or operand kind differs")

@@ -512,6 +512,34 @@ class GateTests(unittest.TestCase):
             with self.assertRaisesRegex(gate.GateError, "not pinned by current R2"):
                 gate.require_layout_review([altered], admission, rules, root)
 
+    def test_named_direct_import_thunk_requires_actual_iat_jump_on_both_sides(self):
+        images = []
+        for base in (0x1000, 0x4000):
+            code = b"\xe8" + struct.pack("<i", 16 - 5) + b"\xc3"
+            thunk = b"\xff\x25" + struct.pack("<I", base + 32)
+            image = Image(base, code + bytes(16 - len(code)) + thunk + bytes(32 - 16 - len(thunk)) + bytes(4))
+            image.import_entries = [{"va": base + 32, "dll": "MSVCR80.dll", "name": "_get_wpgmptr"}]
+            images.append(image)
+        retail, emitted = images
+        boundary = {"status": "verified", "evidence": "synthetic complete caller"}
+        request = {"retail_va": 0x1000, "size": 6, "boundary": boundary}
+        claim = {"retail_va": 0x1000, "candidate_va": 0x4000, "size": 6, "boundary": boundary,
+                 "bytes_sha256": gate.digest(emitted.data[:6]),
+                 "referents": [{"offset": 1, "width": 4, "kind": "rel32", "target": 0x4010,
+                                "identity": "__get_wpgmptr", "resolved": True}]}
+        bindings = {"__get_wpgmptr": {"kind": "import-thunk", "dll": "msvcr80.dll", "name": "_get_wpgmptr",
+                                      "va": 0x1010, "evidence": "fixture named thunk"}}
+        identities = {0x4010: {"__get_wpgmptr"}}
+        code, count = gate.compare_candidate(retail, emitted, claim, request, bindings, identities)
+        self.assertEqual((code, count), (retail.data[:6], 1))
+        emitted.import_entries[0]["name"] = "free"
+        with self.assertRaisesRegex(gate.GateError, "thunk DLL/name"):
+            gate.compare_candidate(retail, emitted, claim, request, bindings, identities)
+        emitted.import_entries[0]["name"] = "_get_wpgmptr"
+        emitted.data = emitted.data[:16] + b"\x90" + emitted.data[17:]
+        with self.assertRaisesRegex(gate.GateError, "six-byte absolute IAT jump"):
+            gate.compare_candidate(retail, emitted, claim, request, bindings, identities)
+
 
 if __name__ == "__main__":
     unittest.main()
