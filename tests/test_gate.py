@@ -238,6 +238,25 @@ class GateTests(unittest.TestCase):
             with self.assertRaisesRegex(gate.GateError, "different source unit"):
                 gate.verify_linked_symbol(manifest["candidates"][0], manifest, artifacts, root)
 
+    def test_per_binary_descriptors_merge_and_conflicts_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = root / "config"
+            config.mkdir()
+            (config / "gate-allow.json").write_text('{"schema_version":1,"candidates":[],"referents":{}}')
+            descriptor = {"schema_version": 1, "candidates": [{"binary": "cl", "symbol": "_f", "retail_va": "0x401000"}],
+                          "referents": {"cl": {"_data": {"va": "0x402000", "evidence": "fixture"}}}}
+            (config / "cl-candidates.json").write_text(json.dumps(descriptor))
+            self.assertEqual(len(gate.load_registry(root)["candidates"]), 1)
+            (config / "gate-allow.json").write_text(json.dumps(descriptor))
+            with self.assertRaisesRegex(gate.GateError, "duplicate candidate"):
+                gate.load_registry(root)
+            descriptor["candidates"] = []
+            descriptor["referents"]["cl"]["_data"]["va"] = "0x402001"
+            (config / "gate-allow.json").write_text(json.dumps(descriptor))
+            with self.assertRaisesRegex(gate.GateError, "conflicting referent"):
+                gate.load_registry(root)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -68,10 +68,37 @@ def checked_file(record, root=ROOT, directory=None):
 def snapshot_inputs(root):
     """Catch changes during the trusted builder's invocation, including headers."""
     result = {}
-    for directory in ("matching", "config", "tools"):
+    for directory in ("matching", "include", "config", "tools"):
         for path in sorted((root / directory).rglob("*")):
             if path.is_file() and path.suffix.lower() in (".c", ".cpp", ".cxx", ".h", ".hpp", ".json", ".py"):
                 result[str(path.resolve())] = digest(path.read_bytes())
+    return result
+
+
+def load_registry(root):
+    """Merge the global policy and canonical per-binary candidate descriptors."""
+    documents = [(root / "config" / "gate-allow.json", None)]
+    documents += [(root / "config" / (name + "-candidates.json"), name) for name in BINARIES
+                  if (root / "config" / (name + "-candidates.json")).is_file()]
+    result = {"schema_version": 1, "candidates": [], "referents": {}}
+    seen_symbols, seen_addresses = set(), set()
+    for path, only_binary in documents:
+        document = read_json(path)
+        require(document.get("schema_version") == 1, "wrong admission registry schema: " + str(path))
+        for candidate in document.get("candidates", []):
+            name = candidate.get("binary")
+            require(name in BINARIES and (only_binary is None or name == only_binary), "candidate descriptor names wrong binary")
+            symbol_key, address_key = (name, candidate["symbol"]), (name, integer(candidate["retail_va"]))
+            require(symbol_key not in seen_symbols and address_key not in seen_addresses, "duplicate candidate admission descriptor")
+            seen_symbols.add(symbol_key)
+            seen_addresses.add(address_key)
+            result["candidates"].append(candidate)
+        for name, bindings in document.get("referents", {}).items():
+            require(name in BINARIES and (only_binary is None or name == only_binary), "referent descriptor names wrong binary")
+            destination = result["referents"].setdefault(name, {})
+            for identity, binding in bindings.items():
+                require(identity not in destination or destination[identity] == binding, "conflicting referent identity descriptors")
+                destination[identity] = binding
     return result
 
 
@@ -326,8 +353,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
               "status": "RED", "authority": None, "binaries": {}, "errors": []}
     selected = BINARIES if binary == "all" else (binary,)
     try:
-        registry = read_json(root / "config" / "gate-allow.json")
-        require(registry.get("schema_version") == 1, "wrong admission registry schema")
+        registry = load_registry(root)
         retail_images = {}
         # All-five fallback proof precedes every possible source admission.
         for name in BINARIES:
