@@ -19,8 +19,8 @@
     },
     "matching/cl/merr.c": {
       "remove_compile_flags": ["/EHsc"],
-      "compile_flags": ["/O1"],
-      "evidence": "Installed-era CRT return-zero source; /O1 is an experimental control for the three-byte retail leaf, not proof of the original CRT object flags. C++ EH options are excluded from this C unit."
+      "compile_flags": ["/O1", "/D_CRTBLD", "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"],
+      "evidence": "Installed-era CRT return-zero source uses actual cruntime.h/math.h under _CRTBLD, matching authentic CRT build context. Actual /GL + /LTCG probe emits all three retail bytes. /O1 is an experimental control, not proof of original CRT flags; C++ EH options are excluded from this C unit."
     }
   },
   "flags": {

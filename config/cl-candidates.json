@@ -51,8 +51,6 @@
     {
       "binary": "cl",
       "symbol": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ",
-      "gate_enabled": false,
-      "pending": "R2: direct enum access and module ownership do not yet distinguish a separate scalar global from an aggregate interior.",
       "retail_va": "0x409934",
       "size": 6,
       "unit": "matching/cl/util_watson.cpp",
@@ -68,8 +66,6 @@
     {
       "binary": "cl",
       "symbol": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
-      "gate_enabled": false,
-      "pending": "R2: direct enum access and module ownership do not yet distinguish a separate scalar global from an aggregate interior.",
       "retail_va": "0x40993a",
       "size": 12,
       "unit": "matching/cl/util_watson.cpp",
@@ -102,7 +98,7 @@
     "cl": {
       "?g_errorReportingMode@@3W4ErrorReportingMode@@A": {
         "va": "0x41a020",
-        "evidence": "Canonical invented global spelling, explicitly annotated DATA in util_watson.cpp and declared once in its header. Getter reads exactly the enum-sized word at 0x41a020; setter writes its enum argument to that same storage. No public PDB name is claimed. Candidate identity must independently match COFF/MAP binding; this registry binds the modeled storage to retail rather than supplying a signature."
+        "evidence": "Canonical invented global spelling, explicitly annotated DATA in util_watson.cpp and declared once in its header. The preceding independently identified SECURITY_ATTRIBUTES object ends exactly at 0x41a020; getter/setter independently access the enum-sized word starting there, in the same PDB-attributed module. Loader-zero storage and absence of contradictory aggregate accesses support the separate enum entity; this is positive model evidence, not a recovered public data name. Candidate identity must independently match actual MAP target binding."
       }
     }
   }
