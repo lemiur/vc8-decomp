@@ -82,6 +82,7 @@ class ImageEvidence:
         if self.pe.FILE_HEADER.Machine != 0x14C:
             raise ValueError("only x86 PE images are supported")
         self.base = self.pe.OPTIONAL_HEADER.ImageBase
+        self.image_end = self.base + self.pe.OPTIONAL_HEADER.SizeOfImage
         self.names = {}
         for symbol in symbols:
             self.names.setdefault(symbol["va"], []).append(symbol["name"])
@@ -131,6 +132,13 @@ class ImageEvidence:
                 else:
                     refs = [op.mem.disp for op in insn.operands if op.type == cs.x86.X86_OP_MEM and op.mem.base == 0 and op.mem.index == 0]
                     referents.append({"instruction_va": f"0x{address:08X}", "kind": "indirect-call" if is_call else "indirect-branch", "operand": insn.op_str, "slot": self.target(refs[0]) if refs else None})
+            # Fixed-base EXEs need not have base relocations. Indexed image
+            # displacements still expose a static table base, not a local field.
+            for operand in insn.operands:
+                if operand.type == cs.x86.X86_OP_MEM and self.base <= operand.mem.disp < self.image_end:
+                    referents.append({"instruction_va": f"0x{address:08X}", "kind": "memory-address-base",
+                                      "indexed": bool(operand.mem.base or operand.mem.index), "operand": insn.op_str,
+                                      **self.target(operand.mem.disp)})
             for offset in range(insn.size):
                 if address + offset in self.relocs:
                     location = address + offset

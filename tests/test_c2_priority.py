@@ -77,6 +77,7 @@ class BoundedDisassemblyTests(unittest.TestCase):
     def image(self, data):
         image = priority.ImageEvidence.__new__(priority.ImageEvidence)
         image.capstone = self.cs
+        image.base, image.image_end = 0x1000, 0x3000
         image.names = {0x1000: ["entry"], 0x2000: ["callee"]}
         image.relocs, image.imports = {}, {}
         decoder = self.cs.Cs(self.cs.CS_ARCH_X86, self.cs.CS_MODE_32)
@@ -111,6 +112,14 @@ class BoundedDisassemblyTests(unittest.TestCase):
         result = image.inspect(0x1000)
         self.assertEqual(result["decoded_byte_count"], 1)
         self.assertEqual(result["stops"][0]["reason"], "other-public-entry")
+
+    def test_absolute_indexed_memory_without_base_relocation(self):
+        result = self.image(bytes.fromhex("8b8080200000c3")).inspect(0x1000)
+        reference = result["referents"][0]
+        self.assertEqual(reference["kind"], "memory-address-base")
+        self.assertEqual(reference["va"], "0x00002080")
+        self.assertTrue(reference["indexed"])
+        self.assertEqual(result["unresolved_referent_count"], 1)
 
 
 if __name__ == "__main__":
