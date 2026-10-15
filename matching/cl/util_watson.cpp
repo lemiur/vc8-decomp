@@ -131,7 +131,6 @@ bool __cdecl ErrorReportingCreateMapping()
 
 // FUNCTION: cl 0x00409aab
 // SYMBOL: ?ErrorReportingInitialize@@YAXXZ
-// stop: referents: gate must independently resolve the real SDK object's fields.
 void __cdecl ErrorReportingInitialize()
 {
     g_errorReportingMappingAttributes.nLength = sizeof(g_errorReportingMappingAttributes);
