@@ -98,3 +98,16 @@ int __cdecl IsOutputToConsole(HANDLE output)
         return 0;
     return GetConsoleMode(output, &mode) != 0;
 }
+
+// FUNCTION: cl 0x407f08
+// SYMBOL: ?IsRunningUnderIDE@@YAHPAPAX@Z
+int __cdecl IsRunningUnderIDE(HANDLE* output)
+{
+    WCHAR handleText[64];
+    if (GetEnvironmentVariableW(L"VS_UNICODE_OUTPUT", 0, 0)) {
+        GetEnvironmentVariableW(L"VS_UNICODE_OUTPUT", handleText, 64);
+        *output = (HANDLE)_wtoi(handleText);
+        return 1;
+    }
+    return 0;
+}
