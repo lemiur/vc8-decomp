@@ -1,6 +1,9 @@
 #include "../../include/cl/clmain.h"
 #include "../../include/cl/util_watson.h"
 
+#include <stdlib.h>
+#include <windows.h>
+
 // Source filename inferred from the PDB object owner clmain.obj; the original
 // extension and assert line mappings remain unresolved. Public names and stack
 // cleanup prove these cdecl callbacks; their flag_s argument is unused.
@@ -36,3 +39,19 @@ void __cdecl error_report_none(flag_s*)
 // DATA: cl 0x00417034
 // Public ?RedirStderr@@3HA; four file-backed bytes initialize the int to one.
 int RedirStderr = 1;
+
+// FUNCTION: cl 0x0040218a
+// SYMBOL: ?IsRunningUnderIDE@@YAHXZ
+int __cdecl IsRunningUnderIDE()
+{
+    return GetEnvironmentVariableW(L"VS_UNICODE_OUTPUT", 0, 0) != 0;
+}
+
+// FUNCTION: cl 0x004024a8
+// SYMBOL: ?fullccpath@@YAPAGXZ
+wchar_t* __cdecl fullccpath()
+{
+    wchar_t* path = 0;
+    _get_wpgmptr(&path);
+    return path;
+}
