@@ -22,3 +22,28 @@ bool __cdecl ErrorReportingSetMode(ErrorReportingMode mode)
     g_errorReportingMode = mode;
     return true;
 }
+
+// DATA: cl 0x00417be8
+// Invented spelling; module ownership and pointer type are recorded in header.
+// /Zc:wchar_t- makes the genuine L"" initializer const unsigned short[1].
+const unsigned short *g_errorReportingDlls = L"";
+
+// DATA: cl 0x00417bec
+// Invented spelling; retail shares the same empty wide literal initializer.
+const unsigned short *g_errorReportingFormalAppName = L"";
+
+// FUNCTION: cl 0x00409946
+// SYMBOL: ?ErrorReportingSetDlls@@YA_NPBG@Z
+bool __cdecl ErrorReportingSetDlls(const unsigned short *dlls)
+{
+    g_errorReportingDlls = dlls;
+    return true;
+}
+
+// FUNCTION: cl 0x00409952
+// SYMBOL: ?ErrorReportingSetFormalAppName@@YA_NPBG@Z
+bool __cdecl ErrorReportingSetFormalAppName(const unsigned short *appName)
+{
+    g_errorReportingFormalAppName = appName;
+    return true;
+}
