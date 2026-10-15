@@ -291,6 +291,7 @@ class GateTests(unittest.TestCase):
                 return record
             tools = [item(compiler), item(linker)]
             (root / "config/toolchains.json").write_text(json.dumps({"toolchains": {"fixture": {"files": tools}}}))
+            late_change = [False]
             def runner(argv, **kwargs):
                 if Path(argv[1]).name == "match.py":
                     output = Path(argv[argv.index("--output-dir") + 1])
@@ -315,6 +316,9 @@ class GateTests(unittest.TestCase):
                         "source_path": str(source), "source_sha256": source_hash,
                         "status": "RULE-ADMITTED", "admitted": True}]}
                     Path(argv[-1]).write_text(json.dumps(report))
+                    if late_change[0]:
+                        (root / "include").mkdir(exist_ok=True)
+                        (root / "include/late.h").write_text("extern int added_after_rule_scan;\n")
                 return types.SimpleNamespace(returncode=0, stdout="", stderr="")
             class Retail(Image):
                 def __init__(self, cfg):
@@ -333,6 +337,13 @@ class GateTests(unittest.TestCase):
             self.assertEqual(admission["function_source_sha256"], function_hash)
             self.assertEqual(gate.digest(Path(admission["manifest_path"]).read_bytes()), admission["manifest_sha256"])
             self.assertIn("cl functions=1 source_bytes=1/1", result["authority"])
+            late_change[0] = True
+            with patch.object(gate.subprocess, "run", side_effect=runner):
+                changed = gate.execute_gate("cl", root, module)
+            self.assertEqual(changed["status"], "RED")
+            self.assertIsNone(changed["authority"])
+            self.assertEqual(changed["binaries"]["cl"]["source_bytes"], 0)
+            self.assertIn("changed during admission", changed["errors"][0])
 
     def referenced_data_fixture(self, data, opcode=b"\x68"):
         images = []

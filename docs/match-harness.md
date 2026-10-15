@@ -76,6 +76,13 @@ import DLL/name and both literal payloads, read-only storage, final terminators,
 and ownership by the genuine source literal token. Referenced data bytes are
 never counted as source code.
 
+Named SDK-member references use a single canonical aggregate symbol plus a
+member name, offset, width, and compiler layout witness. The scanner distinguishes
+an immediate/LEA pointer to the whole object from a memory access to its first
+field at offset zero. Indexed or oversized member accesses stay unresolved.
+Only the gate independently validates the witness, SDK field layout, source and
+retail base identities, bounds, actual access width, and matching rule review.
+
 MAP starts establish locations, not exact function ends. Registered candidate
 sizes and boundary evidence come from `config/gate-allow.json`. Without those,
 the next MAP symbol supplies only an unverified inspection span; a function

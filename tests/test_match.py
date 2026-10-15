@@ -200,6 +200,31 @@ class MatchContracts(unittest.TestCase):
         refs = ltcg.scan_referents(Image(), 0x10001000, len(code))
         self.assertEqual([(r['offset'], r['kind'], r['target'], r['resolved']) for r in refs], [(1, 'abs32', 0x10002020, False)])
 
+    def test_struct_base_address_and_offset_zero_memory_have_distinct_identities(self):
+        code = b'\x68\x00\x20\x00\x10\xc7\x05\x00\x20\x00\x10\x0c\0\0\0\x8d\x05\x00\x20\x00\x10\xc3'
+
+        class Image:
+            sections = [{'va': 0x10002000, 'vsize': 12, 'rawsize': 0}]
+
+            def read_va(self, va, size):
+                if not 0x10001000 <= va <= va + size <= 0x10001000 + len(code):
+                    raise ValueError('not file-backed')
+                return code[va - 0x10001000:va - 0x10001000 + size]
+
+            def base_relocations(self):
+                return []
+
+        witness = {'path': 'layout.json', 'sha256': 'a' * 64}
+        bindings = {'_attrs': {'kind': 'symbol', 'size': 12, 'layout_witness': witness},
+                    'member:_attrs.nLength': {'kind': 'member', 'base_identity': '_attrs',
+                        'offset': 0, 'size': 4, 'layout_witness': witness}}
+        symbols = [ltcg.MapSymbol('_attrs', 0x10002000, 2, 0, False, 'source.obj')]
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), symbols, bindings)
+        self.assertEqual([r['identity'] for r in refs], ['_attrs', 'member:_attrs.nLength', '_attrs'])
+        bindings['member:_attrs.nLength']['size'] = 1
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), symbols, bindings)
+        self.assertEqual([r['identity'] for r in refs], ['_attrs', None, '_attrs'])
+
 
 if __name__ == '__main__':
     unittest.main()

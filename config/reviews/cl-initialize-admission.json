@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "reviewer": "independent audit lane /root/audit",
+  "review_date": "2026-10-15",
+  "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+  "approved_function_count": 43,
+  "enabled_source_bytes_expected": 1493,
+  "authority_limit": "Source-rule approval only; the fresh full gate is the authority for compiled bytes and banked counts.",
+  "change": "Only the resolved Initialize stop-marker comment was removed. Independently compared complete Watson source with its prior committed snapshot after deleting exactly that one comment line. Every other source/header raw hash is identical, and all42 previously banked normalized function source hashes independently equal the actual primary42-function baseline.",
+  "prior_review": {
+    "path": "config/reviews/cl-third-batch.json",
+    "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056",
+    "use": "The prior42 semantic checks/evidence are preserved verbatim in current policy rows; only source-file and whole-scope identities are refreshed. Their function bodies, signatures, headers and semantic rationale are unchanged."
+  },
+  "unchanged_functions": [
+    {
+      "symbol": "?error_report_prompt@@YAXPAUflag_s@@@Z",
+      "va": "0x4015a8",
+      "function_source_sha256": "26d3a45a51bbf6aa1dfbc688f04d917c74f33feeb99db6a8b27c15593aa703b7"
+    },
+    {
+      "symbol": "?error_report_queue@@YAXPAUflag_s@@@Z",
+      "va": "0x4015b1",
+      "function_source_sha256": "0ab8089ae8d46262daeeba8e3e615f07a1df4ad7794ed83c4c55f7e5faa1b856"
+    },
+    {
+      "symbol": "?error_report_send@@YAXPAUflag_s@@@Z",
+      "va": "0x4015ba",
+      "function_source_sha256": "6878486a422e22ad7bb23496db9014fd49d70a32a4712d11cb9a33d10b1e0b18"
+    },
+    {
+      "symbol": "?error_report_none@@YAXPAUflag_s@@@Z",
+      "va": "0x4015c3",
+      "function_source_sha256": "84145bb2c4dc20d10c2ee5082d92858812cb7dac03667905df1b86f6b0511fd5"
+    },
+    {
+      "symbol": "?IsRunningUnderIDE@@YAHXZ",
+      "va": "0x40218a",
+      "function_source_sha256": "915e47d3f5a4aaed7fb5b8187b26d58a5cc9e43c25cbe4db33dc6916aa5b59b5"
+    },
+    {
+      "symbol": "?fullccpath@@YAPAGXZ",
+      "va": "0x4024a8",
+      "function_source_sha256": "25a731cba451d517afd5393eafdd20524760cd54da6a4cb8503ffa6b8f90eec7"
+    },
+    {
+      "symbol": "?release_filelife_heap@@YAXXZ",
+      "va": "0x402c06",
+      "function_source_sha256": "5e4f863ac70dfd85f520431e78d67b1320364cbcf89b219a87573375500be333"
+    },
+    {
+      "symbol": "?release_ast_extra_heap@@YAXXZ",
+      "va": "0x402c1a",
+      "function_source_sha256": "8678bb5d588f67767d03c472cb01eee65293a6e889bca0243b671c1c9f43859e"
+    },
+    {
+      "symbol": "?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z",
+      "va": "0x408f04",
+      "function_source_sha256": "cdb6bbb90ca00f404bd1a159b902361ea6795b976c24cd79c44203e11b538da3"
+    },
+    {
+      "symbol": "?screen_length@@YAHXZ",
+      "va": "0x4092d4",
+      "function_source_sha256": "345e4bfc745990ec4226e591c46347b4073212c6b73945738f3f85a9f85d013d"
+    },
+    {
+      "symbol": "?redirect@@YAXXZ",
+      "va": "0x4092be",
+      "function_source_sha256": "7dbfa6ee990b49b061d2a62c3215f9b14f3a37f6aa46f1fde2f281edfe463397"
+    },
+    {
+      "symbol": "__matherr",
+      "va": "0x40c661",
+      "function_source_sha256": "d7858fc3315abff9c0bea470a65ef960461613f8109d2c033bba4d27a9a23999"
+    },
+    {
+      "symbol": "?thread_print@@YAXPBGZZ",
+      "va": "0x40a25f",
+      "function_source_sha256": "9e63ff88e094241df9900cf9bd014b1bb1e9f2b690beac4128c0dc24ea6e483f"
+    },
+    {
+      "symbol": "?env_size@@YAIPBG@Z",
+      "va": "0x40a2dc",
+      "function_source_sha256": "5a29c98bf4ee48dd1cda138937e40b5b40e1a0d7d852e9e76ea68809e40dfa89"
+    },
+    {
+      "symbol": "?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "va": "0x40a3a1",
+      "function_source_sha256": "56c0c400a37bafa0b02f23fb49e0bb5d8d43a82eb0cec63c87ee5f90108ac6ec"
+    },
+    {
+      "symbol": "?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "va": "0x40a475",
+      "function_source_sha256": "944c1c2c4970a5f36984c3d703ce8b23017b4b29a2433dbbf4932b33e85217bd"
+    },
+    {
+      "symbol": "?size@?$Queue@Uaction_t@@@@QBEHXZ",
+      "va": "0x40a458",
+      "function_source_sha256": "e9b4d34a4db3429f531c3225fe032f0b4ed763d1293a91115d51fd3efaeea6de"
+    },
+    {
+      "symbol": "?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "va": "0x40aa29",
+      "function_source_sha256": "7bb3faa55bfaa732329c6d154f5ecef43d0bb70deb8620a6c8b4bc0349d466f0"
+    },
+    {
+      "symbol": "?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "va": "0x40aa5e",
+      "function_source_sha256": "f2ba6ab98500734f295029b44d6f796a0ddfb608e6f10cb48c80c7c8c664331c"
+    },
+    {
+      "symbol": "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "va": "0x40a3c7",
+      "function_source_sha256": "82cb9c3f35be24b8b8e54044d04ee03554ade06bc8999c2e66f5d5597a0da0a3"
+    },
+    {
+      "symbol": "?read_int@ProcessChannel@@QAEHXZ",
+      "va": "0x40a0a2",
+      "function_source_sha256": "ec890dd989da6ee3afa389dc7da6b35a7cfe34a81d50d9cfd96d86dc14aa7911"
+    },
+    {
+      "symbol": "?close@PipeProcessChannel@@UAEXXZ",
+      "va": "0x40a243",
+      "function_source_sha256": "62e32dd93b4e2892fc33622183e35edd75503a91a829eef06463e428ec6abdbb"
+    },
+    {
+      "symbol": "?NT_err@@YAHH@Z",
+      "va": "0x40a2c4",
+      "function_source_sha256": "457e73a0cc7398c6668a27a7f176f6ea7767c4d4bff3d21e3b78e1b1604f768b"
+    },
+    {
+      "symbol": "?write@PipeProcessChannel@@UAEXPBXK@Z",
+      "va": "0x40a8e3",
+      "function_source_sha256": "fc510171945d8fa042fa77c5f15c2c8186c0f06ff80aa8b5181f9abb2b401d09"
+    },
+    {
+      "symbol": "?read@PipeProcessChannel@@UAEXPAXK@Z",
+      "va": "0x40a906",
+      "function_source_sha256": "fc9e164341d9b82d5f201a6e07c10b23bc8da0615503784cfbd13e0ccd72e482"
+    },
+    {
+      "symbol": "?expect_int@ProcessChannel@@QAEXH@Z",
+      "va": "0x40a0b6",
+      "function_source_sha256": "a6eb4aae4843e0e7952bd1074dda516418ecd38327273e9f4d2fd79ad192e226"
+    },
+    {
+      "symbol": "?kill@ProcessChannel@@QAEXXZ",
+      "va": "0x40a8a6",
+      "function_source_sha256": "b6b4a64cf590545926d28beec04c6990341d98c80a498241ecc1fda3719373be"
+    },
+    {
+      "symbol": "?nextbase@@YAHH@Z",
+      "va": "0x408276",
+      "function_source_sha256": "7fb237f810c188d216a51c36a6bd5a96725b87edb601e404bd8050df94aaba3c"
+    },
+    {
+      "symbol": "?xfree@@YAXPAX@Z",
+      "va": "0x4082dc",
+      "function_source_sha256": "23c339b1e65fd02cedc9b746408f4b4a55e9c41fca7335fda94f84bdc0027c83"
+    },
+    {
+      "symbol": "?gobblewhite@@YAPAGPAG@Z",
+      "va": "0x407f99",
+      "function_source_sha256": "7621ee798c5c31079e86ffe4a27d30cea11ca578d296b62ccecf15a63260fae2"
+    },
+    {
+      "symbol": "?strrchars@@YAPAGPAGPBG@Z",
+      "va": "0x408145",
+      "function_source_sha256": "5aa4ee31ed2ef42f700191de289aa41406e41a8a08a1ef42792eb8194bd0f2bf"
+    },
+    {
+      "symbol": "?concat@@YAPAGPAGIPBG@Z",
+      "va": "0x407fba",
+      "function_source_sha256": "13693e1a47035f1b1427230e62f7bf6480520cf438f4583af9cd865b74e868ab"
+    },
+    {
+      "symbol": "?append@@YAPAGPAGIPBG@Z",
+      "va": "0x407fe5",
+      "function_source_sha256": "bb05f615e9738c5c2380e584d5f92bd281058fc663e72f6e7bd45de198034f85"
+    },
+    {
+      "symbol": "?IsOutputToConsole@@YAHPAX@Z",
+      "va": "0x407f69",
+      "function_source_sha256": "9713a62bcad6de20324b4eafe42c27559d219445193baae2f84c6905caf0631c"
+    },
+    {
+      "symbol": "?IsRunningUnderIDE@@YAHPAPAX@Z",
+      "va": "0x407f08",
+      "function_source_sha256": "2855a7bda37f0a5409ee41188d53c89dcccc18da05914617f33fb6c6cde01c9f"
+    },
+    {
+      "symbol": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ",
+      "va": "0x409934",
+      "function_source_sha256": "69a14d3024b77931a763ca7034389134e18e5db323785315980fa6d7dcd3da1d"
+    },
+    {
+      "symbol": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
+      "va": "0x40993a",
+      "function_source_sha256": "5271b8f24d1b6a5926ff5aad569410b77da4ab68807a86cfdc90a8ac113c9b47"
+    },
+    {
+      "symbol": "?ErrorReportingSetDlls@@YA_NPBG@Z",
+      "va": "0x409946",
+      "function_source_sha256": "b00e972bef174d3b731162c5662dbd765b1eec836675af55423178e7fd422f7e"
+    },
+    {
+      "symbol": "?ErrorReportingSetFormalAppName@@YA_NPBG@Z",
+      "va": "0x409952",
+      "function_source_sha256": "2361f200c60d25b0452e842f3e530d0af3ff18b0838213a6679c6db0d890e6f5"
+    },
+    {
+      "symbol": "?ErrorReportingCheckOptIn@@YA_NXZ",
+      "va": "0x40995e",
+      "function_source_sha256": "871fe3e365b588e2e47a4a0f398d897a2c40d046772a7c101f158508967e0f42"
+    },
+    {
+      "symbol": "?ErrorReportingDisabled@@YA_NXZ",
+      "va": "0x409acb",
+      "function_source_sha256": "e661c300beb5e513e462f52534771ba9d65546df60680fdc2faa26292ac81c68"
+    },
+    {
+      "symbol": "?ErrorReportingCreateMapping@@YA_NXZ",
+      "va": "0x409a58",
+      "function_source_sha256": "2bdd797a9166e8dd36cc63e063803b3d4dbca9a06b2d14a7db18ef282215245d"
+    }
+  ],
+  "source_scope": [
+    {
+      "path": "matching/cl/clmain.cpp",
+      "sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c"
+    },
+    {
+      "path": "matching/cl/dos.cpp",
+      "sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1"
+    },
+    {
+      "path": "matching/cl/merr.c",
+      "sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44"
+    },
+    {
+      "path": "matching/cl/mpcl.cpp",
+      "sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b"
+    },
+    {
+      "path": "matching/cl/util.cpp",
+      "sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908"
+    },
+    {
+      "path": "matching/cl/util_watson.cpp",
+      "sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9"
+    },
+    {
+      "path": "include/cl/clmain.h",
+      "sha256": "2f879ee972bd895219c92776b1a8548a2c65025115354636d1727646e3cb38d7"
+    },
+    {
+      "path": "include/cl/dos.h",
+      "sha256": "fdc4938b6ccf951dd8b0b75e009689adeb43f68df0c2aa5f83cd7d15bf2037be"
+    },
+    {
+      "path": "include/cl/merr.h",
+      "sha256": "4dccb09d73fd0f57e0ff33ca7512df03e2b99dc94433d91f1874d04ac74bf644"
+    },
+    {
+      "path": "include/cl/mpcl.h",
+      "sha256": "1c2a197ec146f73628d4bdde93ff05a82e56f4f72fe39f42388d4bf8d337b81e"
+    },
+    {
+      "path": "include/cl/util.h",
+      "sha256": "a017ab95071e9ba4689f489ebe0d3d956160fc76ede6c522fa187d7b1e3c1a1f"
+    },
+    {
+      "path": "include/cl/util_watson.h",
+      "sha256": "9d5d72da161094d439f39d77f6be491082b9c33230a63ddf3d4e41bd2d908e72"
+    }
+  ],
+  "layout_witnesses": [
+    {
+      "path": "E:\\vc8-decomp\\build\\toolchain-layout\\security-attributes-sp1-v1\\layout-witness.json",
+      "sha256": "daf53a8a6b7006817af98cd8620507e541b8dc443ed0a658b6c130923f1a2023"
+    }
+  ],
+  "initialize": {
+    "binary": "cl",
+    "va": "0x409aab",
+    "symbol": "?ErrorReportingInitialize@@YAXXZ",
+    "size": 32,
+    "source_path": "matching/cl/util_watson.cpp",
+    "source_span": {
+      "start": 134,
+      "end": 140
+    },
+    "identity_and_abi": "Actual public PDB identity encodes void __cdecl(). Direct retail body uses no arguments and ends in a terminal jump to the existing no-argument mapping helper; no signature is inferred from the public name alone. Source filename/line-position and member/global identifiers retain their documented reconstruction caveats.",
+    "boundary_and_body": "Independently decoded all32 bytes at409aab..409aca: AND DWORD[41a018],0; MOV DWORD[41a014],12; MOV DWORD[41a01c],1; terminal JMP409a58. There is no embedded data or missing fallthrough. The real83B mapping helper is already banked and returns to the original caller; ordinary source tail-call optimization explains the terminal jump.",
+    "checks": {
+      "R1": "Uses only the actual installed SDK SECURITY_ATTRIBUTES definition through canonical Windows headers. Project header has a consistent struct _SECURITY_ATTRIBUTES forward declaration and canonical extern; no duplicated type, hand-copied SDK fields, conflicting class/struct keyword or partial layout view.",
+      "R2": "All stores belong to the one DATA-annotated canonical g_errorReportingMappingAttributes object at41a014, owned by util_watson.obj. Actual API argument/CreateFileMappingA proof establishes the real12B SDK aggregate. nLength, lpSecurityDescriptor and bInheritHandle are real members of that object, not three fake global definitions. Exact witness below is pinned by this current R2 evidence and independently bound to the actual compiler/SDK artifacts.",
+      "R4": "Uses typed members only: nLength=sizeof(actual aggregate), lpSecurityDescriptor=0, bInheritHandle=TRUE. Independently replayed compiler witness fixes exact named layout: nLength offset0,size4; lpSecurityDescriptor offset4,size4; bInheritHandle offset8,size4; aggregate12. Retail instruction data accesses are each4B, separately distinguished from4B address relocations. Gate must bind actual emitted MAP aggregate base+the verified named addend and reject wrong fields, crossing widths, sibling bases, dynamic indexing and invented field globals.",
+      "R13": "Free scalar initialization function; no virtual calls, vtable, dummy slots or class layout reconstruction. Its real mapping helper is a direct no-argument callee.",
+      "R17": "Every statement initializes a real SDK attribute needed by the actual mapping call. sizeof uses the actual SDK type, not a hardcoded padding target. TRUE is the genuine BOOL value1. No fake locals, byte arrays, volatile carriers, forced blocks, artificial field globals or compiler-steering statements. Only the resolved parking comment was removed; the body and all prior42 bodies remain unchanged.",
+      "R18": "Ordinary VC8 C++ source using real SDK declarations; no assembly, byte emission, binary include or decompiler paste. The separate compiler-exported offsetof/sizeof array is infrastructure metadata and adds zero recovered function bytes. No rule exception."
+    }
+  },
+  "layout_audit": "Original witness daf53a8a... was independently reopened: all source/tool/object/image/map hashes, raw PE export directory and exact28B array verified. Actual values12,0,4,4,4,8,4 agree with independently read WinBase.h field definition and actual retail API use. Separate observed pinned-compiler replay766ae78af9c44868acd54b52e6ed778d reproduced identical source expressions and results with all known SDK/tool inputs snapshotted before/after. Gate typed-member diagnostic independently passed all32B/4refs; wrong nLength offset4, sibling base, crossing width and fake field globals are negative cases. This current review pins the same complete witness record, not a mutable unreviewed replacement.",
+  "pending": [
+    {
+      "va": "0x40a41b",
+      "name": "Queue::append_nosync",
+      "status": "MATCH-PENDING-no-review"
+    },
+    {
+      "va": "0x408010",
+      "name": "strqlen",
+      "status": "MATCH-PENDING-no-review"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "binary": "cl",
-  "note": "Independently bounded source candidates. Only the byte gate admits counts. append_nosync, strqlen and SDK-member Initialize remain disabled pending candidates; neither aliases nor referenced data inflate counts.",
+  "note": "Independently bounded candidates; only the gate admits counts. append_nosync and strqlen remain disabled. SDK Initialize uses three named members of one canonical object; aliases and referenced data never inflate counts.",
   "candidates": [
     {
       "binary": "cl",
@@ -838,8 +838,8 @@
       "size": 32,
       "unit": "matching/cl/util_watson.cpp",
       "source_span": {
-        "start": 135,
-        "end": 141
+        "start": 134,
+        "end": 140
       },
       "boundary": {
         "status": "verified",
@@ -847,8 +847,9 @@
       },
       "dependencies": [],
       "roots": [],
-      "gate_enabled": false,
-      "pending": "Real SDK member writes belong to one canonical SECURITY_ATTRIBUTES object. Typed member witness support and source stop-marker resolution are required before admission."
+      "compiler_context": {
+        "evidence": "Source stop marker removed only after typed SDK member identities and compiler-witness validation became available. Function body and flags are unchanged."
+      }
     }
   ],
   "referents": {
@@ -1026,7 +1027,11 @@
         "kind": "symbol",
         "entity_kind": "data",
         "type": "SECURITY_ATTRIBUTES",
-        "size": 12
+        "size": 12,
+        "layout_witness": {
+          "path": "E:\\vc8-decomp\\build\\toolchain-layout\\security-attributes-sp1-v1\\layout-witness.json",
+          "sha256": "daf53a8a6b7006817af98cd8620507e541b8dc443ed0a658b6c130923f1a2023"
+        }
       },
       "?g_errorReportingMappingHandle@@3PAXA": {
         "va": "0x41a02c",
@@ -1167,6 +1172,45 @@
         "dll": "msvcr80.dll",
         "name": "_get_wpgmptr",
         "evidence": "Exact public __get_wpgmptr at 0x40bbbe (DBI module53 MSVCR80.dll) is the six-byte FF25 74d24000 thunk to IAT0x40d274. That actual PE slot resolves MSVCR80.dll!_get_wpgmptr. Source/candidate must independently have the same exact MAP thunk identity and six-byte absolute-IAT-jump chain. Installed stdlib.h340 declares errno_t __cdecl _get_wpgmptr(wchar_t**) without _CRTIMP; caller push/pop confirms cdecl. Thunk bytes remain library/fallback, never counted."
+      },
+      "member:?g_errorReportingMappingAttributes@@3U_SECURITY_ATTRIBUTES@@A.nLength": {
+        "kind": "member",
+        "base_identity": "?g_errorReportingMappingAttributes@@3U_SECURITY_ATTRIBUTES@@A",
+        "member": "nLength",
+        "offset": 0,
+        "size": 4,
+        "va": "0x41a014",
+        "layout_witness": {
+          "path": "E:\\vc8-decomp\\build\\toolchain-layout\\security-attributes-sp1-v1\\layout-witness.json",
+          "sha256": "daf53a8a6b7006817af98cd8620507e541b8dc443ed0a658b6c130923f1a2023"
+        },
+        "evidence": "One canonical SDK SECURITY_ATTRIBUTES object and its named field, independently compiled offsetof/sizeof witness and direct retail memory access. Source/retail base plus this field offset must agree; no independent field storage or referent masking is allowed."
+      },
+      "member:?g_errorReportingMappingAttributes@@3U_SECURITY_ATTRIBUTES@@A.lpSecurityDescriptor": {
+        "kind": "member",
+        "base_identity": "?g_errorReportingMappingAttributes@@3U_SECURITY_ATTRIBUTES@@A",
+        "member": "lpSecurityDescriptor",
+        "offset": 4,
+        "size": 4,
+        "va": "0x41a018",
+        "layout_witness": {
+          "path": "E:\\vc8-decomp\\build\\toolchain-layout\\security-attributes-sp1-v1\\layout-witness.json",
+          "sha256": "daf53a8a6b7006817af98cd8620507e541b8dc443ed0a658b6c130923f1a2023"
+        },
+        "evidence": "One canonical SDK SECURITY_ATTRIBUTES object and its named field, independently compiled offsetof/sizeof witness and direct retail memory access. Source/retail base plus this field offset must agree; no independent field storage or referent masking is allowed."
+      },
+      "member:?g_errorReportingMappingAttributes@@3U_SECURITY_ATTRIBUTES@@A.bInheritHandle": {
+        "kind": "member",
+        "base_identity": "?g_errorReportingMappingAttributes@@3U_SECURITY_ATTRIBUTES@@A",
+        "member": "bInheritHandle",
+        "offset": 8,
+        "size": 4,
+        "va": "0x41a01c",
+        "layout_witness": {
+          "path": "E:\\vc8-decomp\\build\\toolchain-layout\\security-attributes-sp1-v1\\layout-witness.json",
+          "sha256": "daf53a8a6b7006817af98cd8620507e541b8dc443ed0a658b6c130923f1a2023"
+        },
+        "evidence": "One canonical SDK SECURITY_ATTRIBUTES object and its named field, independently compiled offsetof/sizeof witness and direct retail memory access. Source/retail base plus this field offset must agree; no independent field storage or referent masking is allowed."
       }
     }
   }
