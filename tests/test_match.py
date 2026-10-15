@@ -110,6 +110,25 @@ class MatchContracts(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'duplicate'):
                 match.registry_entries(root, 'cl')
 
+    def test_comparison_resolves_exact_referent_instead_of_masking(self):
+        candidate = {'candidate_va': 0x10001000, 'retail_va': 0x401000}
+        code = b'\xa1\x00\x20\x00\x10\xc3'
+        source = [{'offset': 1, 'width': 4, 'kind': 'abs32', 'target': 0x10002000, 'identity': '_global'}]
+        retail = [{'offset': 1, 'width': 4, 'kind': 'abs32', 'target': 0x41a020}]
+        bindings = {'_global': {'va': '0x41a020', 'evidence': 'independent storage identity'}}
+        self.assertEqual(match.relocate_for_comparison(candidate, code, source, retail, bindings), b'\xa1\x20\xa0\x41\x00\xc3')
+        with self.assertRaisesRegex(ValueError, 'unresolved'):
+            match.relocate_for_comparison(candidate, code, source, retail, {})
+        bindings['_global']['va'] = '0x41a024'
+        with self.assertRaisesRegex(ValueError, 'differs'):
+            match.relocate_for_comparison(candidate, code, source, retail, bindings)
+
+    def test_comparison_rejects_same_mask_with_different_ordered_sites(self):
+        source = [{'offset': 1, 'width': 4, 'kind': 'rel32', 'target': 0x1000, 'identity': 'self+0x0'}]
+        retail = [dict(source[0], offset=2)]
+        with self.assertRaisesRegex(ValueError, 'encoding differs'):
+            match.relocate_for_comparison({'candidate_va': 0x1000, 'retail_va': 0x2000}, b'\xe8\0\0\0\0', source, retail, {})
+
 
 if __name__ == '__main__':
     unittest.main()

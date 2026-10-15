@@ -5,11 +5,14 @@ with VC8 `/GL`, links each unit and its explicit real source dependencies with
 `/LTCG`, and writes a fresh ignored `build/cl/<UUID>/manifest.json`. It does
 not admit functions or update banked counts. The gate owns admission.
 
-`match --binary cl --unit matching/cl/unit.cpp` additionally writes raw-byte
-comparisons to `comparison.json`. `diff --binary cl --function DECORATED_NAME`
+`match --binary cl --unit matching/cl/unit.cpp` additionally writes byte and
+ordered-referent comparisons to `comparison.json`. `diff --binary cl --function DECORATED_NAME`
 uses the unit registered in `config/gate-allow.json` and shows at most 24
-instructions from each side. Scores are diagnostic raw-byte agreement; they
-do not mask relocation operands or prove referent identity.
+instructions from each side. When every ordered operand encoding and retail
+identity binding agrees, comparison resolves those operands before comparing
+bytes. Missing bindings or different targets remain unresolved or mismatched;
+the diagnostic score then uses raw bytes. These comparisons do not admit source
+or replace the gate's independent checks.
 
 The build interface also accepts `--output-dir ABS --manifest ABS
 --build-id UUID`. A supplied output directory must be empty; stale files are

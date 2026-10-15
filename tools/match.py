@@ -307,23 +307,79 @@ def compare_candidates(manifest, root, binary):
     project, settings = load_settings(root, binary)
     retail_path = settings.get('path') or str(Path(project['toolchain_root']) / 'bin' / settings['filename'])
     retail = PEImage(retail_path)
+    bindings = {}
+    for path in (root / 'config/gate-allow.json', root / 'config' / (binary + '-candidates.json')):
+        registry = read_json(path, {})
+        for name, record in registry.get('referents', {}).get(binary, {}).items():
+            if name in bindings and bindings[name] != record:
+                raise ValueError('conflicting referent identity binding: ' + name)
+            bindings[name] = record
     results = []
     for candidate in manifest['candidates']:
         size = candidate['size']
-        ours = PEImage(candidate['image_path']).read_va(candidate['candidate_va'], size) if size else b''
+        image = PEImage(candidate['image_path'])
+        ours = image.read_va(candidate['candidate_va'], size) if size else b''
         theirs = retail.read_va(candidate['retail_va'], size) if size else b''
-        equal = sum(a == b for a, b in zip(ours, theirs))
+        normalized = ours
+        referents_status = 'unresolved'
+        comparison_error = None
+        if size:
+            try:
+                source_refs = ltcg.scan_referents(image, candidate['candidate_va'], size,
+                    ltcg.read_map(Path(candidate['image_path']).with_suffix('.map')))
+                retail_refs = ltcg.scan_referents(retail, candidate['retail_va'], size)
+                normalized = relocate_for_comparison(candidate, ours, source_refs, retail_refs, bindings)
+                referents_status = 'resolved'
+            except (ValueError, ImportError) as error:
+                comparison_error = str(error)
+                referents_status = 'mismatch' if 'differs' in str(error) else 'unresolved'
+        equal = sum(a == b for a, b in zip(normalized, theirs))
+        exact = bool(size) and normalized == theirs and referents_status == 'resolved'
         results.append({'symbol': candidate['symbol'], 'retail_va': candidate['retail_va'],
                         'observed_at': datetime.now(timezone.utc).isoformat(),
                         'source_path': candidate['source_path'], 'source_sha256': candidate['source_sha256'],
                         'function_source_sha256': candidate['function_source_sha256'],
                         'build_id': manifest['build_id'], 'size': size,
                         'score': 100.0 * equal / size if size else None,
+                        'score_kind': 'resolved-referents' if referents_status == 'resolved' else 'raw-bytes',
                         'raw_bytes_equal': bool(size) and ours == theirs,
+                        'bytes_exact': exact,
                         'boundary_status': candidate['boundary'].get('status', 'unverified'),
-                        'referents_status': candidate['referents_status'], 'rule_status': 'pending',
-                        'status': 'MATCH-PENDING' if size and ours == theirs else 'DIFF' if size else 'UNRESOLVED'})
+                        'referents_status': referents_status, 'comparison_error': comparison_error, 'rule_status': 'pending',
+                        'status': 'MATCH-PENDING' if exact else 'DIFF' if size else 'UNRESOLVED'})
     return results
+
+
+def relocate_for_comparison(candidate, code, source_refs, retail_refs, bindings):
+    """Diagnostic relocation only after ordered encodings and identities agree.
+
+    These bytes are never spliced by this tool. The gate repeats every check
+    independently and additionally verifies rules and complete image identity.
+    """
+    shape = lambda refs: [(ref['offset'], ref['width'], ref['kind']) for ref in refs]
+    if shape(source_refs) != shape(retail_refs):
+        raise ValueError('ordered referent encoding differs from retail')
+    adjusted = bytearray(code)
+    for source, retail in zip(source_refs, retail_refs):
+        identity = source.get('identity')
+        if identity and identity.startswith('self+0x'):
+            offset = int(identity[7:], 16)
+            if not 0 <= offset < len(code) or source['target'] != candidate['candidate_va'] + offset:
+                raise ValueError('internal reference identity differs from candidate')
+            target = candidate['retail_va'] + offset
+        else:
+            record = bindings.get(identity)
+            if not record or not record.get('evidence'):
+                raise ValueError('unresolved retail identity: ' + str(identity))
+            target = integer(record['va'])
+        if target != retail['target']:
+            raise ValueError('ordered referent target differs from retail: ' + str(identity))
+        offset, width = source['offset'], source['width']
+        value = target if source['kind'] == 'abs32' else target - (candidate['retail_va'] + offset + width)
+        if source['kind'] != 'abs32' and not -(1 << (width * 8 - 1)) <= value < 1 << (width * 8 - 1):
+            raise ValueError('relative target cannot be encoded at retail address')
+        adjusted[offset:offset + width] = (value & ((1 << (width * 8)) - 1)).to_bytes(width, 'little')
+    return bytes(adjusted)
 
 
 def main(argv=None):

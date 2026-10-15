@@ -154,4 +154,7 @@ def scan_referents(image, va, size, symbols=()):
         raise ValueError('candidate span contains undecoded bytes')
     if relocation_sites - decoded_word_sites:
         raise ValueError('PE relocation is not a decoded four-byte operand')
-    return [refs[offset] for offset in sorted(refs)]
+    ordered = [refs[offset] for offset in sorted(refs)]
+    if any(a['offset'] + a['width'] > b['offset'] for a, b in zip(ordered, ordered[1:])):
+        raise ValueError('overlapping reference operands')
+    return ordered
