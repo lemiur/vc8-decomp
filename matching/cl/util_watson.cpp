@@ -92,3 +92,50 @@ bool __cdecl ErrorReportingDisabled()
     }
     return true;
 }
+
+// DATA: cl 0x0041a014
+// Invented spelling. The complete canonical layout is the installed Win32 SDK
+// SECURITY_ATTRIBUTES, corroborated by the API argument and nLength == 12.
+SECURITY_ATTRIBUTES g_errorReportingMappingAttributes;
+
+// DATA: cl 0x0041a02c
+// Invented spelling; receives CreateFileMappingA's HANDLE and feeds CloseHandle.
+HANDLE g_errorReportingMappingHandle;
+
+// DATA: cl 0x0041a028
+// Invented spelling; receives MapViewOfFile's LPVOID result.
+LPVOID g_errorReportingMappingView;
+
+// FUNCTION: cl 0x00409a58
+// SYMBOL: ?ErrorReportingCreateMapping@@YA_NXZ
+// Invented helper spelling; original name and linkage are unresolved. Its body
+// and no-argument/caller-clean ABI are directly decoded. Both returned AL values
+// are boolean, and ErrorReportingFilter tests AL after calling this entry.
+bool __cdecl ErrorReportingCreateMapping()
+{
+    g_errorReportingMappingHandle = CreateFileMappingA(
+        INVALID_HANDLE_VALUE, &g_errorReportingMappingAttributes,
+        PAGE_READWRITE, 0, 0x9c9c, 0);
+    if (!g_errorReportingMappingHandle)
+        return false;
+    g_errorReportingMappingView = MapViewOfFile(
+        g_errorReportingMappingHandle, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0);
+    if (!g_errorReportingMappingView)
+    {
+        CloseHandle(g_errorReportingMappingHandle);
+        g_errorReportingMappingHandle = 0;
+        return false;
+    }
+    return true;
+}
+
+// FUNCTION: cl 0x00409aab
+// SYMBOL: ?ErrorReportingInitialize@@YAXXZ
+// stop: referents: gate must independently resolve the real SDK object's fields.
+void __cdecl ErrorReportingInitialize()
+{
+    g_errorReportingMappingAttributes.nLength = sizeof(g_errorReportingMappingAttributes);
+    g_errorReportingMappingAttributes.lpSecurityDescriptor = 0;
+    g_errorReportingMappingAttributes.bInheritHandle = TRUE;
+    ErrorReportingCreateMapping();
+}

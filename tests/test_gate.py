@@ -378,7 +378,7 @@ class GateTests(unittest.TestCase):
                               "va": 0x1020, "evidence": "fixture complete string object"}}
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "unit.cpp"
-            source.write_text('const wchar_t *fixture(void) { return L"CONOUT$"; }\n')
+            source.write_text('''char quote = '"';\nconst wchar_t *fixture(void) { return L"CONOUT$"; }\n''')
             claim.update(source_path=str(source), source_sha256=gate.digest(source.read_bytes()))
             code, count = gate.compare_candidate(retail, emitted, claim, request, binding, {})
             self.assertEqual((code, count), (retail.read(0x1000, 6), 1))
@@ -424,6 +424,121 @@ class GateTests(unittest.TestCase):
         self.assertEqual(refs, [{"offset": 1, "width": 4, "kind": "abs32", "target": 0x1030}])
         with self.assertRaisesRegex(gate.GateError, "read-only"):
             gate.verify_literal_storage(image, 0x1030, b"x\0")
+
+    def member_fixture(self, directory):
+        root = Path(directory)
+        record = {"path": str(root / "layout.json"), "sha256": "a" * 64}
+        layout = {"type": "SECURITY_ATTRIBUTES", "size": 12,
+                  "members": {"nLength": {"offset": 0, "size": 4}, "lpSecurityDescriptor": {"offset": 4, "size": 4},
+                              "bInheritHandle": {"offset": 8, "size": 4}}}
+        base = {"kind": "symbol", "entity_kind": "data", "type": "SECURITY_ATTRIBUTES", "size": 12,
+                "va": 0x1020, "layout_witness": record, "evidence": "fixture canonical object"}
+        member = {"kind": "member", "base_identity": "_attrs", "member": "lpSecurityDescriptor", "offset": 4,
+                  "size": 4, "va": 0x1024, "layout_witness": record, "evidence": "fixture SDK field"}
+        layouts = {gate.witness_key(record, root): layout}
+        return root, record, base, member, layouts
+
+    def test_member_uses_named_compiler_layout_and_canonical_base(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root, record, base, member, layouts = self.member_fixture(directory)
+            identities = {"_attrs": base, "member": member}
+            gate.verify_member(member, "member", identities, {0x4020: {"_attrs"}}, 0x4024, 0x1024,
+                               {"width": 4, "dynamic": False}, layouts, root)
+            tampering = [
+                ("field name/offset", dict(member, member="nLength"), {0x4020: {"_attrs"}}, {"width": 4, "dynamic": False}),
+                ("crosses member", member, {0x4020: {"_attrs"}}, {"width": 8, "dynamic": False}),
+                ("sibling", member, {0x4020: {"_other_attrs"}}, {"width": 4, "dynamic": False}),
+                ("invented field", member, {0x4024: {"_attrs.lpSecurityDescriptor"}}, {"width": 4, "dynamic": False}),
+                ("static member", member, {0x4020: {"_attrs"}}, {"width": 4, "dynamic": True}),
+            ]
+            for message, altered, emitted, access in tampering:
+                with self.subTest(message=message), self.assertRaisesRegex(gate.GateError, message):
+                    gate.verify_member(altered, "member", identities, emitted, 0x4024, 0x1024, access, layouts, root)
+            base["entity_kind"] = "scalar"
+            with self.assertRaisesRegex(gate.GateError, "canonical aggregate"):
+                gate.verify_member(member, "member", identities, {0x4020: {"_attrs"}}, 0x4024, 0x1024,
+                                   {"width": 4, "dynamic": False}, layouts, root)
+
+    def test_data_access_width_is_not_the_relocation_operand_width(self):
+        # movsd qword ptr [0x1024],xmm0: eight data bytes, four address bytes.
+        access = gate.memory_reference_widths(0x1000, b"\xf2\x0f\x11\x05\x24\x10\x00\x00\xc3")
+        self.assertEqual(access[4], {"width": 8, "dynamic": False})
+
+    def test_compiler_export_layout_is_reopened_and_metadata_tampering_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output, manifest = self.manifest_fixture(root)
+            values = (12, 0, 4, 4, 4, 8, 4)
+            image = output / "candidate.dll"
+            image.write_bytes(struct.pack("<7I", *values))
+            next(item for item in manifest["artifacts"] if item["kind"] == "linked-image")["sha256"] = gate.digest(image.read_bytes())
+            observations = {"size": 12, "members": {"nLength": {"offset": 0, "size": 4}, "lpSecurityDescriptor": {"offset": 4, "size": 4},
+                                                    "bInheritHandle": {"offset": 8, "size": 4}}}
+            witness = dict(manifest, kind="offsetof-sizeof", type="SECURITY_ATTRIBUTES", fields=list(observations["members"]),
+                           image={"path": str(image), "sha256": gate.digest(image.read_bytes())}, symbol="fixture_layout", observations=observations)
+            path = root / "layout.json"
+            path.write_text(json.dumps(witness))
+            record = {"path": str(path), "sha256": gate.digest(path.read_bytes())}
+            class PE(Image):
+                machine = 0x14c
+                def __init__(self, path):
+                    super().__init__(0x1000, Path(path).read_bytes())
+                def export_records(self):
+                    return [{"names": ["fixture_layout"], "va": 0x1000, "forwarder": None}]
+            module = types.SimpleNamespace(PEImage=PE)
+            self.assertEqual(gate.load_layout_witness(record, root, module)["members"], observations["members"])
+            witness["observations"]["members"]["nLength"]["offset"] = 4
+            path.write_text(json.dumps(witness))
+            with self.assertRaisesRegex(gate.GateError, "provenance hash"):
+                gate.load_layout_witness(record, root, module)
+            record["sha256"] = gate.digest(path.read_bytes())
+            with self.assertRaisesRegex(gate.GateError, "compiled export"):
+                gate.load_layout_witness(record, root, module)
+
+    def test_semantic_review_pins_exact_layout_witness(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root, record, _, _, _ = self.member_fixture(directory)
+            (root / "config").mkdir()
+            review_path = root / "review.json"
+            review_path.write_text(json.dumps({"layout_witnesses": [record]}))
+            admission = {"binary": "cl", "va": "0x1000", "source_path": "matching/cl/unit.cpp",
+                         "source_sha256": "b" * 64, "scope_sha256": "c" * 64}
+            review = dict(admission, checks={"R2": {"evidence": [{"path": "review.json", "sha256": gate.digest(review_path.read_bytes())}]}})
+            policy_path = root / "config/rule-exceptions.json"
+            policy_path.write_text(json.dumps({"reviews": [review]}))
+            rules = {"policy_sha256": gate.digest(policy_path.read_bytes())}
+            gate.require_layout_review([record], admission, rules, root)
+            altered = dict(record, sha256="d" * 64)
+            with self.assertRaisesRegex(gate.GateError, "not pinned by current R2"):
+                gate.require_layout_review([altered], admission, rules, root)
+
+    def test_named_direct_import_thunk_requires_actual_iat_jump_on_both_sides(self):
+        images = []
+        for base in (0x1000, 0x4000):
+            code = b"\xe8" + struct.pack("<i", 16 - 5) + b"\xc3"
+            thunk = b"\xff\x25" + struct.pack("<I", base + 32)
+            image = Image(base, code + bytes(16 - len(code)) + thunk + bytes(32 - 16 - len(thunk)) + bytes(4))
+            image.import_entries = [{"va": base + 32, "dll": "MSVCR80.dll", "name": "_get_wpgmptr"}]
+            images.append(image)
+        retail, emitted = images
+        boundary = {"status": "verified", "evidence": "synthetic complete caller"}
+        request = {"retail_va": 0x1000, "size": 6, "boundary": boundary}
+        claim = {"retail_va": 0x1000, "candidate_va": 0x4000, "size": 6, "boundary": boundary,
+                 "bytes_sha256": gate.digest(emitted.data[:6]),
+                 "referents": [{"offset": 1, "width": 4, "kind": "rel32", "target": 0x4010,
+                                "identity": "__get_wpgmptr", "resolved": True}]}
+        bindings = {"__get_wpgmptr": {"kind": "import-thunk", "dll": "msvcr80.dll", "name": "_get_wpgmptr",
+                                      "va": 0x1010, "evidence": "fixture named thunk"}}
+        identities = {0x4010: {"__get_wpgmptr"}}
+        code, count = gate.compare_candidate(retail, emitted, claim, request, bindings, identities)
+        self.assertEqual((code, count), (retail.data[:6], 1))
+        emitted.import_entries[0]["name"] = "free"
+        with self.assertRaisesRegex(gate.GateError, "thunk DLL/name"):
+            gate.compare_candidate(retail, emitted, claim, request, bindings, identities)
+        emitted.import_entries[0]["name"] = "_get_wpgmptr"
+        emitted.data = emitted.data[:16] + b"\x90" + emitted.data[17:]
+        with self.assertRaisesRegex(gate.GateError, "six-byte absolute IAT jump"):
+            gate.compare_candidate(retail, emitted, claim, request, bindings, identities)
 
 
 if __name__ == "__main__":

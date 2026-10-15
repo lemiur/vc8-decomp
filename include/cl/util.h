@@ -1,6 +1,8 @@
 #ifndef VC8_DECOMP_CL_UTIL_H
 #define VC8_DECOMP_CL_UTIL_H
 
+#include <windows.h>
+
 // PDB identity: ?nextbase@@YAHH@Z. Caller at 0x408e80 cleans one
 // stack argument; the body returns the integer in EAX.
 int __cdecl nextbase(int);
@@ -9,5 +11,11 @@ int __cdecl nextbase(int);
 // the still-unresolved native wchar_t compiler setting.
 unsigned short* __cdecl gobblewhite(unsigned short*);
 void __cdecl xfree(void*);
+int __cdecl strqlen(const unsigned short*);
+unsigned short* __cdecl strrchars(unsigned short*, const unsigned short*);
+unsigned short* __cdecl concat(unsigned short*, unsigned int, const unsigned short*);
+unsigned short* __cdecl append(unsigned short*, unsigned int, const unsigned short*);
+int __cdecl IsOutputToConsole(HANDLE);
+int __cdecl IsRunningUnderIDE(HANDLE*);
 
 #endif

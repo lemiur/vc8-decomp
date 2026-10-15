@@ -1,6 +1,9 @@
 #include "../../include/cl/clmain.h"
 #include "../../include/cl/util_watson.h"
 
+#include <stdlib.h>
+#include <windows.h>
+
 // Source filename inferred from the PDB object owner clmain.obj; the original
 // extension and assert line mappings remain unresolved. Public names and stack
 // cleanup prove these cdecl callbacks; their flag_s argument is unused.
@@ -36,3 +39,42 @@ void __cdecl error_report_none(flag_s*)
 // DATA: cl 0x00417034
 // Public ?RedirStderr@@3HA; four file-backed bytes initialize the int to one.
 int RedirStderr = 1;
+
+// FUNCTION: cl 0x0040218a
+// SYMBOL: ?IsRunningUnderIDE@@YAHXZ
+int __cdecl IsRunningUnderIDE()
+{
+    return GetEnvironmentVariableW(L"VS_UNICODE_OUTPUT", 0, 0) != 0;
+}
+
+// FUNCTION: cl 0x004024a8
+// SYMBOL: ?fullccpath@@YAPAGXZ
+wchar_t* __cdecl fullccpath()
+{
+    wchar_t* path = 0;
+    _get_wpgmptr(&path);
+    return path;
+}
+
+// DATA: cl 0x00419640
+// Public ?pPCHBaseAddress@@3PAXA proves void* storage; clmain.obj owns it.
+// Retail places this zero-initialized pointer in the .data virtual tail.
+void* pPCHBaseAddress;
+
+// DATA: cl 0x004188ec
+// Public ?pPCHAstExtraBaseAddress@@3PAXA; clmain.obj owns the zero-valued pointer.
+void* pPCHAstExtraBaseAddress;
+
+// FUNCTION: cl 0x00402c06
+// SYMBOL: ?release_filelife_heap@@YAXXZ
+void __cdecl release_filelife_heap()
+{
+    VirtualFree(pPCHBaseAddress, 0, MEM_RELEASE);
+}
+
+// FUNCTION: cl 0x00402c1a
+// SYMBOL: ?release_ast_extra_heap@@YAXXZ
+void __cdecl release_ast_extra_heap()
+{
+    VirtualFree(pPCHAstExtraBaseAddress, 0, MEM_RELEASE);
+}
