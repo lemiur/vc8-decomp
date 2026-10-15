@@ -88,6 +88,7 @@ def load_registry(root):
         for candidate in document.get("candidates", []):
             name = candidate.get("binary")
             require(name in BINARIES and (only_binary is None or name == only_binary), "candidate descriptor names wrong binary")
+            require(type(candidate.get("gate_enabled", True)) is bool, "gate_enabled must be a boolean")
             symbol_key, address_key = (name, candidate["symbol"]), (name, integer(candidate["retail_va"]))
             require(symbol_key not in seen_symbols and address_key not in seen_addresses, "duplicate candidate admission descriptor")
             seen_symbols.add(symbol_key)
@@ -370,7 +371,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 "function_denominator": None, "function_denominator_caveat": "public symbols do not establish all function boundaries",
                 "source_byte_denominator": len(copied), "admitted": [], "pending": [], "status": "fallback-verified"}
         for name in selected:
-            requests = [r for r in registry.get("candidates", []) if r.get("binary") == name]
+            requests = [r for r in registry.get("candidates", []) if r.get("binary") == name and r.get("gate_enabled", True)]
             require(len({r["symbol"] for r in requests}) == len(requests), "duplicate candidate admission requests")
             build_dir = out / name
             build_dir.mkdir()
@@ -437,6 +438,10 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                     "referents": refs, "referents_status": "resolved", "bytes_exact": True,
                     "artifacts": list(artifacts.values()),
                     "boundary": request["boundary"]})
+            # The rule review and comparison must describe the same headers,
+            # sources and toolchain that produced the fresh artifact.
+            for item in manifest.get("source_inputs", []) + manifest.get("toolchain", []):
+                checked_file(item, root)
             output = build_dir / "splice.bin"
             output.write_bytes(image)
             result["output_sha256"] = digest(output.read_bytes())

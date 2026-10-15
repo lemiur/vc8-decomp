@@ -256,6 +256,11 @@ class GateTests(unittest.TestCase):
             (config / "gate-allow.json").write_text(json.dumps(descriptor))
             with self.assertRaisesRegex(gate.GateError, "conflicting referent"):
                 gate.load_registry(root)
+            (config / "gate-allow.json").write_text('{"schema_version":1,"candidates":[]}')
+            descriptor["candidates"] = [{"binary": "cl", "symbol": "_f", "retail_va": "0x401000", "gate_enabled": "false"}]
+            (config / "cl-candidates.json").write_text(json.dumps(descriptor))
+            with self.assertRaisesRegex(gate.GateError, "must be a boolean"):
+                gate.load_registry(root)
 
 
 if __name__ == "__main__":
