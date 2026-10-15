@@ -1,6 +1,8 @@
 // PDB DBI module 7: dos.obj. Original source filename and line layout unresolved.
 #include "../../include/cl/dos.h"
+#include "../../include/cl/clmain.h"
 #include <windows.h>
+#include <io.h>
 
 // FUNCTION: cl 0x408f04
 // SYMBOL: ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z
@@ -29,4 +31,12 @@ int screen_length()
 
     int height = info.srWindow.Bottom - info.srWindow.Top + 1;
     return height > 0 ? height : 1;
+}
+
+// FUNCTION: cl 0x4092be
+// SYMBOL: ?redirect@@YAXXZ
+void redirect()
+{
+    if (RedirStderr)
+        _dup2(1, 2);
 }
