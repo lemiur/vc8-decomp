@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "module_inventory_is_function_ownership": false,
+    "infer_source_extension_from_object_name": false,
+    "infer_ownership_from_public_name_or_address_contiguity": false,
+    "assert_references_prove_original_translation_unit": false,
+    "embedded_paths_prove_source_ownership": false
+  },
+  "binaries": {
+    "cl": {
+      "binary_sha256": "71c93ca5bddc9b2816d0e053cac2b952f926f6b9321fab6b1ab6e8603621324c",
+      "evidence": "Public PDB DBI section contributions; module indices are zero based. Rich header one-LTCG-product count does not establish a single original translation unit.",
+      "object_lanes": [
+        {"id": "cl-mpcl", "module_indices": [4]},
+        {"id": "cl-util-watson", "module_indices": [5]},
+        {"id": "cl-loadui", "module_indices": [6]},
+        {"id": "cl-dos", "module_indices": [7]},
+        {"id": "cl-util", "module_indices": [8]},
+        {"id": "cl-compile", "module_indices": [9]},
+        {"id": "cl-clmain", "module_indices": [11]},
+        {"id": "cl-vssqm", "module_indices": [1]},
+        {"id": "cl-delayhlp", "module_indices": [14]},
+        {"id": "cl-crt-runtime", "module_indices": [3, 25, 28, 32, 34, 35, 36, 37, 38, 52, 54]},
+        {"id": "cl-crt-security", "module_indices": [20, 30, 31, 41, 47, 48, 49]},
+        {"id": "cl-crt-arithmetic", "module_indices": [42, 44, 45, 50]}
+      ]
+    }
+  },
+  "notes": [
+    "DBI module names identify linker inputs, including archives and LTCG products; they need not identify original source units.",
+    "Direct module procedure records and unique section contributions support object attribution, not original source ownership through LTCG.",
+    "Assert file references are qualified secondary evidence: macro and inline expansion can cite another file.",
+    "Generated maps are evidence inventories. No entry is a compiled-source match or a byte-gate admission.",
+    "Object lanes allocate disjoint public start sets; they do not infer C/C++ source filenames, function sizes, or independence from cross-unit LTCG.",
+    "cl VERSION.dll and MSVCR80.dll module symbols are import-module entries and excluded from the twelve object lanes."
+  ]
+}
