@@ -183,6 +183,23 @@ class MatchContracts(unittest.TestCase):
         refs = ltcg.scan_referents(Image(), 0x10001000, len(code))
         self.assertEqual([(r['offset'], r['kind'], r['target']) for r in refs], [(3, 'abs32', 0x10002000)])
 
+    def test_immediate_virtual_bss_pointer_remains_an_unresolved_referent(self):
+        code = b'\x68\x20\x20\x00\x10\xc3'
+
+        class Image:
+            sections = [{'va': 0x10002000, 'vsize': 0x100, 'rawsize': 0}]
+
+            def read_va(self, va, size):
+                if not 0x10001000 <= va <= va + size <= 0x10001000 + len(code):
+                    raise ValueError('not file-backed')
+                return code[va - 0x10001000:va - 0x10001000 + size]
+
+            def base_relocations(self):
+                return []
+
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code))
+        self.assertEqual([(r['offset'], r['kind'], r['target'], r['resolved']) for r in refs], [(1, 'abs32', 0x10002020, False)])
+
 
 if __name__ == '__main__':
     unittest.main()

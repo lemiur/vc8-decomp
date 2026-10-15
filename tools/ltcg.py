@@ -170,7 +170,9 @@ def scan_referents(image, va, size, symbols=(), bindings=None):
                 try:
                     readable = len(image.read_va(target, 1)) == 1
                 except ValueError:
-                    readable = False
+                    readable = any(section['va'] <= target < section['va'] +
+                                   max(section['vsize'], section['rawsize'])
+                                   for section in getattr(image, 'sections', []))
                 if readable:
                     add(off + ins.imm_offset, 4, 'abs32', target)
     if decoded != size:
