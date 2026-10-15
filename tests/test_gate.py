@@ -401,6 +401,30 @@ class GateTests(unittest.TestCase):
         with self.assertRaisesRegex(gate.GateError, "read-only"):
             gate.verify_literal_storage(image, 0x1000, b"abc\0")
 
+    def test_fixed_base_indexed_operand_retains_static_referent(self):
+        image = Image(0x1000, b"\x8b\x04\x85\x20\x10\x00\x00\xc3" + bytes(28))
+        refs = gate.scan_referents(image, 0x1000, image.data[:8])
+        self.assertEqual(refs, [{"offset": 3, "width": 4, "kind": "abs32", "target": 0x1020}])
+
+    def test_map_inline_flag_preserves_exact_compiled_source_owner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output, manifest = self.manifest_fixture(root)
+            mapfile = output / "candidate.map"
+            mapfile.write_text(" 0001:00000000 _fixture 10001000 f i source.obj\n")
+            next(item for item in manifest["artifacts"] if item["kind"] == "linker-map")["sha256"] = gate.digest(mapfile.read_bytes())
+            _, artifacts = gate.validate_manifest(manifest, "cl", "fresh", output, root)
+            identities = gate.verify_linked_symbol(manifest["candidates"][0], manifest, artifacts, root)
+            self.assertEqual(identities[0x10001000], {"_fixture"})
+
+    def test_immediate_to_virtual_global_is_not_silently_omitted(self):
+        image = Image(0x1000, b"\x68\x30\x10\x00\x00\xc3")
+        image.sections.append({"va": 0x1020, "rawsize": 0, "vsize": 0x20, "chars": 0xc0000080})
+        refs = gate.scan_referents(image, 0x1000, image.data)
+        self.assertEqual(refs, [{"offset": 1, "width": 4, "kind": "abs32", "target": 0x1030}])
+        with self.assertRaisesRegex(gate.GateError, "read-only"):
+            gate.verify_literal_storage(image, 0x1030, b"x\0")
+
 
 if __name__ == "__main__":
     unittest.main()

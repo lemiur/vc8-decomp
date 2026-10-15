@@ -140,18 +140,22 @@ def scan_referents(image, va, code):
                 fixup_fields.add(ins.address - va + ins.imm_offset)
             if operand.type == X86_OP_MEM and ins.disp_size == 4:
                 fixup_fields.add(ins.address - va + ins.disp_offset)
-            if operand.type == X86_OP_MEM and not operand.mem.base and not operand.mem.index:
+            if operand.type == X86_OP_MEM and not operand.mem.base:
                 require(ins.disp_size == 4, "unsupported absolute memory operand")
                 offset = ins.address - va + ins.disp_offset
                 sites[offset] = {"offset": offset, "width": 4, "kind": "abs32",
                                  "target": operand.mem.disp & 0xffffffff}
             elif operand.type == X86_OP_IMM and not branch and ins.imm_size == 4:
-                # EXEs may have no relocation table. Treat an immediate that
-                # names file-backed image storage conservatively as a referent.
+                # EXEs may have no relocation table. Initialized storage and
+                # zero-filled virtual globals both need referent identity proof.
                 target = operand.imm & 0xffffffff
                 try:
-                    image.read(target, 1)
+                    in_image = len(image.read(target, 1)) == 1
                 except (ValueError, KeyError):
+                    in_image = any(integer(section["va"]) <= target < integer(section["va"]) +
+                                   max(integer(section.get("vsize", 0)), integer(section["rawsize"]))
+                                   for section in image.sections)
+                if not in_image:
                     continue
                 offset = ins.address - va + ins.imm_offset
                 sites[offset] = {"offset": offset, "width": 4, "kind": "abs32", "target": target}
@@ -383,7 +387,7 @@ def verify_linked_symbol(claim, manifest, artifacts, root):
                      for arg in links[0]["argv"] if arg.lower().startswith("/map:")}
     require(maps[0] in declared_maps, "linker MAP lacks command attribution")
     matches, identities = [], {}
-    pattern = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+f\s+(.+?)\s*$")
+    pattern = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+f\s+(?:i\s+)?(.+?)\s*$")
     any_symbol = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})(?:\s+.*)?$")
     compiled_objects = [str(resolve(path, root)) for path in links[0].get("argv", [])
                         if artifacts.get(str(resolve(path, root)), {}).get("kind") == "ltcg-object"]

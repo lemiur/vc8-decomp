@@ -1,0 +1,393 @@
+{
+  "schema_version": 1,
+  "reviewer": "independent audit lane /root/audit",
+  "review_date": "2026-10-15",
+  "scope_sha256": "f5e9cdbb34056ae701a6a41f63830ad1f3768dff8072006355316dae9b359c5f",
+  "approved_function_count": 25,
+  "enabled_source_bytes_expected": 761,
+  "authority_limit": "Source-rule admission only. Compiled bytes, ordered referents, source attribution, verified boundaries and complete image identity still require the fresh gate. No bytes are banked by this review.",
+  "prior_review": {
+    "path": "config/reviews/cl-first-pilot.json",
+    "sha256": "5102ebb4896f37222a158c50d1e177476e4eceb945f8cd9e4da2def4b349952e",
+    "use": "Historical first-six semantic rationale retained unchanged; the entire expanded current source/header scope was re-reviewed and rebound below."
+  },
+  "retail": {
+    "sha256": "71c93ca5bddc9b2816d0e053cac2b952f926f6b9321fab6b1ab6e8603621324c",
+    "image_base": "0x400000",
+    "pdb_guid": "720089F2F35A4A128093E654DACA5226",
+    "pdb_age": 1
+  },
+  "method": "Read all enabled actual source bodies and their canonical project headers. Compared central source/header snapshot with reviewed lane snapshots to exclude later future additions. Independently decoded bounded complete retail bodies for all25 enabled functions, plus Queue/action constructor, array stride and SDK-object support slices. Independently resolved actual retail import descriptors and checked literal/pointer initializer bytes. No decompiler source or raw offset model is relied on.",
+  "source_scope": [
+    {
+      "path": "matching/cl/clmain.cpp",
+      "sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92"
+    },
+    {
+      "path": "matching/cl/dos.cpp",
+      "sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1"
+    },
+    {
+      "path": "matching/cl/merr.c",
+      "sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44"
+    },
+    {
+      "path": "matching/cl/mpcl.cpp",
+      "sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b"
+    },
+    {
+      "path": "matching/cl/util.cpp",
+      "sha256": "97bd0df830cf4c4420683b5ca8bbec45bb11e3906735b5fd1eab9cfb2b523362"
+    },
+    {
+      "path": "matching/cl/util_watson.cpp",
+      "sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace"
+    },
+    {
+      "path": "include/cl/clmain.h",
+      "sha256": "01b8e2ce14dbd509fc430bc1008b354a8104e5bfffe87fa92d695f6993f50331"
+    },
+    {
+      "path": "include/cl/dos.h",
+      "sha256": "fdc4938b6ccf951dd8b0b75e009689adeb43f68df0c2aa5f83cd7d15bf2037be"
+    },
+    {
+      "path": "include/cl/merr.h",
+      "sha256": "4dccb09d73fd0f57e0ff33ca7512df03e2b99dc94433d91f1874d04ac74bf644"
+    },
+    {
+      "path": "include/cl/mpcl.h",
+      "sha256": "9625f796bcd1aa9861d0d36b810110f8abb0e0f2627ba058266610536dec878f"
+    },
+    {
+      "path": "include/cl/util.h",
+      "sha256": "b9a53289a8487362f4c49d908c7baea24d9f9b1839f43986320b3672b4b81a7f"
+    },
+    {
+      "path": "include/cl/util_watson.h",
+      "sha256": "6b5142c348705f9ed84316481cb83e79b25d22d1c794cf65579aac5aed971114"
+    }
+  ],
+  "checks": {
+    "R1": "Every project type has one guarded canonical header. Queue/action_t are complete evidence-backed models in mpcl.h; ProcessChannel is a class forward declaration, worklist_s/source_s are struct forward declarations and remain undereferenced incomplete entities where not recovered. flag_s and passinfo_s use canonical struct forward declarations matching PAU public spellings, not invented partial layouts. Real era Windows/CRT headers own SDK/CRT types; there are no copied SDK structs, duplicate type views or keyword mismatches.",
+    "R2": "Globals have one canonical header declaration and one DATA-annotated definition in their supported owners. ErrorReportingMode datum41a020 is supported by actual enum-sized access and the preceding actual12B SECURITY_ATTRIBUTES boundary. Watson pointer data417be8/417bec are direct typed pointer setter targets in module5 contribution, each initially pointing to the real pooled empty UTF16 literal415a48. Their names remain invented explicitly. Public RedirStderr is actual int417034 initialized1 in clmain owner11 and address-escapes in real table triple412570 (br,0xa,417034). No known interior object address is modeled separately; no hypothetical enclosing-object exclusion is claimed.",
+    "R4": "Queue is a full0x3c object, positively corroborated by public batches indexing stride and constructor/operations. Its fields are int0, actual24B SDK CRITICAL_SECTION4, actual24B action_t sentinel1c, typed tail34 and int count38. action_t has actual fields0..14 corroborated by both constructors and intrusive operations; unknown semantic field names are explicit, not fake padding. All body accesses use real typed members. screen_length uses actual SDK CONSOLE_SCREEN_BUFFER_INFO members, and its signed SHORT top/bottom offsets follow the SDK layout. Registry reinterpret_cast<BYTE*>(&value) is a real DWORD-to-API-byte-buffer boundary with no offset arithmetic. No offset casts, invented storage aliases or raw layout views occur.",
+    "R13": "Queue and action_t have no fabricated virtuals, vtables or RTTI. Their methods use actual thiscall/member evidence. ProcessChannel is only forward declared, so no guessed vtable slots are introduced for its actual polymorphic implementation. Scalar and Win32/CRT bodies require no project vtable model.",
+    "R17": "Reviewed actual statements/local lifetimes for all25 bodies. Queue sentinel/tail/count and lock fields are supported by complete positive layout evidence; the small empty_nosync helper is explicitly reconstructed from the repeated tail==sentinel predicate, used consistently and introduces no arbitrary state. Local result values survive real unlocking/API calls as observed. Registry output locals, console state and cursor locals have real semantic uses. No dummy locals, volatile carriers, padding fields, probes, stub dependencies, artificial source to anchor LTCG, or forced dispatch slots are admitted. append_nosync has no review and remains pending despite being a complete source candidate.",
+    "R18": "All approved bodies are native VC8 C++ or C89 CRT source. No inline assembly, byte-emission bodies, binary includes, Microsoft binary copies masquerading as source or pasted decompiler implementation occur. Era CRT lineage is recorded; imports are genuine declarations from the installed headers, not fabricated replacement bodies. No rule exceptions are requested."
+  },
+  "queue_layout_evidence": {
+    "full_object": "Public ?batches@@3PAV?$Queue@Uaction_t@@@@A at41a2d4 is loaded40a654; actual imul40a65a multiplies index by0x3c before addition40a65d. This is positive full-object extent evidence, not a guessed prefix.",
+    "constructor": "Queue ctor40a364 stores int synchronized at0; initializes actual action_t sentinel at1c, passes this+4 to actual InitializeCriticalSection IAT40d090, then writes tail34, sentinel.next30 and count38. Complete body through ret4 at40a39e independently decoded.",
+    "action_t": "Ctor409ed0 stores real int first argument0, worklist_s* second argument4, zero passc and int third argument10; source8 receives typed source_s* corroborated by ProcessChannel::read_source public signature and call40a755/store40a75a. Intrusive methods access typed next14. No gaps need synthetic padding.",
+    "critical_section": "Era WinNT.h8586..8599 defines six x86 four-byte fields, totaling24B. Enter/Leave/InitializeCriticalSection actual import identities corroborate member type; mutable enables the real const size() API usage without casting away const."
+  },
+  "preprocessing_abi_and_lines": "Reviewed project guards, native __cplusplus/CRT context, canonical SDK declarations and actual build choices. merr uses real cruntime.h+math.h under _CRTBLD. Native unsigned-short wide spellings are preserved by actual /Zc:wchar_t- where used. No body has assert, __LINE__, __FILE__, line padding or source-layout claim. Parameter/member/helper names identified as reconstructed remain so. Rooting actual public setter and escaped RedirStderr plus compiler /Ob1 context does not add fake C++ code; independent gate must verify resulting ABIs and ordered referents. Public names are corroborated by stack/register access, real API signatures and observed cleanup, not treated as standalone signature proof.",
+  "literal_and_import_evidence": {
+    "literals": "Independently read retail pointer initializers417be8 and417bec ->415a48, containing exactly2 zero UTF16 bytes. screen_length4155f0 is16B UTF16 CONOUT$ including terminator. Query key415640 is43 characters plus NUL (44B), value415624 is26 characters plus NUL (27B). These are source literals, not source byte arrays; referent identity and emitted payload equality remain fresh-gate obligations.",
+    "imports": "Independently parsed retail imports: free40d28c/iswspace40d25c/_dup240d1e8 ->MSVCR80.dll; console APIs and lock/Sleep APIs ->KERNEL32.dll; RegOpenKeyExA40d014/RegQueryValueExA40d010/RegCloseKey40d00c ->ADVAPI32.dll. Header prototypes and real byte-buffer/output types were inspected."
+  },
+  "functions": [
+    {
+      "binary": "cl",
+      "va": "0x4015a8",
+      "symbol": "?error_report_prompt@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete9B: push1, call the actual cdecl enum setter, pop one argument and return. flag_s* is an authentic unused parameter; no layout is invented."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015b1",
+      "symbol": "?error_report_queue@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete9B: push2, call the actual cdecl enum setter, pop one argument and return. Canonical flag_s forward declaration only."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015ba",
+      "symbol": "?error_report_send@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete9B: push3, call the actual cdecl enum setter, pop one argument and return. Actual setter body participates in compilation."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4015c3",
+      "symbol": "?error_report_none@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "9e17f61adbf2e09790bdb1f267a2460c6d3b431963f94b61d08cf24884d9ef92",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete9B: push0, call the actual cdecl enum setter, pop one argument and return. Canonical enum values are source names invented explicitly."
+    },
+    {
+      "binary": "cl",
+      "va": "0x408f04",
+      "symbol": "?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z",
+      "size": 23,
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete23B: compare exception code with0x80000003; for other codes write4 through the real third int* argument; return0. passinfo_s* is authentic but unused. Actual era EXCEPTION_BREAKPOINT/EXCEPTION_CONTINUE_SEARCH macros match observed values."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4092d4",
+      "symbol": "?screen_length@@YAHXZ",
+      "size": 92,
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete92B: CreateFileW of16B UTF16 CONOUT$ literal with read|write and OPEN_EXISTING; failure returns25. Query real CONSOLE_SCREEN_BUFFER_INFO, always close successful handle, query failure returns25; otherwise signed SHORT Bottom-Top+1 clamped to at least1. info, console, success and height all have observed roles."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4092be",
+      "symbol": "?redirect@@YAXXZ",
+      "size": 22,
+      "source_path": "matching/cl/dos.cpp",
+      "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete22B: read public int RedirStderr; if nonzero call actual _dup2(1,2), perform caller cleanup and return. Real public-data root preserves its externally escaped mutable identity under LTCG; no volatile, fake caller, setter, exported shim or source alteration is used."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40c661",
+      "symbol": "__matherr",
+      "size": 3,
+      "source_path": "matching/cl/merr.c",
+      "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior independently reviewed3B CRT body remains unchanged. It includes actual cruntime.h+math.h under authentic _CRTBLD and uses __CRTDECL; no copied type/prototype. Unused real parameter is required by installed lineage."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a25f",
+      "symbol": "?thread_print@@YAXPBGZZ",
+      "size": 1,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior independently reviewed1B no-op remains unchanged. Decorated const unsigned short* variadic signature and caller cleanup corroborate the authentic empty body."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a2dc",
+      "symbol": "?env_size@@YAIPBG@Z",
+      "size": 45,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior independently reviewed45B typed environment traversal remains unchanged. All20 instructions and internal branches were independently decoded; a real cursor supplies loads and final pointer difference."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a3a1",
+      "symbol": "?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "size": 38,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete38B Queue try_head_nosync: test actual tail against sentinel; empty returns0, otherwise unlink sentinel.next, clear returned node.next, reset tail when removing last node, decrement count and return node. All field offsets correspond to the full typed model."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a475",
+      "symbol": "?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 33,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete33B Queue add_head_nosync: if empty set tail=item, link item before current sentinel.next, update head and preincrement real count. this in ECX and ret4 corroborate thiscall with one pointer argument."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a458",
+      "symbol": "?size@?$Queue@Uaction_t@@@@QBEHXZ",
+      "size": 29,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete29B const Queue size: enter actual critical section at this+4, preserve the real count at+0x38 across leave, return it. mutable CRITICAL_SECTION permits the real API operations without casting away const."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40aa29",
+      "symbol": "?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 53,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete53B Queue add_tail: enter critical section, point item.next to actual sentinel, link from old tail, update tail/count, preserve return count across leave and return with ret4. No fake lifetime carrier is introduced."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40aa5e",
+      "symbol": "?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 41,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete41B Queue add_head: enter lock, invoke the real recovered add_head_nosync member with item and this, preserve its actual returned count across leave, return with ret4. No stub or fabricated callee participates."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40a3c7",
+      "symbol": "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "size": 84,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "413500672350179433fd0c16ebd1c8971d8d9b6a096a8857d548dd6e5b58d05b",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete84B Queue head: load the real EnterCriticalSection IAT into a register, enter lock; while empty, leave, Sleep(0), then reenter. Unlink node, clear its next, repair tail, decrement count, leave and return node. Both indirect register calls are fed by the independently identified IAT load."
+    },
+    {
+      "binary": "cl",
+      "va": "0x408276",
+      "symbol": "?nextbase@@YAHH@Z",
+      "size": 26,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "97bd0df830cf4c4420683b5ca8bbec45bb11e3906735b5fd1eab9cfb2b523362",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior independently reviewed26B scalar nextbase semantics remain unchanged:1->2,2->3,otherwise1. The only source expansion is real CRT includes and independent utility declarations in its canonical unit/header."
+    },
+    {
+      "binary": "cl",
+      "va": "0x4082dc",
+      "symbol": "?xfree@@YAXPAX@Z",
+      "size": 14,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "97bd0df830cf4c4420683b5ca8bbec45bb11e3906735b5fd1eab9cfb2b523362",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete14B xfree: test actual void* argument; null returns, nonnull tail-jumps through the real MSVCR80 free IAT. Actual era stdlib.h provides void __cdecl free(void*). No new parameter interpretation or private CRT stub is invented."
+    },
+    {
+      "binary": "cl",
+      "va": "0x407f99",
+      "symbol": "?gobblewhite@@YAPAGPAG@Z",
+      "size": 33,
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "97bd0df830cf4c4420683b5ca8bbec45bb11e3906735b5fd1eab9cfb2b523362",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete33B gobblewhite: examine a real unsigned-short element; stop on zero or real iswspace result0, otherwise advance by one element and repeat. Return the actual cursor. Era wctype.h supplies canonical wint_t/API declarations; no custom classifier or offset access."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409934",
+      "symbol": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ",
+      "size": 6,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior6B getter semantics unchanged. Canonical enum datum remains supported by direct4B accesses, owner contribution and positive preceding SECURITY_ATTRIBUTES boundary. Invented original data spelling remains explicit."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40993a",
+      "symbol": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
+      "size": 12,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Prior12B setter semantics unchanged: write real enum argument to canonical datum and return true inAL. Parameter mode is an invented natural spelling, not claimed PDB parameter provenance."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409946",
+      "symbol": "?ErrorReportingSetDlls@@YA_NPBG@Z",
+      "size": 12,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete12B setter: copy actual const unsigned short* stack argument to canonical pointer datum417be8, return true inAL. Public PBG signature, direct pointer-sized copy, DBI owner and actual initializer support type/ownership."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409952",
+      "symbol": "?ErrorReportingSetFormalAppName@@YA_NPBG@Z",
+      "size": 12,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete12B setter: copy actual const unsigned short* stack argument to canonical pointer datum417bec, return true inAL. It shares the independently checked empty wide literal initializer but is a distinct canonical pointer definition."
+    },
+    {
+      "binary": "cl",
+      "va": "0x40995e",
+      "symbol": "?ErrorReportingCheckOptIn@@YA_NXZ",
+      "size": 110,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete110B registry query: RegOpenKeyExA of the actual43-character key, KEY_READ and HKEY_CURRENT_USER; on success query26-character value name into real DWORD type/value/size outputs with size4; close key; return value==1 only on success and REG_DWORD. BYTE* cast is the documented API buffer boundary, with no offset arithmetic or fake spill. All locals have actual address-taking/result-lifetime evidence; failed queries never consume uninitialized outputs."
+    },
+    {
+      "binary": "cl",
+      "va": "0x409acb",
+      "symbol": "?ErrorReportingDisabled@@YA_NXZ",
+      "size": 36,
+      "source_path": "matching/cl/util_watson.cpp",
+      "source_sha256": "4f43b9072451c2559db7388ac965f684d7fc14504c47d7bd2b0e6ea760cedace",
+      "review_status": "all-six-match-rules-pass",
+      "semantic_and_boundary_review": "Complete36B Disabled: signed enum mode<=0 or>3 returns true, modes1/2 return false, mode3 calls the actual110B CheckOptIn and returns its logical negation. Three observed terminal returns and real call are preserved; nested guards are natural control flow, with no artificial blocks or values."
+    }
+  ],
+  "pending": [
+    {
+      "binary": "cl",
+      "va": "0x40a41b",
+      "source_path": "matching/cl/mpcl.cpp",
+      "status": "NO-REVIEW-MATCH-PENDING",
+      "reason": "append_nosync is diagnostically complete but not byte exact; no rule approval or exception is issued."
+    }
+  ],
+  "installed_header_provenance": [
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\include\\math.h",
+      "sha256": "3cdf840fdb5db5a4c98fb849b6247f0f74dbd3071620ab218634d2c9ab58b791"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\include\\crtdefs.h",
+      "sha256": "0f51953203447b463edb22fd75519a38d50d008a84c306c419f5c483393eb6cd"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\crt\\src\\cruntime.h",
+      "sha256": "d1245829d64198109953651ca787743bdca7c0b1ad43397f5615966b08c0ff1c"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\include\\stdlib.h",
+      "sha256": "0438b0843b727f06110a6a3af2068629dcefaa5b836ffe97041b16115e4a9c14"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\include\\wctype.h",
+      "sha256": "2b1d53e317c533e2d9d01bcc0a312eef9aebced5649f37dd8f626b4fbb146bdf"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\include\\io.h",
+      "sha256": "1452bc39925b79de2c16f49a7486786f166567bb00c50a2d67ae014f2a02b87d"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\Include\\WinBase.h",
+      "sha256": "8570a7e2a03356b951238bd8377c8109f0ee7d6aeaf67583f0926e5f704820ed"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\Include\\WinCon.h",
+      "sha256": "83dfa7a50ae3d554f7974f49b04c5c8c1ff6cd8d35e6f38fdc052478eb389980"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\Include\\WinNT.h",
+      "sha256": "b86b87e0750e48791e54f8c9983a248cc2ccc3321bca8e5c17f9573410c75eb8"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\Include\\WinReg.h",
+      "sha256": "9ec9b9046683f668fc58549d0a4c53fcb70e8a99c6f38cd37e90a481216cdf5c"
+    }
+  ]
+}

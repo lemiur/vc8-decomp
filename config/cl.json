@@ -6,21 +6,52 @@
   "status": "provisional",
   "units": {
     "matching/cl/util.cpp": {
-      "compile_flags": ["/O1"],
+      "compile_flags": [
+        "/O1"
+      ],
       "evidence": "Actual SP1 /GL + /LTCG nextbase compile emits all 26 retail bytes with /O1; /O2 differs. This leaf does not establish flags for the rest of util.obj."
     },
     "matching/cl/mpcl.cpp": {
-      "compile_flags": ["/O1"],
+      "compile_flags": [
+        "/O1"
+      ],
       "evidence": "Actual SP1 /GL + /LTCG env_size compile emits all 45 retail bytes with /O1; /O2 differs at offset 13. The empty thread_print body is also exact but does not distinguish optimization flags."
     },
     "matching/cl/util_watson.cpp": {
-      "compile_flags": ["/O2"],
-      "evidence": "Actual /GL + /LTCG getter/setter probes emit retail code with either /O1 or /O2 after resolving their sole absolute data operands. /O2 is an experimental equivalent choice, not a pinned retail flag."
+      "compile_flags": [
+        "/O1",
+        "/Zc:wchar_t-",
+        "/GF",
+        "/Ob1"
+      ],
+      "link_flags": [
+        "advapi32.lib"
+      ],
+      "evidence": "Actual complete Watson family /GL+/LTCG probes match whole function bodies and independently resolved data/import/literal referents. wchar_t typedef mode and genuine L-empty initializer preserve the observed unsigned-short pointer type; /GF models observed sharing. /O1 is experimental outside the measured family. Explicit /Ob1 on this callee unit as well as the wrapper unit prevents cross-unit inlining and preserves the four observed 9-byte wrappers when the full Watson family is linked."
     },
     "matching/cl/merr.c": {
-      "remove_compile_flags": ["/EHsc"],
-      "compile_flags": ["/O1", "/D_CRTBLD", "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"],
+      "remove_compile_flags": [
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/D_CRTBLD",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
       "evidence": "Installed-era CRT return-zero source uses actual cruntime.h/math.h under _CRTBLD, matching authentic CRT build context. Actual /GL + /LTCG probe emits all three retail bytes. /O1 is an experimental control, not proof of original CRT flags; C++ EH options are excluded from this C unit."
+    },
+    "matching/cl/clmain.cpp": {
+      "compile_flags": [
+        "/O1",
+        "/Ob1"
+      ],
+      "evidence": "Same source/object probes require the real setter /INCLUDE root to preserve observed cdecl stack ABI; /O1 /Ob1 emits four complete 9-byte retail call wrappers."
+    },
+    "matching/cl/dos.cpp": {
+      "compile_flags": [
+        "/O1"
+      ],
+      "evidence": "Complete Filter23B, screen_length92B and redirect22B probes match; redirect additionally requires its evidence-backed real escaped data root, recorded per candidate."
     }
   },
   "flags": {
@@ -35,7 +66,7 @@
     ]
   },
   "flag_evidence": {
-    "/GL": "Compiler-owned Rich header objects; independent probe confirmation pending.",
+    "/GL": "Compiler-owned Rich header objects; actual synthetic and genuine source /GL + /LTCG probes succeed with both installed SP1 and isolated RTM tools. This establishes support, while optimization/suboptions and the bootstrap compiler remain provisional.",
     "/LTCG": "Required to consume /GL candidate objects.",
     "/MD": "Dynamic CRT imports and startup objects; exact startup flags remain provisional.",
     "/EHsc": "C++ exception support provisional; exact exception suboptions require probes."

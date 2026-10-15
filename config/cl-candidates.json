@@ -1,22 +1,196 @@
 {
   "schema_version": 1,
   "binary": "cl",
-  "note": "Independently bounded source candidates; only the byte gate admits counts. Original source filenames and line positions remain unresolved.",
+  "note": "Independently bounded source candidates; only the byte gate admits counts. append_nosync remains diagnostic only. Source filenames, most field/local names and original source lines remain unresolved unless explicitly evidenced.",
   "candidates": [
     {
       "binary": "cl",
-      "symbol": "?nextbase@@YAHH@Z",
-      "retail_va": "0x408276",
-      "size": 26,
-      "unit": "matching/cl/util.cpp",
-      "source_span": {"start": 8, "end": 15},
+      "symbol": "?error_report_prompt@@YAXPAUflag_s@@@Z",
+      "retail_va": "0x4015a8",
+      "size": 9,
+      "unit": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 10,
+        "end": 13
+      },
       "boundary": {
         "status": "verified",
-        "evidence": "config/cl-pilot.json: nextbase; complete 26-byte CFG with returns at 0x408280 and 0x40828f, local branch 0x40827b -> 0x408281, all instructions decoded; no public-gap inference."
+        "evidence": "Bounded direct retail decoding over exactly 9 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"
+      ],
+      "compiler_context": {
+        "evidence": "Retail wrappers push the enum argument and call the actual __cdecl setter, which reads [esp+4]. Keeping that real setter as an /INCLUDE root preserves its independently proven externally observed ABI; same-object A/B isolates this root as necessary for all four 9-byte wrappers. No dummy source or extra exported ABI is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?error_report_queue@@YAXPAUflag_s@@@Z",
+      "retail_va": "0x4015b1",
+      "size": 9,
+      "unit": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 17,
+        "end": 20
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 9 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"
+      ],
+      "compiler_context": {
+        "evidence": "Retail wrappers push the enum argument and call the actual __cdecl setter, which reads [esp+4]. Keeping that real setter as an /INCLUDE root preserves its independently proven externally observed ABI; same-object A/B isolates this root as necessary for all four 9-byte wrappers. No dummy source or extra exported ABI is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?error_report_send@@YAXPAUflag_s@@@Z",
+      "retail_va": "0x4015ba",
+      "size": 9,
+      "unit": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 24,
+        "end": 27
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 9 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"
+      ],
+      "compiler_context": {
+        "evidence": "Retail wrappers push the enum argument and call the actual __cdecl setter, which reads [esp+4]. Keeping that real setter as an /INCLUDE root preserves its independently proven externally observed ABI; same-object A/B isolates this root as necessary for all four 9-byte wrappers. No dummy source or extra exported ABI is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?error_report_none@@YAXPAUflag_s@@@Z",
+      "retail_va": "0x4015c3",
+      "size": 9,
+      "unit": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 31,
+        "end": 34
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 9 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"
+      ],
+      "compiler_context": {
+        "evidence": "Retail wrappers push the enum argument and call the actual __cdecl setter, which reads [esp+4]. Keeping that real setter as an /INCLUDE root preserves its independently proven externally observed ABI; same-object A/B isolates this root as necessary for all four 9-byte wrappers. No dummy source or extra exported ABI is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z",
+      "retail_va": "0x408f04",
+      "size": 23,
+      "unit": "matching/cl/dos.cpp",
+      "source_span": {
+        "start": 10,
+        "end": 15
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 23 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?RedirStderr@@3HA"
+      ],
+      "compiler_context": {
+        "evidence": "RedirStderr is a real public int with an actual form-table alias at 0x412578 proving address escape/mutability. Keeping its real data symbol via /INCLUDE models that observed standalone LTCG context. The unchanged redirect body then emits all 22 bytes; no volatile, fake writer or /EXPORT was introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?screen_length@@YAHXZ",
+      "retail_va": "0x4092d4",
+      "size": 92,
+      "unit": "matching/cl/dos.cpp",
+      "source_span": {
+        "start": 19,
+        "end": 34
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 92 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?RedirStderr@@3HA"
+      ],
+      "compiler_context": {
+        "evidence": "RedirStderr is a real public int with an actual form-table alias at 0x412578 proving address escape/mutability. Keeping its real data symbol via /INCLUDE models that observed standalone LTCG context. The unchanged redirect body then emits all 22 bytes; no volatile, fake writer or /EXPORT was introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?redirect@@YAXXZ",
+      "retail_va": "0x4092be",
+      "size": 22,
+      "unit": "matching/cl/dos.cpp",
+      "source_span": {
+        "start": 38,
+        "end": 42
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 22 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?RedirStderr@@3HA"
+      ],
+      "compiler_context": {
+        "evidence": "RedirStderr is a real public int with an actual form-table alias at 0x412578 proving address escape/mutability. Keeping its real data symbol via /INCLUDE models that observed standalone LTCG context. The unchanged redirect body then emits all 22 bytes; no volatile, fake writer or /EXPORT was introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "__matherr",
+      "retail_va": "0x40c661",
+      "size": 3,
+      "unit": "matching/cl/merr.c",
+      "source_span": {
+        "start": 13,
+        "end": 16
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "config/cl-pilot.json: __matherr; xor eax,eax then ret at 0x40c663, all three bytes decode. Installed merr.c lineage body returns zero."
       },
       "dependencies": [],
       "roots": [],
-      "identity_evidence": "S_PUB32 and unique DBI contribution module 8 util.obj; int(int) __cdecl from mangling, stack argument and caller cleanup."
+      "identity_evidence": "S_PUB32 and unique DBI contribution module 32 build/intel/dll_obj/merr.obj. Canonical int __cdecl _matherr(struct _exception*) declaration comes from installed-era CRT source with recorded provenance."
     },
     {
       "binary": "cl",
@@ -24,7 +198,10 @@
       "retail_va": "0x40a25f",
       "size": 1,
       "unit": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 10, "end": 12},
+      "source_span": {
+        "start": 10,
+        "end": 12
+      },
       "boundary": {
         "status": "verified",
         "evidence": "config/cl-pilot.json: thread_print; one decoded C3 return at entry, no data or other control transfer."
@@ -39,7 +216,10 @@
       "retail_va": "0x40a2dc",
       "size": 45,
       "unit": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 19, "end": 29},
+      "source_span": {
+        "start": 19,
+        "end": 29
+      },
       "boundary": {
         "status": "verified",
         "evidence": "Bounded direct retail decoding from 0x40a2dc through ret at 0x40a308: all 45 bytes are 20 contiguous instructions, every branch stays within the function, no embedded data or external referents. Source lane exact /O1 probe recorded under build/cl-mpcl-flag-probe/e2aa33e9-a418-4bef-95a5-7e5672715f62/O1/probe.json in its worktree."
@@ -50,11 +230,187 @@
     },
     {
       "binary": "cl",
+      "symbol": "?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "retail_va": "0x40a3a1",
+      "size": 38,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 34,
+        "end": 47
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 38 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?append_nosync@?$Queue@Uaction_t@@@@QAEHAAV1@@Z",
+      "retail_va": "0x40a41b",
+      "size": 61,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 52,
+        "end": 67
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 61 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": [],
+      "gate_enabled": false,
+      "pending": "Complete natural append body remains different after ordinary/helper passes; register/control residue not admitted."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "retail_va": "0x40a475",
+      "size": 33,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 72,
+        "end": 80
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 33 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?size@?$Queue@Uaction_t@@@@QBEHXZ",
+      "retail_va": "0x40a458",
+      "size": 29,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 87,
+        "end": 94
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 29 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "retail_va": "0x40aa29",
+      "size": 53,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 100,
+        "end": 110
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 53 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "retail_va": "0x40aa5e",
+      "size": 41,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 116,
+        "end": 123
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 41 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "retail_va": "0x40a3c7",
+      "size": 84,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 129,
+        "end": 146
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 84 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?nextbase@@YAHH@Z",
+      "retail_va": "0x408276",
+      "size": 26,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 10,
+        "end": 17
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "config/cl-pilot.json: nextbase; complete 26-byte CFG with returns at 0x408280 and 0x40828f, local branch 0x40827b -> 0x408281, all instructions decoded; no public-gap inference."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 and unique DBI contribution module 8 util.obj; int(int) __cdecl from mangling, stack argument and caller cleanup."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?xfree@@YAXPAX@Z",
+      "retail_va": "0x4082dc",
+      "size": 14,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 21,
+        "end": 25
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 14 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?gobblewhite@@YAPAGPAG@Z",
+      "retail_va": "0x407f99",
+      "size": 33,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 29,
+        "end": 34
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 33 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
       "symbol": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ",
       "retail_va": "0x409934",
       "size": 6,
       "unit": "matching/cl/util_watson.cpp",
-      "source_span": {"start": 13, "end": 16},
+      "source_span": {
+        "start": 14,
+        "end": 17
+      },
       "boundary": {
         "status": "verified",
         "evidence": "config/cl-pilot.json: ErrorReportingGetMode; mov eax,[0x41a020] then ret at 0x409939; six fully decoded bytes."
@@ -69,7 +425,10 @@
       "retail_va": "0x40993a",
       "size": 12,
       "unit": "matching/cl/util_watson.cpp",
-      "source_span": {"start": 20, "end": 24},
+      "source_span": {
+        "start": 21,
+        "end": 25
+      },
       "boundary": {
         "status": "verified",
         "evidence": "config/cl-pilot.json: ErrorReportingSetMode; argument load, store to 0x41a020, mov al,1, ret at 0x409945; twelve fully decoded bytes."
@@ -80,18 +439,71 @@
     },
     {
       "binary": "cl",
-      "symbol": "__matherr",
-      "retail_va": "0x40c661",
-      "size": 3,
-      "unit": "matching/cl/merr.c",
-      "source_span": {"start": 13, "end": 16},
+      "symbol": "?ErrorReportingSetDlls@@YA_NPBG@Z",
+      "retail_va": "0x409946",
+      "size": 12,
+      "unit": "matching/cl/util_watson.cpp",
+      "source_span": {
+        "start": 38,
+        "end": 42
+      },
       "boundary": {
         "status": "verified",
-        "evidence": "config/cl-pilot.json: __matherr; xor eax,eax then ret at 0x40c663, all three bytes decode. Installed merr.c lineage body returns zero."
+        "evidence": "Bounded direct retail decoding over exactly 12 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
       },
       "dependencies": [],
-      "roots": [],
-      "identity_evidence": "S_PUB32 and unique DBI contribution module 32 build/intel/dll_obj/merr.obj. Canonical int __cdecl _matherr(struct _exception*) declaration comes from installed-era CRT source with recorded provenance."
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ErrorReportingSetFormalAppName@@YA_NPBG@Z",
+      "retail_va": "0x409952",
+      "size": 12,
+      "unit": "matching/cl/util_watson.cpp",
+      "source_span": {
+        "start": 46,
+        "end": 50
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 12 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ErrorReportingCheckOptIn@@YA_NXZ",
+      "retail_va": "0x40995e",
+      "size": 110,
+      "unit": "matching/cl/util_watson.cpp",
+      "source_span": {
+        "start": 57,
+        "end": 75
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 110 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ErrorReportingDisabled@@YA_NXZ",
+      "retail_va": "0x409acb",
+      "size": 36,
+      "unit": "matching/cl/util_watson.cpp",
+      "source_span": {
+        "start": 81,
+        "end": 94
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 36 bytes, complete observed local CFG; source owner independently compared every emitted byte and ordered reference under actual /GL + /LTCG. Public symbol gaps are not treated as lengths."
+      },
+      "dependencies": [],
+      "roots": []
     }
   ],
   "referents": {
@@ -99,6 +511,141 @@
       "?g_errorReportingMode@@3W4ErrorReportingMode@@A": {
         "va": "0x41a020",
         "evidence": "Canonical invented global spelling, explicitly annotated DATA in util_watson.cpp and declared once in its header. The preceding independently identified SECURITY_ATTRIBUTES object ends exactly at 0x41a020; getter/setter independently access the enum-sized word starting there, in the same PDB-attributed module. Loader-zero storage and absence of contradictory aggregate accesses support the separate enum entity; this is positive model evidence, not a recovered public data name. Candidate identity must independently match actual MAP target binding."
+      },
+      "?g_errorReportingDlls@@3PBGB": {
+        "va": "0x417be8",
+        "evidence": "Canonical invented pointer-global name; independent enum-family source ownership, 32-bit pointer stores in SetDlls, full NUL wide initializer shared with FormalAppName; no public data spelling is claimed."
+      },
+      "?g_errorReportingFormalAppName@@3PBGB": {
+        "va": "0x417bec",
+        "evidence": "Canonical invented pointer-global name; independent matching 32-bit pointer stores in SetFormalAppName and source-owned pooled empty-wide initializer; no public data spelling is claimed."
+      },
+      "?RedirStderr@@3HA": {
+        "va": "0x417034",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj, initial value 1, 4-byte conditional read in redirect and actual flag/form-table address alias at 0x412578; /INCLUDE root preserves observed escaped mutability."
+      },
+      "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z": {
+        "va": "0x40993a",
+        "evidence": "S_PUB32 actual setter with proven enum stack argument, AL bool result and caller cleanup; canonical real body is linked as an explicit dependency and kept as an actual ABI root."
+      },
+      "?ErrorReportingCheckOptIn@@YA_NXZ": {
+        "va": "0x40995e",
+        "evidence": "Actual public no-argument bool query, complete 110-byte CFG and canonical SDK registry API semantics; source body present in the same unit."
+      },
+      "?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z": {
+        "va": "0x40a475",
+        "evidence": "Actual public Queue<action_t> member with ECX this and ret4, complete 33-byte body in the same unit; called between real Win32 lock operations."
+      },
+      "advapi32.dll!RegCloseKey": {
+        "kind": "import",
+        "va": "0x40d00c",
+        "dll": "ADVAPI32.dll",
+        "name": "RegCloseKey",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "advapi32.dll!RegQueryValueExA": {
+        "kind": "import",
+        "va": "0x40d010",
+        "dll": "ADVAPI32.dll",
+        "name": "RegQueryValueExA",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "advapi32.dll!RegOpenKeyExA": {
+        "kind": "import",
+        "va": "0x40d014",
+        "dll": "ADVAPI32.dll",
+        "name": "RegOpenKeyExA",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "msvcr80.dll!_dup2": {
+        "kind": "import",
+        "va": "0x40d1e8",
+        "dll": "MSVCR80.dll",
+        "name": "_dup2",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "msvcr80.dll!iswspace": {
+        "kind": "import",
+        "va": "0x40d25c",
+        "dll": "MSVCR80.dll",
+        "name": "iswspace",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "msvcr80.dll!free": {
+        "kind": "import",
+        "va": "0x40d28c",
+        "dll": "MSVCR80.dll",
+        "name": "free",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "kernel32.dll!Sleep": {
+        "kind": "import",
+        "va": "0x40d084",
+        "dll": "KERNEL32.dll",
+        "name": "Sleep",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "kernel32.dll!LeaveCriticalSection": {
+        "kind": "import",
+        "va": "0x40d088",
+        "dll": "KERNEL32.dll",
+        "name": "LeaveCriticalSection",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "kernel32.dll!EnterCriticalSection": {
+        "kind": "import",
+        "va": "0x40d08c",
+        "dll": "KERNEL32.dll",
+        "name": "EnterCriticalSection",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "kernel32.dll!CreateFileW": {
+        "kind": "import",
+        "va": "0x40d0e4",
+        "dll": "KERNEL32.dll",
+        "name": "CreateFileW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "kernel32.dll!GetConsoleScreenBufferInfo": {
+        "kind": "import",
+        "va": "0x40d0e8",
+        "dll": "KERNEL32.dll",
+        "name": "GetConsoleScreenBufferInfo",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "kernel32.dll!CloseHandle": {
+        "kind": "import",
+        "va": "0x40d0f8",
+        "dll": "KERNEL32.dll",
+        "name": "CloseHandle",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "literal:sha256:b226c2467b9f3254602539485ef6828e3505b8f80ca4c168b46935aa27dff0f0": {
+        "kind": "literal",
+        "va": "0x4155f0",
+        "encoding": "utf-16le",
+        "size": 16,
+        "bytes_sha256": "b226c2467b9f3254602539485ef6828e3505b8f80ca4c168b46935aa27dff0f0",
+        "source_literal": "L\"CONOUT$\"",
+        "evidence": "Full bounded retail literal contents including final NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "literal:sha256:df4909a16f56a9bbdf77ef56e1c0a387be9c81f159a0e395f7f321150367adfb": {
+        "kind": "literal",
+        "va": "0x415640",
+        "encoding": "ascii",
+        "size": 44,
+        "bytes_sha256": "df4909a16f56a9bbdf77ef56e1c0a387be9c81f159a0e395f7f321150367adfb",
+        "source_literal": "\"Software\\\\Microsoft\\\\VisualStudio\\\\8.0\\\\General\"",
+        "evidence": "Full bounded retail literal contents including final NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "literal:sha256:caa83b581b3258c6e10ba395c2206eb464fa617f9d1503612c575d38824f0c1c": {
+        "kind": "literal",
+        "va": "0x415624",
+        "encoding": "ascii",
+        "size": 27,
+        "bytes_sha256": "caa83b581b3258c6e10ba395c2206eb464fa617f9d1503612c575d38824f0c1c",
+        "source_literal": "\"UserCanAutoSendErrorReport\"",
+        "evidence": "Full bounded retail literal contents including final NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
       }
     }
   }

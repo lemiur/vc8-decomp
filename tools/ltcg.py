@@ -84,7 +84,7 @@ def link(toolchain_root, objects, roots, out_dir, env, commands, flags=()):
     return image, mapfile
 
 
-def scan_referents(image, va, size, symbols=()):
+def scan_referents(image, va, size, symbols=(), bindings=None):
     """Independent decoder inputs are public; all targets remain evidence records.
 
     Return ordered external and internal branches plus HIGHLOW/absolute memory
@@ -100,12 +100,35 @@ def scan_referents(image, va, size, symbols=()):
     names = {}
     for symbol in symbols:
         names.setdefault(symbol.va, []).append(symbol.name)
+    imports = {}
+    for record in getattr(image, 'import_records', lambda: [])():
+        imports.setdefault(record['va'], set()).add(record['identity'])
 
     def add(offset, width, kind, target):
         identity = 'self+0x%x' % (target - va) if va <= target < va + size else None
         aliases = names.get(target, [])
-        if identity is None and len(aliases) == 1:
-            identity = aliases[0]
+        if identity is None:
+            imported = imports.get(target, set())
+            if len(imported) == 1:
+                identity = next(iter(imported))
+            elif not imported:
+                literals = []
+                for key, binding in (bindings or {}).items():
+                    if binding.get('kind') != 'literal':
+                        continue
+                    length = binding.get('size', 0)
+                    if not isinstance(length, int) or not 0 < length <= 65536:
+                        continue
+                    try:
+                        data = image.read_va(target, length)
+                    except ValueError:
+                        continue
+                    if hashlib.sha256(data).hexdigest() == binding.get('bytes_sha256'):
+                        literals.append(key)
+                if len(literals) == 1:
+                    identity = literals[0]
+                elif not literals and len(aliases) == 1:
+                    identity = aliases[0]
         record = {'offset': offset, 'width': width, 'kind': kind,
                   'target': target, 'identity': identity, 'resolved': identity is not None}
         old = refs.get(offset)
@@ -138,7 +161,7 @@ def scan_referents(image, va, size, symbols=()):
                 raise ValueError('unsupported relative branch width')
             add(off + ins.imm_offset, width, 'rel%d' % (width * 8), ins.operands[0].imm & 0xffffffff)
         for operand in ins.operands:
-            if operand.type == CS_OP_MEM and not operand.mem.base and not operand.mem.index:
+            if operand.type == CS_OP_MEM and not operand.mem.base:
                 if ins.disp_size != 4:
                     raise ValueError('unsupported absolute memory operand width')
                 add(off + ins.disp_offset, 4, 'abs32', operand.mem.disp & 0xffffffff)
@@ -147,7 +170,9 @@ def scan_referents(image, va, size, symbols=()):
                 try:
                     readable = len(image.read_va(target, 1)) == 1
                 except ValueError:
-                    readable = False
+                    readable = any(section['va'] <= target < section['va'] +
+                                   max(section['vsize'], section['rawsize'])
+                                   for section in getattr(image, 'sections', []))
                 if readable:
                     add(off + ins.imm_offset, 4, 'abs32', target)
     if decoded != size:

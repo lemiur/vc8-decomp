@@ -21,4 +21,18 @@ extern ErrorReportingMode g_errorReportingMode;
 ErrorReportingMode __cdecl ErrorReportingGetMode();
 bool __cdecl ErrorReportingSetMode(ErrorReportingMode mode);
 
+// These global spellings are invented. Both pointer-sized objects belong to
+// util_watson.obj's section 3 contribution, offset 0xbe8, size 9, and initially
+// point to the pooled empty wide literal at 0x00415a48. The two setters prove
+// mutable pointers to const unsigned short; native wchar_t mangles differently.
+extern const unsigned short *g_errorReportingDlls;
+extern const unsigned short *g_errorReportingFormalAppName;
+
+// Parameter spellings in this header are invented semantic names; the public
+// PDB proves function/type spellings and the inspected code supports the ABI.
+bool __cdecl ErrorReportingSetDlls(const unsigned short *dlls);
+bool __cdecl ErrorReportingSetFormalAppName(const unsigned short *appName);
+bool __cdecl ErrorReportingCheckOptIn();
+bool __cdecl ErrorReportingDisabled();
+
 #endif
