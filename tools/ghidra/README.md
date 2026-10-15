@@ -79,3 +79,35 @@ Failed runs remain for diagnosis; no stale output is reused.
 Ghidra analysis boundaries/signatures remain inferred evidence. Exporting a body
 does not establish a contiguous complete retail function, a source signature, or
 gate admission. All exports and projects are ignored and must never be committed.
+
+## Bounded lookup index
+
+`tools/evidence_index.py` builds the ignored SQLite index at
+`E:/vc8-decomp/build/evidence/lookup.sqlite`. Each binary is replaced atomically;
+other binaries remain available. It joins exact addresses, preserves public
+aliases and their actual DBI ownership evidence, indexes inclusive Ghidra body
+ranges and recorded references, and links hint/assembly/result files. A datum
+inside a DBI contribution gets contribution evidence rather than an invented
+source owner or table type.
+
+```
+python tools/evidence_index.py build --binary c2 --run COMPLETED_EXPORT_RUN
+python tools/evidence_index.py lookup --binary c2 --symbol "EXACT_PUBLIC_SPELLING"
+python tools/evidence_index.py lookup --binary c1xx --contains "AliasHash"
+python tools/evidence_index.py lookup --binary cl --va 0x412570
+```
+
+`--rva` accepts an RVA; `--va` accepts a VA. Queries show up to five entries,
+three public aliases, and four references per direction, capped at 60 lines with
+long names clipped. `--limit` and `--max-lines` may reduce that output. Reference
+order is Ghidra's recorded order, not an independently resolved relocation verdict.
+Full identities remain in the local database; exports remain the underlying
+evidence. Complete result records must match the retail hash and RVA. Failed
+updates preserve the previous index.
+
+`build --allow-pending` explicitly permits a running export only after its complete
+metadata marker matches the retail identity. Such a lookup is a dated partial
+snapshot, including any completed per-function results available during indexing.
+Rebuild after export completion for final failure/timeout status. Original serial
+exports did not capture per-function timeout causes; the lookup reports that as
+`not captured` instead of inferring a verdict.
