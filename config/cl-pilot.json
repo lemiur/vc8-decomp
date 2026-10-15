@@ -38,7 +38,7 @@
       "name": "?thread_print@@YAXPBGZZ", "va": "0x40a25f", "lane": "mpcl", "priority": 2, "score": null, "match_ready": true,
       "identity": "S_PUB32 and unique DBI contribution module 4 mpcl.obj",
       "boundary": {"status": "proven", "size": 1, "methods": ["bounded-disassembly"], "terminal": "ret at entry", "evidence": "single decoded C3 instruction; no reads, writes or transfers besides return"},
-      "abi": {"status": "resolved", "calling_convention": "__cdecl", "declaration": "void thread_print(const wchar_t*, ...)", "evidence": "YAXPBGZZ cdecl variadic spelling and plain ret; body does not access args"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "declaration": "void thread_print(const unsigned short*, ...)", "evidence": "YAXPBGZZ cdecl variadic spelling and plain ret; PBG is const unsigned short*, not native wchar_t (_W). Caller pushes format plus one/two variadic args then cleans 8/12 bytes. Native wchar_t setting unresolved."},
       "referents": {"status": "resolved", "ordered": []},
       "semantics": "empty body plausible release-build no-op; no format behavior to invent"
     },
@@ -91,13 +91,13 @@
     {
       "name": "?ErrorReportingSetDlls@@YA_NPBG@Z", "va": "0x409946", "lane": "util_watson", "priority": 5, "score": null, "match_ready": false,
       "boundary": {"status": "proven", "size": 12, "methods": ["bounded-disassembly"], "terminal": "ret at 0x409951", "evidence": "mov eax,[esp+4]; mov [0x417be8],eax; mov al,1; ret"},
-      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "pointer arg at [esp+4], plain ret, AL result, wchar_t const* mangling"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "pointer arg at [esp+4], plain ret, AL result, const unsigned short* PBG mangling; native wchar_t would use _W"},
       "referents": {"status": "unresolved", "ordered": [{"kind": "write-data", "va": "0x417be8", "name": null}]}
     },
     {
       "name": "?ErrorReportingSetFormalAppName@@YA_NPBG@Z", "va": "0x409952", "lane": "util_watson", "priority": 5, "score": null, "match_ready": false,
       "boundary": {"status": "proven", "size": 12, "methods": ["bounded-disassembly"], "terminal": "ret at 0x40995d", "evidence": "mov eax,[esp+4]; mov [0x417bec],eax; mov al,1; ret"},
-      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "pointer arg at [esp+4], plain ret, AL result, wchar_t const* mangling"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "pointer arg at [esp+4], plain ret, AL result, const unsigned short* PBG mangling; native wchar_t would use _W"},
       "referents": {"status": "unresolved", "ordered": [{"kind": "write-data", "va": "0x417bec", "name": null}]}
     },
     {
@@ -111,7 +111,7 @@
   "open_leads": [
     "PstNext<SRCTARG> 0x4062f7 has two terminating branches and 14 decoded bytes, but SRCTARG first-member ownership/layout unproven; no raw-offset model is acceptable.",
     "IsRunningUnderIDE(void) 0x40218a has 22 decoded bytes and named GetEnvironmentVariableW IAT reference plus VS_UNICODE_OUTPUT literal; global/import declarations must be canonical.",
-    "fullccpath 0x4024a8 has 23 decoded bytes, local wchar_t* output, direct call __get_wpgmptr; C runtime thunk/import chain must resolve.",
+    "fullccpath 0x4024a8 has 23 decoded bytes, local unsigned short* output, direct call __get_wpgmptr; C runtime thunk/import chain and native-wchar_t setting must resolve.",
     "release_filelife_heap 0x402c06 and release_ast_extra_heap 0x402c1a each have 20 decoded bytes. VirtualFree IAT and PDB-named pointer globals identified; canonical definitions require coordination.",
     "MP_get_mutex 0x40a6fa is a 5-byte tail jump to0x40a496; never infer empty function semantics from it.",
     "get_action_nonbatching 0x40a67a is a 10-byte ECX-load/tail-jump wrapper; Queue<action_t> storage and callee member ABI unresolved.",
