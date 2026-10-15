@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "binary": "cl",
+  "note": "Independently bounded source candidates; only the byte gate admits counts. Original source filenames and line positions remain unresolved.",
+  "candidates": [
+    {
+      "binary": "cl",
+      "symbol": "?nextbase@@YAHH@Z",
+      "retail_va": "0x408276",
+      "size": 26,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {"start": 8, "end": 15},
+      "boundary": {
+        "status": "verified",
+        "evidence": "config/cl-pilot.json: nextbase; complete 26-byte CFG with returns at 0x408280 and 0x40828f, local branch 0x40827b -> 0x408281, all instructions decoded; no public-gap inference."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 and unique DBI contribution module 8 util.obj; int(int) __cdecl from mangling, stack argument and caller cleanup."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?thread_print@@YAXPBGZZ",
+      "retail_va": "0x40a25f",
+      "size": 1,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {"start": 10, "end": 12},
+      "boundary": {
+        "status": "verified",
+        "evidence": "config/cl-pilot.json: thread_print; one decoded C3 return at entry, no data or other control transfer."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 and unique DBI contribution module 4 mpcl.obj; cdecl variadic declaration and unsigned-short pointer match decorated symbol."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?env_size@@YAIPBG@Z",
+      "retail_va": "0x40a2dc",
+      "size": 45,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {"start": 19, "end": 29},
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding from 0x40a2dc through ret at 0x40a308: all 45 bytes are 20 contiguous instructions, every branch stays within the function, no embedded data or external referents. Source lane exact /O1 probe recorded under build/cl-mpcl-flag-probe/e2aa33e9-a418-4bef-95a5-7e5672715f62/O1/probe.json in its worktree."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 decorated signature unsigned int __cdecl(const unsigned short*), unique mpcl.obj contribution; merge_env callers pass UTF-16 environment blocks and scale returned counts by two."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ",
+      "retail_va": "0x409934",
+      "size": 6,
+      "unit": "matching/cl/util_watson.cpp",
+      "source_span": {"start": 13, "end": 16},
+      "boundary": {
+        "status": "verified",
+        "evidence": "config/cl-pilot.json: ErrorReportingGetMode; mov eax,[0x41a020] then ret at 0x409939; six fully decoded bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 and unique util_watson.obj contribution; no arguments, enum return in EAX and mangled enum type."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
+      "retail_va": "0x40993a",
+      "size": 12,
+      "unit": "matching/cl/util_watson.cpp",
+      "source_span": {"start": 20, "end": 24},
+      "boundary": {
+        "status": "verified",
+        "evidence": "config/cl-pilot.json: ErrorReportingSetMode; argument load, store to 0x41a020, mov al,1, ret at 0x409945; twelve fully decoded bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 and unique util_watson.obj contribution; enum argument at [esp+4], caller cleanup, bool result in AL."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__matherr",
+      "retail_va": "0x40c661",
+      "size": 3,
+      "unit": "matching/cl/merr.c",
+      "source_span": {"start": 13, "end": 16},
+      "boundary": {
+        "status": "verified",
+        "evidence": "config/cl-pilot.json: __matherr; xor eax,eax then ret at 0x40c663, all three bytes decode. Installed merr.c lineage body returns zero."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 and unique DBI contribution module 32 build/intel/dll_obj/merr.obj. Canonical int __cdecl _matherr(struct _exception*) declaration comes from installed-era CRT source with recorded provenance."
+    }
+  ],
+  "referents": {
+    "cl": {
+      "?g_errorReportingMode@@3W4ErrorReportingMode@@A": {
+        "va": "0x41a020",
+        "evidence": "Canonical invented global spelling, explicitly annotated DATA in util_watson.cpp and declared once in its header. Getter reads exactly the enum-sized word at 0x41a020; setter writes its enum argument to that same storage. No public PDB name is claimed. Candidate identity must independently match COFF/MAP binding; this registry binds the modeled storage to retail rather than supplying a signature."
+      }
+    }
+  }
+}

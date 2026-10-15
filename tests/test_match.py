@@ -97,6 +97,19 @@ class MatchContracts(unittest.TestCase):
                 match.build(root, 'cl', root / 'out')
             self.assertEqual((root / 'out/stale.dll').read_bytes(), b'stale')
 
+    def test_registry_combines_descriptors_and_rejects_duplicate_addresses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'config').mkdir()
+            entry = {'binary': 'cl', 'symbol': '_f', 'retail_va': '0x401000'}
+            descriptor = {'schema_version': 1, 'candidates': [entry]}
+            (root / 'config/cl-candidates.json').write_text(json.dumps(descriptor))
+            self.assertEqual(match.registry_entries(root, 'cl'), [entry])
+            entry2 = dict(entry, symbol='_g')
+            (root / 'config/gate-allow.json').write_text(json.dumps({'schema_version': 1, 'candidates': [entry2]}))
+            with self.assertRaisesRegex(ValueError, 'duplicate'):
+                match.registry_entries(root, 'cl')
+
 
 if __name__ == '__main__':
     unittest.main()

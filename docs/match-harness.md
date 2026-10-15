@@ -35,8 +35,18 @@ compiled in place; no line directives or synthetic source wrappers are added.
 
 `config/<binary>.json` supplies `flags.compile`, `flags.link`, and optionally
 `dependencies: {"matching/cl/unit.cpp": ["matching/cl/callee.cpp"]}`. The
-registry's per-candidate `dependencies` and `roots` are also honored. All
-dependency units are compiled with `/GL`; missing definitions fail the link.
+registry's per-candidate `dependencies` and `roots` are also honored.
+Per-unit `units: {"matching/cl/unit.cpp": {"compile_flags": ["/O1"]}}`
+appends experimental controls after the common compile flags; optional
+`remove_compile_flags` removes exact common switches first. The final `/GL`
+and output path remain controlled by the harness. `--toolchain sp1` or `rtm`
+selects a pinned toolchain for one isolated build without changing config.
+
+Candidate descriptors are combined from `config/gate-allow.json` and
+`config/<binary>-candidates.json`. Duplicate symbol or retail address entries
+are rejected. The gate independently loads and verifies those descriptors.
+
+All dependency units are compiled with `/GL`; missing definitions fail the link.
 No synthetic callee stubs or retail code are linked. The default experimental
 link is a `/DLL /NOENTRY /OPT:NOREF,NOICF` image with `/INCLUDE` roots.
 Keeping these roots does not reproduce retail's whole-program custom calling
