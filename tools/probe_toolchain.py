@@ -17,7 +17,10 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/toolchains.json"
 PIN_NAMES = ("cl.exe", "c1.dll", "c1xx.dll", "c2.dll", "link.exe", "cvtres.exe",
-             "mspdb80.dll", "msobj80.dll", "pgodb80.dll", "msvcr80.dll", "msvcp80.dll")
+             "mspdb80.dll", "mspdbcore.dll", "mspdbsrv.exe", "msobj80.dll", "pgodb80.dll",
+             "pgort80.dll", "pgort80ui.dll", "msvcr80.dll", "msvcp80.dll",
+             "clui.dll", "linkui.dll", "dumpbin.exe", "lib.exe", "undname.exe")
+PIN_NAMES += ("cl.exe.config", "link.exe.config", "Microsoft.VC80.CRT.manifest")
 
 
 def sha256(path):
@@ -69,13 +72,15 @@ def run_tool(toolchain, tool, args, cwd=None):
     if not exe.is_file():
         raise FileNotFoundError(exe)
     verify_toolchain(toolchain)
+    if str(exe.resolve()).casefold() not in {str(Path(item["path"]).resolve()).casefold() for item in toolchain["files"]}:
+        raise ValueError("requested executable is not pinned: " + str(exe))
     return subprocess.run([str(exe), *map(str, args)], cwd=cwd,
                           env=toolchain_environment(toolchain), capture_output=True,
                           text=True, errors="replace", timeout=120)
 
 
 def inventory(toolchain):
-    paths = [Path(toolchain["bin"]), *map(Path, toolchain.get("runtime", []))]
+    paths = [Path(toolchain["bin"]), Path(toolchain["bin"]) / "1033", *map(Path, toolchain.get("runtime", []))]
     out = []
     for name in PIN_NAMES:
         found = next((folder / name for folder in paths if (folder / name).is_file()), None)
@@ -193,6 +198,8 @@ def main():
     parser.add_argument("--config", type=Path, default=CONFIG)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--matrix", action="store_true", help="also compile one-control-at-a-time C ABI/flag variants")
+    parser.add_argument("--repeat", type=int, choices=range(1, 5), default=2,
+                        help="fresh builds to compare for stable .text (default: 2)")
     args = parser.parse_args()
     tc = load_toolchain(args.toolchain, args.config)
     if args.action == "inventory":
@@ -204,12 +211,21 @@ def main():
         verify_toolchain(tc)
         print("Toolchain pins verified: " + args.toolchain)
     else:
-        report = run_probes(tc, args.out or ROOT / "build" / "toolchain" / args.toolchain, args.matrix)
+        output = args.out or ROOT / "build" / "toolchain" / args.toolchain
+        runs = [run_probes(tc, output, args.matrix) for _ in range(args.repeat)]
+        report = runs[-1]
+        report["fresh_build_count"] = args.repeat
+        for index, item in enumerate(report["probes"]):
+            item["stable_text"] = all(run["probes"][index]["supported"] and
+                                      run["probes"][index]["sections"][".text"] == item["sections"][".text"]
+                                      for run in runs) if item["supported"] else False
+        (output / "probe-results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         for item in report["probes"]:
-            print("%s %s /GL /LTCG support: %s" % (args.toolchain, item["case"], item["supported"]))
+            print("%s %s /GL /LTCG support: %s; stable .text: %s" %
+                  (args.toolchain, item["case"], item["supported"], item["stable_text"]))
             if not item["supported"]:
                 print((item["commands"][-1]["stdout"] + item["commands"][-1]["stderr"])[-3000:])
-        return 0 if all(item["supported"] for item in report["probes"]) else 1
+        return 0 if all(item["supported"] and item["stable_text"] for item in report["probes"]) else 1
     return 0
 
 

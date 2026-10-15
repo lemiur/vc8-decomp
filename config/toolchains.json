@@ -61,6 +61,18 @@
           "sha256": "92e4d5684040e87abe599db87d79cf1d75e7ab07726c590996b9c32242bc9d0e"
         },
         {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/Common7/IDE/mspdbcore.dll",
+          "size": 257024,
+          "version": "8.0.50727.762",
+          "sha256": "75df53ed64493816388aff9cf4bbf8c87aa9cbf461df5038770ef632269c558e"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/Common7/IDE/mspdbsrv.exe",
+          "size": 113928,
+          "version": "8.0.50727.762",
+          "sha256": "a216a6a07adb23894bef5f658a9b12adc14b1f471eac73abb53e8d54cdff1e4f"
+        },
+        {
           "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/Common7/IDE/msobj80.dll",
           "size": 57856,
           "version": "8.0.50727.762",
@@ -73,6 +85,18 @@
           "sha256": "c6a217e1762048fec2e6a4c1e81940b1fddaaabd4151a486342a6b410d13802c"
         },
         {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/pgort80.dll",
+          "size": 45056,
+          "version": "8.0.50727.762",
+          "sha256": "413d77b30e62c6679c5cfc57e4272727bfd5fef120a5ab1eed930733887cf14d"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/1033/pgort80ui.dll",
+          "size": 10240,
+          "version": "8.0.50727.762",
+          "sha256": "ced1ca329ea69e4764f30d5e64e91d516032650d0d124bf1799cfecff466a359"
+        },
+        {
           "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/redist/x86/Microsoft.VC80.CRT/msvcr80.dll",
           "size": 626688,
           "version": "8.0.50727.762",
@@ -83,6 +107,54 @@
           "size": 548864,
           "version": "8.0.50727.762",
           "sha256": "2026f3c4f830dff6883b88e2647272a52a132f25eb42c0d423e36b3f65a94d08"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/1033/clui.dll",
+          "size": 389120,
+          "version": "14.0.50727.762",
+          "sha256": "86a77aa0754b7cb8622ad85944f7443feea0ad3d458ef9f46baadbe15eddafaa"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/1033/linkui.dll",
+          "size": 55808,
+          "version": "8.0.50727.762",
+          "sha256": "6a5b8a15f45413aa58ce5baa39ba76478682a3a8d1bc4c8c29c9bbba0d8c9b75"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/dumpbin.exe",
+          "size": 14600,
+          "version": "8.0.50727.762",
+          "sha256": "23a415fd8b8c4e67fa71222a84f5203aeec17f83c6ae7f15dab22ef99dfc05d5"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/lib.exe",
+          "size": 14592,
+          "version": "8.0.50727.762",
+          "sha256": "5053e465028f01a5ab36709d702dd6e31233e451a4a71a59ea9efd7a7a304090"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/undname.exe",
+          "size": 16648,
+          "version": "14.0.50727.762",
+          "sha256": "284dd41de3fadbf427b7e9fb339548c51fe84c62eff41e9a5ca7bdbb9025cb51"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/cl.exe.config",
+          "size": 268,
+          "version": null,
+          "sha256": "b9dfee4863211334847ccdfc0145f97546328cd164025aa6cc968fbf3f64c4d9"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/bin/link.exe.config",
+          "size": 268,
+          "version": null,
+          "sha256": "b9dfee4863211334847ccdfc0145f97546328cd164025aa6cc968fbf3f64c4d9"
+        },
+        {
+          "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/redist/x86/Microsoft.VC80.CRT/Microsoft.VC80.CRT.manifest",
+          "size": 1869,
+          "version": null,
+          "sha256": "17ad1a64ba1c382abf89341b40950f9b31f95015c6b0d3e25925bfebc1b53eb5"
         },
         {
           "path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/lib/msvcrt.lib",
@@ -177,6 +249,18 @@
           "sha256": "8db1e85503bff64aa0197c06933aa41eaa2f6dee2e223b6160d3eb463ec0f6dd"
         },
         {
+          "path": "E:/vc8-decomp/ref-rtm/bin/mspdbcore.dll",
+          "size": 257024,
+          "version": "8.0.50727.42",
+          "sha256": "9678b3a3a2ffd3e2e53a84ce16a20271737e0e53ff9d8cd5e99665bc13557ff6"
+        },
+        {
+          "path": "E:/vc8-decomp/ref-rtm/bin/mspdbsrv.exe",
+          "size": 112832,
+          "version": "8.0.50727.42",
+          "sha256": "eafc82bcb2c7661e880b4c9cf6473809c65d3d36dbd076dc656f4b38b3a9187e"
+        },
+        {
           "path": "E:/vc8-decomp/ref-rtm/bin/msobj80.dll",
           "size": 57856,
           "version": "8.0.50727.42",
@@ -189,6 +273,18 @@
           "sha256": "2bb78d716bd7472219a5c131f0f36f136e95b746ecf6dd9b4ceda77acdf16e65"
         },
         {
+          "path": "E:/vc8-decomp/ref-rtm/bin/pgort80.dll",
+          "size": 45056,
+          "version": "8.0.50727.42",
+          "sha256": "879af4a09638143e2d30e0f95cea51786f24ac61ba79b18bdc29e51f9a95b672"
+        },
+        {
+          "path": "E:/vc8-decomp/ref-rtm/bin/1033/pgort80ui.dll",
+          "size": 10240,
+          "version": "8.0.50727.42",
+          "sha256": "4eae59b7c2ec6c53e977127ffb34623a95076fda226c6322d628847610dd1cd5"
+        },
+        {
           "path": "E:/vc8-decomp/ref-rtm/bin/Microsoft.VC80.CRT/msvcr80.dll",
           "size": 626688,
           "version": "8.0.50727.42",
@@ -199,6 +295,24 @@
           "size": 548864,
           "version": "8.0.50727.42",
           "sha256": "9fc2e85ba84cf0459aab0dc2efac734ad7b5b4c99ba19871fe8f6e35d0191838"
+        },
+        {
+          "path": "E:/vc8-decomp/ref-rtm/bin/1033/clui.dll",
+          "size": 389120,
+          "version": "14.0.50727.42",
+          "sha256": "bb1ddaa62048ddbef54a25d43695124c87ce559cf52cff0ffed17bf77741bec8"
+        },
+        {
+          "path": "E:/vc8-decomp/ref-rtm/bin/1033/linkui.dll",
+          "size": 55808,
+          "version": "8.0.50727.42",
+          "sha256": "25dfa3c14b624cf372b042b3db3d51d9d7350851a9674e58d80e472bd1d6a65b"
+        },
+        {
+          "path": "E:/vc8-decomp/ref-rtm/bin/Microsoft.VC80.CRT/Microsoft.VC80.CRT.manifest",
+          "size": 522,
+          "version": null,
+          "sha256": "9964e296c171b8a395150dc93fdcec7589244a88b6eee3d974d6187b5148681b"
         },
         {
           "path": "E:/vc8-decomp/ref-rtm/lib/msvcrt.lib",
@@ -226,5 +340,26 @@
         }
       ]
     }
+  },
+  "observations": {
+    "measured_date": "2026-10-15",
+    "commands": [
+      "python tools/probe_toolchain.py probe --toolchain sp1 --matrix",
+      "python tools/probe_toolchain.py probe --toolchain rtm --matrix"
+    ],
+    "fresh_builds_per_case": 2,
+    "cases_per_toolchain": 14,
+    "all_compiles_and_ltcg_links_succeeded": true,
+    "all_repeated_text_sections_identical": true,
+    "all_rtm_sp1_text_sections_identical": true,
+    "controls_that_changed_leaf_text": [
+      "/O1",
+      "/Oy-",
+      "/Gz",
+      "/Gr",
+      "/J",
+      "/Zp1"
+    ],
+    "conclusion": "Support and deterministic .text established for these synthetic probes only. No retail per-unit flags or bootstrap compiler established. Retail pilot candidates must be A/B compiled."
   }
 }

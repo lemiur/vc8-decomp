@@ -41,6 +41,21 @@ class ToolchainTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 probe.run_tool({"bin": temp}, "missing.exe", [])
 
+    def test_run_tool_rejects_unpinned_requested_program(self):
+        with tempfile.TemporaryDirectory() as temp:
+            (Path(temp) / "unlisted.exe").write_bytes(b"do not execute")
+            with mock.patch.object(probe, "verify_toolchain"), mock.patch.object(probe.subprocess, "run") as run:
+                with self.assertRaisesRegex(ValueError, "requested executable is not pinned"):
+                    probe.run_tool({"bin": temp, "files": []}, "unlisted.exe", [])
+                run.assert_not_called()
+
+    def test_section_hashes_rejects_non_pe(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "bad.dll"
+            path.write_bytes(b"not a PE")
+            with self.assertRaisesRegex(ValueError, "invalid probe PE"):
+                probe.section_hashes(path)
+
     def test_failed_compile_removes_stale_output_and_skips_link(self):
         with tempfile.TemporaryDirectory() as temp:
             for language in ("c", "cpp"):
