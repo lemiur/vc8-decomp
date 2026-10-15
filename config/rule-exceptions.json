@@ -5,8 +5,8 @@
       "binary": "cl",
       "va": "0x4015a8",
       "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -75,8 +75,8 @@
       "binary": "cl",
       "va": "0x4015b1",
       "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -145,8 +145,8 @@
       "binary": "cl",
       "va": "0x4015ba",
       "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -215,8 +215,8 @@
       "binary": "cl",
       "va": "0x4015c3",
       "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -285,8 +285,8 @@
       "binary": "cl",
       "va": "0x40218a",
       "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -355,8 +355,8 @@
       "binary": "cl",
       "va": "0x4024a8",
       "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -425,8 +425,8 @@
       "binary": "cl",
       "va": "0x402c06",
       "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -495,8 +495,8 @@
       "binary": "cl",
       "va": "0x402c1a",
       "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "ec5b03b08461a2d6bba198a50ac8217ed1db604345e54f3e19a95fc69154404c",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -566,7 +566,7 @@
       "va": "0x408f04",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -636,7 +636,7 @@
       "va": "0x4092d4",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -706,7 +706,7 @@
       "va": "0x4092be",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -776,7 +776,7 @@
       "va": "0x40c661",
       "source_path": "matching/cl/merr.c",
       "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -845,8 +845,8 @@
       "binary": "cl",
       "va": "0x40a25f",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -915,8 +915,8 @@
       "binary": "cl",
       "va": "0x40a2dc",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -985,8 +985,8 @@
       "binary": "cl",
       "va": "0x40a3a1",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1055,8 +1055,8 @@
       "binary": "cl",
       "va": "0x40a475",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1125,8 +1125,8 @@
       "binary": "cl",
       "va": "0x40a458",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1195,8 +1195,8 @@
       "binary": "cl",
       "va": "0x40aa29",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1265,8 +1265,8 @@
       "binary": "cl",
       "va": "0x40aa5e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1335,8 +1335,8 @@
       "binary": "cl",
       "va": "0x40a3c7",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1405,8 +1405,8 @@
       "binary": "cl",
       "va": "0x40a0a2",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1475,8 +1475,8 @@
       "binary": "cl",
       "va": "0x40a243",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1545,8 +1545,8 @@
       "binary": "cl",
       "va": "0x40a2c4",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1615,8 +1615,8 @@
       "binary": "cl",
       "va": "0x40a8e3",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1685,8 +1685,8 @@
       "binary": "cl",
       "va": "0x40a906",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1755,8 +1755,8 @@
       "binary": "cl",
       "va": "0x40a0b6",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1825,8 +1825,8 @@
       "binary": "cl",
       "va": "0x40a8a6",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "c230fbd809cb435ecf9dd9736f0e56f03c37fc10eab39cfd9955c1b179bb551b",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1895,8 +1895,8 @@
       "binary": "cl",
       "va": "0x408276",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -1965,8 +1965,8 @@
       "binary": "cl",
       "va": "0x4082dc",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2035,8 +2035,8 @@
       "binary": "cl",
       "va": "0x407f99",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2105,8 +2105,8 @@
       "binary": "cl",
       "va": "0x408145",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2175,8 +2175,8 @@
       "binary": "cl",
       "va": "0x407fba",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2245,8 +2245,8 @@
       "binary": "cl",
       "va": "0x407fe5",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2315,8 +2315,8 @@
       "binary": "cl",
       "va": "0x407f69",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2385,8 +2385,8 @@
       "binary": "cl",
       "va": "0x407f08",
       "source_path": "matching/cl/util.cpp",
-      "source_sha256": "268c96dcffdc6fd222b72c9e136f1cd102c377bdb334c4d86cbfb7a2cc415908",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2456,7 +2456,7 @@
       "va": "0x409934",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2526,7 +2526,7 @@
       "va": "0x40993a",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2596,7 +2596,7 @@
       "va": "0x409946",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2666,7 +2666,7 @@
       "va": "0x409952",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2736,7 +2736,7 @@
       "va": "0x40995e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2806,7 +2806,7 @@
       "va": "0x409acb",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2876,7 +2876,7 @@
       "va": "0x409a58",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -2946,7 +2946,7 @@
       "va": "0x409aab",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
-      "scope_sha256": "22cacca0194946d447ad4adf06662bea52ef3a38d4723db64523b7bb5bbba343",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
       "reviewer": "independent audit lane /root/audit",
       "checks": {
         "R1": {
@@ -3006,6 +3006,216 @@
               "path": "config/reviews/cl-initialize-admission.json",
               "sha256": "4f4e6714e5a780f1c5fb449b125b78a00c6266065e133ff67fc53308bd9eb912",
               "description": "R18 Initialize review: actual canonical SDK aggregate, independently replayed pinned named offsetof/sizeof witness, complete32B body/ABI and unchanged42-function proof."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x408290",
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Uses the shared screen_length declaration and actual installed io.h, limits.h and Windows headers. No replacement CRT prototype, copied SDK type or partial structure. Public int cdecl() identity is corroborated by direct calls, EAX result and plain RET."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "References actual _isatty import and already reviewed screen_length function. There is no invented data object, field global or borrowed interior address. Both retail calls resolve to the canonical screen_length owner."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "No reconstructed field access or raw offset model. The real SDK max macro operates on integer API results; canonical prototypes supply all types."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Free scalar function with ordinary direct calls; no class layout, virtual calls or synthetic vtable slots."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Independently decoded the complete41B 408290..4082b8 CFG, including three RETs, _isatty(1), INT_MAX and both screen_length calls at40829d/4082a8. The genuine SDK max macro deliberately evaluates screen_length()-1 twice on the >1 path, exactly as retail. No invented cached local, extra call, padding, inline directive or source steering."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Ordinary VC8 C++ with real headers and macro; no assembly, byte arrays, binary inclusion or generated retail bytes. No exception."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x4082b9",
+      "source_path": "matching/cl/util.cpp",
+      "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Uses actual installed sys/timeb.h struct __timeb64 and _ftime64_s declaration through canonical util.h. This is a complete genuine CRT type, not a copied layout or guessed fragment. Public void cdecl() and observed no-argument caller/plain RET corroborate signature."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "One DATA-annotated canonical struct __timeb64 g_startTime at419fe8 is defined in util.cpp and declared once in util.h. Its private name/original grouping is explicitly unresolved. PDB DBI util.obj contribution419fd8..419ffc contains the whole16B object; the actual _ftime64_s output pointer and later time/millitm accesses identify the real CRT object. Witness0ded27... independently compiles size16/alignment8; target419fe8 is8-aligned. No split time fields or standalone interior globals."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "The body passes the whole typed object address to its actual CRT API and performs no field or high-word access. The named witness retains time as a single8B field at0, millitm8:2, timezone10:2,dstflag12:2. No member_addend or special relocation contract is required for this body."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Free timing initialization function and plain CRT data object; no virtual slots or polymorphic class model."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Independently supported complete13B4082b9..4082c5 body: PUSH419fe8, CALL[IAT40d21c], caller cleanup and RET. The secure CRT result is intentionally unused in both real source and retail. No artificial initialization, numeric timestamp replacement, volatile carrier or fake local."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Ordinary VC8 C++ calls actual _ftime64_s. Layout array is separately compiled infrastructure metadata and contributes zero function/source bytes. No inline assembly, copied binary body or exception."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x4014d5",
+      "source_path": "matching/cl/clmain.cpp",
+      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
+      "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
+      "reviewer": "independent audit lane /root/audit",
+      "checks": {
+        "R1": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "One canonical CConsoleLock definition in clmain.h with private bool locked, reconstructed field name explicitly documented. Constructor public identity plus observed ECX this/EAX return corroborates thiscall ABI. Header includes canonical mpcl.h for shared HANDLE g_hMutex rather than redeclaring or redefining the global."
+            }
+          ]
+        },
+        "R2": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Real public ?g_hMutex@@3PAXA at41aaf0 is loader-zero storage owned by mpcl.obj/module4, with sole DATA definition in mpcl.cpp and canonical HANDLE extern. Constructor accesses that same object; no duplicate static/global, fake field global or interior-address entity."
+            }
+          ]
+        },
+        "R4": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Actual constructor writes only BYTE[this+0]. Independent pinned cmderr frame bytes show PUSH EBP;MOV EBP,ESP and LEA ECX,[EBP-1] before the constructor, plus byte guard at[EBP-1]. This places the complete object below saved frame and establishes one-byte extent together with the actual byte member. No raw casts, padding or fabricated fields."
+            }
+          ]
+        },
+        "R13": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "CConsoleLock has no virtual calls or vptr evidence; source defines none. Real cmderr lifetime cleanup tests the same byte then calls ReleaseMutex(g_hMutex) before done. Header inline destructor models that actual cleanup; it has no separate public body or matched count."
+            }
+          ]
+        },
+        "R17": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Independently reopened and decoded all44B4014d5..401500 through RET: test real mutex, WaitForSingleObject(INFINITE), success for WAIT_OBJECT_0 or WAIT_ABANDONED, then store true/false and return this. Source uses actual SDK constants and genuine early-success return shape; no artificial helper, fake local, noinline, volatile carrier or padding."
+            }
+          ]
+        },
+        "R18": {
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "config/reviews/cl-fourth-batch.json",
+              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122",
+              "description": "Ordinary VC8 constructor/destructor with canonical Windows declarations and shared data owner. No assembly, byte emission, binary include or rule exception."
             }
           ]
         }

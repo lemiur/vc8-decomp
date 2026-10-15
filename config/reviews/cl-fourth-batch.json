@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "reviewer": "independent audit lane /root/audit",
+  "review_date": "2026-10-15",
+  "scope_sha256": "f8a19d4c9c9b7e48c2a3689237bba74f1787501d9af3c9b9cf78f001f5ca3484",
+  "approved_function_count": 46,
+  "enabled_source_bytes_expected": 1591,
+  "authority_limit": "Source-rule approval only; the fresh complete gate alone banks compiled functions/bytes.",
+  "prior_review": {
+    "path": "config/reviews/cl-initialize-admission.json",
+    "sha256": "4f4e6714e5a780f1c5fb449b125b78a00c6266065e133ff67fc53308bd9eb912"
+  },
+  "unchanged_functions": [
+    {
+      "symbol": "?error_report_prompt@@YAXPAUflag_s@@@Z",
+      "va": "0x4015a8",
+      "function_source_sha256": "26d3a45a51bbf6aa1dfbc688f04d917c74f33feeb99db6a8b27c15593aa703b7"
+    },
+    {
+      "symbol": "?error_report_queue@@YAXPAUflag_s@@@Z",
+      "va": "0x4015b1",
+      "function_source_sha256": "0ab8089ae8d46262daeeba8e3e615f07a1df4ad7794ed83c4c55f7e5faa1b856"
+    },
+    {
+      "symbol": "?error_report_send@@YAXPAUflag_s@@@Z",
+      "va": "0x4015ba",
+      "function_source_sha256": "6878486a422e22ad7bb23496db9014fd49d70a32a4712d11cb9a33d10b1e0b18"
+    },
+    {
+      "symbol": "?error_report_none@@YAXPAUflag_s@@@Z",
+      "va": "0x4015c3",
+      "function_source_sha256": "84145bb2c4dc20d10c2ee5082d92858812cb7dac03667905df1b86f6b0511fd5"
+    },
+    {
+      "symbol": "?IsRunningUnderIDE@@YAHXZ",
+      "va": "0x40218a",
+      "function_source_sha256": "915e47d3f5a4aaed7fb5b8187b26d58a5cc9e43c25cbe4db33dc6916aa5b59b5"
+    },
+    {
+      "symbol": "?fullccpath@@YAPAGXZ",
+      "va": "0x4024a8",
+      "function_source_sha256": "25a731cba451d517afd5393eafdd20524760cd54da6a4cb8503ffa6b8f90eec7"
+    },
+    {
+      "symbol": "?release_filelife_heap@@YAXXZ",
+      "va": "0x402c06",
+      "function_source_sha256": "5e4f863ac70dfd85f520431e78d67b1320364cbcf89b219a87573375500be333"
+    },
+    {
+      "symbol": "?release_ast_extra_heap@@YAXXZ",
+      "va": "0x402c1a",
+      "function_source_sha256": "8678bb5d588f67767d03c472cb01eee65293a6e889bca0243b671c1c9f43859e"
+    },
+    {
+      "symbol": "?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z",
+      "va": "0x408f04",
+      "function_source_sha256": "cdb6bbb90ca00f404bd1a159b902361ea6795b976c24cd79c44203e11b538da3"
+    },
+    {
+      "symbol": "?screen_length@@YAHXZ",
+      "va": "0x4092d4",
+      "function_source_sha256": "345e4bfc745990ec4226e591c46347b4073212c6b73945738f3f85a9f85d013d"
+    },
+    {
+      "symbol": "?redirect@@YAXXZ",
+      "va": "0x4092be",
+      "function_source_sha256": "7dbfa6ee990b49b061d2a62c3215f9b14f3a37f6aa46f1fde2f281edfe463397"
+    },
+    {
+      "symbol": "__matherr",
+      "va": "0x40c661",
+      "function_source_sha256": "d7858fc3315abff9c0bea470a65ef960461613f8109d2c033bba4d27a9a23999"
+    },
+    {
+      "symbol": "?thread_print@@YAXPBGZZ",
+      "va": "0x40a25f",
+      "function_source_sha256": "9e63ff88e094241df9900cf9bd014b1bb1e9f2b690beac4128c0dc24ea6e483f"
+    },
+    {
+      "symbol": "?env_size@@YAIPBG@Z",
+      "va": "0x40a2dc",
+      "function_source_sha256": "5a29c98bf4ee48dd1cda138937e40b5b40e1a0d7d852e9e76ea68809e40dfa89"
+    },
+    {
+      "symbol": "?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "va": "0x40a3a1",
+      "function_source_sha256": "56c0c400a37bafa0b02f23fb49e0bb5d8d43a82eb0cec63c87ee5f90108ac6ec"
+    },
+    {
+      "symbol": "?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "va": "0x40a475",
+      "function_source_sha256": "944c1c2c4970a5f36984c3d703ce8b23017b4b29a2433dbbf4932b33e85217bd"
+    },
+    {
+      "symbol": "?size@?$Queue@Uaction_t@@@@QBEHXZ",
+      "va": "0x40a458",
+      "function_source_sha256": "e9b4d34a4db3429f531c3225fe032f0b4ed763d1293a91115d51fd3efaeea6de"
+    },
+    {
+      "symbol": "?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "va": "0x40aa29",
+      "function_source_sha256": "7bb3faa55bfaa732329c6d154f5ecef43d0bb70deb8620a6c8b4bc0349d466f0"
+    },
+    {
+      "symbol": "?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "va": "0x40aa5e",
+      "function_source_sha256": "f2ba6ab98500734f295029b44d6f796a0ddfb608e6f10cb48c80c7c8c664331c"
+    },
+    {
+      "symbol": "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "va": "0x40a3c7",
+      "function_source_sha256": "82cb9c3f35be24b8b8e54044d04ee03554ade06bc8999c2e66f5d5597a0da0a3"
+    },
+    {
+      "symbol": "?read_int@ProcessChannel@@QAEHXZ",
+      "va": "0x40a0a2",
+      "function_source_sha256": "ec890dd989da6ee3afa389dc7da6b35a7cfe34a81d50d9cfd96d86dc14aa7911"
+    },
+    {
+      "symbol": "?close@PipeProcessChannel@@UAEXXZ",
+      "va": "0x40a243",
+      "function_source_sha256": "62e32dd93b4e2892fc33622183e35edd75503a91a829eef06463e428ec6abdbb"
+    },
+    {
+      "symbol": "?NT_err@@YAHH@Z",
+      "va": "0x40a2c4",
+      "function_source_sha256": "457e73a0cc7398c6668a27a7f176f6ea7767c4d4bff3d21e3b78e1b1604f768b"
+    },
+    {
+      "symbol": "?write@PipeProcessChannel@@UAEXPBXK@Z",
+      "va": "0x40a8e3",
+      "function_source_sha256": "fc510171945d8fa042fa77c5f15c2c8186c0f06ff80aa8b5181f9abb2b401d09"
+    },
+    {
+      "symbol": "?read@PipeProcessChannel@@UAEXPAXK@Z",
+      "va": "0x40a906",
+      "function_source_sha256": "fc9e164341d9b82d5f201a6e07c10b23bc8da0615503784cfbd13e0ccd72e482"
+    },
+    {
+      "symbol": "?expect_int@ProcessChannel@@QAEXH@Z",
+      "va": "0x40a0b6",
+      "function_source_sha256": "a6eb4aae4843e0e7952bd1074dda516418ecd38327273e9f4d2fd79ad192e226"
+    },
+    {
+      "symbol": "?kill@ProcessChannel@@QAEXXZ",
+      "va": "0x40a8a6",
+      "function_source_sha256": "b6b4a64cf590545926d28beec04c6990341d98c80a498241ecc1fda3719373be"
+    },
+    {
+      "symbol": "?nextbase@@YAHH@Z",
+      "va": "0x408276",
+      "function_source_sha256": "7fb237f810c188d216a51c36a6bd5a96725b87edb601e404bd8050df94aaba3c"
+    },
+    {
+      "symbol": "?xfree@@YAXPAX@Z",
+      "va": "0x4082dc",
+      "function_source_sha256": "23c339b1e65fd02cedc9b746408f4b4a55e9c41fca7335fda94f84bdc0027c83"
+    },
+    {
+      "symbol": "?gobblewhite@@YAPAGPAG@Z",
+      "va": "0x407f99",
+      "function_source_sha256": "7621ee798c5c31079e86ffe4a27d30cea11ca578d296b62ccecf15a63260fae2"
+    },
+    {
+      "symbol": "?strrchars@@YAPAGPAGPBG@Z",
+      "va": "0x408145",
+      "function_source_sha256": "5aa4ee31ed2ef42f700191de289aa41406e41a8a08a1ef42792eb8194bd0f2bf"
+    },
+    {
+      "symbol": "?concat@@YAPAGPAGIPBG@Z",
+      "va": "0x407fba",
+      "function_source_sha256": "13693e1a47035f1b1427230e62f7bf6480520cf438f4583af9cd865b74e868ab"
+    },
+    {
+      "symbol": "?append@@YAPAGPAGIPBG@Z",
+      "va": "0x407fe5",
+      "function_source_sha256": "bb05f615e9738c5c2380e584d5f92bd281058fc663e72f6e7bd45de198034f85"
+    },
+    {
+      "symbol": "?IsOutputToConsole@@YAHPAX@Z",
+      "va": "0x407f69",
+      "function_source_sha256": "9713a62bcad6de20324b4eafe42c27559d219445193baae2f84c6905caf0631c"
+    },
+    {
+      "symbol": "?IsRunningUnderIDE@@YAHPAPAX@Z",
+      "va": "0x407f08",
+      "function_source_sha256": "2855a7bda37f0a5409ee41188d53c89dcccc18da05914617f33fb6c6cde01c9f"
+    },
+    {
+      "symbol": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ",
+      "va": "0x409934",
+      "function_source_sha256": "69a14d3024b77931a763ca7034389134e18e5db323785315980fa6d7dcd3da1d"
+    },
+    {
+      "symbol": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
+      "va": "0x40993a",
+      "function_source_sha256": "5271b8f24d1b6a5926ff5aad569410b77da4ab68807a86cfdc90a8ac113c9b47"
+    },
+    {
+      "symbol": "?ErrorReportingSetDlls@@YA_NPBG@Z",
+      "va": "0x409946",
+      "function_source_sha256": "b00e972bef174d3b731162c5662dbd765b1eec836675af55423178e7fd422f7e"
+    },
+    {
+      "symbol": "?ErrorReportingSetFormalAppName@@YA_NPBG@Z",
+      "va": "0x409952",
+      "function_source_sha256": "2361f200c60d25b0452e842f3e530d0af3ff18b0838213a6679c6db0d890e6f5"
+    },
+    {
+      "symbol": "?ErrorReportingCheckOptIn@@YA_NXZ",
+      "va": "0x40995e",
+      "function_source_sha256": "871fe3e365b588e2e47a4a0f398d897a2c40d046772a7c101f158508967e0f42"
+    },
+    {
+      "symbol": "?ErrorReportingDisabled@@YA_NXZ",
+      "va": "0x409acb",
+      "function_source_sha256": "e661c300beb5e513e462f52534771ba9d65546df60680fdc2faa26292ac81c68"
+    },
+    {
+      "symbol": "?ErrorReportingCreateMapping@@YA_NXZ",
+      "va": "0x409a58",
+      "function_source_sha256": "2bdd797a9166e8dd36cc63e063803b3d4dbca9a06b2d14a7db18ef282215245d"
+    },
+    {
+      "symbol": "?ErrorReportingInitialize@@YAXXZ",
+      "va": "0x409aab",
+      "function_source_sha256": "8d712ee61cd1add6db92b0ca6cb15f3d4bfcbe5e149980e792d3ad9ce04d46c2"
+    }
+  ],
+  "change": "All43 prior normalized function source hashes independently equal the primary GREEN43 baseline. New complete bodies are initscreenline, starttiming and CConsoleLock constructor. Shared headers add canonical CRT timing storage, mutex ownership and one-byte RAII class; prior declarations remain consistent. Parked strqcpy affects census but is not reviewed or admitted.",
+  "source_scope": [
+    {
+      "path": "include/cl/clmain.h",
+      "sha256": "76a3e54b70bf6ee25cc201d7a0bcccd768be471801739f6adc58fe92ab67ea1d"
+    },
+    {
+      "path": "include/cl/dos.h",
+      "sha256": "fdc4938b6ccf951dd8b0b75e009689adeb43f68df0c2aa5f83cd7d15bf2037be"
+    },
+    {
+      "path": "include/cl/merr.h",
+      "sha256": "4dccb09d73fd0f57e0ff33ca7512df03e2b99dc94433d91f1874d04ac74bf644"
+    },
+    {
+      "path": "include/cl/mpcl.h",
+      "sha256": "bfbff818ad8e8297ac9624922fde6769909da1bc88df73b63ff302182153f1a0"
+    },
+    {
+      "path": "include/cl/util.h",
+      "sha256": "b10d157631fc652a11c22634195bcfd4fea52ecdc14fecbbc59e3d989a29e8c0"
+    },
+    {
+      "path": "include/cl/util_watson.h",
+      "sha256": "9d5d72da161094d439f39d77f6be491082b9c33230a63ddf3d4e41bd2d908e72"
+    },
+    {
+      "path": "matching/cl/clmain.cpp",
+      "sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d"
+    },
+    {
+      "path": "matching/cl/dos.cpp",
+      "sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1"
+    },
+    {
+      "path": "matching/cl/merr.c",
+      "sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44"
+    },
+    {
+      "path": "matching/cl/mpcl.cpp",
+      "sha256": "280f2e7abda441acd539919ad70da624985c3f773530015b3e7a9ee309d30409"
+    },
+    {
+      "path": "matching/cl/util.cpp",
+      "sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359"
+    },
+    {
+      "path": "matching/cl/util_watson.cpp",
+      "sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9"
+    }
+  ],
+  "layout_witnesses": [
+    {
+      "path": "E:/vc8-decomp/build/toolchain-layout/timeb64-sp1-v1/layout-witness.json",
+      "sha256": "0ded27c705a9e4efe54b59e3687dc53198be14073c08daeec7962c80dba0b2b0"
+    }
+  ],
+  "layout_audit": {
+    "replay_build": "272f517d7e104794975831daf7b506c8",
+    "observed_export_values": [
+      16,
+      0,
+      8,
+      8,
+      2,
+      10,
+      2,
+      12,
+      2
+    ],
+    "observed_alignment": 8,
+    "verification": "Independently hashed original record,9 source/config/CRT inputs and31 tool pins; actually reran pinned cl/link in fresh ignored directory, manually parsed raw PE export table, and required every pre/post input hash unchanged. Generated source contains only genuine sizeof/offsetof/__alignof expressions, no numeric expected layout."
+  },
+  "console_lifetime_evidence": {
+    "path": "E:/vc8-decomp/build/evidence/cl.console-lock.json",
+    "sha256": "26bfbdb0870befadb9aeb33efd13b7a23297d39f95b5017092810f214c059cf4",
+    "verification": "Independently reopened pinned retail and verified every actual frame/LEA/call/guard/ReleaseMutex byte slice plus full44B constructor decode. No out-of-line destructor count."
+  },
+  "functions": [
+    {
+      "va": "0x408290",
+      "symbol": "?initscreenline@@YAHXZ",
+      "size": 41,
+      "source_path": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 152,
+        "end": 157
+      },
+      "checks": {
+        "R1": "Uses the shared screen_length declaration and actual installed io.h, limits.h and Windows headers. No replacement CRT prototype, copied SDK type or partial structure. Public int cdecl() identity is corroborated by direct calls, EAX result and plain RET.",
+        "R2": "References actual _isatty import and already reviewed screen_length function. There is no invented data object, field global or borrowed interior address. Both retail calls resolve to the canonical screen_length owner.",
+        "R4": "No reconstructed field access or raw offset model. The real SDK max macro operates on integer API results; canonical prototypes supply all types.",
+        "R13": "Free scalar function with ordinary direct calls; no class layout, virtual calls or synthetic vtable slots.",
+        "R17": "Independently decoded the complete41B 408290..4082b8 CFG, including three RETs, _isatty(1), INT_MAX and both screen_length calls at40829d/4082a8. The genuine SDK max macro deliberately evaluates screen_length()-1 twice on the >1 path, exactly as retail. No invented cached local, extra call, padding, inline directive or source steering.",
+        "R18": "Ordinary VC8 C++ with real headers and macro; no assembly, byte arrays, binary inclusion or generated retail bytes. No exception."
+      }
+    },
+    {
+      "va": "0x4082b9",
+      "symbol": "?starttiming@@YAXXZ",
+      "size": 13,
+      "source_path": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 165,
+        "end": 168
+      },
+      "checks": {
+        "R1": "Uses actual installed sys/timeb.h struct __timeb64 and _ftime64_s declaration through canonical util.h. This is a complete genuine CRT type, not a copied layout or guessed fragment. Public void cdecl() and observed no-argument caller/plain RET corroborate signature.",
+        "R2": "One DATA-annotated canonical struct __timeb64 g_startTime at419fe8 is defined in util.cpp and declared once in util.h. Its private name/original grouping is explicitly unresolved. PDB DBI util.obj contribution419fd8..419ffc contains the whole16B object; the actual _ftime64_s output pointer and later time/millitm accesses identify the real CRT object. Witness0ded27... independently compiles size16/alignment8; target419fe8 is8-aligned. No split time fields or standalone interior globals.",
+        "R4": "The body passes the whole typed object address to its actual CRT API and performs no field or high-word access. The named witness retains time as a single8B field at0, millitm8:2, timezone10:2,dstflag12:2. No member_addend or special relocation contract is required for this body.",
+        "R13": "Free timing initialization function and plain CRT data object; no virtual slots or polymorphic class model.",
+        "R17": "Independently supported complete13B4082b9..4082c5 body: PUSH419fe8, CALL[IAT40d21c], caller cleanup and RET. The secure CRT result is intentionally unused in both real source and retail. No artificial initialization, numeric timestamp replacement, volatile carrier or fake local.",
+        "R18": "Ordinary VC8 C++ calls actual _ftime64_s. Layout array is separately compiled infrastructure metadata and contributes zero function/source bytes. No inline assembly, copied binary body or exception."
+      }
+    },
+    {
+      "va": "0x4014d5",
+      "symbol": "??0CConsoleLock@@QAE@XZ",
+      "size": 44,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 84,
+        "end": 96
+      },
+      "checks": {
+        "R1": "One canonical CConsoleLock definition in clmain.h with private bool locked, reconstructed field name explicitly documented. Constructor public identity plus observed ECX this/EAX return corroborates thiscall ABI. Header includes canonical mpcl.h for shared HANDLE g_hMutex rather than redeclaring or redefining the global.",
+        "R2": "Real public ?g_hMutex@@3PAXA at41aaf0 is loader-zero storage owned by mpcl.obj/module4, with sole DATA definition in mpcl.cpp and canonical HANDLE extern. Constructor accesses that same object; no duplicate static/global, fake field global or interior-address entity.",
+        "R4": "Actual constructor writes only BYTE[this+0]. Independent pinned cmderr frame bytes show PUSH EBP;MOV EBP,ESP and LEA ECX,[EBP-1] before the constructor, plus byte guard at[EBP-1]. This places the complete object below saved frame and establishes one-byte extent together with the actual byte member. No raw casts, padding or fabricated fields.",
+        "R13": "CConsoleLock has no virtual calls or vptr evidence; source defines none. Real cmderr lifetime cleanup tests the same byte then calls ReleaseMutex(g_hMutex) before done. Header inline destructor models that actual cleanup; it has no separate public body or matched count.",
+        "R17": "Independently reopened and decoded all44B4014d5..401500 through RET: test real mutex, WaitForSingleObject(INFINITE), success for WAIT_OBJECT_0 or WAIT_ABANDONED, then store true/false and return this. Source uses actual SDK constants and genuine early-success return shape; no artificial helper, fake local, noinline, volatile carrier or padding.",
+        "R18": "Ordinary VC8 constructor/destructor with canonical Windows declarations and shared data owner. No assembly, byte emission, binary include or rule exception."
+      }
+    }
+  ],
+  "pending": [
+    {
+      "va": "0x40a41b",
+      "symbol": "Queue<action_t>::append_nosync",
+      "reason": "Complete source remains diagnostic with register/lifetime residue; no current semantic approval/count."
+    },
+    {
+      "va": "0x408010",
+      "symbol": "strqlen",
+      "reason": "Explicit parking marker; promotion/schedule residue, no admission."
+    },
+    {
+      "va": "0x408072",
+      "symbol": "strqcpy",
+      "reason": "Explicit parking marker; complete211B candidate has promotion/schedule residue, no admission."
+    }
+  ]
+}
