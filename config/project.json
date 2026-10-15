@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "primary_checkout": "E:/vc8-decomp",
+  "toolchain_root": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC",
+  "symbols_root": "E:/vc8-decomp/symbols",
+  "binaries": {
+    "cl": {"filename": "cl.exe", "language": "c++", "phase": 1},
+    "c2": {"filename": "c2.dll", "language": "c", "phase": 2},
+    "c1": {"filename": "c1.dll", "language": "c++", "phase": 3},
+    "c1xx": {"filename": "c1xx.dll", "language": "c++", "phase": 4},
+    "link": {"filename": "link.exe", "language": "c++", "phase": 5, "optional": true}
+  }
+}

@@ -7,3 +7,12 @@ build/
 *.exe
 *.dll
 *.obj
+*.iso
+*.ilk
+*.pgd
+*.pgc
+__pycache__/
+*.pyc
+.worktrees/
+ref-rtm/
+tools.local.json
