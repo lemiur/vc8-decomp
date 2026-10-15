@@ -10,5 +10,6 @@ int __cdecl nextbase(int);
 unsigned short* __cdecl gobblewhite(unsigned short*);
 void __cdecl xfree(void*);
 int __cdecl strqlen(const unsigned short*);
+unsigned short* __cdecl strrchars(unsigned short*, const unsigned short*);
 
 #endif

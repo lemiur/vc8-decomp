@@ -1,6 +1,7 @@
 #include "../../include/cl/util.h"
 #include <stdlib.h>
 #include <wctype.h>
+#include <wchar.h>
 
 // Reconstruction unit named for PDB contribution owner util.obj.
 // Original source filename and parameter spelling are unresolved.
@@ -55,4 +56,17 @@ int __cdecl strqlen(const unsigned short* text)
     if (quote)
         length += backslashes + 2;
     return length;
+}
+
+// FUNCTION: cl 0x408145
+// SYMBOL: ?strrchars@@YAPAGPAGPBG@Z
+unsigned short* __cdecl strrchars(unsigned short* text, const unsigned short* characters)
+{
+    unsigned short* last = 0;
+    for (; *characters; ++characters) {
+        unsigned short* found = wcsrchr(text, *characters);
+        if (found && (!last || found > last))
+            last = found;
+    }
+    return last;
 }
