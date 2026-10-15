@@ -160,8 +160,9 @@ Other facts:
 
 Current session ruling (supersedes conflicting model/context/slot instructions below): reasoning workers use
 Sol 6.1; keep agent contexts below 400k tokens and maintain twelve concurrent workers once matching begins.
-Luna 6.1 was requested for mechanical readers but is not exposed by the available agent tool; model fallback
-is pending user preference. The initial twelve lanes perform reasoning work using bounded evidence reads.
+Luna 6.1 was requested for mechanical readers but is not exposed by the available agent tool; the user
+approved Luna 6 as the fallback and accepted the project adapter's defaults. Reasoning lanes use bounded
+evidence reads, and mechanical readers handle bulk inventories.
 The project adapter now lives in `AGENTS.md`; twelve isolated worktree slots replace the original three-slot
 proposal. Installed Ghidra 12.0.1 may be used with its version recorded because 12.1.3 was not located.
 

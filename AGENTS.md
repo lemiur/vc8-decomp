@@ -1,6 +1,6 @@
 # VC8 matching decompilation
 
-Read VC8_DECOMP_PLAN.md for the target and phase order. Human instructions in the current session take precedence over that plan and the skills. The current campaign requests twelve concurrent workers once matching starts, Sol 6.1 for reasoning, contexts below 400k tokens, and a mechanical-reader model to be resolved because Luna 6.1 is not available.
+Read VC8_DECOMP_PLAN.md for the target and phase order. Human instructions in the current session take precedence over that plan and the skills. The current campaign requests twelve concurrent workers once matching starts, Sol 6.1 for reasoning, and contexts below 400k tokens. The user approved Luna 6 for mechanical readers because Luna 6.1 is not available, and approved the project defaults below.
 
 ## Project adapter
 
