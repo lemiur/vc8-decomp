@@ -18,5 +18,6 @@ unsigned short* __cdecl append(unsigned short*, unsigned int, const unsigned sho
 int __cdecl IsOutputToConsole(HANDLE);
 int __cdecl IsRunningUnderIDE(HANDLE*);
 unsigned short* __cdecl strqcpy(unsigned short*, const unsigned short*);
+int __cdecl initscreenline();
 
 #endif

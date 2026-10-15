@@ -3,6 +3,9 @@
 #include <wctype.h>
 #include <wchar.h>
 #include <string.h>
+#include "../../include/cl/dos.h"
+#include <io.h>
+#include <limits.h>
 
 // Reconstruction unit named for PDB contribution owner util.obj.
 // Original source filename and parameter spelling are unresolved.
@@ -142,4 +145,13 @@ unsigned short* __cdecl strqcpy(unsigned short* destination, const unsigned shor
     }
     *output = 0;
     return destination;
+}
+
+// FUNCTION: cl 0x408290
+// SYMBOL: ?initscreenline@@YAHXZ
+int __cdecl initscreenline()
+{
+    if (_isatty(1))
+        return max(screen_length() - 1, 1);
+    return INT_MAX;
 }
