@@ -80,6 +80,88 @@ def pdb(age=2, dbi_age=1, guid=GUID):
 
 
 class SymbolsTests(unittest.TestCase):
+    def boundary(self, ranges, starts=(0x1080,), section_changes=None):
+        rows = [dict(rva=start, section_index=1, size=None, boundary_status="public-start-only") for start in starts]
+        section = dict(index=1, rva=0x1000, raw_size=512, virtual_size=512, characteristics=0x60000020)
+        section.update(section_changes or {})
+        frames = dict(fpo=[dict(rva=start, size=size, stream_index=5, record_offset=index * 16)
+                           for index, (start, size) in enumerate(ranges)])
+        symbols.apply_fpo_boundaries(rows, [section], frames)
+        return rows
+
+    def test_fpo_size_does_not_add_alignment_padding(self):
+        rows = self.boundary([(0x1080, 19)])
+        self.assertEqual(rows[0]["size"], 19)
+        self.assertEqual(rows[0]["boundary_status"], "pdb-fpo-procedure-size")
+        self.assertEqual(rows[0]["fpo_records"][0]["record_offset"], 0)
+
+    def test_fpo_duplicate_range_aliases_are_preserved(self):
+        rows = self.boundary([(0x1080, 19), (0x1080, 19)], starts=(0x1080, 0x1080))
+        self.assertEqual([r["size"] for r in rows], [19, 19])
+
+    def test_fpo_conflicting_sizes_and_zero_are_rejected(self):
+        for ranges in ([(0x1080, 19), (0x1080, 20)], [(0x1080, 0)]):
+            row = self.boundary(ranges)[0]
+            self.assertIsNone(row["size"])
+            self.assertEqual(row["fpo_boundary_rejection"], "conflicting-or-zero-FPO-sizes")
+
+    def test_fpo_overlap_and_interior_public_are_rejected(self):
+        row = self.boundary([(0x1080, 19)], starts=(0x1080, 0x1081))[0]
+        self.assertEqual(row["fpo_boundary_rejection"], "interior-public-function-start")
+        row = self.boundary([(0x1080, 19), (0x1070, 20)])[0]
+        self.assertEqual(row["fpo_boundary_rejection"], "overlapping-distinct-FPO-ranges")
+
+    def test_fpo_requires_executable_section_and_file_bytes(self):
+        row = self.boundary([(0x1080, 19)], section_changes={"characteristics": 0})[0]
+        self.assertEqual(row["fpo_boundary_rejection"], "FPO-range-not-executable")
+        row = self.boundary([(0x1080, 19)], section_changes={"raw_size": 130})[0]
+        self.assertEqual(row["fpo_boundary_rejection"], "FPO-range-outside-section-file-bytes")
+
+    def test_frame_stream_parsing_and_newfpo_not_used_as_function_size(self):
+        old = struct.pack("<IIIHH", 0x1080, 19, 4, 2, 0x1903)
+        new = struct.pack("<IIIIIIHHI", 0x1080, 20, 4, 8, 12, 16, 3, 4, 5)
+        header = bytearray(dbi())
+        struct.pack_into("<i", header, 48, 20)
+        indices = [0xFFFF] * 10
+        indices[0], indices[9] = 5, 6
+        dbi_data = bytes(header) + struct.pack("<10H", *indices)
+        reader = symbols.MSF(msf([b"", b"", None, dbi_data, b"", old, new]))
+        frames = symbols.read_frame_ranges(reader, dbi_data)
+        self.assertEqual(frames["fpo"][0]["size"], 19)
+        self.assertEqual(frames["fpo"][0]["prolog_size"], 3)
+        self.assertTrue(frames["fpo"][0]["has_seh"])
+        self.assertEqual(frames["new_fpo"][0]["size"], 20)
+        self.assertIn("not function extent", frames["new_fpo"][0]["provenance"])
+        header[48:52] = struct.pack("<i", 19)
+        with self.assertRaises(symbols.SymbolError):
+            symbols.read_frame_ranges(reader, bytes(header) + struct.pack("<10H", *indices))
+
+    def test_misaligned_fpo_stream_rejected(self):
+        header = bytearray(dbi())
+        struct.pack_into("<i", header, 48, 2)
+        dbi_data = bytes(header) + struct.pack("<H", 5)
+        reader = symbols.MSF(msf([b"", b"", None, dbi_data, b"", b"broken"]))
+        with self.assertRaises(symbols.SymbolError):
+            symbols.read_frame_ranges(reader, dbi_data)
+
+    def test_address_mapping_validates_rvas_but_preserves_postlink_size_changes(self):
+        header = struct.pack("<8sIIIIIIII", b".text\0\0\0", 100, 0x1000, 512, 512, 0, 0, 0, 0x60000020)
+        reader = symbols.MSF(msf([b"", b"", None, b"", b"", header]))
+        indices = [0xFFFF] * 6
+        indices[5] = 5
+        frames = dict(optional_debug_stream_indices=indices)
+        sections = [dict(name=".text", rva=0x1000, virtual_size=101)]
+        result = symbols.validate_address_mapping(reader, frames, sections)
+        self.assertEqual(result["pdb_sections"][0]["virtual_size"], 100)
+        sections[0]["rva"] += 1
+        with self.assertRaises(symbols.SymbolError):
+            symbols.validate_address_mapping(reader, frames, sections)
+
+    def test_unsupported_omap_is_rejected(self):
+        reader = symbols.MSF(msf([b"", b"", None, b"", b"", b"omap"]))
+        with self.assertRaises(symbols.SymbolError):
+            symbols.validate_address_mapping(reader, dict(optional_debug_stream_indices=[0xFFFF] * 3 + [5]), [])
+
     def test_msf_empty_absent_and_multiblock_stream(self):
         reader = symbols.MSF(msf([b"", None, b"z" * 1200]))
         self.assertEqual(reader.stream(0), b"")
