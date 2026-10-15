@@ -1,4 +1,5 @@
 import json
+import hashlib
 from pathlib import Path
 import struct
 import sys
@@ -128,6 +129,59 @@ class MatchContracts(unittest.TestCase):
         retail = [dict(source[0], offset=2)]
         with self.assertRaisesRegex(ValueError, 'encoding differs'):
             match.relocate_for_comparison({'candidate_va': 0x1000, 'retail_va': 0x2000}, b'\xe8\0\0\0\0', source, retail, {})
+
+    def test_import_identity_comes_from_actual_pe_slot_instead_of_map_alias(self):
+        code = b'\xff\x25\x00\x20\x00\x10'
+
+        class Image:
+            def read_va(self, va, size):
+                return code[va - 0x10001000:va - 0x10001000 + size]
+
+            def base_relocations(self):
+                return []
+
+            def import_records(self):
+                return [{'va': 0x10002000, 'identity': 'msvcr80.dll!free'}]
+
+        aliases = [ltcg.MapSymbol('__imp__free', 0x10002000, 2, 0, False, 'msvcrt.lib')]
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), aliases)
+        self.assertEqual(refs[0]['identity'], 'msvcr80.dll!free')
+
+    def test_literal_identity_requires_exact_bounded_content(self):
+        code = b'\xa1\x00\x20\x00\x10\xc3'
+        payload = b'CONOUT$\0'
+
+        class Image:
+            def read_va(self, va, size):
+                data, start = (code, 0x10001000) if va < 0x10002000 else (payload, 0x10002000)
+                if not start <= va <= va + size <= start + len(data):
+                    raise ValueError('not file-backed')
+                return data[va - start:va - start + size]
+
+            def base_relocations(self):
+                return []
+
+        digest = hashlib.sha256(payload).hexdigest()
+        key = 'literal:sha256:' + digest
+        binding = {key: {'kind': 'literal', 'size': len(payload), 'bytes_sha256': digest}}
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), bindings=binding)
+        self.assertEqual(refs[0]['identity'], key)
+        binding[key]['bytes_sha256'] = '0' * 64
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), bindings=binding)
+        self.assertIsNone(refs[0]['identity'])
+
+    def test_fixed_base_index_operand_is_a_reference_without_pe_fixups(self):
+        code = b'\x8b\x04\x85\x00\x20\x00\x10\xc3'
+
+        class Image:
+            def read_va(self, va, size):
+                return code[va - 0x10001000:va - 0x10001000 + size]
+
+            def base_relocations(self):
+                return []
+
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code))
+        self.assertEqual([(r['offset'], r['kind'], r['target']) for r in refs], [(3, 'abs32', 0x10002000)])
 
 
 if __name__ == '__main__':

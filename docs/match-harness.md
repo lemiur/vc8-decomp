@@ -44,6 +44,8 @@ appends experimental controls after the common compile flags; optional
 `remove_compile_flags` removes exact common switches first. The final `/GL`
 and output path remain controlled by the harness. `--toolchain sp1` or `rtm`
 selects a pinned toolchain for one isolated build without changing config.
+Per-unit `link_flags` are combined for the primary source and every explicitly
+linked dependency, so genuine API import libraries accompany their users.
 
 Candidate descriptors are combined from `config/gate-allow.json` and
 `config/<binary>-candidates.json`. Duplicate symbol or retail address entries
@@ -68,7 +70,11 @@ full source hash, image/span hashes, and decoded ordered referents.
 References include internal relative branches, external relative branches,
 HIGHLOW relocations, and absolute memory operands. Unsupported relocations or
 undecodable bytes leave referents unresolved. MAP names provide candidate
-identities; independently verified retail identities remain the gate's job.
+function/data identities; actual PE IAT slots supply import identities. Literal
+bindings require exact bounded content hashes. The gate independently verifies
+import DLL/name and both literal payloads, read-only storage, final terminators,
+and ownership by the genuine source literal token. Referenced data bytes are
+never counted as source code.
 
 MAP starts establish locations, not exact function ends. Registered candidate
 sizes and boundary evidence come from `config/gate-allow.json`. Without those,

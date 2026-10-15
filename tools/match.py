@@ -116,6 +116,17 @@ def load_settings(root, binary):
     return project, settings
 
 
+def registry_referents(root, binary):
+    bindings = {}
+    for path in (root / 'config/gate-allow.json', root / 'config' / (binary + '-candidates.json')):
+        registry = read_json(path, {})
+        for name, record in registry.get('referents', {}).get(binary, {}).items():
+            if name in bindings and bindings[name] != record:
+                raise ValueError('conflicting referent identity binding: ' + name)
+            bindings[name] = record
+    return bindings
+
+
 def source_path(root, path):
     path = Path(path)
     return path.resolve() if path.is_absolute() else (root / path).resolve()
@@ -201,6 +212,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
         selected = [source_path(root, unit) for unit in units] if units else sorted(
             path for path in (root / 'matching' / binary).rglob('*') if path.suffix.lower() in ('.c', '.cpp', '.cxx'))
         entries = registry_entries(root, binary)
+        bindings = registry_referents(root, binary)
         for number, source in enumerate(selected):
             annotations = [annotation for annotation in parse_annotations(source) if annotation.binary == binary]
             if not annotations:
@@ -220,6 +232,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
             dependencies = {source_path(root, path) for entry in source_entries for path in entry.get('dependencies', [])}
             dependencies.update(source_path(root, path) for path in settings.get('dependencies', {}).get(source.relative_to(root).as_posix(), []))
             objects = []
+            group_link_flags = list(link_flags)
             discovery_symbols = []
             for index, unit in enumerate([source] + sorted(dependencies - {source})):
                 add_input(unit)
@@ -228,6 +241,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
                 removed = {flag.lower() for flag in unit_options.get('remove_compile_flags', [])}
                 unit_flags = [flag for flag in unit_flags if flag.lower() not in removed]
                 unit_flags.extend(unit_options.get('compile_flags', []))
+                group_link_flags.extend(flag for flag in unit_options.get('link_flags', []) if flag not in group_link_flags)
                 if unit.suffix.lower() != '.c' and not any(flag.lower().startswith('/eh') for flag in unit_flags):
                     unit_flags.append('/EHsc')
                 plain = group / ('discovery-%03d.obj' % index)
@@ -245,7 +259,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
                 add_artifact(obj, 'ltcg-object')
             roots = [discover_symbol(annotation, discovery_symbols) for annotation in annotations]
             roots += [name for entry in source_entries for name in entry.get('roots', [])]
-            image_path, map_path = ltcg.link(toolroot, objects, roots, group, env, manifest['commands'], link_flags)
+            image_path, map_path = ltcg.link(toolroot, objects, roots, group, env, manifest['commands'], group_link_flags)
             add_artifact(image_path, 'linked-image')
             add_artifact(map_path, 'linker-map')
             from matchlib import PEImage
@@ -271,7 +285,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
                 ref_error = None
                 try:
                     if size:
-                        refs = ltcg.scan_referents(image, start, size, map_symbols)
+                        refs = ltcg.scan_referents(image, start, size, map_symbols, bindings)
                         ref_status = 'verified' if all(ref['resolved'] for ref in refs) else 'unresolved'
                 except (ValueError, ImportError) as error:
                     ref_error = str(error)
@@ -307,13 +321,7 @@ def compare_candidates(manifest, root, binary):
     project, settings = load_settings(root, binary)
     retail_path = settings.get('path') or str(Path(project['toolchain_root']) / 'bin' / settings['filename'])
     retail = PEImage(retail_path)
-    bindings = {}
-    for path in (root / 'config/gate-allow.json', root / 'config' / (binary + '-candidates.json')):
-        registry = read_json(path, {})
-        for name, record in registry.get('referents', {}).get(binary, {}).items():
-            if name in bindings and bindings[name] != record:
-                raise ValueError('conflicting referent identity binding: ' + name)
-            bindings[name] = record
+    bindings = registry_referents(root, binary)
     results = []
     for candidate in manifest['candidates']:
         size = candidate['size']
@@ -326,7 +334,7 @@ def compare_candidates(manifest, root, binary):
         if size:
             try:
                 source_refs = ltcg.scan_referents(image, candidate['candidate_va'], size,
-                    ltcg.read_map(Path(candidate['image_path']).with_suffix('.map')))
+                    ltcg.read_map(Path(candidate['image_path']).with_suffix('.map')), bindings)
                 retail_refs = ltcg.scan_referents(retail, candidate['retail_va'], size)
                 normalized = relocate_for_comparison(candidate, ours, source_refs, retail_refs, bindings)
                 referents_status = 'resolved'
