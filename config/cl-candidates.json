@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "binary": "cl",
-  "note": "Independently bounded candidates; only the gate admits counts. append_nosync and strqlen remain disabled. SDK Initialize uses three named members of one canonical object; aliases and referenced data never inflate counts.",
+  "note": "Independently bounded candidates; only the gate admits counts. append_nosync, strqlen and strqcpy remain disabled. SDK Initialize uses three named members of one canonical object; aliases and referenced data never inflate counts.",
   "candidates": [
     {
       "binary": "cl",
@@ -560,8 +560,8 @@
       "size": 26,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 11,
-        "end": 18
+        "start": 15,
+        "end": 22
       },
       "boundary": {
         "status": "verified",
@@ -578,8 +578,8 @@
       "size": 14,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 22,
-        "end": 26
+        "start": 26,
+        "end": 30
       },
       "boundary": {
         "status": "verified",
@@ -595,8 +595,8 @@
       "size": 33,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 30,
-        "end": 35
+        "start": 34,
+        "end": 39
       },
       "boundary": {
         "status": "verified",
@@ -612,8 +612,8 @@
       "size": 98,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 40,
-        "end": 59
+        "start": 44,
+        "end": 63
       },
       "boundary": {
         "status": "verified",
@@ -631,8 +631,8 @@
       "size": 55,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 63,
-        "end": 72
+        "start": 67,
+        "end": 76
       },
       "boundary": {
         "status": "verified",
@@ -648,8 +648,8 @@
       "size": 43,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 76,
-        "end": 81
+        "start": 80,
+        "end": 85
       },
       "boundary": {
         "status": "verified",
@@ -665,8 +665,8 @@
       "size": 43,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 85,
-        "end": 90
+        "start": 89,
+        "end": 94
       },
       "boundary": {
         "status": "verified",
@@ -682,8 +682,8 @@
       "size": 48,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 94,
-        "end": 100
+        "start": 98,
+        "end": 104
       },
       "boundary": {
         "status": "verified",
@@ -699,8 +699,8 @@
       "size": 97,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 104,
-        "end": 113
+        "start": 108,
+        "end": 117
       },
       "boundary": {
         "status": "verified",
@@ -849,6 +849,54 @@
       "roots": [],
       "compiler_context": {
         "evidence": "Source stop marker removed only after typed SDK member identities and compiler-witness validation became available. Function body and flags are unchanged."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?initscreenline@@YAHXZ",
+      "retail_va": "0x408290",
+      "size": 41,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 152,
+        "end": 157
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independently decoded complete 41-byte retail CFG at 0x408290..0x4082b8; two real screen_length calls are retained by the authentic SDK max macro. Actual owner /GL + /LTCG comparison resolves every ordered referent."
+      },
+      "dependencies": [
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [
+        "?RedirStderr@@3HA",
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"
+      ],
+      "compiler_context": {
+        "evidence": "Real dos/clmain/Watson source dependencies and already proven escaped RedirStderr/standard setter ABI roots preserve actual external context; no replacement bodies or export controls."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?strqcpy@@YAPAGPAGPBG@Z",
+      "retail_va": "0x408072",
+      "size": 211,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 122,
+        "end": 148
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode covers 211 bytes from 0x408072 through RET 0x408144 inclusive, 89 instructions, seven branches, two calls. Complete source candidate is not byte-exact."
+      },
+      "gate_enabled": false,
+      "dependencies": [],
+      "roots": [],
+      "compiler_context": {
+        "evidence": "Parked complete quote-copy reconstruction; wide-character promotion and scheduling differ. No admission or exactness claim."
       }
     }
   ],
@@ -1211,6 +1259,18 @@
           "sha256": "daf53a8a6b7006817af98cd8620507e541b8dc443ed0a658b6c130923f1a2023"
         },
         "evidence": "One canonical SDK SECURITY_ATTRIBUTES object and its named field, independently compiled offsetof/sizeof witness and direct retail memory access. Source/retail base plus this field offset must agree; no independent field storage or referent masking is allowed."
+      },
+      "?screen_length@@YAHXZ": {
+        "kind": "symbol",
+        "va": "0x4092d4",
+        "evidence": "Actual PDB public function in dos.obj; complete real source body is linked as the candidate dependency. Both emitted direct calls and retail direct calls resolve this exact canonical symbol."
+      },
+      "msvcr80.dll!_isatty": {
+        "kind": "import",
+        "va": "0x40d220",
+        "dll": "MSVCR80.dll",
+        "name": "_isatty",
+        "evidence": "Actual retail PE import slot resolves MSVCR80.dll!_isatty; gate independently verifies candidate PE import DLL/name and source uses canonical era io.h."
       }
     }
   }
