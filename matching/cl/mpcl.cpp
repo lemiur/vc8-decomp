@@ -93,7 +93,38 @@ int Queue<T>::size() const
     return result;
 }
 
+// FUNCTION: cl 0x40AA29
+// SYMBOL: ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z
+// Complete CFG: 53 decoded bytes, ret 4 at 0x40AA5B; only the two
+// EnterCriticalSection/LeaveCriticalSection IAT operands are external.
+template<class T>
+int Queue<T>::add_tail(T *item)
+{
+    EnterCriticalSection(&lock);
+    item->next = &sentinel;
+    tail->next = item;
+    tail = item;
+    int result = ++count;
+    LeaveCriticalSection(&lock);
+    return result;
+}
+
+// FUNCTION: cl 0x40AA5E
+// SYMBOL: ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z
+// Complete CFG: 41 decoded bytes, ret 4 at 0x40AA84. The middle call is
+// the real add_head_nosync body above, surrounded by the same Win32 imports.
+template<class T>
+int Queue<T>::add_head(T *item)
+{
+    EnterCriticalSection(&lock);
+    int result = add_head_nosync(item);
+    LeaveCriticalSection(&lock);
+    return result;
+}
+
 template action_t *Queue<action_t>::try_head_nosync();
 template int Queue<action_t>::append_nosync(Queue<action_t> &);
 template int Queue<action_t>::add_head_nosync(action_t *);
 template int Queue<action_t>::size() const;
+template int Queue<action_t>::add_tail(action_t *);
+template int Queue<action_t>::add_head(action_t *);
