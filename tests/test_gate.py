@@ -378,7 +378,7 @@ class GateTests(unittest.TestCase):
                               "va": 0x1020, "evidence": "fixture complete string object"}}
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "unit.cpp"
-            source.write_text('const wchar_t *fixture(void) { return L"CONOUT$"; }\n')
+            source.write_text('''char quote = '"';\nconst wchar_t *fixture(void) { return L"CONOUT$"; }\n''')
             claim.update(source_path=str(source), source_sha256=gate.digest(source.read_bytes()))
             code, count = gate.compare_candidate(retail, emitted, claim, request, binding, {})
             self.assertEqual((code, count), (retail.read(0x1000, 6), 1))

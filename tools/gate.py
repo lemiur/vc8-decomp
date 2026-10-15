@@ -202,8 +202,9 @@ def literal_bytes(binding, claim):
     path = Path(claim["source_path"])
     require(digest(path.read_bytes()) == claim.get("source_sha256"), "literal source hash differs from build input")
     source = path.read_text(encoding="utf-8-sig")
-    tokens = re.findall(r'//[^\n]*|/\*.*?\*/|L?"(?:\\.|[^"\\])*"', source, re.S)
-    require(token in [part for part in tokens if not part.startswith("//") and not part.startswith("/*")],
+    lexical = re.compile(r'''//[^\n]*|/\*.*?\*/|L?'(?:\\.|[^'\\])*'|(?P<literal>L?"(?:\\.|[^"\\])*")''', re.S)
+    tokens = [match.group("literal") for match in lexical.finditer(source) if match.group("literal") is not None]
+    require(token in tokens,
             "literal token absent from hashed source expressions")
     body = token[2:-1] if token.startswith('L"') else token[1:-1]
     escapes = {"a": 7, "b": 8, "f": 12, "n": 10, "r": 13, "t": 9, "v": 11,
