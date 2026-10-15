@@ -22,6 +22,13 @@ def number(value):
     return int(value, 0) if isinstance(value, str) else int(value)
 
 
+def byte_count(value):
+    result = int(value)
+    if not 1 <= result <= 200000:
+        raise argparse.ArgumentTypeError("byte count must be in 1..200000")
+    return result
+
+
 def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8-sig"))
 
@@ -39,7 +46,9 @@ def load_symbols(primary, binary, image):
     path = primary / "build/evidence" / (binary + ".symbols.json")
     if not path.is_file():
         raise ValueError("symbol map missing: %s; run tools/symbols.py first" % path)
-    result = read_json(path)
+    raw = path.read_bytes()
+    result = json.loads(raw.decode("utf-8-sig"))
+    result["_input_sha256"] = hashlib.sha256(raw).hexdigest()
     identity = result.get("identity", {})
     expected = identity.get("binary_sha256") or identity.get("sha256")
     if not identity.get("verified") or not expected:
@@ -97,6 +106,8 @@ def disassembly(pe, row, symbols, max_bytes):
     if section is None or not section.Characteristics & 0x20000000:
         raise ValueError("selected address is not in an executable section")
     end = section.VirtualAddress + section.SizeOfRawData
+    if rva >= end:
+        raise ValueError("selected executable address has no physical section bytes")
     starts = [number(x["rva"]) for x in symbol_rows(symbols) if number(x["rva"]) > rva]
     if starts:
         end = min(end, min(starts))
@@ -184,6 +195,11 @@ def ghidra_version(home):
     raise ValueError("Ghidra version unavailable")
 
 
+def analysis_timed_out(log_path):
+    with Path(log_path).open(encoding="utf-8", errors="replace") as log:
+        return any("REPORT: Analysis timed out at " in line for line in log)
+
+
 def import_ghidra(args):
     project, entry, primary, image = project_paths(args.binary, args.config)
     home = Path(args.ghidra_home or os.environ.get("GHIDRA_HOME", ""))
@@ -198,8 +214,9 @@ def import_ghidra(args):
                 "binary_sha256": hashlib.sha256(image.read_bytes()).hexdigest(),
                 "ghidra_home": str(home), "ghidra_version": version,
                 "requested_version": "12.1.3", "version_deviation": version != "12.1.3",
-                "symbol_map": str(symbol_file), "symbol_map_sha256": hashlib.sha256(symbol_file.read_bytes()).hexdigest(),
-                "pdb_application": "not_requested", "status": "running", "export_limit": args.limit}
+                "symbol_map": str(symbol_file), "symbol_map_sha256": symbols["_input_sha256"],
+                "pdb_application": "not_requested", "status": "running", "export_limit": args.limit,
+                "analysis_timeout_seconds": args.analysis_timeout}
     pdb = Path(args.pdb) if args.pdb else None
     if pdb:
         expected = symbols.get("identity", {}).get("pdb_sha256")
@@ -211,6 +228,8 @@ def import_ghidra(args):
     manifest_path = out / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     script = ROOT / "tools/ghidra"
+    manifest["scripts_sha256"] = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                                  for path in sorted(script.glob("*.java"))}
     java = str(Path(args.java_home) / "bin/java.exe") if args.java_home else shutil.which("java")
     if not java:
         raise ValueError("Java not found; provide --java-home")
@@ -238,7 +257,9 @@ def import_ghidra(args):
     success = (result.returncode == 0 and (out / "export-complete.json").is_file()
                and (out / "create-functions.tsv").is_file()
                and pdb_status == ("applied_local_validated_pdb" if pdb else "not_requested"))
-    manifest.update(status="complete" if success else "failed", returncode=result.returncode)
+    timed_out = analysis_timed_out(out / "headless.log")
+    manifest.update(status=("complete_with_analysis_timeout" if timed_out else "complete") if success else "failed",
+                    returncode=result.returncode, analysis_timed_out=timed_out)
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     print("GHIDRA %s: %s" % (manifest["status"].upper(), manifest_path))
     return 0 if success else 1
@@ -253,7 +274,7 @@ def main(argv=None):
         cmd.add_argument("--symbol", required=True)
         cmd.add_argument("--config", type=Path)
         cmd.add_argument("--max-lines", type=int, choices=range(4, 61), default=60, metavar="4..60")
-        cmd.add_argument("--max-bytes", type=int, choices=range(1, 200001), default=4096, metavar="1..200000")
+        cmd.add_argument("--max-bytes", type=byte_count, default=4096, metavar="1..200000")
     cmd = sub.add_parser("ghidra-import", help="fresh isolated project and ignored export; never admits matches")
     cmd.add_argument("--binary", required=True)
     cmd.add_argument("--config", type=Path)
