@@ -33,5 +33,6 @@ extern const unsigned short *g_errorReportingFormalAppName;
 bool __cdecl ErrorReportingSetDlls(const unsigned short *dlls);
 bool __cdecl ErrorReportingSetFormalAppName(const unsigned short *appName);
 bool __cdecl ErrorReportingCheckOptIn();
+bool __cdecl ErrorReportingDisabled();
 
 #endif

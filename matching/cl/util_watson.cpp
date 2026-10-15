@@ -73,3 +73,22 @@ bool __cdecl ErrorReportingCheckOptIn()
     }
     return false;
 }
+
+// FUNCTION: cl 0x00409acb
+// SYMBOL: ?ErrorReportingDisabled@@YA_NXZ
+// Mode comparisons, the real opt-in call and all three terminal returns are
+// directly evidenced. The nested guards preserve the observed branch order.
+bool __cdecl ErrorReportingDisabled()
+{
+    if (g_errorReportingMode > ErrorReportingMode_None)
+    {
+        if (g_errorReportingMode > ErrorReportingMode_Queue)
+        {
+            if (g_errorReportingMode == ErrorReportingMode_Send)
+                return !ErrorReportingCheckOptIn();
+        }
+        else
+            return false;
+    }
+    return true;
+}
