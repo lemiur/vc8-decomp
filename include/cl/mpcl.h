@@ -61,7 +61,7 @@ private:
     bool empty_nosync() const { return tail == &sentinel; }
 
     int synchronized;
-    CRITICAL_SECTION lock;
+    mutable CRITICAL_SECTION lock;
     T sentinel;
     T *tail;
     int count;

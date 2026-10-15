@@ -79,6 +79,21 @@ int Queue<T>::add_head_nosync(T *item)
     return ++count;
 }
 
+// FUNCTION: cl 0x40A458
+// SYMBOL: ?size@?$Queue@Uaction_t@@@@QBEHXZ
+// Complete CFG: 29 decoded bytes ending in ret 0x40A474. The two calls
+// are real EnterCriticalSection/LeaveCriticalSection imports; lock is mutable
+// because the const member uses the Win32 synchronization object.
+template<class T>
+int Queue<T>::size() const
+{
+    EnterCriticalSection(&lock);
+    int result = count;
+    LeaveCriticalSection(&lock);
+    return result;
+}
+
 template action_t *Queue<action_t>::try_head_nosync();
 template int Queue<action_t>::append_nosync(Queue<action_t> &);
 template int Queue<action_t>::add_head_nosync(action_t *);
+template int Queue<action_t>::size() const;
