@@ -212,9 +212,15 @@ def trace_tool_runtime(toolchain, tool, args, output):
 
 LAYOUT_FIELDS = ("nLength", "lpSecurityDescriptor", "bInheritHandle")
 LAYOUT_SYMBOL = "vc8_layout_SECURITY_ATTRIBUTES"
+LAYOUT_TYPES = {
+    "SECURITY_ATTRIBUTES": {"header": "windows.h", "fields": LAYOUT_FIELDS,
+                            "symbol": LAYOUT_SYMBOL, "alignment": False},
+    "__timeb64": {"header": "sys/timeb.h", "fields": ("time", "millitm", "timezone", "dstflag"),
+                  "symbol": "vc8_layout___timeb64", "alignment": True},
+}
 
 
-def build_layout_witness(toolchain, output, config_path=CONFIG):
+def build_layout_witness(toolchain, output, config_path=CONFIG, type_name="SECURITY_ATTRIBUTES"):
     """Build an independently extractable SDK aggregate layout witness.
 
     The exported DWORD array contains sizeof(type), then ordered offset/width
@@ -223,19 +229,30 @@ def build_layout_witness(toolchain, output, config_path=CONFIG):
     """
     import ltcg
     from matchlib import PEImage
+    if type_name not in LAYOUT_TYPES:
+        raise ValueError("unsupported layout witness type: " + type_name)
+    specification = LAYOUT_TYPES[type_name]
+    fields = specification["fields"]
+    symbol = specification["symbol"]
     verify_toolchain(toolchain)
     output = Path(output).resolve()
     if output.exists() and any(output.iterdir()):
         raise ValueError("layout output must be empty for a fresh build")
     output.mkdir(parents=True, exist_ok=True)
     source = output / "layout.cpp"
-    expressions = ["sizeof(SECURITY_ATTRIBUTES)"]
-    for field in LAYOUT_FIELDS:
-        expressions += ["offsetof(SECURITY_ATTRIBUTES, %s)" % field,
-                        "sizeof(((SECURITY_ATTRIBUTES *)0)->%s)" % field]
-    source.write_text('#include <windows.h>\n#include <stddef.h>\n'
-                      'extern "C" __declspec(dllexport) const unsigned long ' + LAYOUT_SYMBOL +
-                      '[] = {\n    ' + ',\n    '.join(expressions) + '\n};\n', encoding="ascii")
+    expressions = ["sizeof(%s)" % type_name]
+    for field in fields:
+        expressions += ["offsetof(%s, %s)" % (type_name, field),
+                        "sizeof(((%s *)0)->%s)" % (type_name, field)]
+    source_text = '#include <' + specification["header"] + '>\n#include <stddef.h>\n'
+    source_text += ('extern "C" __declspec(dllexport) const unsigned long ' + symbol +
+                    '[] = {\n    ' + ',\n    '.join(expressions) + '\n};\n')
+    roots = ["_" + symbol]
+    if specification["alignment"]:
+        source_text += ('extern "C" __declspec(dllexport) const unsigned long ' + symbol +
+                        '_alignment = __alignof(' + type_name + ');\n')
+        roots.append("_" + symbol + "_alignment")
+    source.write_text(source_text, encoding="ascii")
     inputs = {str(source): sha256(source)}
     config_path = Path(config_path).resolve()
     inputs[str(config_path)] = sha256(config_path)
@@ -254,16 +271,16 @@ def build_layout_witness(toolchain, output, config_path=CONFIG):
             inputs[str(header)] = sha256(header)
     if len(inputs) <= 2:
         raise ValueError("layout compiler did not report included SDK headers")
-    image_path, map_path = ltcg.link(toolroot, [obj], ["_" + LAYOUT_SYMBOL], output, env, commands)
+    image_path, map_path = ltcg.link(toolroot, [obj], roots, output, env, commands)
     image = PEImage(image_path)
-    exports = [entry for entry in image.export_records() if LAYOUT_SYMBOL in entry.get("names", [])]
+    exports = [entry for entry in image.export_records() if symbol in entry.get("names", [])]
     if len(exports) != 1 or exports[0].get("va") is None:
         raise ValueError("layout export did not resolve to one image-backed array")
     array_va = exports[0]["va"]
-    count = 1 + len(LAYOUT_FIELDS) * 2
+    count = 1 + len(fields) * 2
     values = struct.unpack("<" + "I" * count, image.read_va(array_va, count * 4))
     observations = {"size": values[0], "members": {field: {"offset": values[1 + index * 2],
-                       "size": values[2 + index * 2]} for index, field in enumerate(LAYOUT_FIELDS)}}
+                       "size": values[2 + index * 2]} for index, field in enumerate(fields)}}
     for path, digest in inputs.items():
         if sha256(path) != digest:
             raise ValueError("layout input changed during build: " + path)
@@ -271,13 +288,22 @@ def build_layout_witness(toolchain, output, config_path=CONFIG):
     artifacts = [{"path": str(path), "sha256": sha256(path), "kind": kind}
                  for path, kind in ((obj, "ltcg-object"), (image_path, "linked-image"), (map_path, "linker-map"))]
     result = {"schema_version": 1, "kind": "offsetof-sizeof", "binary": "cl", "build_id": str(uuid.uuid4()),
-              "status": "built", "type": "SECURITY_ATTRIBUTES", "fields": list(LAYOUT_FIELDS),
+              "status": "built", "type": type_name, "fields": list(fields),
               "source_inputs": [{"path": path, "sha256": digest} for path, digest in sorted(inputs.items())],
               "toolchain_name": toolchain["name"], "toolchain": toolchain["files"], "commands": commands,
               "artifacts": artifacts, "image": {"path": str(image_path), "sha256": sha256(image_path)},
-              "symbol": LAYOUT_SYMBOL, "export": {"va": array_va, "size": count * 4},
+              "symbol": symbol, "export": {"va": array_va, "size": count * 4},
               "observations": observations,
               "purpose": "Compiler-produced aggregate layout witness only; no function or byte matching count"}
+    if specification["alignment"]:
+        alignment_symbol = symbol + "_alignment"
+        alignment_exports = [entry for entry in image.export_records() if alignment_symbol in entry.get("names", [])]
+        if len(alignment_exports) != 1 or alignment_exports[0].get("va") is None:
+            raise ValueError("layout alignment export did not resolve to one image-backed DWORD")
+        alignment_va = alignment_exports[0]["va"]
+        alignment = struct.unpack("<I", image.read_va(alignment_va, 4))[0]
+        result["alignment"] = {"symbol": alignment_symbol, "va": alignment_va, "size": 4, "value": alignment,
+                               "expression": "__alignof(" + type_name + ")"}
     record = output / "layout-witness.json"
     record.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     return result, record
@@ -373,6 +399,7 @@ def main():
                         help="fresh builds to compare for stable .text (default: 2)")
     parser.add_argument("--tool", default="cl.exe", help="pinned executable for trace (default: cl.exe)")
     parser.add_argument("--tool-arg", action="append", help="one argument for trace; default: /?")
+    parser.add_argument("--layout-type", choices=tuple(LAYOUT_TYPES), default="SECURITY_ATTRIBUTES")
     args = parser.parse_args()
     tc = load_toolchain(args.toolchain, args.config)
     if args.action == "inventory":
@@ -385,7 +412,7 @@ def main():
         print("Toolchain pins verified: " + args.toolchain)
     elif args.action == "layout":
         output = args.out or ROOT / "build/toolchain-layout" / args.toolchain / str(uuid.uuid4())
-        result, record = build_layout_witness(tc, output, args.config)
+        result, record = build_layout_witness(tc, output, args.config, args.layout_type)
         print("Compiled %s layout: %s; record: %s" % (result["type"], result["observations"], record))
     elif args.action == "trace":
         output = args.out or ROOT / "build/toolchain" / args.toolchain / "runtime"
