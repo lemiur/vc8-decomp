@@ -39,7 +39,9 @@ def load_symbols(primary, binary, image):
     path = primary / "build/evidence" / (binary + ".symbols.json")
     if not path.is_file():
         raise ValueError("symbol map missing: %s; run tools/symbols.py first" % path)
-    result = read_json(path)
+    raw = path.read_bytes()
+    result = json.loads(raw.decode("utf-8-sig"))
+    result["_input_sha256"] = hashlib.sha256(raw).hexdigest()
     identity = result.get("identity", {})
     expected = identity.get("binary_sha256") or identity.get("sha256")
     if not identity.get("verified") or not expected:
@@ -97,6 +99,8 @@ def disassembly(pe, row, symbols, max_bytes):
     if section is None or not section.Characteristics & 0x20000000:
         raise ValueError("selected address is not in an executable section")
     end = section.VirtualAddress + section.SizeOfRawData
+    if rva >= end:
+        raise ValueError("selected executable address has no physical section bytes")
     starts = [number(x["rva"]) for x in symbol_rows(symbols) if number(x["rva"]) > rva]
     if starts:
         end = min(end, min(starts))
@@ -198,7 +202,7 @@ def import_ghidra(args):
                 "binary_sha256": hashlib.sha256(image.read_bytes()).hexdigest(),
                 "ghidra_home": str(home), "ghidra_version": version,
                 "requested_version": "12.1.3", "version_deviation": version != "12.1.3",
-                "symbol_map": str(symbol_file), "symbol_map_sha256": hashlib.sha256(symbol_file.read_bytes()).hexdigest(),
+                "symbol_map": str(symbol_file), "symbol_map_sha256": symbols["_input_sha256"],
                 "pdb_application": "not_requested", "status": "running", "export_limit": args.limit}
     pdb = Path(args.pdb) if args.pdb else None
     if pdb:
@@ -211,6 +215,8 @@ def import_ghidra(args):
     manifest_path = out / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     script = ROOT / "tools/ghidra"
+    manifest["scripts_sha256"] = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                                  for path in sorted(script.glob("*.java"))}
     java = str(Path(args.java_home) / "bin/java.exe") if args.java_home else shutil.which("java")
     if not java:
         raise ValueError("Java not found; provide --java-home")

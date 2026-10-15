@@ -3,6 +3,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 SPEC = importlib.util.spec_from_file_location("evidence", Path(__file__).resolve().parents[1] / "tools/evidence.py")
@@ -56,6 +57,21 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual([item.mnemonic for item in instructions], ["call", "call", "ret"])
         self.assertEqual(list(evidence.references(instructions[0]))[0][0], 0x402000)
         self.assertEqual(list(evidence.references(instructions[1]))[0][0], 0x402000)
+
+    def test_disassembly_display_bound_and_virtual_tail(self):
+        requests = []
+        section = SimpleNamespace(VirtualAddress=0x1000, SizeOfRawData=8, Characteristics=0x20000000)
+        def read(rva, size):
+            requests.append((rva, size))
+            return b"\x90" * size
+        pe = SimpleNamespace(OPTIONAL_HEADER=SimpleNamespace(ImageBase=0x400000),
+                             get_section_by_rva=lambda _rva: section, get_data=read)
+        row = {"name": "start", "rva": 0x1000, "size": None, "boundary_status": "public-start-only"}
+        symbols = {"functions": [row, {"name": "next", "rva": 0x1003}], "data": []}
+        self.assertEqual(len(list(evidence.disassembly(pe, row, symbols, 4096))), 4)
+        self.assertEqual(requests, [(0x1000, 3)])
+        with self.assertRaisesRegex(ValueError, "no physical section bytes"):
+            list(evidence.disassembly(pe, {"rva": 0x1008}, {}, 4096))
 
     def test_ghidra_diagnostics_and_version(self):
         with tempfile.TemporaryDirectory() as folder:
