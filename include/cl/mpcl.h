@@ -67,4 +67,33 @@ private:
     int count;
 };
 
+int __cdecl NT_err(int);
+// Public PDB identities and three-slot base/derived vtables are proven.
+// Field identifiers are reconstructed; allocation/stores prove an 8-byte base
+// and a 16-byte concrete PipeProcessChannel object.
+class ProcessChannel {
+public:
+    virtual void write(const void *, unsigned long) = 0;
+    virtual void read(void *, unsigned long) = 0;
+    virtual void close() = 0;
+    int read_int();
+    unsigned int read_size_t();
+    void expect_int(int);
+    void kill();
+
+protected:
+    HANDLE process_handle;
+};
+
+class PipeProcessChannel : public ProcessChannel {
+public:
+    virtual void write(const void *, unsigned long);
+    virtual void read(void *, unsigned long);
+    virtual void close();
+
+private:
+    HANDLE write_handle;
+    HANDLE read_handle;
+};
+
 #endif

@@ -152,3 +152,68 @@ template int Queue<action_t>::size() const;
 template int Queue<action_t>::add_tail(action_t *);
 template int Queue<action_t>::add_head(action_t *);
 template action_t *Queue<action_t>::head();
+
+// FUNCTION: cl 0x40A0A2
+// SYMBOL: ?read_int@ProcessChannel@@QAEHXZ
+int ProcessChannel::read_int()
+{
+    int result;
+    read(&result, sizeof result);
+    return result;
+}
+
+// FUNCTION: cl 0x40A243
+// SYMBOL: ?close@PipeProcessChannel@@UAEXXZ
+void PipeProcessChannel::close()
+{
+    CloseHandle(read_handle);
+    CloseHandle(write_handle);
+}
+
+// FUNCTION: cl 0x40A2C4
+// SYMBOL: ?NT_err@@YAHH@Z
+int __cdecl NT_err(int result)
+{
+    if (!result)
+        RaiseException(1, 0, 0, 0);
+    return result;
+}
+
+// FUNCTION: cl 0x40A8E3
+// SYMBOL: ?write@PipeProcessChannel@@UAEXPBXK@Z
+void PipeProcessChannel::write(const void *buffer, unsigned long size)
+{
+    unsigned long written;
+    NT_err(WriteFile(write_handle, buffer, size, &written, 0));
+}
+
+// FUNCTION: cl 0x40A906
+// SYMBOL: ?read@PipeProcessChannel@@UAEXPAXK@Z
+void PipeProcessChannel::read(void *buffer, unsigned long size)
+{
+    unsigned long remaining = size;
+    while (remaining > 0) {
+        NT_err(ReadFile(read_handle, buffer, remaining, &size, 0));
+        remaining -= size;
+        buffer = static_cast<char *>(buffer) + size;
+    }
+}
+
+// FUNCTION: cl 0x40A0B6
+// SYMBOL: ?expect_int@ProcessChannel@@QAEXH@Z
+void ProcessChannel::expect_int(int expected)
+{
+    if (expected != read_int())
+        RaiseException(1, 0, 0, 0);
+}
+
+// FUNCTION: cl 0x40A8A6
+// SYMBOL: ?kill@ProcessChannel@@QAEXXZ
+void ProcessChannel::kill()
+{
+    int command = 0x29a;
+    write(&command, sizeof command);
+    expect_int(0x298);
+    WaitForSingleObject(process_handle, INFINITE);
+    CloseHandle(process_handle);
+}
