@@ -1,0 +1,371 @@
+"""Fresh VC8 /GL + /LTCG builds and bounded retail comparisons.
+
+Only gate.py can admit compiled bytes. MAP-derived spans are explicitly
+unverified. This harness never manufactures definitions for missing callees.
+"""
+import argparse
+from dataclasses import dataclass
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import re
+import sys
+import uuid
+
+from coff import function_symbols
+import ltcg
+
+ROOT = Path(__file__).resolve().parents[1]
+ANNOTATION = re.compile(r'^\s*//\s*FUNCTION:\s+(\S+)\s+(0x[0-9a-fA-F]+)\s*$', re.M)
+SYMBOL = re.compile(r'^\s*//\s*SYMBOL:\s*(\S+)\s*$', re.M)
+COMMENT_OR_STRING = re.compile(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', re.S)
+
+
+@dataclass
+class Annotation:
+    binary: str
+    retail_va: int
+    line: int
+    start: int
+    end: int
+    source_name: str | None
+    symbol: str | None
+
+
+def parse_annotations(path):
+    text = Path(path).read_text(encoding='utf-8-sig')
+    clean = COMMENT_OR_STRING.sub(lambda m: ''.join('\n' if c == '\n' else ' ' for c in m[0]), text)
+    markers = list(ANNOTATION.finditer(text))
+    result = []
+    seen = set()
+    for index, marker in enumerate(markers):
+        limit = markers[index + 1].start() if index + 1 < len(markers) else len(text)
+        opening = clean.find('{', marker.end(), limit)
+        if opening < 0:
+            raise ValueError('FUNCTION annotation has no body at line %d' % (text.count('\n', 0, marker.start()) + 1))
+        depth = 1
+        closing = opening + 1
+        while closing < limit and depth:
+            depth += (clean[closing] == '{') - (clean[closing] == '}')
+            closing += 1
+        if depth:
+            raise ValueError('unbalanced FUNCTION body')
+        declaration = clean[marker.end():opening]
+        names = re.findall(r'([A-Za-z_$][\w$]*)\s*\(', declaration)
+        names = [name for name in names if name not in ('__declspec', '__attribute__', 'throw')]
+        symbol = SYMBOL.search(text, marker.end(), opening)
+        binary, va = marker[1], int(marker[2], 16)
+        if (binary, va) in seen:
+            raise ValueError('duplicate FUNCTION address %s %#x' % (binary, va))
+        seen.add((binary, va))
+        declaration_start = marker.end() + len(declaration) - len(declaration.lstrip())
+        result.append(Annotation(binary, va, text.count('\n', 0, marker.start()) + 1,
+                                 text.count('\n', 0, declaration_start) + 1,
+                                 text.count('\n', 0, closing) + 1,
+                                 names[0] if names else None, symbol[1] if symbol else None))
+    return result
+
+
+def integer(value):
+    return int(value, 0) if isinstance(value, str) else int(value)
+
+
+def read_json(path, fallback=None):
+    return json.loads(Path(path).read_text(encoding='utf-8-sig')) if Path(path).is_file() else fallback
+
+
+def discover_symbol(annotation, symbols):
+    if annotation.symbol:
+        if annotation.symbol not in symbols:
+            raise ValueError('explicit symbol is not defined by discovery object: ' + annotation.symbol)
+        return annotation.symbol
+    name = annotation.source_name
+    choices = [symbol for symbol in symbols if symbol == '_' + str(name) or
+               re.fullmatch(r'_' + re.escape(str(name)) + r'@\d+', symbol) or
+               symbol.startswith('?' + str(name) + '@')]
+    if len(choices) != 1:
+        raise ValueError('cannot uniquely bind annotation at line %d to COFF symbol; add // SYMBOL: decorated-name' % annotation.line)
+    return choices[0]
+
+
+def registry_entries(root, binary):
+    registry = read_json(root / 'config' / 'gate-allow.json', {})
+    return [entry for entry in registry.get('candidates', []) if entry.get('binary') == binary]
+
+
+def load_settings(root, binary):
+    project = read_json(root / 'config' / 'project.json')
+    if not project or binary not in project.get('binaries', {}):
+        raise ValueError('binary is not configured: ' + binary)
+    settings = dict(project['binaries'][binary])
+    settings.update(read_json(root / 'config' / (binary + '.json'), {}))
+    return project, settings
+
+
+def source_path(root, path):
+    path = Path(path)
+    return path.resolve() if path.is_absolute() else (root / path).resolve()
+
+
+def compile_unit(source, output, toolroot, flags, env, commands, plain=False):
+    argv = [str(toolroot / 'bin' / 'cl.exe'), '/nologo', '/c', '/showIncludes'] + list(flags)
+    argv += ['/GL-' if plain else '/GL', '/Fo' + str(output), str(source)]
+    result = ltcg.run_command(argv, output.parent, env, commands, [output])
+    if not output.is_file():
+        raise RuntimeError('successful compilation produced no object')
+    includes = []
+    for line in (result.stdout + result.stderr).splitlines():
+        match = re.match(r'\s*Note: including file:\s*(.+)', line)
+        if match:
+            includes.append(Path(match[1].strip()).resolve())
+    return includes
+
+
+def build(root, binary, output_dir=None, manifest_path=None, build_id=None, units=None):
+    project, settings = load_settings(root, binary)
+    build_id = build_id or str(uuid.uuid4())
+    out = Path(output_dir).resolve() if output_dir else root / 'build' / binary / build_id
+    if out.exists() and any(out.iterdir()):
+        raise ValueError('output directory must be empty for a fresh build: ' + str(out))
+    out.mkdir(parents=True, exist_ok=True)
+    destination = Path(manifest_path).resolve() if manifest_path else out / 'manifest.json'
+    toolroot = Path(project['toolchain_root'])
+    env = ltcg.tool_environment(toolroot)
+    toolchain_config = root / 'config' / 'toolchains.json'
+    toolchain = None
+    if toolchain_config.is_file():
+        from probe_toolchain import load_toolchain, toolchain_environment
+        toolchain = load_toolchain(settings.get('toolchain', 'sp1'), toolchain_config)
+        toolroot = Path(toolchain['bin']).parent
+        env = toolchain_environment(toolchain)
+    configured_flags = settings.get('flags', {})
+    flags = settings.get('compile_flags', configured_flags.get('compile', ['/O2', '/MD', '/Gy', '/GF', '/GS']))
+    link_flags = settings.get('link_flags', configured_flags.get('link', []))
+    tools = [toolroot / 'bin' / name for name in ('cl.exe', 'c1.dll', 'c1xx.dll', 'c2.dll', 'link.exe')]
+    manifest = {'schema_version': 1, 'binary': binary, 'build_id': build_id,
+                'status': 'building', 'source_inputs': [], 'toolchain': [], 'commands': [],
+                'artifacts': [], 'candidates': [], 'limitations': [
+                    'Standalone LTCG context does not prove retail custom calling conventions.',
+                    'MAP-derived function ends are unverified and cannot be admitted.',
+                    'Compile flags remain provisional until configured from probes.']}
+    inputs = {}
+
+    def add_input(path):
+        path = Path(path).resolve()
+        digest = ltcg.sha256(path)
+        old = inputs.get(str(path))
+        if old and old != digest:
+            raise ValueError('input changed during build: ' + str(path))
+        inputs[str(path)] = digest
+
+    def add_artifact(path, kind):
+        manifest['artifacts'].append({'path': str(Path(path).resolve()), 'sha256': ltcg.sha256(path), 'kind': kind})
+
+    try:
+        if toolchain:
+            for tool in toolchain.get('files', []):
+                path = Path(tool['path']).resolve()
+                digest = ltcg.sha256(path)
+                if digest != tool['sha256']:
+                    raise ValueError('toolchain pin mismatch: ' + str(path))
+                manifest['toolchain'].append({'path': str(path), 'sha256': digest})
+            if not manifest['toolchain']:
+                raise ValueError('configured toolchain has no pinned inputs')
+            add_input(toolchain_config)
+        else:
+            manifest['limitations'].append('Toolchain inventory not configured; gate admission unavailable.')
+            for tool in tools:
+                manifest['toolchain'].append({'path': str(tool.resolve()), 'sha256': ltcg.sha256(tool)})
+        add_input(root / 'config' / 'project.json')
+        for config in (root / 'config' / (binary + '.json'), root / 'config' / 'gate-allow.json'):
+            if config.exists():
+                add_input(config)
+        selected = [source_path(root, unit) for unit in units] if units else sorted(
+            path for path in (root / 'matching' / binary).rglob('*') if path.suffix.lower() in ('.c', '.cpp', '.cxx'))
+        entries = registry_entries(root, binary)
+        for number, source in enumerate(selected):
+            annotations = [annotation for annotation in parse_annotations(source) if annotation.binary == binary]
+            if not annotations:
+                continue
+            group = out / ('unit-%03d' % number)
+            group.mkdir()
+            add_input(source)
+            source_entries = [entry for entry in entries if source_path(root, entry['unit']) == source]
+            for annotation in annotations:
+                allowed = [entry for entry in source_entries if integer(entry['retail_va']) == annotation.retail_va]
+                if len(allowed) > 1:
+                    raise ValueError('duplicate registry address')
+                if allowed:
+                    if annotation.symbol and annotation.symbol != allowed[0]['symbol']:
+                        raise ValueError('annotation and registry symbols disagree')
+                    annotation.symbol = allowed[0]['symbol']
+            dependencies = {source_path(root, path) for entry in source_entries for path in entry.get('dependencies', [])}
+            dependencies.update(source_path(root, path) for path in settings.get('dependencies', {}).get(source.relative_to(root).as_posix(), []))
+            objects = []
+            discovery_symbols = []
+            for index, unit in enumerate([source] + sorted(dependencies - {source})):
+                add_input(unit)
+                unit_flags = list(flags)
+                if unit.suffix.lower() != '.c' and not any(flag.lower().startswith('/eh') for flag in unit_flags):
+                    unit_flags.append('/EHsc')
+                plain = group / ('discovery-%03d.obj' % index)
+                for include in compile_unit(unit, plain, toolroot, unit_flags, env, manifest['commands'], plain=True):
+                    add_input(include)
+                if index == 0:
+                    discovery_symbols = function_symbols(plain)
+                add_artifact(plain, 'discovery-object-not-candidate')
+                obj = group / ('source-%03d.obj' % index)
+                for include in compile_unit(unit, obj, toolroot, unit_flags, env, manifest['commands']):
+                    if str(include) not in inputs:
+                        raise ValueError('GL compile introduced an input absent from discovery: ' + str(include))
+                    add_input(include)
+                objects.append(obj)
+                add_artifact(obj, 'ltcg-object')
+            roots = [discover_symbol(annotation, discovery_symbols) for annotation in annotations]
+            roots += [name for entry in source_entries for name in entry.get('roots', [])]
+            image_path, map_path = ltcg.link(toolroot, objects, roots, group, env, manifest['commands'], link_flags)
+            add_artifact(image_path, 'linked-image')
+            add_artifact(map_path, 'linker-map')
+            from matchlib import PEImage
+            image = PEImage(image_path)
+            map_symbols = ltcg.read_map(map_path)
+            for annotation, symbol in zip(annotations, roots):
+                matches = [item for item in map_symbols if item.name == symbol]
+                if len(matches) != 1:
+                    raise ValueError('root does not identify one linked function: ' + symbol)
+                start = matches[0].va
+                allowed = next((entry for entry in source_entries if integer(entry['retail_va']) == annotation.retail_va), None)
+                boundary = allowed.get('boundary', {}) if allowed else {}
+                size = integer(allowed['size']) if allowed else None
+                if size is None:
+                    ends = [item.va for item in map_symbols if item.va > start and item.section == matches[0].section]
+                    size = min(ends) - start if ends else 0
+                    boundary = {'status': 'unverified', 'evidence': 'next MAP symbol; includes possible padding' if ends else 'no end boundary'}
+                if size < 0 or size > 16 * 1024 * 1024:
+                    raise ValueError('invalid extraction size')
+                code = image.read_va(start, size) if size else b''
+                refs = []
+                ref_status = 'unresolved'
+                ref_error = None
+                try:
+                    if size:
+                        refs = ltcg.scan_referents(image, start, size, map_symbols)
+                        ref_status = 'verified' if all(ref['resolved'] for ref in refs) else 'unresolved'
+                except (ValueError, ImportError) as error:
+                    ref_error = str(error)
+                manifest['candidates'].append({'symbol': symbol, 'retail_va': annotation.retail_va,
+                    'candidate_va': start, 'size': size, 'boundary': boundary,
+                    'source_span': {'start': annotation.start, 'end': annotation.end},
+                    'annotation_line': annotation.line, 'image_path': str(image_path),
+                    'image_sha256': ltcg.sha256(image_path), 'bytes_sha256': hashlib.sha256(code).hexdigest(),
+                    'source_path': str(source), 'source_sha256': ltcg.sha256(source),
+                    'function_source_sha256': hashlib.sha256('\n'.join(source.read_text(encoding='utf-8-sig').splitlines()[annotation.start - 1:annotation.end]).encode('utf-8')).hexdigest(),
+                    'referents': refs, 'referents_status': ref_status, 'referents_error': ref_error,
+                    'rule_status': 'pending', 'compile_context': 'standalone-ltcg-with-real-dependencies'})
+        for path, digest in inputs.items():
+            if ltcg.sha256(path) != digest:
+                raise ValueError('input changed during build: ' + path)
+        for tool in manifest['toolchain']:
+            if ltcg.sha256(tool['path']) != tool['sha256']:
+                raise ValueError('toolchain changed during build: ' + tool['path'])
+        manifest['status'] = 'built'
+    except Exception as error:
+        manifest['status'] = 'failed'
+        manifest['error'] = str(error)
+        raise
+    finally:
+        manifest['source_inputs'] = [{'path': path, 'sha256': digest} for path, digest in sorted(inputs.items())]
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    return manifest, destination
+
+
+def compare_candidates(manifest, root, binary):
+    from matchlib import PEImage
+    project, settings = load_settings(root, binary)
+    retail_path = settings.get('path') or str(Path(project['toolchain_root']) / 'bin' / settings['filename'])
+    retail = PEImage(retail_path)
+    results = []
+    for candidate in manifest['candidates']:
+        size = candidate['size']
+        ours = PEImage(candidate['image_path']).read_va(candidate['candidate_va'], size) if size else b''
+        theirs = retail.read_va(candidate['retail_va'], size) if size else b''
+        equal = sum(a == b for a, b in zip(ours, theirs))
+        results.append({'symbol': candidate['symbol'], 'retail_va': candidate['retail_va'],
+                        'observed_at': datetime.now(timezone.utc).isoformat(),
+                        'source_path': candidate['source_path'], 'source_sha256': candidate['source_sha256'],
+                        'function_source_sha256': candidate['function_source_sha256'],
+                        'build_id': manifest['build_id'], 'size': size,
+                        'score': 100.0 * equal / size if size else None,
+                        'raw_bytes_equal': bool(size) and ours == theirs,
+                        'boundary_status': candidate['boundary'].get('status', 'unverified'),
+                        'referents_status': candidate['referents_status'], 'rule_status': 'pending',
+                        'status': 'MATCH-PENDING' if size and ours == theirs else 'DIFF' if size else 'UNRESOLVED'})
+    return results
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command', choices=['build', 'match', 'diff'])
+    parser.add_argument('--binary', required=True)
+    parser.add_argument('--unit', action='append')
+    parser.add_argument('--function')
+    parser.add_argument('--output-dir')
+    parser.add_argument('--manifest')
+    parser.add_argument('--build-id')
+    parser.add_argument('--root', type=Path, default=ROOT)
+    args = parser.parse_args(argv)
+    try:
+        root = args.root.resolve()
+        if args.command == 'match' and not args.unit:
+            parser.error('match requires --unit')
+        units = args.unit
+        if args.command == 'diff':
+            if not args.function:
+                parser.error('diff requires --function')
+            units = [entry['unit'] for entry in registry_entries(root, args.binary) if entry['symbol'] == args.function]
+            if not units:
+                parser.error('function has no configured unit in gate-allow.json')
+        manifest, path = build(root, args.binary, args.output_dir, args.manifest, args.build_id, units)
+        print('Built %d candidate(s); manifest: %s' % (len(manifest['candidates']), path))
+        if args.command != 'build':
+            results = compare_candidates(manifest, root, args.binary)
+            (path.parent / 'comparison.json').write_text(json.dumps(results, indent=2) + '\n', encoding='utf-8')
+            for result in results:
+                if args.command == 'diff' and result['symbol'] != args.function:
+                    continue
+                print('%s %s size=%d score=%s boundary=%s referents=%s' % (
+                    result['status'], result['symbol'], result['size'], result['score'],
+                    result['boundary_status'], result['referents_status']))
+                if args.command == 'diff':
+                    candidate = next(item for item in manifest['candidates'] if item['symbol'] == result['symbol'])
+                    print_diff(root, args.binary, candidate)
+        return 0
+    except (OSError, ValueError, RuntimeError, ImportError) as error:
+        print('ERROR: ' + str(error), file=sys.stderr)
+        return 1
+
+
+def print_diff(root, binary, candidate):
+    from matchlib import PEImage
+    from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+    project, settings = load_settings(root, binary)
+    retail = PEImage(settings.get('path') or Path(project['toolchain_root']) / 'bin' / settings['filename'])
+    ours = PEImage(candidate['image_path']).read_va(candidate['candidate_va'], candidate['size'])
+    theirs = retail.read_va(candidate['retail_va'], candidate['size'])
+    decoder = Cs(CS_ARCH_X86, CS_MODE_32)
+    left = list(decoder.disasm(theirs, candidate['retail_va']))
+    right = list(decoder.disasm(ours, candidate['candidate_va']))
+    print('RETAIL'.ljust(52) + 'CANDIDATE (first 24 instructions)')
+    for index in range(min(24, max(len(left), len(right)))):
+        def format_instruction(items):
+            if index >= len(items):
+                return ''
+            ins = items[index]
+            return '%08x %-8s %s' % (ins.address, ins.mnemonic, ins.op_str)
+        print(format_instruction(left).ljust(52) + format_instruction(right))
+
+
+if __name__ == '__main__':
+    sys.exit(main())
