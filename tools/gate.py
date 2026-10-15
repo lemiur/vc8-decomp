@@ -596,8 +596,8 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
             build_dir.mkdir()
             manifest_path = build_dir / "manifest.json"
             harness = root / "tools" / "match.py"
+            inputs_before = snapshot_inputs(root)
             if harness.is_file():
-                inputs_before = snapshot_inputs(root)
                 command = [sys.executable, str(harness), "build", "--binary", name, "--output-dir", str(build_dir),
                            "--manifest", str(manifest_path), "--build-id", run_id]
                 run = subprocess.run(command, cwd=root, capture_output=True, text=True)
@@ -676,6 +676,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
             if claims:
                 require(digest(manifest_path.read_bytes()) == manifest_hash, "build manifest changed during admission")
             require(load_member_layouts(used_bindings, root, matchlib_module) == member_layouts, "compiler layout witness changed during admission")
+            require(inputs_before == snapshot_inputs(root), "source, rule policy or tool inputs changed during admission")
             output = build_dir / "splice.bin"
             output.write_bytes(image)
             result["output_sha256"] = digest(output.read_bytes())
