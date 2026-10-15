@@ -242,7 +242,115 @@ def verify_literal_storage(image, target, data):
     require(image.read(target, len(data)) == data, "referenced literal bytes differ from source expression")
 
 
-def compare_candidate(retail, candidate_image, claim, request, identities, emitted_identities=None):
+def memory_reference_widths(va, code):
+    """Relocation operand width is separate from the actual data access width."""
+    import capstone as cs
+    from capstone.x86 import X86_OP_MEM
+    decoder = cs.Cs(cs.CS_ARCH_X86, cs.CS_MODE_32)
+    decoder.detail = True
+    result = {}
+    for ins in decoder.disasm(code, va):
+        for operand in ins.operands:
+            if operand.type == X86_OP_MEM and ins.disp_size == 4:
+                result[ins.address - va + ins.disp_offset] = {
+                    "width": 0 if ins.mnemonic == "lea" else operand.size,
+                    "dynamic": bool(operand.mem.base or operand.mem.index or operand.mem.segment)}
+    return result
+
+
+def witness_key(record, root=ROOT):
+    require(isinstance(record, dict) and record.get("path") and record.get("sha256"), "missing pinned layout witness")
+    return str(resolve(record["path"], root)) + ":" + record["sha256"]
+
+
+def load_layout_witness(record, root, matchlib_module):
+    """Reopen a pinned compiler-produced sizeof/offsetof data export."""
+    path = checked_file(record, root)
+    witness = read_json(path)
+    require(witness.get("schema_version") == 1 and witness.get("kind") == "offsetof-sizeof" and
+            witness.get("status") == "built", "invalid compiler layout witness")
+    fields = witness.get("fields")
+    require(isinstance(fields, list) and fields and len(fields) == len(set(fields)) and
+            all(isinstance(field, str) and re.fullmatch(r"[A-Za-z_]\w*", field) for field in fields), "invalid named layout fields")
+    image_path = checked_file(witness["image"], root)
+    # This reuses only build-provenance validation. The probe contributes zero
+    # admitted functions or bytes, and its data is independently extracted below.
+    provenance = dict(witness, binary="layout-witness", candidates=[{"symbol": witness["symbol"]}])
+    _, artifacts = validate_manifest(provenance, "layout-witness", witness["build_id"], image_path.parent, root)
+    require(artifacts.get(str(image_path), {}).get("kind") == "linked-image", "layout export lacks linked-image provenance")
+    image = matchlib_module.PEImage(image_path)
+    require(image.machine == 0x14c, "layout witness is not x86")
+    exports = [entry for entry in image.export_records() if witness["symbol"] in entry["names"]]
+    require(len(exports) == 1 and exports[0]["va"] is not None and not exports[0].get("forwarder"), "layout witness has no unique local export")
+    values = struct.unpack("<" + "I" * (1 + 2 * len(fields)), image.read(exports[0]["va"], 4 * (1 + 2 * len(fields))))
+    observed = {"size": values[0], "members": {name: {"offset": values[1 + 2 * index], "size": values[2 + 2 * index]}
+                                               for index, name in enumerate(fields)}}
+    require(observed == witness.get("observations"), "named layout observations differ from compiled export")
+    require(observed["size"] > 0 and all(member["size"] > 0 and member["offset"] + member["size"] <= observed["size"]
+                                        for member in observed["members"].values()), "compiled layout fields exceed aggregate")
+    return dict(observed, type=witness["type"], witness_sha256=record["sha256"])
+
+
+def load_member_layouts(bindings, root, matchlib_module):
+    result = {}
+    for binding in bindings.values():
+        if binding.get("kind") == "member":
+            record = binding["layout_witness"]
+            key = witness_key(record, root)
+            if key not in result:
+                result[key] = load_layout_witness(record, root, matchlib_module)
+    return result
+
+
+def require_layout_review(records, admission, rules, root):
+    if not records:
+        return
+    policy_path = root / "config" / "rule-exceptions.json"
+    require(digest(policy_path.read_bytes()) == rules.get("policy_sha256"), "layout policy changed after rule review")
+    policy = read_json(policy_path)
+    reviews = [review for review in policy.get("reviews", []) if review.get("binary") == admission["binary"] and
+               integer(review.get("va", -1)) == integer(admission["va"]) and
+               resolve(review.get("source_path", ""), root) == resolve(admission["source_path"], root) and
+               review.get("source_sha256") == admission["source_sha256"] and
+               review.get("scope_sha256") == admission["scope_sha256"]]
+    require(len(reviews) == 1, "member layout has no unique current semantic review")
+    pinned = set()
+    for evidence in reviews[0].get("checks", {}).get("R2", {}).get("evidence", []):
+        path = checked_file(evidence, root)
+        try:
+            document = read_json(path)
+        except (ValueError, UnicodeError):
+            continue
+        if not isinstance(document, dict):
+            continue
+        for record in document.get("layout_witnesses", []):
+            pinned.add(witness_key(record, root))
+        pinned.add(str(path) + ":" + evidence["sha256"])
+    require(all(witness_key(record, root) in pinned for record in records), "compiler layout witness is not pinned by current R2 review")
+
+
+def verify_member(binding, identity, identities, emitted_identities, emitted_target, retail_target, access, layouts, root):
+    base_identity = binding.get("base_identity")
+    base = identities.get(base_identity, {})
+    require(base.get("kind", "symbol") == "symbol" and base.get("entity_kind") == "data" and base.get("evidence"),
+            "member has no canonical aggregate base")
+    require(base.get("layout_witness") == binding.get("layout_witness"), "member and base use different layout witnesses")
+    key = witness_key(binding.get("layout_witness"), root)
+    require(layouts is not None and key in layouts, "member layout witness was not independently verified")
+    layout = layouts[key]
+    require(base.get("type") == layout["type"] and integer(base.get("size", 0)) == layout["size"], "aggregate type/extent differs from compiler layout")
+    member = layout["members"].get(binding.get("member"))
+    require(member is not None and integer(binding.get("offset", -1)) == member["offset"] and
+            integer(binding.get("size", 0)) == member["size"], "field name/offset/width differs from compiler layout")
+    offset, size = member["offset"], member["size"]
+    require(0 <= offset and 0 < size and offset + size <= layout["size"], "member exceeds canonical aggregate")
+    require(access is not None and not access["dynamic"] and 0 < access["width"] <= size, "access crosses member boundary or lacks static member proof")
+    require(emitted_identities is not None and emitted_identities.get(emitted_target - offset) == {base_identity},
+            "member refers to a sibling or invented field global")
+    require(integer(base["va"]) + offset == retail_target == integer(binding["va"]), "retail member is not canonical base plus field offset")
+
+
+def compare_candidate(retail, candidate_image, claim, request, identities, emitted_identities=None, member_layouts=None, root=ROOT):
     """Return emitted source bytes with only independently resolved fixups."""
     va, built_va, size = map(integer, (request["retail_va"], claim["candidate_va"], request["size"]))
     require(size > 0 and integer(claim["size"]) == size, "unexplained function size change")
@@ -259,6 +367,7 @@ def compare_candidate(retail, candidate_image, claim, request, identities, emitt
     require(digest(code) == claim.get("bytes_sha256"), "candidate byte hash mismatch")
     emitted_refs = scan_referents(candidate_image, built_va, code)
     retail_refs = scan_referents(retail, va, expected)
+    emitted_widths, retail_widths = memory_reference_widths(built_va, code), memory_reference_widths(va, expected)
     claimed_refs = claim.get("referents")
     require(isinstance(claimed_refs, list) and len(claimed_refs) == len(emitted_refs) == len(retail_refs),
             "incomplete ordered referent inventory")
@@ -293,6 +402,15 @@ def compare_candidate(retail, candidate_image, claim, request, identities, emitt
             elif kind == "symbol":
                 require(emitted_identities is not None and emitted_identities.get(built["target"]) == {identity},
                         "emitted external target does not independently identify advertised referent")
+                if "layout_witness" in binding:
+                    require(emitted_widths.get(built["offset"], {}).get("width", 0) == 0 and
+                            retail_widths.get(reference["offset"], {}).get("width", 0) == 0,
+                            "aggregate memory access requires a typed member identity")
+            elif kind == "member":
+                require(built["kind"] == "abs32", "member reference is not an absolute data operand")
+                require(emitted_widths.get(built["offset"]) == retail_widths.get(reference["offset"]), "source and retail member access widths differ")
+                verify_member(binding, identity, identities, emitted_identities, built["target"], reference["target"],
+                              emitted_widths.get(built["offset"]), member_layouts, root)
             else:
                 raise GateError("unsupported external referent evidence kind")
         require(target == reference["target"], "ordered referent target differs from retail")
@@ -485,6 +603,10 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
             require(requested_symbols <= {c["symbol"] for c in all_claims}, "candidate inventory omits admission request")
             claims = [c for c in all_claims if c["symbol"] in requested_symbols]
             rules = check_rules(root, build_dir) if claims else {"functions": []}
+            bindings = registry.get("referents", {}).get(name, {})
+            used_bindings = {reference.get("identity"): bindings.get(reference.get("identity"), {})
+                             for claim in claims for reference in claim.get("referents", [])}
+            member_layouts = load_member_layouts(used_bindings, root, matchlib_module)
             image, spans = bytearray(retail_images[name].data), []
             result = record["binaries"][name]
             result["pending"] = [{"symbol": c["symbol"], "retail_va": c["retail_va"],
@@ -508,6 +630,9 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                         admissions[0].get("status") == "RULE-ADMITTED" and
                         admissions[0].get("source_sha256") == claim["source_sha256"],
                         "function lacks evidence-backed rule admission")
+                member_records = [bindings[reference["identity"]]["layout_witness"] for reference in claim.get("referents", [])
+                                  if bindings.get(reference.get("identity"), {}).get("kind") == "member"]
+                require_layout_review(member_records, admissions[0], rules, root)
                 image_path = resolve(claim["image_path"], root)
                 artifact = artifacts.get(str(image_path), {})
                 require(artifact.get("kind") == "linked-image" and artifact.get("sha256") == claim.get("image_sha256"),
@@ -515,7 +640,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 emitted_identities = verify_linked_symbol(claim, manifest, artifacts, root)
                 built = matchlib_module.PEImage(image_path)
                 code, refs = compare_candidate(retail_images[name], built, claim, request,
-                                               registry.get("referents", {}).get(name, {}), emitted_identities)
+                                               bindings, emitted_identities, member_layouts, root)
                 offset = retail_images[name].offset_of(integer(request["retail_va"]), len(code))
                 splice(image, spans, offset, code)
                 result["admitted"].append({"symbol": claim["symbol"], "retail_va": request["retail_va"], "size": len(code),
@@ -524,7 +649,8 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                     "source_span": span, "candidate_va": claim["candidate_va"], "image_path": str(image_path),
                     "bytes_sha256": claim["bytes_sha256"], "retail_file_offset": offset,
                     "spliced_bytes_sha256": digest(code), "manifest_path": str(manifest_path), "manifest_sha256": manifest_hash,
-                    "image_sha256": claim["image_sha256"], "rules": {"status": "passed", "admission": admissions[0]},
+                    "image_sha256": claim["image_sha256"], "rules": {"status": "passed", "admission": admissions[0],
+                        "policy_sha256": rules.get("policy_sha256"), "scope_sha256": rules.get("scope_sha256")},
                     "referents": refs, "referents_status": "resolved", "bytes_exact": True,
                     "artifacts": list(artifacts.values()),
                     "boundary": request["boundary"]})
@@ -534,6 +660,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 checked_file(item, root)
             if claims:
                 require(digest(manifest_path.read_bytes()) == manifest_hash, "build manifest changed during admission")
+            require(load_member_layouts(used_bindings, root, matchlib_module) == member_layouts, "compiler layout witness changed during admission")
             output = build_dir / "splice.bin"
             output.write_bytes(image)
             result["output_sha256"] = digest(output.read_bytes())
