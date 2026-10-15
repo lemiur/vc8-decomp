@@ -27,6 +27,27 @@ only the supplied local PDB through Ghidra's universal reader. The Java launcher
 uses Ghidra's LaunchSupport VM options and headless entry point directly, avoiding
 Windows batch expansion of compiler installation paths containing parentheses.
 
+The exporter uses `--workers 1..4` independent native decompilers (default four),
+with at most that many functions active. It completes tables, recorded ranges,
+references, and selected assembly before decompilation, marked by
+`metadata-complete.json`. A metadata marker does not imply decompilation finished.
+Every selected function receives a JSON identity/result record, including errors
+and its independent timeout verdict. `decompile-status.tsv` is flushed as results
+arrive; the final function table remains in address order.
+
+Reuse a completed saved import without reanalysis or project modification:
+
+```
+python tools/evidence.py ghidra-export --binary cl --source-run SAVED_IMPORT_RUN --ghidra-home GHIDRA_DIR --java-home JDK_DIR --workers 4
+```
+
+This uses `-process -noanalysis -readOnly`, pins the source manifest hash and
+inherited PDB provenance, and writes a fresh output directory with current script
+hashes. The loaded program's executable hash must match the configured retail
+image. Running imports cannot be reused: Ghidra saves a newly imported program
+after its post-scripts return, so stopping an import during body export may lose
+its in-memory analysis. Never stop such an import just to release a project lock.
+
 The requested analyzer is 12.1.3. The locally found and executed installation is
 12.0.1 at `E:/Downloads/ghidra_12.0.1_PUBLIC_20260114/ghidra_12.0.1_PUBLIC`.
 Every run records the exact version and the plan deviation. No download is needed.
@@ -48,7 +69,7 @@ Failed runs remain for diagnosis; no stale output is reused.
   this table; consume actual DBI contributions from the symbol map separately.
 - `ranges.tsv`: every inclusive body range, including noncontiguous bodies.
 - `references.tsv`: Ghidra's recorded outgoing reference sites/types/targets.
-- `functions/VA.c` and `.asm`: individual hints and assembly. `--limit N` bounds
+- `functions/VA.c`, `.asm`, and `.json`: individual hints, assembly, and result/identity metadata. `--limit N` bounds
   body exports while preserving the full table; default zero exports all bodies.
 - `headless.log`, `pdb-status.json`, `export-complete.json`: execution evidence.
 
