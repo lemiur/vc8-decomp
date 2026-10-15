@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "binary": "cl",
+  "retail": {
+    "sha256": "71c93ca5bddc9b2816d0e053cac2b952f926f6b9321fab6b1ab6e8603621324c",
+    "image_base": "0x400000",
+    "version": "14.0.50727.762",
+    "pdb_guid": "720089F2F35A4A128093E654DACA5226",
+    "pdb_age": 1
+  },
+  "symbol_input": "E:/vc8-decomp/build/evidence/cl.symbols.json",
+  "evidence_policy": "Curated evidence only. No source compiled, no score or banked count. Public gaps are never function extents. PDB module attribution proves contribution owner, not original source filename, extension, or complete declaration. Bounded disassembly was read directly with Capstone 5.0.7 over PEImage.read_va; terminal offsets and all local branch targets were inspected. These extents remain subject to the independent byte gate.",
+  "lane_policy": "Twelve disjoint object-owner work lanes are supported by DBI contribution attribution. The integration owner may allocate infrastructure/evidence workers instead of concurrent source writers. LTCG dependencies across lanes require coordination and canonical shared declarations. Original source filenames remain unresolved unless lineage evidence is explicitly recorded.",
+  "lanes": [
+    {"id": "clmain", "module_index": 11, "object": "clmain.obj", "kind": "compiler", "original_source": null, "assignment": "driver options, heaps, wrappers"},
+    {"id": "util", "module_index": 8, "object": "util.obj", "kind": "compiler", "original_source": null, "assignment": "pure scalar pilot nextbase, then utilities"},
+    {"id": "mpcl", "module_index": 4, "object": "mpcl.obj", "kind": "compiler", "original_source": null, "assignment": "no-op thread_print pilot, then multiprocessing types"},
+    {"id": "util_watson", "module_index": 5, "object": "util_watson.obj", "kind": "compiler", "original_source": null, "assignment": "reporting state, resolve unnamed globals before reconstruction"},
+    {"id": "loadui", "module_index": 6, "object": "loadui.obj", "kind": "compiler", "original_source": null, "assignment": "UI loading dependencies"},
+    {"id": "dos", "module_index": 7, "object": "dos.obj", "kind": "compiler", "original_source": null, "assignment": "OS support and exception-filter ABI"},
+    {"id": "compile", "module_index": 9, "object": "compile.obj", "kind": "compiler", "original_source": null, "assignment": "compile context and SRCTARG layout"},
+    {"id": "vssqm", "module_index": 1, "object": "vssqm.obj", "kind": "support", "original_source": null, "assignment": "telemetry and StrSafe dependency evidence"},
+    {"id": "delayhlp", "module_index": 14, "object": "delayhlp.obj", "kind": "support", "original_source": null, "assignment": "delay-load helper and hook contracts"},
+    {"id": "crt_merr", "module_index": 32, "object": "merr.obj", "kind": "crt", "original_source": "merr.c (installed lineage, not proof of exact retail revision)", "assignment": "three-byte _matherr source-lineage pilot"},
+    {"id": "crt_atonexit", "module_index": 25, "object": "atonexit.obj", "kind": "crt", "original_source": "atonexit.c (installed lineage, not proof of exact retail revision)", "assignment": "atexit/onexit and encoded pointers"},
+    {"id": "crt_pesect", "module_index": 34, "object": "pesect.obj", "kind": "crt", "original_source": "pesect.c (installed lineage, not proof of exact retail revision)", "assignment": "PE validation helpers"}
+  ],
+  "functions": [
+    {
+      "name": "?nextbase@@YAHH@Z", "va": "0x408276", "lane": "util", "priority": 1, "score": null, "match_ready": true,
+      "identity": "S_PUB32 and unique DBI contribution module 8 util.obj",
+      "boundary": {"status": "proven", "size": 26, "methods": ["bounded-disassembly", "complete-local-cfg"], "terminal": "ret at 0x408280 and 0x40828f", "evidence": "start cmp [esp+4],1; jne 0x408281; both paths terminate, all 26 bytes decode, no embedded data or external branch"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "declaration": "int nextbase(int)", "evidence": "mangled YAHH; arg [esp+4], no callee pop, EAX return"},
+      "referents": {"status": "resolved", "ordered": [], "evidence": "only internal conditional branch"},
+      "semantics": "1 -> 2, 2 -> 3, other inputs -> 1; source expression/control shape unmeasured"
+    },
+    {
+      "name": "?thread_print@@YAXPBGZZ", "va": "0x40a25f", "lane": "mpcl", "priority": 2, "score": null, "match_ready": true,
+      "identity": "S_PUB32 and unique DBI contribution module 4 mpcl.obj",
+      "boundary": {"status": "proven", "size": 1, "methods": ["bounded-disassembly"], "terminal": "ret at entry", "evidence": "single decoded C3 instruction; no reads, writes or transfers besides return"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "declaration": "void thread_print(const wchar_t*, ...)", "evidence": "YAXPBGZZ cdecl variadic spelling and plain ret; body does not access args"},
+      "referents": {"status": "resolved", "ordered": []},
+      "semantics": "empty body plausible release-build no-op; no format behavior to invent"
+    },
+    {
+      "name": "__matherr", "va": "0x40c661", "lane": "crt_merr", "priority": 3, "score": null, "match_ready": true,
+      "identity": "S_PUB32 and unique DBI contribution module 32 build/intel/dll_obj/merr.obj",
+      "boundary": {"status": "proven", "size": 3, "methods": ["bounded-disassembly", "installed-crt-lineage"], "terminal": "ret at 0x40c663", "evidence": "xor eax,eax; ret; installed merr.c _matherr body returns zero"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "declaration": "int _matherr(struct _exception*)", "evidence": "installed merr.c __CRTDECL declaration plus plain ret; public C spelling alone does not prove prototype"},
+      "referents": {"status": "resolved", "ordered": []},
+      "lineage": {"path": "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src/merr.c", "sha256": "250b49faa3afa8bb94b9dcf92d967fe2feb93bb1aae09f38eeaab9b043b80f9d", "revision_caveat": "Installed era source is lineage evidence; exact SP1 source revision not independently established"}
+    },
+    {
+      "name": "?error_report_prompt@@YAXPAUflag_s@@@Z", "va": "0x4015a8", "lane": "clmain", "priority": 4, "score": null, "match_ready": false,
+      "identity": "S_PUB32 and unique DBI contribution module 11 clmain.obj",
+      "boundary": {"status": "proven", "size": 9, "methods": ["bounded-disassembly"], "terminal": "ret at 0x4015b0", "evidence": "push 1; call 0x40993a; pop ecx; ret"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "declaration": "void error_report_prompt(struct flag_s*)", "evidence": "YAXPAUflag_s mangling, plain ret, unused argument; callee arg caller-clean"},
+      "referents": {"status": "resolved", "ordered": [{"kind": "call", "va": "0x40993a", "name": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"}]},
+      "obstacles": ["enum member names unresolved; define canonical ErrorReportingMode and shared callee declaration with util_watson lane", "LTCG inline visibility must be tested"]
+    },
+    {
+      "name": "?error_report_queue@@YAXPAUflag_s@@@Z", "va": "0x4015b1", "lane": "clmain", "priority": 4, "score": null, "match_ready": false,
+      "boundary": {"status": "proven", "size": 9, "methods": ["bounded-disassembly"], "terminal": "ret at 0x4015b9", "evidence": "push 2; call 0x40993a; pop ecx; ret"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "mangling and plain ret agree with error_report_prompt"},
+      "referents": {"status": "resolved", "ordered": [{"kind": "call", "va": "0x40993a", "name": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"}]}
+    },
+    {
+      "name": "?error_report_send@@YAXPAUflag_s@@@Z", "va": "0x4015ba", "lane": "clmain", "priority": 4, "score": null, "match_ready": false,
+      "boundary": {"status": "proven", "size": 9, "methods": ["bounded-disassembly"], "terminal": "ret at 0x4015c2", "evidence": "push 3; call 0x40993a; pop ecx; ret"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "mangling and plain ret agree with error_report_prompt"},
+      "referents": {"status": "resolved", "ordered": [{"kind": "call", "va": "0x40993a", "name": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"}]}
+    },
+    {
+      "name": "?error_report_none@@YAXPAUflag_s@@@Z", "va": "0x4015c3", "lane": "clmain", "priority": 4, "score": null, "match_ready": false,
+      "boundary": {"status": "proven", "size": 9, "methods": ["bounded-disassembly"], "terminal": "ret at 0x4015cb", "evidence": "push 0; call 0x40993a; pop ecx; ret"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "mangling and plain ret agree with error_report_prompt"},
+      "referents": {"status": "resolved", "ordered": [{"kind": "call", "va": "0x40993a", "name": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"}]}
+    },
+    {
+      "name": "?ErrorReportingGetMode@@YA?AW4ErrorReportingMode@@XZ", "va": "0x409934", "lane": "util_watson", "priority": 5, "score": null, "match_ready": false,
+      "boundary": {"status": "proven", "size": 6, "methods": ["bounded-disassembly"], "terminal": "ret at 0x409939", "evidence": "mov eax,[0x41a020]; ret"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "no args, EAX return plus enum-return mangling"},
+      "referents": {"status": "unresolved", "ordered": [{"kind": "read-data", "va": "0x41a020", "name": null}], "evidence": "no public data identity at address; canonical enum storage must be recovered"}
+    },
+    {
+      "name": "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z", "va": "0x40993a", "lane": "util_watson", "priority": 5, "score": null, "match_ready": false,
+      "boundary": {"status": "proven", "size": 12, "methods": ["bounded-disassembly"], "terminal": "ret at 0x409945", "evidence": "mov eax,[esp+4]; mov [0x41a020],eax; mov al,1; ret"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "enum argument at [esp+4], caller pop shown in four wrappers; bool result in AL plus mangling"},
+      "referents": {"status": "unresolved", "ordered": [{"kind": "write-data", "va": "0x41a020", "name": null}]}
+    },
+    {
+      "name": "?ErrorReportingSetDlls@@YA_NPBG@Z", "va": "0x409946", "lane": "util_watson", "priority": 5, "score": null, "match_ready": false,
+      "boundary": {"status": "proven", "size": 12, "methods": ["bounded-disassembly"], "terminal": "ret at 0x409951", "evidence": "mov eax,[esp+4]; mov [0x417be8],eax; mov al,1; ret"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "pointer arg at [esp+4], plain ret, AL result, wchar_t const* mangling"},
+      "referents": {"status": "unresolved", "ordered": [{"kind": "write-data", "va": "0x417be8", "name": null}]}
+    },
+    {
+      "name": "?ErrorReportingSetFormalAppName@@YA_NPBG@Z", "va": "0x409952", "lane": "util_watson", "priority": 5, "score": null, "match_ready": false,
+      "boundary": {"status": "proven", "size": 12, "methods": ["bounded-disassembly"], "terminal": "ret at 0x40995d", "evidence": "mov eax,[esp+4]; mov [0x417bec],eax; mov al,1; ret"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "pointer arg at [esp+4], plain ret, AL result, wchar_t const* mangling"},
+      "referents": {"status": "unresolved", "ordered": [{"kind": "write-data", "va": "0x417bec", "name": null}]}
+    },
+    {
+      "name": "_atexit", "va": "0x40bc69", "lane": "crt_atonexit", "priority": 6, "score": null, "match_ready": false,
+      "boundary": {"status": "proven", "size": 18, "methods": ["bounded-disassembly", "installed-crt-lineage"], "terminal": "ret at 0x40bc7a", "evidence": "push argument; call __onexit 0x40bbc4; neg/sbb/neg; pop ecx; dec eax; ret. Five int3 bytes after return excluded; public-start gap is 23, function is 18"},
+      "abi": {"status": "resolved", "calling_convention": "__cdecl", "evidence": "installed atonexit.c prototype, stack arg and caller cleanup"},
+      "referents": {"status": "resolved", "ordered": [{"kind": "call", "va": "0x40bbc4", "name": "__onexit"}]},
+      "obstacles": ["installed CRT source version/provenance and compiler controls need testing; no match yet"]
+    }
+  ],
+  "open_leads": [
+    "PstNext<SRCTARG> 0x4062f7 has two terminating branches and 14 decoded bytes, but SRCTARG first-member ownership/layout unproven; no raw-offset model is acceptable.",
+    "IsRunningUnderIDE(void) 0x40218a has 22 decoded bytes and named GetEnvironmentVariableW IAT reference plus VS_UNICODE_OUTPUT literal; global/import declarations must be canonical.",
+    "fullccpath 0x4024a8 has 23 decoded bytes, local wchar_t* output, direct call __get_wpgmptr; C runtime thunk/import chain must resolve.",
+    "release_filelife_heap 0x402c06 and release_ast_extra_heap 0x402c1a each have 20 decoded bytes. VirtualFree IAT and PDB-named pointer globals identified; canonical definitions require coordination.",
+    "MP_get_mutex 0x40a6fa is a 5-byte tail jump to0x40a496; never infer empty function semantics from it.",
+    "get_action_nonbatching 0x40a67a is a 10-byte ECX-load/tail-jump wrapper; Queue<action_t> storage and callee member ABI unresolved.",
+    "Original source-language extensions remain unproven for compiler object owners. Rich single LTCG object summary cannot override distinct DBI module identities.",
+    "All scores remain null/unmeasured. Gate green all-fallback does not make any of these functions matched."
+  ]
+}
