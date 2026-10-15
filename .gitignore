@@ -1,0 +1,9 @@
+# Microsoft binaries, symbols and decompiler output are never committed
+symbols/
+ref/
+decompiled/
+build/
+*.pdb
+*.exe
+*.dll
+*.obj
