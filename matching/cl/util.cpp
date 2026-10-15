@@ -155,3 +155,14 @@ int __cdecl initscreenline()
         return max(screen_length() - 1, 1);
     return INT_MAX;
 }
+
+// DATA: cl 0x419fe8
+// Invented private object name; the original name and grouping are unresolved.
+struct __timeb64 g_startTime;
+
+// FUNCTION: cl 0x4082b9
+// SYMBOL: ?starttiming@@YAXXZ
+void __cdecl starttiming()
+{
+    _ftime64_s(&g_startTime);
+}

@@ -2,6 +2,11 @@
 #define VC8_DECOMP_CL_UTIL_H
 
 #include <windows.h>
+#include <sys/timeb.h>
+
+// Invented name for the private util.obj timing object. The CRT API and
+// later time/millitm accesses prove its SDK type; original grouping is unresolved.
+extern struct __timeb64 g_startTime;
 
 // PDB identity: ?nextbase@@YAHH@Z. Caller at 0x408e80 cleans one
 // stack argument; the body returns the integer in EAX.
@@ -19,6 +24,7 @@ int __cdecl IsOutputToConsole(HANDLE);
 int __cdecl IsRunningUnderIDE(HANDLE*);
 unsigned short* __cdecl strqcpy(unsigned short*, const unsigned short*);
 int __cdecl initscreenline();
+void __cdecl starttiming();
 
 // PDB ?cmderr@@YAXIZZ; all retail paths call done(2), which calls the
 // canonical CRT exit import. The real body is still an open dependency.
