@@ -27,3 +27,58 @@ unsigned int __cdecl env_size(const unsigned short *environment)
     }
     return cursor - environment;
 }
+
+// FUNCTION: cl 0x40A3A1
+// SYMBOL: ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ
+// Complete local CFG: 38 decoded bytes, returns at 0x40A3AB and 0x40A3C6.
+template<class T>
+T *Queue<T>::try_head_nosync()
+{
+    if (tail == &sentinel)
+        return 0;
+
+    T *first = sentinel.next;
+    sentinel.next = first->next;
+    first->next = 0;
+    if (tail == first)
+        tail = &sentinel;
+    --count;
+    return first;
+}
+
+// FUNCTION: cl 0x40A41B
+// SYMBOL: ?append_nosync@?$Queue@Uaction_t@@@@QAEHAAV1@@Z
+// Complete local CFG: 61 decoded bytes, ret 4 at 0x40A455; no referents.
+template<class T>
+int Queue<T>::append_nosync(Queue<T> &other)
+{
+    if (other.tail == &other.sentinel)
+        return 0;
+
+    tail->next = other.sentinel.next;
+    tail = other.tail;
+    tail->next = &sentinel;
+    other.tail = &other.sentinel;
+    other.sentinel.next = &other.sentinel;
+    count += other.count;
+    other.count = 0;
+    return 1;
+}
+
+// FUNCTION: cl 0x40A475
+// SYMBOL: ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z
+// Complete local CFG: 33 decoded bytes, ret 4 at 0x40A493; no referents.
+template<class T>
+int Queue<T>::add_head_nosync(T *item)
+{
+    if (tail == &sentinel)
+        tail = item;
+    item->next = sentinel.next;
+    ++count;
+    sentinel.next = item;
+    return count;
+}
+
+template action_t *Queue<action_t>::try_head_nosync();
+template int Queue<action_t>::append_nosync(Queue<action_t> &);
+template int Queue<action_t>::add_head_nosync(action_t *);
