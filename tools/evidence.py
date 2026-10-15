@@ -22,6 +22,13 @@ def number(value):
     return int(value, 0) if isinstance(value, str) else int(value)
 
 
+def byte_count(value):
+    result = int(value)
+    if not 1 <= result <= 200000:
+        raise argparse.ArgumentTypeError("byte count must be in 1..200000")
+    return result
+
+
 def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8-sig"))
 
@@ -267,7 +274,7 @@ def main(argv=None):
         cmd.add_argument("--symbol", required=True)
         cmd.add_argument("--config", type=Path)
         cmd.add_argument("--max-lines", type=int, choices=range(4, 61), default=60, metavar="4..60")
-        cmd.add_argument("--max-bytes", type=int, choices=range(1, 200001), default=4096, metavar="1..200000")
+        cmd.add_argument("--max-bytes", type=byte_count, default=4096, metavar="1..200000")
     cmd = sub.add_parser("ghidra-import", help="fresh isolated project and ignored export; never admits matches")
     cmd.add_argument("--binary", required=True)
     cmd.add_argument("--config", type=Path)

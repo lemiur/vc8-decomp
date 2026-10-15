@@ -1,4 +1,5 @@
 import hashlib
+import argparse
 import importlib.util
 import json
 from pathlib import Path
@@ -12,6 +13,12 @@ SPEC.loader.exec_module(evidence)
 
 
 class EvidenceTests(unittest.TestCase):
+    def test_byte_limit_errors_are_bounded(self):
+        self.assertEqual(evidence.byte_count("200000"), 200000)
+        with self.assertRaises(argparse.ArgumentTypeError) as caught:
+            evidence.byte_count("200001")
+        self.assertLess(len(str(caught.exception)), 100)
+
     def test_symbol_identity_and_ambiguity(self):
         symbols = {"functions": [{"name": "duplicate", "rva": 0x10}, {"name": "duplicate", "rva": 0x20}], "data": []}
         with self.assertRaisesRegex(ValueError, "ambiguous"):
