@@ -383,7 +383,7 @@ def verify_linked_symbol(claim, manifest, artifacts, root):
                      for arg in links[0]["argv"] if arg.lower().startswith("/map:")}
     require(maps[0] in declared_maps, "linker MAP lacks command attribution")
     matches, identities = [], {}
-    pattern = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+f\s+(.+?)\s*$")
+    pattern = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+f\s+(?:i\s+)?(.+?)\s*$")
     any_symbol = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})(?:\s+.*)?$")
     compiled_objects = [str(resolve(path, root)) for path in links[0].get("argv", [])
                         if artifacts.get(str(resolve(path, root)), {}).get("kind") == "ltcg-object"]

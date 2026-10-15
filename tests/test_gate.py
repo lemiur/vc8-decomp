@@ -406,6 +406,17 @@ class GateTests(unittest.TestCase):
         refs = gate.scan_referents(image, 0x1000, image.data[:8])
         self.assertEqual(refs, [{"offset": 3, "width": 4, "kind": "abs32", "target": 0x1020}])
 
+    def test_map_inline_flag_preserves_exact_compiled_source_owner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output, manifest = self.manifest_fixture(root)
+            mapfile = output / "candidate.map"
+            mapfile.write_text(" 0001:00000000 _fixture 10001000 f i source.obj\n")
+            next(item for item in manifest["artifacts"] if item["kind"] == "linker-map")["sha256"] = gate.digest(mapfile.read_bytes())
+            _, artifacts = gate.validate_manifest(manifest, "cl", "fresh", output, root)
+            identities = gate.verify_linked_symbol(manifest["candidates"][0], manifest, artifacts, root)
+            self.assertEqual(identities[0x10001000], {"_fixture"})
+
 
 if __name__ == "__main__":
     unittest.main()
