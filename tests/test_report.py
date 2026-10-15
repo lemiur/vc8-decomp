@@ -32,7 +32,8 @@ def green(source=True):
                  "bytes_exact": True, "artifacts": [{"kind": "linked-image", "sha256": HASH}],
                  "boundary": {"status": "verified", "evidence": "fixture"}}] if source else []
     return {"schema_version": 1, "gate_kind": "retail-splice", "run_id": "run-1",
-            "observed_at": "2026-10-15T12:00:00Z", "status": "GREEN", "authority": "BANKED cl fixture",
+            "observed_at": "2026-10-15T12:00:00Z", "status": "GREEN",
+            "authority": f"BANKED cl functions={len(admitted)} source_bytes={len(admitted) * 4}/100",
             "errors": [], "binaries": {"cl": {"input_sha256": HASH, "fallback_sha256": HASH,
                 "output_sha256": HASH, "image_bytes": 100, "functions": len(admitted),
                 "source_bytes": len(admitted) * 4, "function_denominator": None,
@@ -157,6 +158,7 @@ class ReportTests(unittest.TestCase):
 
     def test_gate_failure_paths(self):
         mutators = [lambda gate: gate.update(status="RED"), lambda gate: gate.update(authority=None),
+                    lambda gate: gate.update(authority="BANKED cl functions=0 source_bytes=0/100"),
                     lambda gate: gate.update(errors=["bad"]),
                     lambda gate: gate["binaries"]["cl"].update(output_sha256=OTHER),
                     lambda gate: gate["binaries"]["cl"].update(source_bytes=8),

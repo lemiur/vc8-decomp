@@ -87,8 +87,11 @@ def gate_admissions(gate, binary):
     if result.get("source_bytes") != total or result.get("functions") != len(admitted):
         raise ValueError("gate source byte count disagrees with admissions")
     denominator = result.get("source_byte_denominator")
-    if not isinstance(denominator, int) or isinstance(denominator, bool) or denominator < total:
+    if not isinstance(denominator, int) or isinstance(denominator, bool) or denominator < total or denominator != result.get("image_bytes"):
         raise ValueError("invalid gate byte denominator")
+    authority_claim = f"{binary} functions={len(admitted)} source_bytes={total}/{denominator}"
+    if authority_claim not in gate["authority"][len("BANKED "):].split("; "):
+        raise ValueError("counts are absent from the printed gate authority")
     return admitted
 
 
