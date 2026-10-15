@@ -10,3 +10,20 @@
 void __cdecl thread_print(const unsigned short *, ...)
 {
 }
+
+// FUNCTION: cl 0x40A2DC
+// SYMBOL: ?env_size@@YAIPBG@Z
+// Complete retail CFG: 45 decoded bytes, all local branches, ret 0x40A308.
+// Names environment/cursor are reconstructed, not recovered identifiers.
+// The final zero is excluded; an empty environment returns zero.
+unsigned int __cdecl env_size(const unsigned short *environment)
+{
+    const unsigned short *cursor = environment;
+
+    while (*cursor) {
+        while (*cursor)
+            ++cursor;
+        ++cursor;
+    }
+    return cursor - environment;
+}

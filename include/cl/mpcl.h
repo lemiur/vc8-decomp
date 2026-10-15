@@ -7,4 +7,8 @@
 // counts and caller cleanup; the retail function is a plain return.
 void __cdecl thread_print(const unsigned short *, ...);
 
+// ?env_size@@YAIPBG@Z; caller merge_env passes GetEnvironmentStringsW's
+// result, uses EAX as a character count, then allocates twice that count + 2.
+unsigned int __cdecl env_size(const unsigned short *);
+
 #endif
