@@ -6,6 +6,12 @@ requested from match.py with --output-dir, --manifest and --build-id. Manifests
 are observations, never authority for bytes, referents, boundaries or code rules.
 Execution trusts the local compiler and repository build runner. Configured and
 observed runtime files are hashed; Windows SxS binding is not retraced per build.
+
+Shared compiler support entries use kind='entry-alias', a sorted exact aliases
+list, va/size/bytes_sha256 and a pinned proof {path,sha256}. Their identity is
+'entry-alias:' + '|'.join(aliases). Current R2 evidence must pin that proof under
+entry_alias_proofs. Retail PDB aliases and fresh MAP owners/flags are reopened;
+the complete closed helper bytes must match. These helpers add zero banked bytes.
 """
 from __future__ import annotations
 
@@ -26,6 +32,13 @@ BINARIES = ("cl", "c1", "c1xx", "c2", "link")
 
 class GateError(ValueError):
     pass
+
+
+class MapIdentities(dict):
+    """Exact names plus owner/flag records from the fresh linked MAP."""
+    def __init__(self):
+        super().__init__()
+        self.rows = []
 
 
 def require(condition, message):
@@ -311,18 +324,18 @@ def load_member_layouts(bindings, root, matchlib_module):
     return result
 
 
-def require_layout_review(records, admission, rules, root):
+def require_evidence_review(records, admission, rules, root, field, label):
     if not records:
         return
     policy_path = root / "config" / "rule-exceptions.json"
-    require(digest(policy_path.read_bytes()) == rules.get("policy_sha256"), "layout policy changed after rule review")
+    require(digest(policy_path.read_bytes()) == rules.get("policy_sha256"), label + " policy changed after rule review")
     policy = read_json(policy_path)
     reviews = [review for review in policy.get("reviews", []) if review.get("binary") == admission["binary"] and
                integer(review.get("va", -1)) == integer(admission["va"]) and
                resolve(review.get("source_path", ""), root) == resolve(admission["source_path"], root) and
                review.get("source_sha256") == admission["source_sha256"] and
                review.get("scope_sha256") == admission["scope_sha256"]]
-    require(len(reviews) == 1, "member layout has no unique current semantic review")
+    require(len(reviews) == 1, label + " has no unique current semantic review")
     pinned = set()
     for evidence in reviews[0].get("checks", {}).get("R2", {}).get("evidence", []):
         path = checked_file(evidence, root)
@@ -332,10 +345,88 @@ def require_layout_review(records, admission, rules, root):
             continue
         if not isinstance(document, dict):
             continue
-        for record in document.get("layout_witnesses", []):
+        for record in document.get(field, []):
             pinned.add(witness_key(record, root))
         pinned.add(str(path) + ":" + evidence["sha256"])
-    require(all(witness_key(record, root) in pinned for record in records), "compiler layout witness is not pinned by current R2 review")
+    require(all(witness_key(record, root) in pinned for record in records), label + " is not pinned by current R2 review")
+
+
+def require_layout_review(records, admission, rules, root):
+    require_evidence_review(records, admission, rules, root, "layout_witnesses", "compiler layout witness")
+
+
+def verify_closed_helper(image, va, size, expected_hash):
+    """Prove a complete reachable, relocation-free closed helper extent."""
+    import capstone
+    require(0 < size <= 4096 and any(integer(s["va"]) <= va and va + size <= integer(s["va"]) + integer(s["rawsize"])
+            and integer(s["chars"]) & 0x20000000 for s in image.sections), "alias helper lacks bounded executable extent")
+    code = image.read(va, size)
+    require(digest(code) == expected_hash, "alias helper bytes differ from reviewed proof")
+    decoder = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+    decoder.detail = True
+    instructions = list(decoder.disasm(code, va))
+    require(sum(i.size for i in instructions) == size, "alias helper decode is incomplete")
+    by_address = {i.address: i for i in instructions}
+    pending, seen = [va], set()
+    while pending:
+        address = pending.pop()
+        if address in seen:
+            continue
+        require(address in by_address, "alias helper branch escapes or splits instruction")
+        seen.add(address)
+        insn = by_address[address]
+        require(not insn.group(capstone.CS_GRP_CALL) and not insn.group(capstone.CS_GRP_INT), "alias helper has external control flow")
+        if insn.group(capstone.CS_GRP_RET):
+            continue
+        if insn.group(capstone.CS_GRP_JUMP):
+            require(len(insn.operands) == 1 and insn.operands[0].type == capstone.x86_const.X86_OP_IMM,
+                    "alias helper has indirect control flow")
+            pending.append(insn.operands[0].imm)
+            if insn.mnemonic == "jmp":
+                continue
+        pending.append(address + insn.size)
+    require(seen == set(by_address), "alias helper extent contains unreachable bytes")
+    require(all(r["kind"].startswith("rel") and va <= r["target"] < va + size
+                for r in scan_referents(image, va, code)), "alias helper has unresolved external data or code")
+    return code
+
+
+def load_entry_alias(binding, retail, root):
+    """Reopen the pinned retail PDB; a registry alias list alone admits nothing."""
+    import symbols
+    proof = read_json(checked_file(binding["proof"], root))
+    require(proof.get("schema_version") == 1 and proof.get("kind") == "compiler-stack-probe-shared-entry-identity",
+            "unsupported shared-entry proof")
+    aliases = binding.get("aliases")
+    require(isinstance(aliases, list) and len(aliases) > 1 and aliases == sorted(set(aliases)), "invalid exact alias set")
+    require(integer(binding["size"]) == integer(proof["compared_cfg_extent"]) and
+            binding["bytes_sha256"] == proof["retail_bytes_sha256"] == proof["candidate_bytes_sha256"],
+            "alias extent/hash differs from reviewed proof")
+    identity = proof["retail_identity"]
+    require(identity["binary_sha256"] == retail.sha256(), "alias proof belongs to another retail image")
+    pdb = checked_file({"path": identity["pdb_path"], "sha256": identity["pdb_sha256"]}, root)
+    extracted = symbols.extract(retail.path, pdb)
+    rows = [dict(row, group=group) for group in ("functions", "data") for row in extracted[group]
+            if integer(row.get("va", -1)) == integer(binding["va"])]
+    fields = ("name", "va", "module", "module_index", "public_flags", "group")
+    normalized = lambda records: sorted(tuple(r.get(k) for k in fields) for r in records)
+    require(normalized(rows) == normalized(proof["retail_public_alias_records"]) and
+            sorted(r["name"] for r in rows) == aliases and len({r["module_index"] for r in rows}) == 1 and
+            all(r.get("module_candidates") == [r["module_index"]] for r in rows), "retail public alias identity/owner differs")
+    source_rows = proof["candidate_alias_records"]
+    require(sorted(r["name"] for r in source_rows) == aliases and len({r["va"] for r in source_rows}) == 1,
+            "proof does not bind exact source aliases to one entry")
+    verify_closed_helper(retail, integer(binding["va"]), integer(binding["size"]), binding["bytes_sha256"])
+    return {"binding": binding, "source_rows": source_rows}
+
+
+def verify_entry_alias(binding, proof, candidate, target, identities):
+    require(proof is not None and proof["binding"] == binding, "entry alias proof was not independently verified")
+    require(identities.get(target) == set(binding["aliases"]), "fresh MAP alias set differs from reviewed entry")
+    actual = [r for r in getattr(identities, "rows", []) if r["va"] == target]
+    normalize = lambda rows: sorted((r["name"], r["is_function"], r["object_name"]) for r in rows)
+    require(normalize(actual) == normalize(proof["source_rows"]), "fresh MAP alias owner/flags differ from reviewed entry")
+    verify_closed_helper(candidate, target, integer(binding["size"]), binding["bytes_sha256"])
 
 
 def verify_member(binding, identity, identities, emitted_identities, emitted_target, retail_target, access, layouts, root):
@@ -359,7 +450,7 @@ def verify_member(binding, identity, identities, emitted_identities, emitted_tar
     require(integer(base["va"]) + offset == retail_target == integer(binding["va"]), "retail member is not canonical base plus field offset")
 
 
-def compare_candidate(retail, candidate_image, claim, request, identities, emitted_identities=None, member_layouts=None, root=ROOT):
+def compare_candidate(retail, candidate_image, claim, request, identities, emitted_identities=None, member_layouts=None, root=ROOT, entry_aliases=None):
     """Return emitted source bytes with only independently resolved fixups."""
     va, built_va, size = map(integer, (request["retail_va"], claim["candidate_va"], request["size"]))
     require(size > 0 and integer(claim["size"]) == size, "unexplained function size change")
@@ -414,6 +505,10 @@ def compare_candidate(retail, candidate_image, claim, request, identities, emitt
                 require(identity == "literal:sha256:" + digest(data) and built["kind"] == "abs32", "literal identity or operand kind differs")
                 verify_literal_storage(candidate_image, built["target"], data)
                 verify_literal_storage(retail, target, data)
+            elif kind == "entry-alias":
+                require(identity == "entry-alias:" + "|".join(binding.get("aliases", [])) and built["kind"] == "rel32",
+                        "shared-entry identity or operand kind differs")
+                verify_entry_alias(binding, (entry_aliases or {}).get(identity), candidate_image, built["target"], emitted_identities)
             elif kind == "symbol":
                 require(emitted_identities is not None and emitted_identities.get(built["target"]) == {identity},
                         "emitted external target does not independently identify advertised referent")
@@ -519,15 +614,19 @@ def verify_linked_symbol(claim, manifest, artifacts, root):
     declared_maps = {str(resolve(arg[5:], resolve(links[0].get("cwd", ""), root)))
                      for arg in links[0]["argv"] if arg.lower().startswith("/map:")}
     require(maps[0] in declared_maps, "linker MAP lacks command attribution")
-    matches, identities = [], {}
+    matches, identities = [], MapIdentities()
     pattern = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+f\s+(?:i\s+)?(.+?)\s*$")
     any_symbol = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})(?:\s+.*)?$")
+    alias_row = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+(?:(f)\s+)?(?:i\s+)?(.+?)\s*$")
     compiled_objects = [str(resolve(path, root)) for path in links[0].get("argv", [])
                         if artifacts.get(str(resolve(path, root)), {}).get("kind") == "ltcg-object"]
     for line in Path(maps[0]).read_text(encoding="utf-8", errors="replace").splitlines():
         symbol = any_symbol.match(line)
         if symbol:
             identities.setdefault(int(symbol[2], 16), set()).add(symbol[1])
+        row = alias_row.match(line)
+        if row:
+            identities.rows.append({"name": row[1], "va": int(row[2], 16), "is_function": bool(row[3]), "object_name": row[4]})
         match = pattern.match(line)
         if match and match[1] == claim["symbol"]:
             owners = [path for path in compiled_objects if Path(path).name.lower() == match[3].strip().lower()]
@@ -622,6 +721,8 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
             used_bindings = {reference.get("identity"): bindings.get(reference.get("identity"), {})
                              for claim in claims for reference in claim.get("referents", [])}
             member_layouts = load_member_layouts(used_bindings, root, matchlib_module)
+            entry_aliases = {identity: load_entry_alias(binding, retail_images[name], root)
+                             for identity, binding in used_bindings.items() if binding.get("kind") == "entry-alias"}
             image, spans = bytearray(retail_images[name].data), []
             result = record["binaries"][name]
             result["pending"] = [{"symbol": c["symbol"], "retail_va": c["retail_va"],
@@ -648,6 +749,9 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 member_records = [bindings[reference["identity"]]["layout_witness"] for reference in claim.get("referents", [])
                                   if bindings.get(reference.get("identity"), {}).get("kind") == "member"]
                 require_layout_review(member_records, admissions[0], rules, root)
+                alias_records = [bindings[reference["identity"]]["proof"] for reference in claim.get("referents", [])
+                                 if bindings.get(reference.get("identity"), {}).get("kind") == "entry-alias"]
+                require_evidence_review(alias_records, admissions[0], rules, root, "entry_alias_proofs", "shared-entry proof")
                 image_path = resolve(claim["image_path"], root)
                 artifact = artifacts.get(str(image_path), {})
                 require(artifact.get("kind") == "linked-image" and artifact.get("sha256") == claim.get("image_sha256"),
@@ -655,7 +759,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 emitted_identities = verify_linked_symbol(claim, manifest, artifacts, root)
                 built = matchlib_module.PEImage(image_path)
                 code, refs = compare_candidate(retail_images[name], built, claim, request,
-                                               bindings, emitted_identities, member_layouts, root)
+                                               bindings, emitted_identities, member_layouts, root, entry_aliases)
                 offset = retail_images[name].offset_of(integer(request["retail_va"]), len(code))
                 splice(image, spans, offset, code)
                 result["admitted"].append({"symbol": claim["symbol"], "retail_va": request["retail_va"], "size": len(code),
@@ -676,6 +780,8 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
             if claims:
                 require(digest(manifest_path.read_bytes()) == manifest_hash, "build manifest changed during admission")
             require(load_member_layouts(used_bindings, root, matchlib_module) == member_layouts, "compiler layout witness changed during admission")
+            require({identity: load_entry_alias(used_bindings[identity], retail_images[name], root) for identity in entry_aliases} == entry_aliases,
+                    "shared-entry proof or retail symbols changed during admission")
             require(inputs_before == snapshot_inputs(root), "source, rule policy or tool inputs changed during admission")
             output = build_dir / "splice.bin"
             output.write_bytes(image)
