@@ -31,6 +31,9 @@ class Image:
     def base_relocations(self):
         return self.relocations
 
+    def import_records(self):
+        return getattr(self, "import_entries", [])
+
     def sha256(self):
         return gate.digest(self.data)
 
@@ -330,6 +333,73 @@ class GateTests(unittest.TestCase):
             self.assertEqual(admission["function_source_sha256"], function_hash)
             self.assertEqual(gate.digest(Path(admission["manifest_path"]).read_bytes()), admission["manifest_sha256"])
             self.assertIn("cl functions=1 source_bytes=1/1", result["authority"])
+
+    def referenced_data_fixture(self, data, opcode=b"\x68"):
+        images = []
+        for base in (0x1000, 0x4000):
+            code = opcode + struct.pack("<I", base + 32) + b"\xc3"
+            image = Image(base, code + bytes(32 - len(code)) + data)
+            image.sections = [{"va": base, "rawsize": len(code), "chars": 0x60000020},
+                              {"va": base + 32, "rawsize": len(data), "chars": 0x40000040}]
+            images.append(image)
+        retail, emitted = images
+        size = len(opcode) + 5
+        request = {"retail_va": 0x1000, "size": size,
+                   "boundary": {"status": "verified", "evidence": "synthetic decoded function"}}
+        claim = {"retail_va": 0x1000, "candidate_va": 0x4000, "size": size,
+                 "boundary": request["boundary"], "bytes_sha256": gate.digest(emitted.read(0x4000, size)),
+                 "referents": [{"offset": len(opcode), "width": 4, "kind": "abs32", "target": 0x4020,
+                                "identity": "", "resolved": True}]}
+        return retail, emitted, request, claim
+
+    def test_import_binding_requires_actual_dll_and_name_on_both_images(self):
+        retail, emitted, request, claim = self.referenced_data_fixture(bytes(4), b"\xff\x15")
+        identity = "msvcr80.dll!free"
+        claim["referents"][0]["identity"] = identity
+        retail.import_entries = [{"va": 0x1020, "dll": "MSVCR80.dll", "name": "free"}]
+        emitted.import_entries = [{"va": 0x4020, "dll": "msvcr80.dll", "name": "free"}]
+        binding = {identity: {"kind": "import", "dll": "MSVCR80.dll", "name": "free", "va": 0x1020, "evidence": "fixture imports"}}
+        code, count = gate.compare_candidate(retail, emitted, claim, request, binding, {})
+        self.assertEqual((code, count), (retail.read(0x1000, 7), 1))
+        for image, key, wrong in ((emitted, "dll", "other.dll"), (retail, "name", "malloc")):
+            old = image.import_entries[0][key]
+            image.import_entries[0][key] = wrong
+            with self.assertRaisesRegex(gate.GateError, "PE import DLL/name"):
+                gate.compare_candidate(retail, emitted, claim, request, binding, {})
+            image.import_entries[0][key] = old
+
+    def test_literal_binding_derives_full_extent_from_hashed_source_token(self):
+        data = "CONOUT$\0".encode("utf-16le")
+        retail, emitted, request, claim = self.referenced_data_fixture(data)
+        identity = "literal:sha256:" + gate.digest(data)
+        claim["referents"][0]["identity"] = identity
+        binding = {identity: {"kind": "literal", "encoding": "utf-16le", "size": 16,
+                              "bytes_sha256": gate.digest(data), "source_literal": 'L"CONOUT$"',
+                              "va": 0x1020, "evidence": "fixture complete string object"}}
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "unit.cpp"
+            source.write_text('const wchar_t *fixture(void) { return L"CONOUT$"; }\n')
+            claim.update(source_path=str(source), source_sha256=gate.digest(source.read_bytes()))
+            code, count = gate.compare_candidate(retail, emitted, claim, request, binding, {})
+            self.assertEqual((code, count), (retail.read(0x1000, 6), 1))
+            emitted.data = emitted.data[:-2] + b"X\0"
+            with self.assertRaisesRegex(gate.GateError, "literal bytes differ"):
+                gate.compare_candidate(retail, emitted, claim, request, binding, {})
+            emitted.data = emitted.data[:-2] + b"\0\0"
+            binding[identity]["size"] = 14
+            with self.assertRaisesRegex(gate.GateError, "extent differs"):
+                gate.compare_candidate(retail, emitted, claim, request, binding, {})
+            binding[identity]["size"] = 16
+            source.write_text('/* L"CONOUT$" */\nconst wchar_t *fixture(void) { return 0; }\n')
+            claim["source_sha256"] = gate.digest(source.read_bytes())
+            with self.assertRaisesRegex(gate.GateError, "absent from hashed source"):
+                gate.compare_candidate(retail, emitted, claim, request, binding, {})
+
+    def test_writable_storage_cannot_be_admitted_as_literal(self):
+        image = Image(0x1000, b"abc\0")
+        image.sections = [{"va": 0x1000, "rawsize": 4, "chars": 0xc0000040}]
+        with self.assertRaisesRegex(gate.GateError, "read-only"):
+            gate.verify_literal_storage(image, 0x1000, b"abc\0")
 
 
 if __name__ == "__main__":
