@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "binary": "c2",
+  "purpose": "Phase 0 candidate selection only; c2 matching waits for the cl pilot and integration authorization.",
+  "max_instructions": 160,
+  "max_span": 2048,
+  "shortlist_evidence": {
+    "binary_sha256": "497d1ffe57f75db8b458167bdea475f3962829e139b355a2672a4ef51c716413",
+    "image_base": "0x10B00000",
+    "object_attribution": "PDB DBI section contribution contains public start; whole-body/source-file ownership remains unresolved",
+    "boundary": "bounded recursive Capstone inspection; decoded byte counts are observations, not function sizes or admitted source bytes",
+    "signature": "all unresolved; decorated spellings can disagree with LTCG machine ABI",
+    "verified_shortlist": [
+      {"name": "@HshOperand@4", "va": "0x10B5F1B0", "object": "hash.obj", "instructions": 12, "reachable_decoded_bytes": 27, "calls": false, "ret_pop_bytes": [0], "dependencies": [], "open": "operand type/layout and register input evidence"},
+      {"name": "@log2@4", "va": "0x10B98820", "object": "misc.obj", "instructions": 7, "reachable_decoded_bytes": 14, "calls": false, "ret_pop_bytes": [0], "dependencies": [], "open": "parameter/return width and edge cases"},
+      {"name": "@MscRevList@4", "va": "0x10B9D5F0", "object": "misc.obj", "instructions": 10, "reachable_decoded_bytes": 19, "calls": false, "ret_pop_bytes": [0], "dependencies": [], "open": "canonical list element type and register input"},
+      {"name": "@PogoCgDontProfile@4", "va": "0x10C9FC70", "object": "pogocg.obj", "instructions": 5, "reachable_decoded_bytes": 30, "calls": false, "ret_pop_bytes": [0], "dependencies": ["_PogoFlag"], "open": "canonical flag declaration and LTCG register ABI"},
+      {"name": "@PogoCgFindCallGraphCallSite@8", "va": "0x10CA1920", "object": "pogocg.obj", "instructions": 10, "reachable_decoded_bytes": 22, "calls": false, "ret_pop_bytes": [0], "dependencies": [], "open": "canonical callgraph/callsite types and register ABI"},
+      {"name": "@PogoInlineFoldableNum@12", "va": "0x10CA8D20", "object": "pogoinline.obj", "instructions": 18, "reachable_decoded_bytes": 44, "calls": false, "ret_pop_bytes": [0], "dependencies": [], "open": "ECX pointer, SI/DI signed-halfword reads observed; canonical structures and custom ABI unresolved"},
+      {"name": "@PogoInlineBusyTest@24", "va": "0x10CA8D50", "object": "pogoinline.obj", "instructions": 12, "reachable_decoded_bytes": 40, "calls": false, "ret_pop_bytes": [24], "dependencies": ["__real@4059000000000000"], "open": "x87 qword loads at ESP+4,+12,+20 observed; signedness and callers need verification"},
+      {"name": "@PogoOptTraceIsDead@4", "va": "0x10CAD080", "object": "pogoopt.obj", "instructions": 22, "reachable_decoded_bytes": 68, "calls": false, "ret_pop_bytes": [0], "dependencies": ["_PogoFlakyCounts"], "open": "EAX pointer input observed; canonical trace/block layouts and custom ABI unresolved"}
+    ]
+  },
+  "families": [
+    {"id": "pgo-inline", "priority": 100, "modules": ["pogoinline.obj", "pogoinline.c"], "name_regex": "(?i)pogo.*inline|inline.*pogo"},
+    {"id": "pgo-opt", "priority": 95, "modules": ["pogoopt.obj", "pogoopt.c"], "name_regex": "(?i)pogo.*(opt|count|weight|freq|profile)|(?:count|weight|freq|profile).*pogo"},
+    {"id": "pgo-codegen", "priority": 90, "modules": ["pogocg.obj", "pogocg.c"], "name_regex": "(?i)pogo.*(cg|code|instrument)|(?:cg|instrument).*pogo"},
+    {"id": "pgo-other", "priority": 70, "modules": [], "name_regex": "(?i)pogo|pgodb"},
+    {"id": "utility", "priority": 60, "modules": ["hash.obj", "list.obj", "misc.obj", "error.obj", "get_err.obj", "getflags.obj", "sym.obj", "tuple.obj", "hash.c", "list.c", "misc.c", "error.c", "get_err.c", "getflags.c", "sym.c", "tuple.c"], "name_regex": "(?i)^(?:_?)(?:hash|list|tuple)[a-z_]|(?i:hash|list|tuple)$"}
+  ],
+  "policy": {
+    "name_matches": "selection hints only; never evidence of source ownership or signature",
+    "module_matches": "require an explicit per-symbol module association and evidence kind",
+    "boundaries": "bounded recursive disassembly only; public address gaps are never function sizes",
+    "abi": "instruction observations only; LTCG custom conventions remain possible",
+    "counts": "no matched functions or source-attributed bytes are claimed"
+  }
+}
