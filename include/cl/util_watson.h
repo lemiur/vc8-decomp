@@ -32,5 +32,6 @@ extern const unsigned short *g_errorReportingFormalAppName;
 // PDB proves function/type spellings and the inspected code supports the ABI.
 bool __cdecl ErrorReportingSetDlls(const unsigned short *dlls);
 bool __cdecl ErrorReportingSetFormalAppName(const unsigned short *appName);
+bool __cdecl ErrorReportingCheckOptIn();
 
 #endif

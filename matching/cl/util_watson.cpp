@@ -1,4 +1,5 @@
 #include "../../include/cl/util_watson.h"
+#include <windows.h>
 
 // Source filename inferred from the PDB object owner util_watson.obj; the
 // original extension is unresolved. No assert line mappings are claimed here.
@@ -46,4 +47,29 @@ bool __cdecl ErrorReportingSetFormalAppName(const unsigned short *appName)
 {
     g_errorReportingFormalAppName = appName;
     return true;
+}
+
+// FUNCTION: cl 0x0040995e
+// SYMBOL: ?ErrorReportingCheckOptIn@@YA_NXZ
+// Public name/ABI, direct retail imports and both literal contents are proven.
+// Local names are invented semantic spellings. The size/type/value objects are
+// the actual DWORD outputs passed to RegQueryValueExA, not artificial spills.
+bool __cdecl ErrorReportingCheckOptIn()
+{
+    HKEY key;
+    if (RegOpenKeyExA(HKEY_CURRENT_USER,
+                     "Software\\Microsoft\\VisualStudio\\8.0\\General",
+                     0, KEY_READ, &key) == ERROR_SUCCESS)
+    {
+        DWORD type;
+        DWORD value;
+        DWORD size = sizeof(value);
+        LONG result = RegQueryValueExA(key, "UserCanAutoSendErrorReport", 0,
+                                      &type, reinterpret_cast<BYTE *>(&value),
+                                      &size);
+        RegCloseKey(key);
+        if (result == ERROR_SUCCESS && type == REG_DWORD)
+            return value == 1;
+    }
+    return false;
 }
