@@ -201,7 +201,29 @@ proposal. Installed Ghidra 12.0.1 may be used with its version recorded because 
    - Public functions total ~17,700. File-static functions are not in publics, so the true total is higher.
      This supersedes the heuristic estimates in section 1. c1xx is roughly 2x the earlier guess.
 2. Do you have VS2005 RTM (50727.42) for the bootstrap-compiler A/B?
+   Resolved locally: the supplied ISO was extracted into ignored `ref-rtm/`, without replacing the installed
+   SP1 compiler. `config/toolchains.json` pins both toolchains. Actual pilot A/B probes have not yet
+   distinguished the bootstrap compiler; this remains an evidence question rather than a missing input.
 3. A naming and layout style ruling, once Phase 0 shows whether public symbols exist.
+   Resolved by the user: use the project defaults recorded in `AGENTS.md`.
 4. Where the new repository should live (for example `E:\vc8-decomp`).
 
    Resolved by the current workspace: `E:\vc8-decomp`.
+
+## 6. Execution state
+
+The symbol inventories, initial Ghidra imports/exports, isolated RTM toolchain and all-fallback identity
+gate are operational for all five binaries. Initial exports completed under recorded Ghidra 12.0.1;
+individual decompilation failures and inferred function boundaries remain explicit in the local evidence.
+Phase 0 flag calibration is partial: measured per-unit profiles are provisional, and twenty discriminating
+leaf probes per binary have not yet been completed.
+
+Phase 1 is active. Reconstructed driver source is banked only after actual VC8 `/GL` compilation, `/LTCG`
+linking, source-rule review, independently resolved ordered references and a complete-image splice hash
+check. Run `python tools/gate.py --binary all --clean`, then `python tools/report.py` to regenerate the
+local `build/reports/progress.md` census. That report gives the current admitted functions and source
+bytes; public-symbol and Ghidra counts are evidence inventories, not proven function denominators.
+
+No binary has met its full-source-relink milestone. Phase 2 through Phase 5 reconstruction has not been
+launched; bounded leaf probes in those binaries remain Phase 0 calibration. The pilot must satisfy its
+exit criterion before the campaign scales to the back end.
