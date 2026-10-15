@@ -238,6 +238,7 @@ def import_ghidra(args):
         manifest.update(source_run=str(source), source_manifest_sha256=source_hash,
                         pdb_application="inherited_from_saved_project",
                         inherited_pdb_application=source_manifest.get("pdb_application"),
+                        inherited_analysis_timed_out=source_manifest.get("analysis_timed_out", False),
                         pdb_sha256=source_manifest.get("pdb_sha256"),
                         symbol_map_application="context_only; project symbol state inherited",
                         analysis="disabled; saved project reused read-only")
@@ -290,7 +291,8 @@ def import_ghidra(args):
                and (bool(source_info) or ((out / "create-functions.tsv").is_file()
                     and pdb_status == ("applied_local_validated_pdb" if pdb else "not_requested"))))
     timed_out = analysis_timed_out(out / "headless.log")
-    manifest.update(status=("complete_with_analysis_timeout" if timed_out else "complete") if success else "failed",
+    any_analysis_timeout = timed_out or manifest.get("inherited_analysis_timed_out", False)
+    manifest.update(status=("complete_with_analysis_timeout" if any_analysis_timeout else "complete") if success else "failed",
                     returncode=result.returncode, analysis_timed_out=timed_out)
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     print("GHIDRA %s: %s" % (manifest["status"].upper(), manifest_path))
