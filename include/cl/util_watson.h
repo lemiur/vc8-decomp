@@ -34,5 +34,15 @@ bool __cdecl ErrorReportingSetDlls(const unsigned short *dlls);
 bool __cdecl ErrorReportingSetFormalAppName(const unsigned short *appName);
 bool __cdecl ErrorReportingCheckOptIn();
 bool __cdecl ErrorReportingDisabled();
+void __cdecl ErrorReportingInitialize();
+
+// The SDK owns the complete tag definition. CreateFileMappingA proves this
+// actual 12-byte API object; the following enum datum is outside that object.
+struct _SECURITY_ATTRIBUTES;
+extern _SECURITY_ATTRIBUTES g_errorReportingMappingAttributes;
+// HANDLE and LPVOID are the era SDK's void* aliases. Names below are invented;
+// the resolved CreateFileMappingA/MapViewOfFile/CloseHandle operands prove roles.
+extern void *g_errorReportingMappingHandle;
+extern void *g_errorReportingMappingView;
 
 #endif
