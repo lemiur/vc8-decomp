@@ -7,6 +7,7 @@ import struct
 import tempfile
 import types
 import unittest
+from unittest.mock import patch
 
 MODULE = Path(__file__).resolve().parents[1] / "tools" / "gate.py"
 spec = importlib.util.spec_from_file_location("gate", MODULE)
@@ -261,6 +262,74 @@ class GateTests(unittest.TestCase):
             (config / "cl-candidates.json").write_text(json.dumps(descriptor))
             with self.assertRaisesRegex(gate.GateError, "must be a boolean"):
                 gate.load_registry(root)
+
+    def test_complete_source_admission_has_fresh_persisted_byte_witnesses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("config", "matching/cl", "tools", "toolbin"):
+                (root / name).mkdir(parents=True)
+            source = root / "matching/cl/unit.cpp"
+            source.write_text("// FUNCTION: cl 0x1000\nvoid fixture(void) {}\n")
+            source_hash = gate.digest(source.read_bytes())
+            function_hash = gate.digest(b"void fixture(void) {}")
+            boundary = {"status": "verified", "evidence": "synthetic one-instruction fixture"}
+            request = {"binary": "cl", "symbol": "_fixture", "retail_va": "0x1000", "size": 1,
+                       "unit": "matching/cl/unit.cpp", "source_span": {"start": 2, "end": 2}, "boundary": boundary}
+            (root / "config/gate-allow.json").write_text(json.dumps({"schema_version": 1, "candidates": [request]}))
+            for name in ("match.py", "rulecheck.py"):
+                (root / "tools" / name).write_text("# synthetic trusted-runner fixture\n")
+            compiler, linker = root / "toolbin/cl.exe", root / "toolbin/link.exe"
+            for tool in (compiler, linker):
+                tool.write_bytes(b"synthetic tool fixture")
+            def item(path, kind=None):
+                record = {"path": str(path), "sha256": gate.digest(path.read_bytes())}
+                if kind:
+                    record["kind"] = kind
+                return record
+            tools = [item(compiler), item(linker)]
+            (root / "config/toolchains.json").write_text(json.dumps({"toolchains": {"fixture": {"files": tools}}}))
+            def runner(argv, **kwargs):
+                if Path(argv[1]).name == "match.py":
+                    output = Path(argv[argv.index("--output-dir") + 1])
+                    token = argv[argv.index("--build-id") + 1]
+                    obj, image, mapfile = output / "source.obj", output / "candidate.dll", output / "candidate.map"
+                    obj.write_bytes(b"synthetic compiler object")
+                    image.write_bytes(b"\xc3")
+                    mapfile.write_text(" 0001:00000000 _fixture 00001000 f source.obj\n")
+                    manifest = {"schema_version": 1, "binary": "cl", "build_id": token, "status": "built",
+                        "source_inputs": [item(source)], "toolchain": tools,
+                        "commands": [{"argv": [str(compiler), "/GL", "/Fo" + str(obj), str(source)], "cwd": str(root), "returncode": 0, "produced": [str(obj)]},
+                                     {"argv": [str(linker), "/LTCG", "/OUT:" + str(image), "/MAP:" + str(mapfile), str(obj)], "cwd": str(root), "returncode": 0, "produced": [str(image), str(mapfile)]}],
+                        "artifacts": [item(obj, "ltcg-object"), item(image, "linked-image"), item(mapfile, "linker-map")],
+                        "candidates": [{"symbol": "_fixture", "retail_va": "0x1000", "candidate_va": "0x1000", "size": 1,
+                            "boundary": boundary, "source_path": str(source), "source_sha256": source_hash,
+                            "function_source_sha256": function_hash, "source_span": request["source_span"],
+                            "image_path": str(image), "image_sha256": gate.digest(image.read_bytes()),
+                            "bytes_sha256": gate.digest(b"\xc3"), "referents": []}]}
+                    Path(argv[argv.index("--manifest") + 1]).write_text(json.dumps(manifest))
+                else:
+                    report = {"schema_version": 1, "functions": [{"binary": "cl", "va": "0x1000",
+                        "source_path": str(source), "source_sha256": source_hash,
+                        "status": "RULE-ADMITTED", "admitted": True}]}
+                    Path(argv[-1]).write_text(json.dumps(report))
+                return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+            class Retail(Image):
+                def __init__(self, cfg):
+                    super().__init__(0x1000, b"\xc3")
+            module = types.SimpleNamespace(Retail=Retail, PEImage=lambda path: Image(0x1000, Path(path).read_bytes()),
+                                           load_binary_config=lambda *args, **kwargs: {})
+            with patch.object(gate.subprocess, "run", side_effect=runner):
+                result = gate.execute_gate("cl", root, module)
+            self.assertEqual(result["errors"], [])
+            self.assertEqual(result["status"], "GREEN")
+            record = result["binaries"]["cl"]
+            self.assertEqual((record["functions"], record["source_bytes"]), (1, 1))
+            self.assertEqual(record["input_sha256"], record["output_sha256"])
+            admission = record["admitted"][0]
+            self.assertEqual(admission["retail_file_offset"], 0)
+            self.assertEqual(admission["function_source_sha256"], function_hash)
+            self.assertEqual(gate.digest(Path(admission["manifest_path"]).read_bytes()), admission["manifest_sha256"])
+            self.assertIn("cl functions=1 source_bytes=1/1", result["authority"])
 
 
 if __name__ == "__main__":
