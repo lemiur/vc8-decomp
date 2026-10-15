@@ -217,3 +217,7 @@ void ProcessChannel::kill()
     WaitForSingleObject(process_handle, INFINITE);
     CloseHandle(process_handle);
 }
+
+// DATA: cl 0x41AAF0
+// PDB ?g_hMutex@@3PAXA; loader-zero-initialized .data virtual tail.
+HANDLE g_hMutex;
