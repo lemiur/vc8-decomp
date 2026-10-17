@@ -657,17 +657,22 @@ def parse_searches(text):
     return out
 
 
-def link_inputs(command):
-    """The library search's view of a link command line: the inputs in order, /LIBPATH folders,
-    /INCLUDE symbols, /DEFAULTLIB and /NODEFAULTLIB options (response files expanded)."""
+def command_args(command):
+    """A link command line's arguments after the program name, response files (`@file`) expanded."""
     args = []
     for a in command[1:]:
         if a.startswith("@"):
             args += shlex.split(Path(a[1:]).read_text(encoding="utf-8", errors="replace"), posix=False)
         else:
             args.append(a)
+    return args
+
+
+def link_inputs(command):
+    """The library search's view of a link command line: the inputs in order, /LIBPATH folders,
+    /INCLUDE symbols, /DEFAULTLIB and /NODEFAULTLIB options (response files expanded)."""
     inputs, libpath, include, defaults = [], [], [], []
-    for a in args:
+    for a in command_args(command):
         a = a.strip('"')
         m = re.match(r"(?i)^[-/](\w+)(?::(.*))?$", a)
         if m and not os.path.isfile(a):
@@ -709,7 +714,8 @@ def linker_seeds(command, inputs=None):
     last `__load_config_used` (x86). `search_check` compares them with every traced log
     (`seeds`)."""
     t_inputs = link_inputs(command)[0]
-    args = [a.strip('"') for a in command[1:]]
+    # The options as link reads them: a response file's /DLL, /NOENTRY, /ENTRY and /EXPORT count.
+    args = [a.strip('"') for a in command_args(command)]
     explicit = [a.split(":", 1)[1].strip('"') for a in args if re.match(r"(?i)^[-/]ENTRY:", a)]
     if any(re.match(r"(?i)^[-/]NOENTRY$", a) for a in args):
         entry = None

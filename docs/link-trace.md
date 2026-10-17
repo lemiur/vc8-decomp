@@ -211,7 +211,8 @@ Validation (`import_check`, part of `run` and of every `experiment`/`crosscheck`
   `ICFAnalysis` is modelled and every traced link folded everything there. `icf-trace` and
   `search-trace` breakpoints are link.exe 8.00.50727.762 addresses (`LINK_SHA256`).
 - The library search model reads `/DEFAULTLIB`, `/NODEFAULTLIB`, `/INCLUDE`, `/EXPORT` and
-  `/ALTERNATENAME`; incremental linking, `/DEF` files, `/ENTRY` of a decorated (`@n`) name and
+  `/ALTERNATENAME`, and the entry options (`/DLL`, `/NOENTRY`, `/ENTRY`), from the command line and
+  its response files (`@file`, as avp3's `vc8_trace.py link` passes them); incremental linking, `/DEF` files, `/ENTRY` of a decorated (`@n`) name and
   command-line `/EXPORT` of an already decorated name (only undecorated ones were traced) are not
   modelled. The export round's name order was traced with names whose order is the same with or
   without the leading `_`.

@@ -548,6 +548,16 @@ class LinkerSeedTests(unittest.TestCase):
         self.assertEqual(seeds()[0], ["_mainCRTStartup"])
         self.assertEqual(seeds()[-1], ["__load_config_used"])
 
+    def test_response_file_options(self):
+        # vc8_trace links with `@flags.txt`: its /DLL /NOENTRY and /EXPORT are the command's.
+        with tempfile.TemporaryDirectory() as d:
+            rsp = str(Path(d) / "flags.txt")
+            with open(rsp, "w") as f:
+                f.write("/DLL /NOENTRY /EXPORT:exp_r")
+            rounds = lt.linker_seeds(["link.exe", "@" + rsp])
+            self.assertEqual(rounds[0], [])
+            self.assertEqual(rounds[1]({"exports": []}), ["_exp_r"])
+
     def test_export_and_alternatename_rounds(self):
         export_round, alternate_round = lt.linker_seeds(["link.exe", "/EXPORT:exp_zcmd"])[1:3]
         state = {"defined": {"_g_alt"}, "undefined": {"_f_alt"}, "exports": ["_exp_lib", "_exp_alpha"],
