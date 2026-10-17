@@ -222,21 +222,26 @@ SSR_LAYOUTS = {
     0x06: (),
     0x09: ("number", "name", "segattr", "class", "u2f"),
     0x0A: ("u16", "directives"),
+    0x08: ("level", "number", "name", "cv_type", "kind", "type", "u01", "size", "value"),
+    0x0B: ("level", "number", "name", "type", "cv_type"),
     0x0D: ("level",),
     0x0E: ("number", "symkind", "name") + _FATTRS + ("?opt2c", "ex_offset", "sy_offset", "ex_nodes",
                                                      "fnflags", "formals", "calls"),
     0x10: ("number", "symkind", "name") + _FATTRS + ("?opt2c", "target"),
-    0x12: ("number", "path", "u16"),
+    0x12: ("number", "path", "checksum"),
     0x18: ("c16a", "u8", "c16b"),
     0x1A: ("level", "number", "kind", "u01", "size", "u06", "flags", "extra", "?opt31"),
 }
-SSR_NAMES = {0x01: "data", 0x02: "array", 0x03: "temp", 0x04: "function", 0x06: "end", 0x09: "segment", 0x0A: "directives",
+SSR_NAMES = {0x01: "data", 0x02: "array", 0x03: "temp", 0x04: "function", 0x06: "end", 0x09: "segment", 0x0A: "directives", 0x08: "enumerator", 0x0B: "udt",
              0x0D: "scope", 0x0E: "definition", 0x10: "vector-dtor", 0x11: "header", 0x12: "file",
              0x18: "ssr18", 0x1A: "anonymous"}
 GL_HEADER_SIZE = 25
 IL_CALL_GRAPH = 0x100   # gl header IL flag: c1xx wrote call lists (absent under /Od)
 # Without IL_CALL_GRAPH (/Od) a definition record ends after `formals`.
 SSR_LAYOUTS_NO_CALLS = {**SSR_LAYOUTS, 0x0E: SSR_LAYOUTS[0x0E][:-1]}
+
+
+FLAG_EXTRA = 0x80   # symbol flags: a u16 and the extra fields follow (_extra)
 
 
 class _Bad(Exception):
@@ -323,16 +328,51 @@ def _directives(d, p):
     return items, p
 
 
+def _checksum(d, p):
+    """A source file's checksum (SSR 12): a u16 whose high byte is the checksum type (1 = MD5,
+    CodeView's CHKSUM_TYPE_MD5) and whose low byte is its length, then that many bytes. Without
+    /Zi the u16 is 0 and no bytes follow; under /Zi it is 0x110 and the MD5 of the file's bytes
+    (the `.debug$S` file checksum table's value) follows."""
+    info, p = _u16(d, p)
+    size = info & 0xFF
+    if p + size > len(d):
+        raise _Bad("eof")
+    return {"type": info >> 8, "digest": d[p:p + size].hex()}, p + size
+
+
+def _sized(d, p):
+    """A constant as SSR 08 writes it: its length in bytes (u8), then its bytes (little endian)."""
+    size, p = _u8(d, p)
+    if p + size > len(d):
+        raise _Bad("eof")
+    return int.from_bytes(d[p:p + size], "little"), p + size
+
+
+def _flags(d, p):
+    """A symbol's flags and, outside the extra fields, its CodeView type. A first byte with bit
+    0x80 (FLAG_EXTRA) starts a u16 of flags whose extra fields (_extra) end with the type;
+    otherwise the byte is the flags and the type (`cv_type`, a c32) follows it. The type is 0
+    without /Zi; under /Zi it is a primitive type below 0x80 (0x74 T_INT4) or a PDB type index
+    from 0x1000 (`80` + u32)."""
+    low, p = _u8(d, p)
+    if low & FLAG_EXTRA:
+        high, p = _u8(d, p)
+        return {"flags": low | high << 8}, p
+    cv_type, p = _c32(d, p)
+    return {"flags": low, "cv_type": cv_type}, p
+
+
 def _extra(d, p, flags):
     """What follows the flags (a u16) when bit 0x80 is set: a byte (`extra`), the losh number of
     the symbol's named segment when bit 0x02 is set (`segment`: `.xdata$x` for the `__CT`/`__TI`
-    throw records, `.CRT$XCU` for an initializer pointer), and a byte (`extra2`, 0 so far). Read
-    as one losh, a segment number whose low byte is below 0x80 desynchronised the decoder."""
+    throw records, `.CRT$XCU` for an initializer pointer), and the CodeView type (`cv_type`, a
+    c32, see _flags). Read as one losh, a segment number whose low byte is below 0x80
+    desynchronised the decoder."""
     extra, p = _u8(d, p)
     out = {"extra": extra}
     if flags & 0x02:
         out["segment"], p = _losh(d, p)
-    out["extra2"], p = _u8(d, p)
+    out["cv_type"], p = _c32(d, p)
     return out, p
 
 
@@ -340,7 +380,7 @@ _FIELD = {"level": _u8, "number": _losh, "symkind": _u8, "name": _cstr, "path": 
           "type": _u8, "u0c": _u8, "storage": _u8, "u01": _u8, "size": _c32, "u06": _u8, "flags": _u16,
           "opt31": _losh, "dyninit": _losh, "opt2c": _u8, "dim": _c32, "calls": _calls, "u0e": _u8,
           "u0a": _u8, "ex_offset": _c32, "sy_offset": _c32, "ex_nodes": _c16, "fnflags": _losh,
-          "formals": _u8, "target": _losh, "u16": _u16, "u8": _u8, "c16a": _c16, "c16b": _c16,
+          "formals": _u8, "target": _losh, "u16": _u16, "checksum": _checksum, "cv_type": _c32, "value": _sized, "u8": _u8, "c16a": _c16, "c16b": _c16,
           "directives": _directives, "segattr": _u8, "class": _cstr, "u2f": _u32}
 
 
@@ -369,7 +409,7 @@ def _record_alternatives(d, pos, optional=True, layouts=None):
         nxt = []
         for fields, q in states:
             if name == "extra":
-                if fields["flags"] & 0x80:
+                if fields["flags"] & FLAG_EXTRA:
                     try:
                         value, q2 = _extra(d, q, fields["flags"])
                     except _Bad:
@@ -377,6 +417,13 @@ def _record_alternatives(d, pos, optional=True, layouts=None):
                     nxt.append((dict(fields, **value), q2))
                 else:
                     nxt.append((fields, q))
+                continue
+            if name == "flags":
+                try:
+                    value, q2 = _flags(d, q)
+                except _Bad:
+                    continue
+                nxt.append((dict(fields, **value), q2))
                 continue
             if is_optional:
                 nxt.append((fields, q))

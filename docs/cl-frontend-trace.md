@@ -76,7 +76,7 @@ The game's options `/O2 /Oy /arch:SSE2 /fp:fast /GS /EHsc /GR- /MD /Gy` become (
 | `gl` | unit-level symbol records (SSRs, below): header, files, declarations, globals, function definitions, then a trailer of default libraries and linker directives |
 | `in` | a 396-byte block present in every unit, plus initialisers |
 | `sy` | one block per function body c1xx wrote, ended by SSR 06: every parameter, local and compiler temporary with its number |
-| `db` | `/Zi` only |
+| `db` | `/Zi` only (not decoded; the gl records carry each symbol's CodeView type index) |
 
 ### Records
 
@@ -99,18 +99,23 @@ byte skipped. Numbers ("losh", `ILSink::loshwrite`) are a u16 below 0x8000, else
 | `06` | end of a function's sy block | |
 | `09` | segment (gl) | `<n> name\0`, attribute (u8: 04 `CONST`, 00 `CODE`, 1D `DATA`), class `name\0`, u32 (0 so far) |
 | `0A` | trailer (gl) | `u16 count`, then per entry `kind name\0` (`04` default library, `0A` linker directive) |
+| `08` | enumerator (gl, `/Zi` only) | `level <n> name\0`, CodeView type (c32), `kind type u8 size(c32)`, value (u8 length, then that many bytes, little endian: `CIP_UNSAFE_TO_ABORT` 7) |
+| `0B` | class, struct or enum name (gl, `/Zi` only) | `level <n> name\0 u8`, CodeView type (c32) |
 | `0D` | scope (sy) | `level` (1 = parameters, 2 = body, deeper = blocks; no close record) |
 | `0E` | function definition (gl) | as `04`, then `ex_offset` (c32), `sy_offset` (c32), node count (`80`+u16 from 0x80), flags (losh), formals (u8), call list: `count`, then per callee `<n>` and a call count (`80`+u16 from 0x80); no call list when the header's IL flags lack 0x100 (`/Od`) |
 | `10` | vector deleting destructor (gl) | as `04`, then `<n>` of its target |
 | `11` | header (gl, 25 bytes) | `u16 0x386`, `u32 0x01321829`, the unit's symbol count (u32), `u8 1`, IL flags (u32: 0x112 at `/O2`, 0x12 at `/Od`; 0x100 = call lists written, `IL_CALL_GRAPH`), 5 bytes, offset of the trailer (u32) |
-| `12` | source file (gl) | `<n> path\0 u16` |
+| `12` | source file (gl) | `<n> path\0`, checksum: u16 (high byte the type, low byte the length: 0 without `/Zi`, 0x110 under it), then the checksum bytes (under `/Zi` the MD5 of the file) |
 | `18` | pragma state (gl; meaning not read) | `c16 u8 c16` |
 | `1A` | unnamed compiler symbol (sy) | `level <n>` kind, `u8`, `size` (c32), `u8`, flags (u16), then the flags' extra fields |
 
-attrs are `kind [kind2] type u8 storage u8 size(c32) u8 flags(u16) [extra]`, where `extra`, when
-flags & 0x80, is a byte, the `<n>` of the symbol's named segment (an SSR 09) when flags & 0x02 (the
+attrs are `kind [kind2] type u8 storage u8 size(c32) u8 flags [extra]`. The flags are a u16 when
+their first byte has bit 0x80 (`extra` then follows); otherwise that byte alone, followed by the
+symbol's CodeView type (c32). `extra` is a byte, the `<n>` of the symbol's named segment (an SSR 09) when flags & 0x02 (the
 `__CT`/`__TI`/`__CTA` throw records in `.xdata$x`, an initializer pointer `x$initializer$` in
-`.CRT$XCU`), and a byte (0 so far); read as one losh, a segment number whose low byte is below 0x80
+`.CRT$XCU`), and the CodeView type (c32). The type (`cv_type`) is 0 without `/Zi`; under `/Zi`
+it is a primitive type below 0x80 (0x74 `T_INT4`) or a PDB type index from 0x1000 (`80` + u32), which
+a fixed u16 read of the flags misread. Read as one losh, a segment number whose low byte is below 0x80
 would hide the next record (`??_7W` in probe `p2`). Storage 3 = parameter, 1 = automatic; globals
 showed 2 and 4. Function attrs are
 `kind [kind2] type u8 size(c32) u8 flags [extra]`. `symkind` is 00 for an ordinary symbol, 0x26 for
@@ -122,7 +127,9 @@ dynamically initialized `x`. The decoder takes a decoding without them unless on
 explains the next four records. Bytes no
 decoding explains are skipped to the next offset whose next four records decode, and reported.
 
-SSR types 05, 07, 08, 0B, 0F, 13-17 and 1B have formats in the table but did not occur; their
+Under `/Zi` the `gl` and `sy` files of avp3's `platform_audio_streams.cpp`, `human_moves_idle_cover.cpp`
+and `curve_tracks.cpp` decode with no byte skipped (`curve_tracks`: 248 SSR 0B, 137 SSR 08).
+SSR types 05, 07, 0F, 13-17 and 1B have formats in the table but did not occur; their
 layouts are not decoded and would show as skipped spans.
 
 ### Which function a sy block belongs to

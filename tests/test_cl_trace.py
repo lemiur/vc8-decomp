@@ -174,7 +174,7 @@ class GlTests(unittest.TestCase):
             ("data", "dyn_init_value$initializer$", 2620), ("data", "_TI1?AUThrown@@", 2652),
             ("data", "_CTA1?AUThrown@@", 2654)])
         ct, _, init = (r.fields for r in records[:3])
-        self.assertEqual((ct["flags"], ct["extra"], ct["segment"], ct["extra2"]), (0xA3, 0x80, 0x0A5D, 0))
+        self.assertEqual((ct["flags"], ct["extra"], ct["segment"], ct["cv_type"]), (0xA3, 0x80, 0x0A5D, 0))
         self.assertEqual((init["flags"], init["extra"], init["segment"], init["dyninit"]), (0x8083, 0, 0x0A39, 0x0A21))
 
     def test_od_definitions_have_no_call_list(self):
@@ -189,6 +189,35 @@ class GlTests(unittest.TestCase):
         self.assertEqual([(s.name, s.attrs["sy_offset"], s.attrs["fnflags"], s.attrs["formals"], "calls" in s.attrs)
                           for s in gl.definitions()],
                          [("??_GBase@@UAEPAXI@Z", 0x40, 0x8C8, 2, False), ("??1Q@@UAE@XZ", 0x7E, 0xDC8, 1, False)])
+
+    def test_zi_records(self):
+        # /Zi (probe f1, avp3's human_moves_idle_cover): a source file record carries the MD5 of
+        # the file; every symbol record carries its CodeView type (primitive below 0x80 in the
+        # flags' place, a PDB type index as 80 + u32); class names (SSR 0B) and enumerators
+        # (SSR 08, a sized constant) appear only under /Zi.
+        md5 = bytes(range(16))
+        records, unparsed = t.decode_records(
+            bytes.fromhex("122000") + b"a.cpp\0" + bytes.fromhex("1001") + md5
+            + bytes.fromhex("122100") + b"b.h\0" + bytes.fromhex("0000")
+            + bytes.fromhex(
+                "0e370a003f665f737461746963404059414848405a00860105040000800110000080c4110000800b0100003368150105"
+                "790001e509013a0a033c0a043e0a01"
+                "0100400a003f64796e5f696e74404033484100860100020104004174"
+                "0b00e209440000800a100000"
+                "0800cad901004349505f554e534146455f544f5f41424f525400802a15000086010004020700"
+                "08008989020048554d414e5f4d4f56455f52455f454e5445525f434f5645520080981700008601000404eea51eb5"))
+        self.assertEqual(unparsed, [])
+        self.assertEqual([r.kind for r in records], ["file", "file", "definition", "data", "udt", "enumerator",
+                                                     "enumerator"])
+        self.assertEqual(records[0].fields["checksum"], {"type": 1, "digest": md5.hex()})
+        self.assertEqual(records[1].fields["checksum"], {"type": 0, "digest": ""})
+        f_static, dyn, udt, cip, hm = (r.fields for r in records[2:])
+        self.assertEqual((f_static["name"], f_static["flags"], f_static["cv_type"], f_static["sy_offset"]),
+                         ("?f_static@@YAHH@Z", 0, 0x1001, 0x10B))
+        self.assertEqual((dyn["flags"], dyn["cv_type"]), (0x41, 0x74))
+        self.assertEqual((udt["name"], udt["cv_type"]), ("D", 0x100A))
+        self.assertEqual((cip["name"], cip["cv_type"], cip["value"]), ("CIP_UNSAFE_TO_ABORT", 0x152A, 7))
+        self.assertEqual((hm["name"], hm["value"]), ("HUMAN_MOVE_RE_ENTER_COVER", 0xB51EA5EE))
 
     def test_segment_record(self):
         records, unparsed = t.decode_records(SEGMENT_GL + SEGMENT_GL)
