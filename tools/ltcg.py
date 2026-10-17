@@ -69,13 +69,16 @@ def run_command(argv, cwd, env, commands, produced=()):
     return completed
 
 
-def link(toolchain_root, objects, roots, out_dir, env, commands, flags=()):
+def link(toolchain_root, objects, roots, out_dir, env, commands, flags=(), ltcg=True,
+         base_flags=('/OPT:NOREF,NOICF',), linker='link.exe'):
+    """Link a candidate DLL; base_flags are the project adapter's link_flags."""
     out_dir = Path(out_dir)
     image = out_dir / 'candidate.dll'
     mapfile = out_dir / 'candidate.map'
-    argv = [str(Path(toolchain_root) / 'bin' / 'link.exe'), '/nologo', '/DLL', '/NOENTRY',
-            '/LTCG', '/MACHINE:X86', '/INCREMENTAL:NO', '/OPT:NOREF,NOICF', '/MANIFEST:NO',
-            '/OUT:' + str(image), '/MAP:' + str(mapfile)]
+    argv = [str(Path(toolchain_root) / 'bin' / linker), '/nologo', '/DLL', '/NOENTRY']
+    argv += ['/LTCG'] if ltcg else []
+    argv += ['/MACHINE:X86', '/INCREMENTAL:NO', *base_flags, '/MANIFEST:NO',
+             '/OUT:' + str(image), '/MAP:' + str(mapfile)]
     argv += ['/INCLUDE:' + root for root in sorted(set(roots))]
     argv += list(flags) + [str(obj) for obj in objects] + ['kernel32.lib']
     run_command(argv, out_dir, env, commands, [image, mapfile])

@@ -1,4 +1,4 @@
-"""Fresh VC8 /GL + /LTCG builds and bounded retail comparisons.
+"""Fresh VC8 builds (/GL + /LTCG unless the adapter says otherwise) and bounded retail comparisons.
 
 Only gate.py can admit compiled bytes. MAP-derived spans are explicitly
 unverified. This harness never manufactures definitions for missing callees.
@@ -15,9 +15,9 @@ import uuid
 
 from coff import function_symbols
 import ltcg
+from matchlib import ADAPTER_DEFAULTS, adapter_of, annotation_pattern, unit_gl
 
 ROOT = Path(__file__).resolve().parents[1]
-ANNOTATION = re.compile(r'^\s*//\s*FUNCTION:\s+(\S+)\s+(0x[0-9a-fA-F]+)\s*$', re.M)
 SYMBOL = re.compile(r'^\s*//\s*SYMBOL:\s*(\S+)\s*$', re.M)
 COMMENT_OR_STRING = re.compile(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', re.S)
 
@@ -33,10 +33,12 @@ class Annotation:
     symbol: str | None
 
 
-def parse_annotations(path):
+def parse_annotations(path, adapter=ADAPTER_DEFAULTS):
     text = Path(path).read_text(encoding='utf-8-sig')
     clean = COMMENT_OR_STRING.sub(lambda m: ''.join('\n' if c == '\n' else ' ' for c in m[0]), text)
-    markers = list(ANNOTATION.finditer(text))
+    function = adapter['annotation']['function']
+    markers = [marker for marker in annotation_pattern(adapter).finditer(text)
+               if marker.groupdict().get('kind', function) == function]
     result = []
     seen = set()
     for index, marker in enumerate(markers):
@@ -55,7 +57,7 @@ def parse_annotations(path):
         names = re.findall(r'([A-Za-z_$][\w$]*)\s*\(', declaration)
         names = [name for name in names if name not in ('__declspec', '__attribute__', 'throw')]
         symbol = SYMBOL.search(text, marker.end(), opening)
-        binary, va = marker[1], int(marker[2], 16)
+        binary, va = marker['binary'], int(marker['va'], 16)
         if (binary, va) in seen:
             raise ValueError('duplicate FUNCTION address %s %#x' % (binary, va))
         seen.add((binary, va))
@@ -113,6 +115,7 @@ def load_settings(root, binary):
         raise ValueError('binary is not configured: ' + binary)
     settings = dict(project['binaries'][binary])
     settings.update(read_json(root / 'config' / (binary + '.json'), {}))
+    settings['adapter'] = adapter_of(project)
     return project, settings
 
 
@@ -132,9 +135,9 @@ def source_path(root, path):
     return path.resolve() if path.is_absolute() else (root / path).resolve()
 
 
-def compile_unit(source, output, toolroot, flags, env, commands, plain=False):
-    argv = [str(toolroot / 'bin' / 'cl.exe'), '/nologo', '/c', '/showIncludes'] + list(flags)
-    argv += ['/GL-' if plain else '/GL', '/Fo' + str(output), str(source)]
+def compile_unit(source, output, toolroot, flags, env, commands, compiler, gl=True):
+    argv = [str(toolroot / 'bin' / compiler), '/nologo', '/c', '/showIncludes'] + list(flags)
+    argv += ['/GL' if gl else '/GL-', '/Fo' + str(output), str(source)]
     result = ltcg.run_command(argv, output.parent, env, commands, [output])
     if not output.is_file():
         raise RuntimeError('successful compilation produced no object')
@@ -148,6 +151,7 @@ def compile_unit(source, output, toolroot, flags, env, commands, plain=False):
 
 def build(root, binary, output_dir=None, manifest_path=None, build_id=None, units=None, toolchain_name=None):
     project, settings = load_settings(root, binary)
+    adapter = settings['adapter']
     build_id = build_id or str(uuid.uuid4())
     out = Path(output_dir).resolve() if output_dir else root / 'build' / binary / build_id
     if out.exists() and any(out.iterdir()):
@@ -168,7 +172,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
     configured_flags = settings.get('flags', {})
     flags = settings.get('compile_flags', configured_flags.get('compile', ['/O2', '/MD', '/Gy', '/GF', '/GS']))
     link_flags = settings.get('link_flags', configured_flags.get('link', []))
-    tools = [toolroot / 'bin' / name for name in ('cl.exe', 'c1.dll', 'c1xx.dll', 'c2.dll', 'link.exe')]
+    tools = [toolroot / 'bin' / name for name in adapter['toolchain_core']]
     manifest = {'schema_version': 1, 'binary': binary, 'build_id': build_id,
                 'toolchain_name': toolchain_name or settings.get('toolchain', 'sp1'),
                 'status': 'building', 'source_inputs': [], 'toolchain': [], 'commands': [],
@@ -214,7 +218,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
         entries = registry_entries(root, binary)
         bindings = registry_referents(root, binary)
         for number, source in enumerate(selected):
-            annotations = [annotation for annotation in parse_annotations(source) if annotation.binary == binary]
+            annotations = [annotation for annotation in parse_annotations(source, adapter) if annotation.binary == binary]
             if not annotations:
                 continue
             group = out / ('unit-%03d' % number)
@@ -233,11 +237,14 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
             dependencies.update(source_path(root, path) for path in settings.get('dependencies', {}).get(source.relative_to(root).as_posix(), []))
             objects = []
             group_link_flags = list(link_flags)
+            group_gl = False
             discovery_symbols = []
             for index, unit in enumerate([source] + sorted(dependencies - {source})):
                 add_input(unit)
                 unit_flags = list(flags)
                 unit_options = settings.get('units', {}).get(unit.relative_to(root).as_posix(), {})
+                gl = unit_gl(adapter, settings, unit.relative_to(root).as_posix())
+                group_gl = group_gl or gl
                 removed = {flag.lower() for flag in unit_options.get('remove_compile_flags', [])}
                 unit_flags = [flag for flag in unit_flags if flag.lower() not in removed]
                 unit_flags.extend(unit_options.get('compile_flags', []))
@@ -245,21 +252,24 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
                 if unit.suffix.lower() != '.c' and not any(flag.lower().startswith('/eh') for flag in unit_flags):
                     unit_flags.append('/EHsc')
                 plain = group / ('discovery-%03d.obj' % index)
-                for include in compile_unit(unit, plain, toolroot, unit_flags, env, manifest['commands'], plain=True):
+                for include in compile_unit(unit, plain, toolroot, unit_flags, env, manifest['commands'],
+                                            adapter['compiler'], gl=False):
                     add_input(include)
                 if index == 0:
                     discovery_symbols = function_symbols(plain)
                 add_artifact(plain, 'discovery-object-not-candidate')
                 obj = group / ('source-%03d.obj' % index)
-                for include in compile_unit(unit, obj, toolroot, unit_flags, env, manifest['commands']):
+                for include in compile_unit(unit, obj, toolroot, unit_flags, env, manifest['commands'],
+                                            adapter['compiler'], gl):
                     if str(include) not in inputs:
-                        raise ValueError('GL compile introduced an input absent from discovery: ' + str(include))
+                        raise ValueError('candidate compile introduced an input absent from discovery: ' + str(include))
                     add_input(include)
                 objects.append(obj)
-                add_artifact(obj, 'ltcg-object')
+                add_artifact(obj, 'ltcg-object' if gl else 'object')
             roots = [discover_symbol(annotation, discovery_symbols) for annotation in annotations]
             roots += [name for entry in source_entries for name in entry.get('roots', [])]
-            image_path, map_path = ltcg.link(toolroot, objects, roots, group, env, manifest['commands'], group_link_flags)
+            image_path, map_path = ltcg.link(toolroot, objects, roots, group, env, manifest['commands'], group_link_flags,
+                                             ltcg=group_gl, base_flags=adapter['link_flags'], linker=adapter['linker'])
             add_artifact(image_path, 'linked-image')
             add_artifact(map_path, 'linker-map')
             from matchlib import PEImage
@@ -297,7 +307,7 @@ def build(root, binary, output_dir=None, manifest_path=None, build_id=None, unit
                     'source_path': str(source), 'source_sha256': ltcg.sha256(source),
                     'function_source_sha256': hashlib.sha256('\n'.join(source.read_text(encoding='utf-8-sig').splitlines()[annotation.start - 1:annotation.end]).encode('utf-8')).hexdigest(),
                     'referents': refs, 'referents_status': ref_status, 'referents_error': ref_error,
-                    'rule_status': 'pending', 'compile_context': 'standalone-ltcg-with-real-dependencies'})
+                    'rule_status': 'pending', 'compile_context': 'standalone-%s-with-real-dependencies' % ('ltcg' if group_gl else 'link')})
         for path, digest in inputs.items():
             if ltcg.sha256(path) != digest:
                 raise ValueError('input changed during build: ' + path)
