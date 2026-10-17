@@ -13,6 +13,12 @@ MODULE = Path(__file__).resolve().parents[1] / "tools" / "gate.py"
 spec = importlib.util.spec_from_file_location("gate", MODULE)
 gate = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gate)
+BINARIES = ("cl", "c1", "c1xx", "c2", "link")
+
+
+def write_project(root, binaries=BINARIES):
+    (root / "config").mkdir(exist_ok=True)
+    (root / "config" / "project.json").write_text(json.dumps({"binaries": {name: {} for name in binaries}}))
 
 
 class Image:
@@ -123,6 +129,7 @@ class GateTests(unittest.TestCase):
             root = Path(directory)
             (root / "config").mkdir()
             (root / "config" / "gate-allow.json").write_text('{"schema_version":1,"candidates":[],"referents":{}}')
+            write_project(root)
             calls = []
             def load(name, root=None):
                 calls.append(name)
@@ -135,7 +142,7 @@ class GateTests(unittest.TestCase):
             second = gate.execute_gate("cl", root, module)
             self.assertEqual(result["status"], "GREEN")
             self.assertNotEqual(result["run_id"], second["run_id"])
-            self.assertEqual(calls, list(gate.BINARIES) * 2)
+            self.assertEqual(calls, list(BINARIES) * 2)
             self.assertIn("BANKED", result["authority"])
             for item in result["binaries"].values():
                 self.assertEqual(item["functions"], 0)
@@ -149,6 +156,7 @@ class GateTests(unittest.TestCase):
             root = Path(directory)
             (root / "config").mkdir()
             (root / "config" / "gate-allow.json").write_text('{"schema_version":1,"candidates":[]}')
+            write_project(root)
             class Retail(Image):
                 def __init__(self, cfg):
                     super().__init__(0x1000, b"fixture")
@@ -251,20 +259,20 @@ class GateTests(unittest.TestCase):
             descriptor = {"schema_version": 1, "candidates": [{"binary": "cl", "symbol": "_f", "retail_va": "0x401000"}],
                           "referents": {"cl": {"_data": {"va": "0x402000", "evidence": "fixture"}}}}
             (config / "cl-candidates.json").write_text(json.dumps(descriptor))
-            self.assertEqual(len(gate.load_registry(root)["candidates"]), 1)
+            self.assertEqual(len(gate.load_registry(root, BINARIES)["candidates"]), 1)
             (config / "gate-allow.json").write_text(json.dumps(descriptor))
             with self.assertRaisesRegex(gate.GateError, "duplicate candidate"):
-                gate.load_registry(root)
+                gate.load_registry(root, BINARIES)
             descriptor["candidates"] = []
             descriptor["referents"]["cl"]["_data"]["va"] = "0x402001"
             (config / "gate-allow.json").write_text(json.dumps(descriptor))
             with self.assertRaisesRegex(gate.GateError, "conflicting referent"):
-                gate.load_registry(root)
+                gate.load_registry(root, BINARIES)
             (config / "gate-allow.json").write_text('{"schema_version":1,"candidates":[]}')
             descriptor["candidates"] = [{"binary": "cl", "symbol": "_f", "retail_va": "0x401000", "gate_enabled": "false"}]
             (config / "cl-candidates.json").write_text(json.dumps(descriptor))
             with self.assertRaisesRegex(gate.GateError, "must be a boolean"):
-                gate.load_registry(root)
+                gate.load_registry(root, BINARIES)
 
     def test_complete_source_admission_has_fresh_persisted_byte_witnesses(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -279,6 +287,7 @@ class GateTests(unittest.TestCase):
             request = {"binary": "cl", "symbol": "_fixture", "retail_va": "0x1000", "size": 1,
                        "unit": "matching/cl/unit.cpp", "source_span": {"start": 2, "end": 2}, "boundary": boundary}
             (root / "config/gate-allow.json").write_text(json.dumps({"schema_version": 1, "candidates": [request]}))
+            write_project(root)
             for name in ("match.py", "rulecheck.py"):
                 (root / "tools" / name).write_text("# synthetic trusted-runner fixture\n")
             compiler, linker = root / "toolbin/cl.exe", root / "toolbin/link.exe"

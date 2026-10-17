@@ -16,6 +16,9 @@ import subprocess
 import sys
 from typing import Mapping, Sequence
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import ADAPTER_DEFAULTS
+
 
 class AuditError(ValueError):
     """A source-byte claim lacks independently checkable evidence."""
@@ -126,7 +129,11 @@ def observe_build(run, argv, manifest_path, cwd, env=None):
                         digest(manifest.read_bytes()), manifest), completed
 
 
-def audit_manifest(manifest, binary, receipt, toolchain_pins, root):
+def audit_manifest(manifest, binary, receipt, toolchain_pins, root, adapter=None, gl_for=None):
+    """gl_for(source) gives a unit's /GL mode; default: the adapter's project mode."""
+    adapter = adapter or ADAPTER_DEFAULTS
+    gl_for = gl_for or (lambda source: adapter["gl"])
+    compiler, linker = adapter["compiler"].lower(), adapter["linker"].lower()
     """Independently validate schema-1 match.py build output and pinned tools.
 
     toolchain_pins is an authoritative mapping of absolute path -> SHA-256,
@@ -174,7 +181,7 @@ def audit_manifest(manifest, binary, receipt, toolchain_pins, root):
     _require(isinstance(commands, list) and bool(commands), "missing compiler execution records")
     invoked = set()
     outputs = set()
-    compiled_sources = set()
+    compiled_sources = {}  # source -> compiled with /GL at least once
     for command in commands:
         argv = command.get("argv")
         _require(isinstance(argv, list) and bool(argv) and command.get("returncode") == 0,
@@ -192,11 +199,11 @@ def audit_manifest(manifest, binary, receipt, toolchain_pins, root):
                 if argument.lower().startswith(prefix.lower()) and len(argument) > len(prefix):
                     outputs.add((directory / argument[len(prefix):]).resolve())
             source_argument = (directory / argument).resolve()
-            if executable.name.lower() == "cl.exe" and "/GL" in argv and source_argument in sources:
-                compiled_sources.add(source_argument)
-    _require({"cl.exe", "link.exe"} <= invoked, "compiler and linker were not both invoked")
+            if executable.name.lower() == compiler and source_argument in sources:
+                compiled_sources[source_argument] = compiled_sources.get(source_argument, False) or "/GL" in argv
+    _require({compiler, linker} <= invoked, "compiler and linker were not both invoked")
     for path, record in artifacts.items():
-        if record.get("kind") in ("linked-image", "ltcg-object"):
+        if record.get("kind") in ("linked-image", "ltcg-object", "object"):
             _require(path in outputs, "artifact is not an observed command output")
     identities = set()
     origins = set()
@@ -207,7 +214,8 @@ def audit_manifest(manifest, binary, receipt, toolchain_pins, root):
         source = (root / candidate["source_path"]).resolve(strict=True)
         _require(source in sources and sources[source]["sha256"] == candidate["source_sha256"],
                  "candidate source lacks hashed provenance")
-        _require(source in compiled_sources, "candidate source was not compiled with /GL")
+        _require(source in compiled_sources, "candidate source was not compiled")
+        _require(compiled_sources[source] or not gl_for(source), "candidate source was not compiled with /GL")
         _require(dict(run.inputs).get(source) == candidate["source_sha256"],
                  "candidate source lacks pre-build input snapshot")
         image = (root / candidate["image_path"]).resolve(strict=True)
@@ -366,7 +374,7 @@ def main(argv=None):
         sys.path.insert(0, str(root / "tools"))
         import matchlib
         retails = {}
-        for name in ("cl", "c1", "c1xx", "c2", "link"):
+        for name in matchlib.load_adapter(root)["binaries"]:
             image = matchlib.Retail(matchlib.load_binary_config(name, root=root))
             image.verify_identity()
             retails[name] = image

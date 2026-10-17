@@ -1,6 +1,6 @@
 """Independent PE splice/hash gate. This is not a full source relink.
 
-Every invocation checks all five pinned retail images before admitting any source.
+Every invocation checks every configured pinned retail image before admitting any source.
 Candidate requests and evidence live in config/gate-allow.json. A fresh build is
 requested from match.py with --output-dir, --manifest and --build-id. Manifests
 are observations, never authority for bytes, referents, boundaries or code rules.
@@ -20,8 +20,11 @@ import subprocess
 import sys
 import uuid
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import ADAPTER_DEFAULTS, adapter_of, load_project, unit_gl
+
 ROOT = Path(__file__).resolve().parents[1]
-BINARIES = ("cl", "c1", "c1xx", "c2", "link")
+OBJECT_KINDS = ("ltcg-object", "object")  # candidate objects compiled with and without /GL
 
 
 class GateError(ValueError):
@@ -77,10 +80,22 @@ def snapshot_inputs(root):
     return result
 
 
-def load_registry(root):
+def tool_names(executable):
+    return {executable.lower(), Path(executable).stem.lower()}
+
+
+def gl_policy(root, project, adapter, name):
+    """Map a compiled source to the /GL mode its unit must use."""
+    options = dict(project["binaries"][name])
+    if (root / "config" / (name + ".json")).is_file():
+        options.update(read_json(root / "config" / (name + ".json")))
+    return lambda source: unit_gl(adapter, options, Path(source).relative_to(root.resolve()).as_posix())
+
+
+def load_registry(root, binaries):
     """Merge the global policy and canonical per-binary candidate descriptors."""
     documents = [(root / "config" / "gate-allow.json", None)]
-    documents += [(root / "config" / (name + "-candidates.json"), name) for name in BINARIES
+    documents += [(root / "config" / (name + "-candidates.json"), name) for name in binaries
                   if (root / "config" / (name + "-candidates.json")).is_file()]
     result = {"schema_version": 1, "candidates": [], "referents": {}}
     seen_symbols, seen_addresses = set(), set()
@@ -89,7 +104,7 @@ def load_registry(root):
         require(document.get("schema_version") == 1, "wrong admission registry schema: " + str(path))
         for candidate in document.get("candidates", []):
             name = candidate.get("binary")
-            require(name in BINARIES and (only_binary is None or name == only_binary), "candidate descriptor names wrong binary")
+            require(name in binaries and (only_binary is None or name == only_binary), "candidate descriptor names wrong binary")
             require(type(candidate.get("gate_enabled", True)) is bool, "gate_enabled must be a boolean")
             symbol_key, address_key = (name, candidate["symbol"]), (name, integer(candidate["retail_va"]))
             require(symbol_key not in seen_symbols and address_key not in seen_addresses, "duplicate candidate admission descriptor")
@@ -97,7 +112,7 @@ def load_registry(root):
             seen_addresses.add(address_key)
             result["candidates"].append(candidate)
         for name, bindings in document.get("referents", {}).items():
-            require(name in BINARIES and (only_binary is None or name == only_binary), "referent descriptor names wrong binary")
+            require(name in binaries and (only_binary is None or name == only_binary), "referent descriptor names wrong binary")
             destination = result["referents"].setdefault(name, {})
             for identity, binding in bindings.items():
                 require(identity not in destination or destination[identity] == binding, "conflicting referent identity descriptors")
@@ -440,7 +455,8 @@ def compare_candidate(retail, candidate_image, claim, request, identities, emitt
     return bytes(resolved), len(emitted_refs)
 
 
-def validate_manifest(manifest, binary, build_id, output_dir, root=ROOT):
+def validate_manifest(manifest, binary, build_id, output_dir, root=ROOT, adapter=ADAPTER_DEFAULTS, gl_for=None):
+    """gl_for(source) gives a unit's required /GL mode; without it, only consistency is checked."""
     require(manifest.get("schema_version") == 1 and manifest.get("binary") == binary, "wrong manifest schema/binary")
     require(manifest.get("build_id") == build_id, "stale build manifest")
     candidates = manifest.get("candidates")
@@ -466,17 +482,18 @@ def validate_manifest(manifest, binary, build_id, output_dir, root=ROOT):
     require(commands and all(c.get("returncode") == 0 and c.get("argv") for c in commands), "failed or absent build commands")
     invoked = {str(resolve(c["argv"][0], root)) for c in commands}
     require(invoked <= toolchain.keys(), "build command executable lacks hashed provenance")
-    require(any(Path(p).name.lower() in ("cl", "cl.exe") for p in invoked) and
-            any(Path(p).name.lower() in ("link", "link.exe") for p in invoked), "compiler and linker commands required")
+    compiler, linker = tool_names(adapter["compiler"]), tool_names(adapter["linker"])
+    require(any(Path(p).name.lower() in compiler for p in invoked) and
+            any(Path(p).name.lower() in linker for p in invoked), "compiler and linker commands required")
     artifacts = {}
     for item in manifest.get("artifacts", []):
         path = checked_file(item, root, output_dir)
         require(str(path) not in artifacts, "duplicate build artifact")
         artifacts[str(path)] = item
     require(artifacts, "missing compiler output artifacts")
-    objects = {p for p, item in artifacts.items() if item.get("kind") == "ltcg-object"}
+    objects = {p for p, item in artifacts.items() if item.get("kind") in OBJECT_KINDS}
     images = {p for p, item in artifacts.items() if item.get("kind") == "linked-image"}
-    require(objects and images, "compiled LTCG objects and linked image required")
+    require(objects and images, "compiled candidate objects and linked image required")
     produced, used_objects = set(), set()
     for command in commands:
         argv = command["argv"]
@@ -485,22 +502,28 @@ def validate_manifest(manifest, binary, build_id, output_dir, root=ROOT):
         require(cwd.is_dir(), "build command working directory missing")
         outputs = {str(resolve(p, root)) for p in command.get("produced", [])}
         require(outputs <= artifacts.keys(), "command produces an unrecorded artifact")
-        if executable in ("cl", "cl.exe"):
+        if executable in compiler:
             output_args = [arg[3:] for arg in argv[1:] if arg.lower().startswith("/fo")]
             produced_objects = {str(resolve(p, cwd)) for p in output_args}
             require(bool(outputs) and outputs <= produced_objects, "compiler output has no command attribution")
-            if outputs.intersection(objects):
-                require("/gl" in [arg.lower() for arg in argv], "candidate object did not use /GL")
-            require(any(str(resolve(arg, cwd)) in sources for arg in argv[1:] if not arg.startswith("/")),
-                    "compiler command has no hashed source input")
-        elif executable in ("link", "link.exe"):
-            require(any(arg.lower() == "/ltcg" or arg.lower().startswith("/ltcg:") for arg in argv), "candidate link did not use /LTCG")
+            gl = "/gl" in [arg.lower() for arg in argv]
+            for path in outputs.intersection(objects):
+                require(gl or artifacts[path]["kind"] != "ltcg-object", "candidate object did not use /GL")
+                require(not gl or artifacts[path]["kind"] == "ltcg-object", "plain candidate object used /GL")
+            compiled = [str(resolve(arg, cwd)) for arg in argv[1:] if not arg.startswith("/")]
+            require(any(path in sources for path in compiled), "compiler command has no hashed source input")
+            if gl_for and outputs.intersection(objects):
+                require(all(gl_for(path) == gl for path in compiled if path in sources),
+                        "candidate object /GL mode differs from the project adapter")
+        elif executable in linker:
             output_args = [arg[5:] for arg in argv[1:] if arg.lower().startswith("/out:")]
             require(images.intersection(outputs) <= {str(resolve(p, cwd)) for p in output_args} and
                     bool(images.intersection(outputs)), "linked image has no command attribution")
             consumed = {str(resolve(arg, cwd)) for arg in argv[1:] if not arg.startswith("/")}
             consumed_objects = consumed.intersection(objects)
             require(consumed_objects and consumed_objects <= produced, "link lacks preceding compiled-object provenance")
+            if any(artifacts[path]["kind"] == "ltcg-object" for path in consumed_objects):
+                require(any(arg.lower() == "/ltcg" or arg.lower().startswith("/ltcg:") for arg in argv), "candidate link did not use /LTCG")
             used_objects.update(consumed_objects)
         produced.update(outputs)
     require(objects | images <= produced, "unattributed candidate output")
@@ -508,7 +531,7 @@ def validate_manifest(manifest, binary, build_id, output_dir, root=ROOT):
     return sources, artifacts
 
 
-def verify_linked_symbol(claim, manifest, artifacts, root):
+def verify_linked_symbol(claim, manifest, artifacts, root, adapter=ADAPTER_DEFAULTS):
     image = str(resolve(claim["image_path"], root))
     links = [command for command in manifest["commands"] if image in
              {str(resolve(path, root)) for path in command.get("produced", [])}]
@@ -523,7 +546,7 @@ def verify_linked_symbol(claim, manifest, artifacts, root):
     pattern = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+f\s+(?:i\s+)?(.+?)\s*$")
     any_symbol = re.compile(r"^\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})(?:\s+.*)?$")
     compiled_objects = [str(resolve(path, root)) for path in links[0].get("argv", [])
-                        if artifacts.get(str(resolve(path, root)), {}).get("kind") == "ltcg-object"]
+                        if artifacts.get(str(resolve(path, root)), {}).get("kind") in OBJECT_KINDS]
     for line in Path(maps[0]).read_text(encoding="utf-8", errors="replace").splitlines():
         symbol = any_symbol.match(line)
         if symbol:
@@ -534,7 +557,7 @@ def verify_linked_symbol(claim, manifest, artifacts, root):
             require(len(owners) == 1, "candidate symbol has no unique compiled source object owner")
             compilers = [command for command in manifest["commands"] if owners[0] in
                          {str(resolve(path, root)) for path in command.get("produced", [])} and
-                         Path(command["argv"][0]).name.lower() in ("cl", "cl.exe")]
+                         Path(command["argv"][0]).name.lower() in tool_names(adapter["compiler"])]
             require(len(compilers) == 1, "candidate object has ambiguous compiler attribution")
             command = compilers[0]
             source_args = {str(resolve(arg, resolve(command.get("cwd", ""), root))) for arg in command["argv"][1:]
@@ -571,12 +594,17 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
               "build_provenance": {"trust_boundary": "trusted local compiler and repository build runner",
                   "runtime_scope": "configured and previously observed runtime files are hashed; Windows SxS policy may change; dynamic binding is not retraced per build"},
               "status": "RED", "authority": None, "binaries": {}, "errors": []}
-    selected = BINARIES if binary == "all" else (binary,)
     try:
-        registry = load_registry(root)
+        project = load_project(root)
+        adapter = adapter_of(project)
+        binaries = adapter["binaries"]
+        require(binaries, "project adapter configures no binaries")
+        require(binary == "all" or binary in binaries, "unconfigured binary: " + binary)
+        selected = binaries if binary == "all" else (binary,)
+        registry = load_registry(root, binaries)
         retail_images = {}
-        # All-five fallback proof precedes every possible source admission.
-        for name in BINARIES:
+        # The all-binary fallback proof precedes every possible source admission.
+        for name in binaries:
             cfg = matchlib_module.load_binary_config(name, root=root)
             retail = matchlib_module.Retail(cfg)
             retail.verify_identity()
@@ -610,7 +638,8 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
             else:
                 require(not requests, "candidate rebuild harness unavailable")
                 manifest = {"schema_version": 1, "binary": name, "build_id": run_id, "candidates": []}
-            sources, artifacts = validate_manifest(manifest, name, run_id, build_dir, root)
+            sources, artifacts = validate_manifest(manifest, name, run_id, build_dir, root, adapter,
+                                                   gl_policy(root, project, adapter, name))
             all_claims = manifest["candidates"]
             require(len({c["symbol"] for c in all_claims}) == len(all_claims) and
                     len({integer(c["retail_va"]) for c in all_claims}) == len(all_claims), "duplicate manifest candidate identity")
@@ -652,7 +681,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
                 artifact = artifacts.get(str(image_path), {})
                 require(artifact.get("kind") == "linked-image" and artifact.get("sha256") == claim.get("image_sha256"),
                         "candidate lacks linked-image provenance")
-                emitted_identities = verify_linked_symbol(claim, manifest, artifacts, root)
+                emitted_identities = verify_linked_symbol(claim, manifest, artifacts, root, adapter)
                 built = matchlib_module.PEImage(image_path)
                 code, refs = compare_candidate(retail_images[name], built, claim, request,
                                                bindings, emitted_identities, member_layouts, root)
@@ -704,7 +733,7 @@ def execute_gate(binary="all", root=ROOT, matchlib_module=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--binary", choices=(*BINARIES, "all"), default="all")
+    parser.add_argument("--binary", choices=(*adapter_of(load_project(ROOT))["binaries"], "all"), default="all")
     parser.add_argument("--clean", action="store_true", help="accepted for adapter compatibility; builds are always fresh")
     parser.add_argument("--json", type=Path, help="additional report destination")
     args = parser.parse_args(argv)
