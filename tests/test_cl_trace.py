@@ -24,6 +24,44 @@ BIG_SY = bytes.fromhex(
 # An array record (tag 02) carries one trailing byte; flags 0x80 adds a losh.
 ARRAY_SY = bytes.fromhex("0d010202030a00617272008606000104100021000401020" "40a00640086060001040400210006")
 
+# Blocks captured from the sy file of avp3's matching/platform_audio_streams.cpp (dx9 flags):
+# StreamFile::Reset (one `this`, two temporaries, scopes 1-4), the scalar deleting destructor
+# of a class (`__flags`, whose symbol-kind byte is 0x26), and an inline SSE helper whose
+# unnamed temporaries are SSR 1A records with a two-byte kind (c8 81 / ca 81, __m64 / __m128).
+RESET_SY = bytes.fromhex(
+    "0303668302001e0001010301658302001f0001010d010101648302000074686973008603000304040001000d020d030d0406")
+DTOR_SY = bytes.fromhex(
+    "0302e3fc01001e0001010301e2fc01001f0001010d010101e0fc0100265f5f666c616773008602000304040001000101e1fc"
+    "01000074686973008603000304040001000d0206")
+SSE_SY = bytes.fromhex(
+    "1a02eafa0100c8810d0800800088001a02e9fa0100c8810d0800800088001a02edfa0100ca810d1000800088001a02ecfa01"
+    "00c8810d0800800088001a02ebfa0100ca810d1000800088001a02f0fa0100ca810d1000800088001a02effa0100c8810d08"
+    "00800088001a02eefa0100ca810d1000800088000301e6fa01001f0001010d010101e4fa0100006100c8810d000304080081"
+    "0088000d020102e8fa0100006578745f76616c00c8810d0001040800810088000102e7fa010000746d7000ca810d00010410"
+    "008100880006")
+
+# gl records captured from the same unit and from gui_pc.cpp (dx9): pragma-state records (SSR
+# 18), a function declaration, g_mouse (kind c6 88: the record the old name scan missed),
+# g_cameras (an array: size 0x570 and dimension 348 in the 0x80+u32 form), g_renderStates,
+# the definition of StreamFile::Reset (ex and sy offsets, call list), the definition of
+# Gui_InitPads (a callee called 0x9e times, in the 0x80+u16 form), and a trailer of a default
+# library and a linker directive. The header is the unit's own with its trailer offset
+# (bytes 21-24) rewritten for this shorter file.
+GL_HEADER = bytes.fromhex("118603291832010704010001120100000e008027c6")
+GL_RECORDS = bytes.fromhex(
+    "18560d80ffff" "188005010080ffff" "04870a007374726e6c656e0086020a04000800"
+    "0100ab9a0200003f675f6d6f757365404033564d6f75736540404100c688060002021400a1008000"
+    "0200cf9c0200003f675f63616d6572617340403350415543616d6572614040410086060002028070050000002100805c010000"
+    "0100bb9c0200003f675f72656e6465725374617465734040335652656e646572537461746543616368654040410086060002026000"
+    "a1008000"
+    "0e73820200003f52657365744053747265616d46696c65404051414558585a008207050014000080629a000080ce2200007668100101"
+    "e40c01"
+    "0e66ae0200003f4775695f496e6974506164734040594158585a0082070500000000808672010080194f000080080a6815000f4c0001"
+    "4ff501000155f5010001a391020001a791020002a991020001b791020002c091020008d2910200010d9b0200012a9b020001d6ad0200"
+    "0165ae0200809e00f7ae02000ef8ae020001")
+GL_TRAILER = bytes.fromhex("0a000002") + b"\x04uuid.lib\x00" + b"\x0a/manifestdependency:x\x00"
+GL_FILE = GL_HEADER + (len(GL_HEADER) + 4 + len(GL_RECORDS)).to_bytes(4, "little") + GL_RECORDS + GL_TRAILER
+
 BD_OUTPUT = """a.cpp
 `C:\\VC\\bin\\c1xx.dll -zm0xFCCA0000 -il C:\\Temp\\_CL_6231ce72 -f a.cpp -W 1 -Ze -Foa.obj -Bd -D_MT'
 `C:\\VC\\bin\\c2.dll -il C:\\Temp\\_CL_6231ce72 -f a.cpp -W 1 -Gs4096 -dos -Foa.obj -Og -Ob2 -Gy -Bd -MT'
@@ -96,6 +134,27 @@ class SyTests(unittest.TestCase):
         self.assertEqual(blocks[1].unparsed, [(len(SMALL_SY), "7777")])
         self.assertEqual(blocks[1].numbers(), blocks[0].numbers())
 
+    def test_captured_blocks_decode_completely(self):
+        blocks = t.parse_sy(RESET_SY + DTOR_SY + SSE_SY)
+        self.assertEqual([b.offset for b in blocks], [0, len(RESET_SY), len(RESET_SY) + len(DTOR_SY)])
+        self.assertEqual([b.unparsed for b in blocks], [[], [], []])
+        reset, dtor, sse = blocks
+        self.assertEqual([(r.kind, r.number, r.name) for r in reset.records],
+                         [("temp", 66406, None), ("temp", 66405, None), ("param", 66404, "this")])
+        self.assertEqual(reset.scopes, [1, 2, 3, 4])
+        flags = next(r for r in dtor.records if r.name == "__flags")
+        self.assertEqual((flags.kind, flags.number, flags.attrs["symkind"]), ("param", 64736, 0x26))
+        anon = [r for r in sse.records if r.kind == "anon"]
+        self.assertEqual(len(anon), 8)
+        self.assertEqual((anon[0].attrs["class"], anon[0].attrs["class2"], anon[0].attrs["size"]), (0xC8, 0x81, 8))
+        self.assertEqual({r.name: (r.kind, r.level, r.scope) for r in sse.records if r.name},
+                         {"a": ("param", 1, 1), "ext_val": ("local", 2, 2), "tmp": ("local", 2, 2)})
+        self.assertEqual(sse.records[-1].attrs["extra"], 0x88)
+
+    def test_ssr_formats_cover_the_layouts(self):
+        for tag in t.SSR_LAYOUTS:
+            self.assertIn(tag, t.SSR_FORMATS)
+
 
 class GlTests(unittest.TestCase):
     def test_header(self):
@@ -104,12 +163,36 @@ class GlTests(unittest.TestCase):
         with self.assertRaises(t.TraceError):
             t.parse_gl_header(b"\x11\x86")
 
-    def test_named_records(self):
-        # Captured from a gui unit's gl file: long and short losh numbers before the name.
-        data = (bytes.fromhex("0100b09c020000") + b"?g_renderStates@@3VRenderStateCache@@A\x00\x86\x06"
-                + bytes.fromhex("01eb0900") + b"?f@@YAXXZ\x00\x82\x02")
-        self.assertEqual(t.scan_gl_names(data), [("?g_renderStates@@3VRenderStateCache@@A", 72880),
-                                                 ("?f@@YAXXZ", 2539)])
+    def test_header_of_a_captured_file(self):
+        info = t.parse_gl_header(GL_FILE)
+        self.assertEqual((info["symbol_count"], info["il_flags"]), (66567, 0x112))
+        self.assertEqual(info["trailer_offset"], len(GL_HEADER) + 4 + len(GL_RECORDS))
+
+    def test_decoded_records(self):
+        gl = t.parse_gl(GL_FILE)
+        self.assertEqual(gl.unparsed, [])
+        self.assertEqual([(s.kind, s.name, s.number) for s in gl.symbols], [
+            ("function", "strnlen", 2695), ("data", "?g_mouse@@3VMouse@@A", 72363),
+            ("array", "?g_cameras@@3PAUCamera@@A", 72911),
+            ("data", "?g_renderStates@@3VRenderStateCache@@A", 72891),
+            ("definition", "?Reset@StreamFile@@QAEXXZ", 66163), ("definition", "?Gui_InitPads@@YAXXZ", 77414)])
+        mouse = gl.symbols[1]
+        self.assertEqual((mouse.attrs["kind"], mouse.attrs["size"], mouse.attrs["flags"], mouse.attrs["extra"]),
+                         ((0xC6, 0x88), 0x14, 0xA1, 0x80))
+        self.assertEqual((gl.symbols[2].attrs["size"], gl.symbols[2].attrs["dim"]), (0x570, 348))
+        reset = gl.symbols[4].attrs
+        self.assertEqual((reset["ex_offset"], reset["sy_offset"], reset["formals"], reset["calls"]),
+                         (0x9A62, 0x22CE, 1, [(0x0CE4, 1)]))
+        pads = gl.symbols[5].attrs
+        self.assertEqual(len(pads["calls"]), 15)
+        self.assertIn((0x12E65, 0x9E), pads["calls"])
+        self.assertEqual(gl.directives, [(4, "uuid.lib"), (0x0A, "/manifestdependency:x")])
+        self.assertEqual(t.scan_gl_names(GL_FILE)[1], ("?g_mouse@@3VMouse@@A", 72363))
+
+    def test_resync_reports_garbage(self):
+        records, unparsed = t.decode_records(GL_RECORDS[:6] + b"\xff\xfe" + GL_RECORDS[6:])
+        self.assertEqual(unparsed, [(6, "fffe")])
+        self.assertEqual(len(records), 8)
 
     def test_strings(self):
         self.assertEqual(t.il_strings(b"\x01\x02rect\x00ab\x00?f@@YAXXZ\x00"), ["rect", "?f@@YAXXZ"])
@@ -160,6 +243,42 @@ class ListingTests(unittest.TestCase):
         self.assertEqual((inner["number"], inner["mod64"], inner["listing_suffix"], inner["frame_offset"]),
                          (2544, 2544 % 64, 2544, -16))
         self.assertEqual([r["number"] for r in f.symbols], sorted(r["number"] for r in f.symbols))
+
+
+class AttributionTests(unittest.TestCase):
+    LISTED = """_this$ = -4\t\t\t\t\t\t; size = 4
+?Reset@StreamFile@@QAEXXZ PROC\t\t\t\t; StreamFile::Reset, COMDAT
+?Reset@StreamFile@@QAEXXZ ENDP\t\t\t\t; StreamFile::Reset
+_result$66881 = 8\t\t\t\t\t\t; size = 4
+___formal$ = 12\t\t\t\t\t\t; size = 4
+?h@@YAXH@Z PROC\t\t\t\t\t\t; h
+?h@@YAXH@Z ENDP\t\t\t\t\t\t; h
+"""
+
+    def test_definitions_pick_the_block(self):
+        # The inline body (SMALL_SY) comes first and has no gl definition: it must not take
+        # Reset's listing, as the old pairing in order did.
+        blocks = t.parse_sy(SMALL_SY + RESET_SY)
+        definitions = [t.GlSymbol("definition", 66163, "?Reset@StreamFile@@QAEXXZ",
+                                  attrs={"sy_offset": len(SMALL_SY)})]
+        functions = t.join_blocks(blocks, t.parse_listing(self.LISTED), definitions, [2539, 66163],
+                                  [("?f@@YAHPAUR@@H@Z", 2539)])
+        inline, reset = functions
+        self.assertFalse(inline.compiled)
+        self.assertIn("?f@@YAHPAUR@@H@Z", inline.name)
+        self.assertEqual((reset.name, reset.decorated, reset.number, reset.compiled),
+                         ("StreamFile::Reset", "?Reset@StreamFile@@QAEXXZ", 66163, True))
+        this = next(r for r in reset.symbols if r["name"] == "this")
+        self.assertEqual((this["number"], this["frame_offset"]), (66404, -4))
+
+    def test_frame_check(self):
+        listed = t.parse_listing(self.LISTED)[1]
+        block = t.parse_sy(bytes.fromhex("0d01" "0101e909005f5f666f726d616c00860100030404000100" "06"))[0]
+        (function,) = t.join_blocks([block], [listed], [t.GlSymbol("definition", 2538, "?h@@YAXH@Z",
+                                                                      attrs={"sy_offset": 0})])
+        self.assertEqual(function.symbols[0]["frame_offset"], 12)
+        self.assertEqual(t.frame_mismatches(function, listed, total=66567), ([], ["result$66881"]))
+        self.assertEqual(t.frame_mismatches(function, listed, total=None), (["result$66881"], []))
 
 
 if __name__ == "__main__":

@@ -8,7 +8,8 @@ runs, the intermediate-language (IL) files between them, and the front end's sym
 
 ```
 python tools/cl_trace.py passes  --source X.cpp --flags="/O2 /GR-" [-I DIR] [--dry] [--debug] [--keep DIR] [--json]
-python tools/cl_trace.py symbols --source X.cpp --flags="..." [-I DIR] [--function REGEX] [--globals REGEX] [--json]
+python tools/cl_trace.py symbols --source X.cpp --flags="..." [-I DIR] [--function REGEX] [--globals REGEX]
+                                 [--check] [--keep DIR] [--json]
 python tools/cl_trace.py il      --source X.cpp --flags="..." [--records] | --prefix DIR/stem_
 python tools/cl_trace.py experiment cost [--flags="..."]
 python tools/cl_trace.py experiment flip --source X.cpp --insert-before TEXT --function REGEX
@@ -72,40 +73,91 @@ The game's options `/O2 /Oy /arch:SSE2 /fp:fast /GS /EHsc /GR- /MD /Gy` become (
 | file | contents (as far as read) |
 |---|---|
 | `ex` | function bodies (expression trees); about 2.8 KB for a one-function unit |
-| `gl` | unit-level symbols: 7 signature bytes `11 86 03 29 18 32 01`, then the unit's symbol count (u32), then records `<number> 00 <decorated name> 00 <attrs>` for globals, functions, members and string literals |
+| `gl` | unit-level symbol records (SSRs, below): header, files, declarations, globals, function definitions, then a trailer of default libraries and linker directives |
 | `in` | a 396-byte block present in every unit, plus initialisers |
-| `sy` | one block per compiled function, ended by `06`: every parameter, local and compiler temporary with its number |
+| `sy` | one block per function body c1xx wrote, ended by SSR 06: every parameter, local and compiler temporary with its number |
 | `db` | `/Zi` only |
 
-Numbers use one encoding, the one c1xx's `ILSink::loshwrite` name suggests: a u16 below 0x8000, or
-`u16(0x8000 | v & 0x7FFF)` followed by `u16(v >> 15)`. The `sy` records:
+### Records
 
-| tag | layout | meaning |
+`sy` and `gl` hold one kind of record, an SSR (c1xx's `SSR_TYPE`), which c1xx's
+`stoil_1(SSR_TYPE, Symbol_t*)` writes. Its format is c1xx's own: the `symdope` table (`IL_INFO`, 8
+bytes per SSR type at 0x106C8E20 in c1xx.dll 14.00.50727.762; names from c1xx.pdb) gives each type a
+string of field-writer codes, which `stoil_1` dispatches on through the jump table at 0x1056B814.
+`SSR_FORMATS` in the tool is that table. The byte layout of each field was then fixed from the
+writers (`0x80` + u32 for values from 0x80, a second kind byte when bit 6 of the first is set) and by
+decoding the whole `sy` and `gl` files of avp3's `platform_audio_streams.cpp` and `gui_pc.cpp` with no
+byte skipped. Numbers ("losh", `ILSink::loshwrite`) are a u16 below 0x8000, else
+`u16(0x8000 | v & 0x7FFF)` then `u16(v >> 15)`; "c32" is one byte below 0x80, else `80` + u32.
+
+| SSR | name | layout after the tag byte |
 |---|---|---|
-| `03` | `a <n> u16 u8 u8` | compiler temporary |
-| `0D` | `level` | scope opened (1 = parameters, 2 = function body, deeper = blocks) |
-| `01` | `level <n> 00 name 00 kind <type> storage u8 <size> flags [<extra> if flags & 0x80]` | named symbol; storage 3 = parameter, 1 = automatic |
-| `02` | as `01`, then one more byte | array |
-| `06` | | end of function |
+| `01` | data (parameter, local, global) | `level <n> symkind name\0` attrs, then optional fields |
+| `02` | array | as `01`, then `dim` (c32) |
+| `03` | temporary | `level <n> symkind name\0 u8 u8` (the name is empty) |
+| `04` | function declaration | `<n> symkind name\0` function attrs |
+| `06` | end of a function's sy block | |
+| `0A` | trailer (gl) | `u16 count`, then per entry `kind name\0` (`04` default library, `0A` linker directive) |
+| `0D` | scope (sy) | `level` (1 = parameters, 2 = body, deeper = blocks; no close record) |
+| `0E` | function definition (gl) | as `04`, then `ex_offset` (c32), `sy_offset` (c32), node count (`80`+u16 from 0x80), flags (losh), formals (u8), call list: `count`, then per callee `<n>` and a call count (`80`+u16 from 0x80) |
+| `10` | vector deleting destructor (gl) | as `04`, then `<n>` of its target |
+| `11` | header (gl, 25 bytes) | `u16 0x386`, `u32 0x01321829`, the unit's symbol count (u32), `u8 1`, IL flags (u32), 5 bytes, offset of the trailer (u32) |
+| `12` | source file (gl) | `<n> path\0 u16` |
+| `18` | pragma state (gl; meaning not read) | `c16 u8 c16` |
+| `1A` | unnamed compiler symbol (sy) | `level <n>` kind, `u8`, `size` (c32), `u8`, flags (losh), extra (losh) if flags & 0x80 |
 
-The layout comes from experiments. The decoder resyncs at unknown bytes and reports what it skipped.
-`gl` records are found by a pattern scan (`symbols --globals`), not decoded.
+attrs are `kind [kind2] type u8 storage u8 size(c32) u8 flags(losh) [extra(losh) if flags & 0x80]`
+(storage 3 = parameter, 1 = automatic; globals showed 2 and 4); function attrs are
+`kind [kind2] type u8 size(c32) u8 flags [extra]`. `symkind` is 00 for an ordinary symbol, 0x26 for
+compiler-generated names (`__flags`, `??_7...`), 0x1E/0x1F for temporaries. The meaning of the
+unnamed bytes was not read. Writers that depend on compiler state the file does not record (codes
+2C, 31, 32, and 2E outside a definition) are optional fields; none was present in the units read,
+and the decoder takes a decoding without them unless only one with them explains the bytes. Bytes no
+decoding explains are skipped to the next offset whose next four records decode, and reported.
+
+SSR types 05, 07-09, 0B, 0F, 13-17 and 1B have formats in the table but did not occur; their
+layouts are not decoded and would show as skipped spans.
+
+### Which function a sy block belongs to
+
+c1xx writes a `sy` block (and an `ex` body) for every function body it parsed, inline helpers of the
+CRT and of the unit's headers included, whether or not c2 will compile it. A `gl` definition record
+(SSR 0E, written by `StoilDefdFunc` from `CurFuncExOff` and `CurFuncSyOff`) exists only for the bodies
+c2 compiles, and its `sy_offset` is the offset of the block. `symbols` attributes each block through
+it and joins the listing by decorated name. Blocks no definition points at are reported as
+`#i inline body, not compiled`, named, when possible, from the function number at the opening of the
+matching `ex` body (`4F 23 ... 53 53 26 <n>`, a pattern used only for this label). On
+`platform_audio_streams.cpp` 58 of the 130 blocks have a definition (30 reach the listing); on
+`gui_pc.cpp`, 145 of 391.
+
+`symbols --check` compares, for every compiled function in the listing, the frame symbols of the
+listing with the block's symbols and exits 1 on a disagreement. Unnamed parameters (`__formal` in
+`sy`, `___formal$` in the listing) pair in declaration order. A suffixed frame name numbered at or
+above the unit's symbol count is c2's own: it numbers the locals of a function it inlines past the
+front end's counter (`StreamFile::BytesOf` has `_result$66881` for a unit count of 66,567). Both
+units check clean.
+
+`symbols --globals REGEX` lists the decoded `gl` symbol records (data, arrays, function declarations
+and definitions) whose decorated name matches, with their numbers: on `gui_pc.cpp` (dx9)
+`?g_mouse@@3VMouse@@A` is 72363 and `?g_renderStates@@3VRenderStateCache@@A` 72891, the numbers c2
+shows for them.
 
 ## Symbol numbers
 
 The front end gives every symbol it creates the next number from one unit-wide counter. The counter
 starts at about 2,530: the predefined symbols come first. Statics go to `gl`; the listing prints
 the suffix only for locals in a nested block (`_inner$2544`), while `_rect$` at function scope has
-none. `symbols` reads every number from `sy` and joins it with the listing's frame offsets:
+none. `symbols` reads every number from `sy` and joins it with the listing's frame offsets
+(`scp` is the index of the scope record a symbol follows; temporaries come before the first):
 
 ```
 f  ?f@@YAHPAUR@@H@Z
-     number mod64 kind   lvl name      suffix  frame size
-       2537    41 param    1 p                     8 4
-       2538    42 param    1 n                    12 4
-       2540    44 temp     1 <temp>
-       2541    45 local    2 rect                 -8 8
-       2544    48 local    5 inner       $2544   -16 8
+     number mod64 kind   lvl scp name      suffix  frame size
+       2537    41 param    1   1 p                     8 4
+       2538    42 param    1   1 n                    12 4
+       2540    44 temp     1   0 <temp>
+       2541    45 local    2   2 rect                 -8 8
+       2544    48 local    5   5 inner       $2544   -16 8
 ```
 
 ### What a construct costs (`experiment cost`, `/O2 /EHsc /GR-`)
