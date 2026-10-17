@@ -12,7 +12,8 @@ import shutil
 import subprocess
 import sys
 
-from probe_toolchain import CONFIG, inventory, sha256
+from matchlib import load_project, adapter_of
+from probe_toolchain import CONFIG, ROOT, inventory, sha256
 
 CAB_GROUPS = {
     "194": "bin", "195": "bin", "196": "bin", "2029": "bin", "260": "bin",
@@ -56,7 +57,7 @@ $names | ConvertTo-Json -Compress
     return json.loads(text)
 
 
-def extract(iso, output, seven_zip, config):
+def extract(iso, output, seven_zip, config, sdk):
     iso, output = Path(iso).resolve(), Path(output).resolve()
     if output == iso.parent or output == Path(output.anchor):
         raise ValueError("choose a dedicated ref-rtm output directory")
@@ -104,7 +105,6 @@ def extract(iso, output, seven_zip, config):
                   "files": payload}
     (output / "bootstrap-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
     data = json.loads(config.read_text(encoding="utf-8-sig"))
-    sdk = "C:/Program Files (x86)/Microsoft Visual Studio 8/VC/PlatformSDK"
     tc = {"kind": "extracted-local-iso", "source_iso": iso.as_posix(), "source_iso_sha256": provenance["iso_sha256"],
           "bin": (output / "bin").as_posix(), "runtime": [(output / "bin/Microsoft.VC80.CRT").as_posix()],
           "include": [(output / "include").as_posix(), sdk + "/include"],
@@ -124,13 +124,21 @@ def extract(iso, output, seven_zip, config):
 
 
 def main():
+    # Defaults: the adapter's "rtm" block; iso and out are relative to the primary
+    # checkout, the borrowed SDK defaults to the installed toolchain's PlatformSDK.
+    project = load_project(ROOT)
+    rtm = adapter_of(project)["rtm"]
+    primary = Path(project["primary_checkout"])
+    sdk = rtm["platform_sdk"] or Path(project["toolchain_root"]) / "PlatformSDK"
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--iso", type=Path, default=Path("E:/vc8-decomp/en_vs_2005_pro_dvd.iso"))
-    parser.add_argument("--out", type=Path, default=Path("E:/vc8-decomp/ref-rtm"))
-    parser.add_argument("--seven-zip", type=Path, default=Path("C:/Program Files/7-Zip/7z.exe"))
+    parser.add_argument("--iso", type=Path, default=primary / rtm["iso"] if rtm["iso"] else None,
+                        required=not rtm["iso"])
+    parser.add_argument("--out", type=Path, default=primary / rtm["out"])
+    parser.add_argument("--seven-zip", type=Path, default=Path(rtm["seven_zip"]))
+    parser.add_argument("--sdk", type=Path, default=Path(sdk), help="PlatformSDK borrowed for headers and libraries")
     parser.add_argument("--config", type=Path, default=CONFIG)
     args = parser.parse_args()
-    extract(args.iso, args.out, args.seven_zip, args.config)
+    extract(args.iso, args.out, args.seven_zip, args.config, args.sdk.as_posix())
 
 
 if __name__ == "__main__":

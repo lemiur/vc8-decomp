@@ -10,19 +10,18 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import struct
 import sys
 import time
 import uuid
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import load_adapter
+
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/toolchains.json"
-PIN_NAMES = ("cl.exe", "c1.dll", "c1xx.dll", "c2.dll", "link.exe", "cvtres.exe",
-             "mspdb80.dll", "mspdbcore.dll", "mspdbsrv.exe", "msobj80.dll", "pgodb80.dll",
-             "pgort80.dll", "pgort80ui.dll", "msvcr80.dll", "msvcp80.dll",
-             "clui.dll", "linkui.dll", "dumpbin.exe", "lib.exe", "undname.exe")
-PIN_NAMES += ("cl.exe.config", "link.exe.config", "Microsoft.VC80.CRT.manifest")
 
 
 def sha256(path):
@@ -81,10 +80,12 @@ def run_tool(toolchain, tool, args, cwd=None):
                           text=True, errors="replace", timeout=120)
 
 
-def inventory(toolchain):
+def inventory(toolchain, adapter=None):
+    """Pin the adapter's toolchain_pins found in the toolchain's folders."""
+    adapter = adapter or load_adapter(ROOT)
     paths = [Path(toolchain["bin"]), Path(toolchain["bin"]) / "1033", *map(Path, toolchain.get("runtime", []))]
     out = []
-    for name in PIN_NAMES:
+    for name in adapter["toolchain_pins"]:
         found = next((folder / name for folder in paths if (folder / name).is_file()), None)
         if found:
             out.append({"path": found.as_posix(), "size": found.stat().st_size,
@@ -104,7 +105,8 @@ def inventory(toolchain):
     return out
 
 
-def verify_toolchain(toolchain):
+def verify_toolchain(toolchain, adapter=None):
+    adapter = adapter or load_adapter(ROOT)
     files = toolchain.get("files", [])
     if not files:
         raise ValueError("toolchain has no pinned files")
@@ -113,7 +115,7 @@ def verify_toolchain(toolchain):
         if not path.is_file() or sha256(path) != item["sha256"]:
             raise ValueError("toolchain pin mismatch: " + str(path))
     required = {str((Path(toolchain["bin"]) / name).resolve()).casefold()
-                for name in ("cl.exe", "c1.dll", "c1xx.dll", "c2.dll", "link.exe")}
+                for name in adapter["toolchain_core"]}
     pinned = {str(Path(item["path"]).resolve()).casefold() for item in files}
     if not required <= pinned:
         raise ValueError("toolchain core executables are not all pinned")
@@ -210,41 +212,44 @@ def trace_tool_runtime(toolchain, tool, args, output):
     return result
 
 
-LAYOUT_FIELDS = ("nLength", "lpSecurityDescriptor", "bInheritHandle")
-LAYOUT_SYMBOL = "vc8_layout_SECURITY_ATTRIBUTES"
-
-
-def build_layout_witness(toolchain, output, config_path=CONFIG):
-    """Build an independently extractable SDK aggregate layout witness.
+def build_layout_witness(toolchain, output, headers, type_name, fields, binary=None, config_path=CONFIG):
+    """Build an independently extractable aggregate layout witness of type_name.
 
     The exported DWORD array contains sizeof(type), then ordered offset/width
-    pairs. No expected numeric layout is injected into the source or bytes.
-    Gate/audit must independently extract the array and approve its named record.
+    pairs of fields. No expected numeric layout is injected into the source or
+    bytes. Gate/audit must independently extract the array and approve its record.
     """
     import ltcg
     from matchlib import PEImage
-    verify_toolchain(toolchain)
+    adapter = load_adapter(ROOT)
+    verify_toolchain(toolchain, adapter)
+    if not re.fullmatch(r"[A-Za-z_]\w*", type_name) or not fields or len(set(fields)) != len(fields) or \
+            not all(re.fullmatch(r"[A-Za-z_]\w*", field) for field in fields):
+        raise ValueError("layout needs one identifier type and distinct identifier fields")
+    binary = binary or adapter["binaries"][0]
+    symbol = "vc8_layout_" + type_name
+    gl = adapter["gl"]
     output = Path(output).resolve()
     if output.exists() and any(output.iterdir()):
         raise ValueError("layout output must be empty for a fresh build")
     output.mkdir(parents=True, exist_ok=True)
     source = output / "layout.cpp"
-    expressions = ["sizeof(SECURITY_ATTRIBUTES)"]
-    for field in LAYOUT_FIELDS:
-        expressions += ["offsetof(SECURITY_ATTRIBUTES, %s)" % field,
-                        "sizeof(((SECURITY_ATTRIBUTES *)0)->%s)" % field]
-    source.write_text('#include <windows.h>\n#include <stddef.h>\n'
-                      'extern "C" __declspec(dllexport) const unsigned long ' + LAYOUT_SYMBOL +
+    expressions = ["sizeof(%s)" % type_name]
+    for field in fields:
+        expressions += ["offsetof(%s, %s)" % (type_name, field),
+                        "sizeof(((%s *)0)->%s)" % (type_name, field)]
+    source.write_text(''.join('#include <%s>\n' % header for header in headers) + '#include <stddef.h>\n'
+                      'extern "C" __declspec(dllexport) const unsigned long ' + symbol +
                       '[] = {\n    ' + ',\n    '.join(expressions) + '\n};\n', encoding="ascii")
     inputs = {str(source): sha256(source)}
     config_path = Path(config_path).resolve()
     inputs[str(config_path)] = sha256(config_path)
     commands = []
     obj = output / "layout.obj"
-    flags = ["/nologo", "/c", "/showIncludes", "/O1", "/MD", "/EHsc", "/GL"]
+    flags = ["/nologo", "/c", "/showIncludes", "/O1", "/MD", "/EHsc"] + (["/GL"] if gl else [])
     toolroot = Path(toolchain["bin"]).parent
     env = toolchain_environment(toolchain)
-    compiled = ltcg.run_command([str(Path(toolchain["bin"]) / "cl.exe"), *flags,
+    compiled = ltcg.run_command([str(Path(toolchain["bin"]) / adapter["compiler"]), *flags,
                                  "/Fo" + str(obj), str(source)], output, env, commands, [obj])
     if not obj.is_file():
         raise ValueError("layout compiler did not produce a fresh object")
@@ -254,28 +259,29 @@ def build_layout_witness(toolchain, output, config_path=CONFIG):
             inputs[str(header)] = sha256(header)
     if len(inputs) <= 2:
         raise ValueError("layout compiler did not report included SDK headers")
-    image_path, map_path = ltcg.link(toolroot, [obj], ["_" + LAYOUT_SYMBOL], output, env, commands)
+    image_path, map_path = ltcg.link(toolroot, [obj], ["_" + symbol], output, env, commands, ltcg=gl,
+                                     base_flags=adapter["link_flags"], linker=adapter["linker"])
     image = PEImage(image_path)
-    exports = [entry for entry in image.export_records() if LAYOUT_SYMBOL in entry.get("names", [])]
+    exports = [entry for entry in image.export_records() if symbol in entry.get("names", [])]
     if len(exports) != 1 or exports[0].get("va") is None:
         raise ValueError("layout export did not resolve to one image-backed array")
     array_va = exports[0]["va"]
-    count = 1 + len(LAYOUT_FIELDS) * 2
+    count = 1 + len(fields) * 2
     values = struct.unpack("<" + "I" * count, image.read_va(array_va, count * 4))
     observations = {"size": values[0], "members": {field: {"offset": values[1 + index * 2],
-                       "size": values[2 + index * 2]} for index, field in enumerate(LAYOUT_FIELDS)}}
+                       "size": values[2 + index * 2]} for index, field in enumerate(fields)}}
     for path, digest in inputs.items():
         if sha256(path) != digest:
             raise ValueError("layout input changed during build: " + path)
-    verify_toolchain(toolchain)
-    artifacts = [{"path": str(path), "sha256": sha256(path), "kind": kind}
-                 for path, kind in ((obj, "ltcg-object"), (image_path, "linked-image"), (map_path, "linker-map"))]
-    result = {"schema_version": 1, "kind": "offsetof-sizeof", "binary": "cl", "build_id": str(uuid.uuid4()),
-              "status": "built", "type": "SECURITY_ATTRIBUTES", "fields": list(LAYOUT_FIELDS),
+    verify_toolchain(toolchain, adapter)
+    artifacts = [{"path": str(path), "sha256": sha256(path), "kind": kind} for path, kind in
+                 ((obj, "ltcg-object" if gl else "object"), (image_path, "linked-image"), (map_path, "linker-map"))]
+    result = {"schema_version": 1, "kind": "offsetof-sizeof", "binary": binary, "build_id": str(uuid.uuid4()),
+              "status": "built", "type": type_name, "fields": list(fields),
               "source_inputs": [{"path": path, "sha256": digest} for path, digest in sorted(inputs.items())],
               "toolchain_name": toolchain["name"], "toolchain": toolchain["files"], "commands": commands,
               "artifacts": artifacts, "image": {"path": str(image_path), "sha256": sha256(image_path)},
-              "symbol": LAYOUT_SYMBOL, "export": {"va": array_va, "size": count * 4},
+              "symbol": symbol, "export": {"va": array_va, "size": count * 4},
               "observations": observations,
               "purpose": "Compiler-produced aggregate layout witness only; no function or byte matching count"}
     record = output / "layout-witness.json"
@@ -342,8 +348,9 @@ def run_probes(toolchain, output, matrix=False):
             flags.append("/EHsc")
         flags.extend(extra_flags)
         commands = []
-        for tool, args in (("cl.exe", [*flags, str(path)]),
-                           ("link.exe", ["/nologo", "/DLL", "/NOENTRY", "/LTCG", "/INCREMENTAL:NO",
+        adapter = load_adapter(ROOT)
+        for tool, args in ((adapter["compiler"], [*flags, str(path)]),
+                           (adapter["linker"], ["/nologo", "/DLL", "/NOENTRY", "/LTCG", "/INCREMENTAL:NO",
                                          "/OUT:" + str(folder / "probe.dll"), "/MAP:" + str(folder / "probe.map"),
                                          str(folder / "probe.obj"), "kernel32.lib"])):
             run = run_tool(toolchain, tool, args, folder)
@@ -371,9 +378,15 @@ def main():
     parser.add_argument("--matrix", action="store_true", help="also compile one-control-at-a-time C ABI/flag variants")
     parser.add_argument("--repeat", type=int, choices=range(1, 5), default=2,
                         help="fresh builds to compare for stable .text (default: 2)")
-    parser.add_argument("--tool", default="cl.exe", help="pinned executable for trace (default: cl.exe)")
+    parser.add_argument("--tool", help="pinned executable for trace (default: the adapter's compiler)")
     parser.add_argument("--tool-arg", action="append", help="one argument for trace; default: /?")
+    parser.add_argument("--header", action="append", help="layout: header to include (repeatable; default: windows.h)")
+    parser.add_argument("--type", help="layout: aggregate type to measure")
+    parser.add_argument("--field", action="append", help="layout: member to measure, in order (repeatable)")
+    parser.add_argument("--binary", help="layout: binary the witness serves (default: the adapter's first)")
     args = parser.parse_args()
+    if args.action == "layout" and not (args.type and args.field):
+        parser.error("layout requires --type and at least one --field")
     tc = load_toolchain(args.toolchain, args.config)
     if args.action == "inventory":
         data = json.loads(args.config.read_text(encoding="utf-8-sig"))
@@ -385,11 +398,12 @@ def main():
         print("Toolchain pins verified: " + args.toolchain)
     elif args.action == "layout":
         output = args.out or ROOT / "build/toolchain-layout" / args.toolchain / str(uuid.uuid4())
-        result, record = build_layout_witness(tc, output, args.config)
+        result, record = build_layout_witness(tc, output, args.header or ["windows.h"], args.type, args.field,
+                                              args.binary, args.config)
         print("Compiled %s layout: %s; record: %s" % (result["type"], result["observations"], record))
     elif args.action == "trace":
         output = args.out or ROOT / "build/toolchain" / args.toolchain / "runtime"
-        result = trace_tool_runtime(tc, args.tool, args.tool_arg or ["/?"], output)
+        result = trace_tool_runtime(tc, args.tool or load_adapter(ROOT)["compiler"], args.tool_arg or ["/?"], output)
         print("Observed %d loaded files; command exit %d; %s" %
               (len(result["modules"]), result["returncode"], output / "runtime-observations.json"))
     else:

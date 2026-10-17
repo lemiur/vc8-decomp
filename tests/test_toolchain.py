@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import probe_toolchain as probe
 import rtm
 
+LAYOUT = (["windows.h"], "SECURITY_ATTRIBUTES", ["nLength", "lpSecurityDescriptor", "bInheritHandle"])
+
 
 class ToolchainTests(unittest.TestCase):
     def test_environment_drops_injected_switches_and_sets_paths(self):
@@ -78,12 +80,18 @@ class ToolchainTests(unittest.TestCase):
             self.assertEqual(len(files), 1)
             self.assertEqual(files[0]["sha256"], probe.sha256(path))
 
+    def test_layout_witness_requires_identifier_type_and_fields(self):
+        with tempfile.TemporaryDirectory() as temp, mock.patch.object(probe, "verify_toolchain"):
+            for type_name, fields in (("struct X", ["a"]), ("X", []), ("X", ["a", "a"]), ("X", ["a)->b"])):
+                with self.assertRaisesRegex(ValueError, "identifier type"):
+                    probe.build_layout_witness({}, Path(temp) / "fresh", ["windows.h"], type_name, fields)
+
     def test_layout_witness_rejects_stale_output(self):
         with tempfile.TemporaryDirectory() as temp:
             (Path(temp) / "stale.dll").write_bytes(b"not attributable")
             with mock.patch.object(probe, "verify_toolchain"):
                 with self.assertRaisesRegex(ValueError, "layout output must be empty"):
-                    probe.build_layout_witness({}, temp)
+                    probe.build_layout_witness({}, temp, *LAYOUT)
 
     def test_layout_witness_requires_included_header_provenance(self):
         import ltcg
@@ -96,7 +104,7 @@ class ToolchainTests(unittest.TestCase):
             tc = {"bin": temp, "runtime": [], "include": [], "lib": []}
             with mock.patch.object(probe, "verify_toolchain"), mock.patch.object(ltcg, "run_command", side_effect=fake_compile):
                 with self.assertRaisesRegex(ValueError, "did not report included SDK headers"):
-                    probe.build_layout_witness(tc, Path(temp) / "fresh", config)
+                    probe.build_layout_witness(tc, Path(temp) / "fresh", *LAYOUT, config_path=config)
 
     def test_failed_compile_removes_stale_output_and_skips_link(self):
         with tempfile.TemporaryDirectory() as temp:

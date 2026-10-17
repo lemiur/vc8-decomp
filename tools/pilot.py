@@ -1,4 +1,4 @@
-"""Inspect the curated cl pilot evidence catalogue; this is not a byte gate.
+"""Inspect a curated pilot evidence catalogue; this is not a byte gate.
 
 The catalogue deliberately records unresolved boundaries and ownership. A public
 start (or the gap to the next public) never supplies an admitted function size.
@@ -12,21 +12,24 @@ import json
 from pathlib import Path
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import load_adapter
 
-DEFAULT_CATALOGUE = Path(__file__).resolve().parents[1] / "config" / "cl-pilot.json"
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def address(value):
     return int(value, 0) if isinstance(value, str) else int(value)
 
 
-def validate(catalogue):
+def validate(catalogue, binaries=None):
     """Check evidence-record consistency, not the truth of uninspected claims."""
+    binaries = load_adapter(ROOT)["binaries"] if binaries is None else binaries
     errors = []
     if catalogue.get("schema_version") != 1:
         errors.append("unsupported schema_version")
-    if catalogue.get("binary") != "cl":
-        errors.append("catalogue binary must be cl")
+    if catalogue.get("binary") not in binaries:
+        errors.append("catalogue binary must be a configured binary")
     lanes = {lane["id"] for lane in catalogue.get("lanes", [])}
     identities = set()
     extents = []
@@ -73,11 +76,12 @@ def validate(catalogue):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("list", "check"))
-    parser.add_argument("--catalogue", type=Path, default=DEFAULT_CATALOGUE)
+    parser.add_argument("--catalogue", type=Path, help="default: config/<first adapter binary>-pilot.json")
     parser.add_argument("--limit", type=int, default=40)
     args = parser.parse_args(argv)
     try:
-        catalogue = json.loads(args.catalogue.read_text(encoding="utf-8"))
+        path = args.catalogue or ROOT / "config" / (load_adapter(ROOT)["binaries"][0] + "-pilot.json")
+        catalogue = json.loads(path.read_text(encoding="utf-8"))
         errors = validate(catalogue)
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(f"pilot: {exc}", file=sys.stderr)
