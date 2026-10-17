@@ -177,6 +177,19 @@ class GlTests(unittest.TestCase):
         self.assertEqual((ct["flags"], ct["extra"], ct["segment"], ct["extra2"]), (0xA3, 0x80, 0x0A5D, 0))
         self.assertEqual((init["flags"], init["extra"], init["segment"], init["dyninit"]), (0x8083, 0, 0x0A39, 0x0A21))
 
+    def test_od_definitions_have_no_call_list(self):
+        # Probe p1 at /Od: the header's IL flags lack IL_CALL_GRAPH (0x112 -> 0x12) and each
+        # definition record ends after `formals`.
+        records = bytes.fromhex(
+            "0eec09263f3f5f4742617365404055414550415849405a008603050434200080780b00004028c808020ef809003f3f31"
+            "51404055414540585a008207050034000080510c00007e25c80d01")
+        header = GL_HEADER[:12] + (0x12).to_bytes(4, "little") + GL_HEADER[16:]
+        gl = t.parse_gl(header + (len(header) + 4 + len(records)).to_bytes(4, "little") + records)
+        self.assertEqual(gl.unparsed, [])
+        self.assertEqual([(s.name, s.attrs["sy_offset"], s.attrs["fnflags"], s.attrs["formals"], "calls" in s.attrs)
+                          for s in gl.definitions()],
+                         [("??_GBase@@UAEPAXI@Z", 0x40, 0x8C8, 2, False), ("??1Q@@UAE@XZ", 0x7E, 0xDC8, 1, False)])
+
     def test_segment_record(self):
         records, unparsed = t.decode_records(SEGMENT_GL + SEGMENT_GL)
         self.assertEqual(unparsed, [])

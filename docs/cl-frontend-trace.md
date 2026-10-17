@@ -100,9 +100,9 @@ byte skipped. Numbers ("losh", `ILSink::loshwrite`) are a u16 below 0x8000, else
 | `09` | segment (gl) | `<n> name\0`, attribute (u8: 04 `CONST`, 00 `CODE`, 1D `DATA`), class `name\0`, u32 (0 so far) |
 | `0A` | trailer (gl) | `u16 count`, then per entry `kind name\0` (`04` default library, `0A` linker directive) |
 | `0D` | scope (sy) | `level` (1 = parameters, 2 = body, deeper = blocks; no close record) |
-| `0E` | function definition (gl) | as `04`, then `ex_offset` (c32), `sy_offset` (c32), node count (`80`+u16 from 0x80), flags (losh), formals (u8), call list: `count`, then per callee `<n>` and a call count (`80`+u16 from 0x80) |
+| `0E` | function definition (gl) | as `04`, then `ex_offset` (c32), `sy_offset` (c32), node count (`80`+u16 from 0x80), flags (losh), formals (u8), call list: `count`, then per callee `<n>` and a call count (`80`+u16 from 0x80); no call list when the header's IL flags lack 0x100 (`/Od`) |
 | `10` | vector deleting destructor (gl) | as `04`, then `<n>` of its target |
-| `11` | header (gl, 25 bytes) | `u16 0x386`, `u32 0x01321829`, the unit's symbol count (u32), `u8 1`, IL flags (u32), 5 bytes, offset of the trailer (u32) |
+| `11` | header (gl, 25 bytes) | `u16 0x386`, `u32 0x01321829`, the unit's symbol count (u32), `u8 1`, IL flags (u32: 0x112 at `/O2`, 0x12 at `/Od`; 0x100 = call lists written, `IL_CALL_GRAPH`), 5 bytes, offset of the trailer (u32) |
 | `12` | source file (gl) | `<n> path\0 u16` |
 | `18` | pragma state (gl; meaning not read) | `c16 u8 c16` |
 | `1A` | unnamed compiler symbol (sy) | `level <n>` kind, `u8`, `size` (c32), `u8`, flags (u16), then the flags' extra fields |

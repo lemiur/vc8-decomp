@@ -234,6 +234,9 @@ SSR_NAMES = {0x01: "data", 0x02: "array", 0x03: "temp", 0x04: "function", 0x06: 
              0x0D: "scope", 0x0E: "definition", 0x10: "vector-dtor", 0x11: "header", 0x12: "file",
              0x18: "ssr18", 0x1A: "anonymous"}
 GL_HEADER_SIZE = 25
+IL_CALL_GRAPH = 0x100   # gl header IL flag: c1xx wrote call lists (absent under /Od)
+# Without IL_CALL_GRAPH (/Od) a definition record ends after `formals`.
+SSR_LAYOUTS_NO_CALLS = {**SSR_LAYOUTS, 0x0E: SSR_LAYOUTS[0x0E][:-1]}
 
 
 class _Bad(Exception):
@@ -353,10 +356,10 @@ class IlRecord:
         return SSR_NAMES.get(self.tag, "ssr%02x" % self.tag)
 
 
-def _record_alternatives(d, pos, optional=True):
+def _record_alternatives(d, pos, optional=True, layouts=None):
     """Every decoding of the record at pos: [(fields, end)], optional fields absent first."""
     tag, p = _u8(d, pos)
-    layout = SSR_LAYOUTS.get(tag)
+    layout = (layouts or SSR_LAYOUTS).get(tag)
     if layout is None:
         raise _Bad("unknown SSR type %#x" % tag)
     states = [({}, p)]
@@ -390,7 +393,7 @@ def _record_alternatives(d, pos, optional=True):
     return [(fields, q) for fields, q in states]
 
 
-def decode_records(data, start=0, end=None, lookahead=4):
+def decode_records(data, start=0, end=None, lookahead=4, layouts=None):
     """Decode SSR records in data[start:end]; returns (records, unparsed spans).
 
     Each record takes, in order of preference: a decoding without optional fields whose next
@@ -408,7 +411,7 @@ def decode_records(data, start=0, end=None, lookahead=4):
         key = (q, optional)
         if key not in memo:
             try:
-                memo[key] = [(f, q2) for f, q2 in _record_alternatives(data, q, optional) if q2 <= end]
+                memo[key] = [(f, q2) for f, q2 in _record_alternatives(data, q, optional, layouts) if q2 <= end]
             except _Bad:
                 memo[key] = []
         return memo[key]
@@ -560,7 +563,8 @@ def parse_gl(data):
     end = header.get("trailer_offset", len(data))
     if not GL_HEADER_SIZE <= end <= len(data):
         end = len(data)
-    records, unparsed = decode_records(data, GL_HEADER_SIZE, end)
+    layouts = None if header.get("il_flags", IL_CALL_GRAPH) & IL_CALL_GRAPH else SSR_LAYOUTS_NO_CALLS
+    records, unparsed = decode_records(data, GL_HEADER_SIZE, end, layouts=layouts)
     if end < len(data):
         tail, more = decode_records(data, end, len(data))
         records += tail
