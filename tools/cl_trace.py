@@ -220,6 +220,7 @@ SSR_LAYOUTS = {
     0x03: ("level", "number", "symkind", "name", "u0e", "u0a"),
     0x04: ("number", "symkind", "name") + _FATTRS + ("?opt2c",),
     0x06: (),
+    0x09: ("number", "name", "segattr", "class", "u2f"),
     0x0A: ("u16", "directives"),
     0x0D: ("level",),
     0x0E: ("number", "symkind", "name") + _FATTRS + ("?opt2c", "ex_offset", "sy_offset", "ex_nodes",
@@ -229,7 +230,7 @@ SSR_LAYOUTS = {
     0x18: ("c16a", "u8", "c16b"),
     0x1A: ("level", "number", "kind", "u01", "size", "u06", "flags", "extra", "?opt31"),
 }
-SSR_NAMES = {0x01: "data", 0x02: "array", 0x03: "temp", 0x04: "function", 0x06: "end", 0x0A: "directives",
+SSR_NAMES = {0x01: "data", 0x02: "array", 0x03: "temp", 0x04: "function", 0x06: "end", 0x09: "segment", 0x0A: "directives",
              0x0D: "scope", 0x0E: "definition", 0x10: "vector-dtor", 0x11: "header", 0x12: "file",
              0x18: "ssr18", 0x1A: "anonymous"}
 GL_HEADER_SIZE = 25
@@ -276,6 +277,12 @@ def _c16(d, p):
     return _u16(d, p)
 
 
+def _u32(d, p):
+    if p + 4 > len(d):
+        raise _Bad("eof")
+    return int.from_bytes(d[p:p + 4], "little"), p + 4
+
+
 def _cstr(d, p):
     end = d.find(b"\0", p)
     if end < 0:
@@ -313,12 +320,25 @@ def _directives(d, p):
     return items, p
 
 
+def _extra(d, p, flags):
+    """What follows the flags (a u16) when bit 0x80 is set: a byte (`extra`), the losh number of
+    the symbol's named segment when bit 0x02 is set (`segment`: `.xdata$x` for the `__CT`/`__TI`
+    throw records, `.CRT$XCU` for an initializer pointer), and a byte (`extra2`, 0 so far). Read
+    as one losh, a segment number whose low byte is below 0x80 desynchronised the decoder."""
+    extra, p = _u8(d, p)
+    out = {"extra": extra}
+    if flags & 0x02:
+        out["segment"], p = _losh(d, p)
+    out["extra2"], p = _u8(d, p)
+    return out, p
+
+
 _FIELD = {"level": _u8, "number": _losh, "symkind": _u8, "name": _cstr, "path": _cstr, "kind": _kind,
-          "type": _u8, "u0c": _u8, "storage": _u8, "u01": _u8, "size": _c32, "u06": _u8, "flags": _losh,
+          "type": _u8, "u0c": _u8, "storage": _u8, "u01": _u8, "size": _c32, "u06": _u8, "flags": _u16,
           "opt31": _losh, "dyninit": _losh, "opt2c": _u8, "dim": _c32, "calls": _calls, "u0e": _u8,
           "u0a": _u8, "ex_offset": _c32, "sy_offset": _c32, "ex_nodes": _c16, "fnflags": _losh,
           "formals": _u8, "target": _losh, "u16": _u16, "u8": _u8, "c16a": _c16, "c16b": _c16,
-          "directives": _directives}
+          "directives": _directives, "segattr": _u8, "class": _cstr, "u2f": _u32}
 
 
 @dataclass
@@ -348,10 +368,10 @@ def _record_alternatives(d, pos, optional=True):
             if name == "extra":
                 if fields["flags"] & 0x80:
                     try:
-                        value, q2 = _losh(d, q)
+                        value, q2 = _extra(d, q, fields["flags"])
                     except _Bad:
                         continue
-                    nxt.append((dict(fields, extra=value), q2))
+                    nxt.append((dict(fields, **value), q2))
                 else:
                     nxt.append((fields, q))
                 continue
@@ -374,9 +394,10 @@ def decode_records(data, start=0, end=None, lookahead=4):
     """Decode SSR records in data[start:end]; returns (records, unparsed spans).
 
     Each record takes, in order of preference: a decoding without optional fields whose next
-    `lookahead` records decode; any decoding without optional fields (what follows is then
-    reported if it does not decode); a decoding with optional fields whose next `lookahead`
-    records decode. No optional field was present in the units read so far.
+    `lookahead` records decode; one whose next record decodes (bytes no decoding explains come
+    later); a decoding with optional fields whose next `lookahead` records decode (the `dyninit`
+    number of an initializer pointer `x$initializer$`); any decoding without optional fields
+    (what follows is then reported).
     Bytes no decoding explains are skipped to the next offset that decodes with the full
     lookahead and reported as (offset, hex).
     """
@@ -406,8 +427,8 @@ def decode_records(data, start=0, end=None, lookahead=4):
     records, unparsed, pos = [], [], start
     while pos < end:
         strict = alternatives(pos, False)
-        good = ([a for a in strict if ok(a[1], lookahead)] or strict
-                or [a for a in alternatives(pos, True) if ok(a[1], lookahead)])
+        good = ([a for a in strict if ok(a[1], lookahead)] or [a for a in strict if ok(a[1], 1)]
+                or [a for a in alternatives(pos, True) if ok(a[1], lookahead)] or strict)
         if good:
             fields, q = good[0]
             records.append(IlRecord(data[pos], pos, q, fields))
@@ -527,6 +548,7 @@ class GlFile:
     symbols: list       # GlSymbol, in file order
     files: dict         # number -> path
     directives: list    # (kind, text) of the trailer: 04 default library, 0A linker directive
+    segments: dict = field(default_factory=dict)    # number -> name of each segment record (SSR 09)
 
     def definitions(self):
         return [s for s in self.symbols if s.kind == "definition"]
@@ -543,7 +565,7 @@ def parse_gl(data):
         tail, more = decode_records(data, end, len(data))
         records += tail
         unparsed += more
-    symbols, files, directives = [], {}, []
+    symbols, files, directives, segments = [], {}, [], {}
     for rec in records:
         f = rec.fields
         if rec.tag in (0x01, 0x02, 0x04, 0x0E, 0x10):
@@ -553,7 +575,9 @@ def parse_gl(data):
             files[f["number"]] = f["path"]
         elif rec.tag == 0x0A:
             directives += f["directives"]
-    return GlFile(header, records, unparsed, symbols, files, directives)
+        elif rec.tag == 0x09:
+            segments[f["number"]] = f["name"]
+    return GlFile(header, records, unparsed, symbols, files, directives, segments)
 
 
 def scan_gl_names(data):

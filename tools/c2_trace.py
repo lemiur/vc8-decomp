@@ -929,28 +929,12 @@ GL_NEEDED = 0x20       # entry +0x50 "needed": c1xx sets it for external non-inl
 GL_INIT = 0x4          # a dynamic initializer (??__E), referenced from .CRT$XCU
 
 
-def gl_names(gl, data=None):
-    """Number -> name of every gl symbol record, spelled as c2 decorates it.
-    With the gl bytes, also the records cl_trace.parse_gl leaves in its
-    unparsed list (it loses sync after a data record whose last field is a long
-    c32, e.g. the `__CT`/`__TI` throw records, and drops the next record: a
-    vtable such as ??_7W, `_CTA1...`): each unparsed chunk starts with the
-    record's losh number, a flag byte and the name."""
-    import cl_trace
-    names = {s.number: s.name if s.name[:1] in "?@" else "_" + s.name for s in gl.symbols}
-    for offset, _ in (gl.unparsed if data is not None else ()):
-        try:
-            number, pos = cl_trace.read_losh(data, offset)
-            end = data.index(b"\x00", pos + 1)
-        except (cl_trace.TraceError, ValueError):
-            continue
-        name = data[pos + 1:end].decode("latin-1")
-        if number not in names and len(name) > 1 and name[:1] in "?_@" and end - pos < 1024:
-            names[number] = name if name[:1] in "?@" else "_" + name
-    return names
+def gl_names(gl):
+    """Number -> name of every gl symbol record, spelled as c2 decorates it."""
+    return {s.number: s.name if s.name[:1] in "?@" else "_" + s.name for s in gl.symbols}
 
 
-def gl_entries(gl, data=None):
+def gl_entries(gl):
     """_Eentry_list as c1xx writes it: the gl definition records (SSR 0E) in file
     order (cl_trace.parse_gl). Per entry: name, number, fnflags, refs (the call
     list resolved to names: functions, vtables, other referenced symbols, in
@@ -958,8 +942,8 @@ def gl_entries(gl, data=None):
     the unit: the call graph's arcs). Vector deleting destructors (SSR 10) are
     returned as a map ??_E name -> ??_G name. gl spells extern "C" names without
     the cdecl underscore (`IsEqualGUID`, `DeleteCriticalSection@4`); c2's entries
-    have it, so it is added here. data: the gl bytes (gl_names)."""
-    names = gl_names(gl, data)
+    have it, so it is added here."""
+    names = gl_names(gl)
     defs = [s for s in gl.symbols if s.kind == "definition"]
     defined = {names[s.number] for s in defs}
     vec = {names[s.number]: names.get(s.attrs.get("target")) for s in gl.symbols if s.kind == "vector-dtor"}
@@ -973,14 +957,14 @@ def gl_entries(gl, data=None):
     return out, vec
 
 
-def in_initializers(data, gl, gl_data=None):
+def in_initializers(data, gl):
     """Static initializers c1xx writes to the `in` file: per gl symbol a record
     `07 00 <losh number> <c32 offset>` and items until the next record: `01
     <count> <size> <c32 value>` (a repeated integer), `02 <losh symbol> <c32
     displacement> <size>` (an address constant), `03 <c32 length> <bytes>` (a
     string). Returns {symbol: [address-constant targets]} for every record."""
     import cl_trace
-    names = gl_names(gl, gl_data)
+    names = gl_names(gl)
     out = {}
     for number, name in names.items():
         key = b"\x07\x00" + cl_trace.encode_losh(number)
@@ -1009,26 +993,26 @@ def in_initializers(data, gl, gl_data=None):
     return out
 
 
-def in_vtables(data, gl, gl_data=None):
+def in_vtables(data, gl):
     """Slots of each vtable: the address constants of its `in` initializer
     (in_initializers). Returns {vtable: [slot names]}."""
-    return {k: v for k, v in in_initializers(data, gl, gl_data).items() if k.startswith("??_7")}
+    return {k: v for k, v in in_initializers(data, gl).items() if k.startswith("??_7")}
 
 
 GL_ON_DEMAND = 0x20    # gl data attribute u06: a COMDAT c2 emits when code first references it
 
 
-def static_function_refs(data, gl, gl_data=None):
+def static_function_refs(data, gl):
     """Functions whose address a static data initializer takes (`int (*g_fn)(int)
     = &helper_inl;`): c2 emits the unit's non-COMDAT data (gl u06 without
     GL_ON_DEMAND) in ProcessSegmentInits before the first function, so these
     functions are needed from the start, inline or not."""
-    names = gl_names(gl, gl_data)
+    names = gl_names(gl)
     static = {names[s.number] for s in gl.symbols if s.kind in ("data", "array")
               and not s.attrs.get("u06", 0) & GL_ON_DEMAND}
     defined = {names[s.number] for s in gl.symbols if s.kind == "definition"}
     out = []
-    for name, targets in in_initializers(data, gl, gl_data).items():
+    for name, targets in in_initializers(data, gl).items():
         if name in static:
             out += [t for t in targets if t in defined and t not in out]
     return out
@@ -1340,11 +1324,11 @@ def il_model(prefix, call_graph=True):
     import cl_trace
     gl_data = Path(str(prefix) + "gl").read_bytes()
     gl = cl_trace.parse_gl(gl_data)
-    entries, vec = gl_entries(gl, gl_data)
+    entries, vec = gl_entries(gl)
     in_path = Path(str(prefix) + "in")
     in_data = in_path.read_bytes() if in_path.exists() else b""
-    vtables = in_vtables(in_data, gl, gl_data)
-    static = static_function_refs(in_data, gl, gl_data)
+    vtables = in_vtables(in_data, gl)
+    static = static_function_refs(in_data, gl)
     return entries, emission_model(entries, vec, vtables, call_graph, static), vtables
 
 

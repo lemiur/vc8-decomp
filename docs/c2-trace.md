@@ -290,9 +290,7 @@ constant was put on the emit list: its `__real@3f800000` COMDAT is still emitted
 relocation references it, so `fld1` (decoded with capstone) counts as a reference at its offset. A vtable
 reached only through an inlined callee is attributed correctly by the IL model too: a callee of a needed
 function is needed and stands earlier in the bottom-up list, so it is compiled (and emits the vtable)
-first (`make_w` inlines `??0W`, which emits `??_7W`). `cl_trace.parse_gl` drops the record after a data
-record ending in a long c32 (`__CT`, `__TI`; e.g. `??_7W`, `__CTA1`); `gl_names` recovers those names from
-its unparsed chunks. `/Gy` is implied by `/O2` and does not change the order.
+first (`make_w` inlines `??0W`, which emits `??_7W`). `/Gy` is implied by `/O2` and does not change the order.
 
 **Rule.** A function is emitted in source order unless it calls (or takes the address of) a function of the
 unit whose IL comes later: a later definition (`h1` -> `plain_after`), a template instantiation (`h6` ->

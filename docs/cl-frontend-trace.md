@@ -97,6 +97,7 @@ byte skipped. Numbers ("losh", `ILSink::loshwrite`) are a u16 below 0x8000, else
 | `03` | temporary | `level <n> symkind name\0 u8 u8` (the name is empty) |
 | `04` | function declaration | `<n> symkind name\0` function attrs |
 | `06` | end of a function's sy block | |
+| `09` | segment (gl) | `<n> name\0`, attribute (u8: 04 `CONST`, 00 `CODE`, 1D `DATA`), class `name\0`, u32 (0 so far) |
 | `0A` | trailer (gl) | `u16 count`, then per entry `kind name\0` (`04` default library, `0A` linker directive) |
 | `0D` | scope (sy) | `level` (1 = parameters, 2 = body, deeper = blocks; no close record) |
 | `0E` | function definition (gl) | as `04`, then `ex_offset` (c32), `sy_offset` (c32), node count (`80`+u16 from 0x80), flags (losh), formals (u8), call list: `count`, then per callee `<n>` and a call count (`80`+u16 from 0x80) |
@@ -104,18 +105,24 @@ byte skipped. Numbers ("losh", `ILSink::loshwrite`) are a u16 below 0x8000, else
 | `11` | header (gl, 25 bytes) | `u16 0x386`, `u32 0x01321829`, the unit's symbol count (u32), `u8 1`, IL flags (u32), 5 bytes, offset of the trailer (u32) |
 | `12` | source file (gl) | `<n> path\0 u16` |
 | `18` | pragma state (gl; meaning not read) | `c16 u8 c16` |
-| `1A` | unnamed compiler symbol (sy) | `level <n>` kind, `u8`, `size` (c32), `u8`, flags (losh), extra (losh) if flags & 0x80 |
+| `1A` | unnamed compiler symbol (sy) | `level <n>` kind, `u8`, `size` (c32), `u8`, flags (u16), then the flags' extra fields |
 
-attrs are `kind [kind2] type u8 storage u8 size(c32) u8 flags(losh) [extra(losh) if flags & 0x80]`
-(storage 3 = parameter, 1 = automatic; globals showed 2 and 4); function attrs are
+attrs are `kind [kind2] type u8 storage u8 size(c32) u8 flags(u16) [extra]`, where `extra`, when
+flags & 0x80, is a byte, the `<n>` of the symbol's named segment (an SSR 09) when flags & 0x02 (the
+`__CT`/`__TI`/`__CTA` throw records in `.xdata$x`, an initializer pointer `x$initializer$` in
+`.CRT$XCU`), and a byte (0 so far); read as one losh, a segment number whose low byte is below 0x80
+would hide the next record (`??_7W` in probe `p2`). Storage 3 = parameter, 1 = automatic; globals
+showed 2 and 4. Function attrs are
 `kind [kind2] type u8 size(c32) u8 flags [extra]`. `symkind` is 00 for an ordinary symbol, 0x26 for
 compiler-generated names (`__flags`, `??_7...`), 0x1E/0x1F for temporaries. The meaning of the
 unnamed bytes was not read. Writers that depend on compiler state the file does not record (codes
-2C, 31, 32, and 2E outside a definition) are optional fields; none was present in the units read,
-and the decoder takes a decoding without them unless only one with them explains the bytes. Bytes no
+2C, 31, 32, and 2E outside a definition) are optional fields. The one seen is 32
+(`GetDynamicInitSymbol`): the initializer pointer `x$initializer$` ends with the `<n>` of the
+dynamically initialized `x`. The decoder takes a decoding without them unless only one with them
+explains the next four records. Bytes no
 decoding explains are skipped to the next offset whose next four records decode, and reported.
 
-SSR types 05, 07-09, 0B, 0F, 13-17 and 1B have formats in the table but did not occur; their
+SSR types 05, 07, 08, 0B, 0F, 13-17 and 1B have formats in the table but did not occur; their
 layouts are not decoded and would show as skipped spans.
 
 ### Which function a sy block belongs to

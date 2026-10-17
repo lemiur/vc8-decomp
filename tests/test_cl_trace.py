@@ -60,6 +60,15 @@ GL_RECORDS = bytes.fromhex(
     "4ff501000155f5010001a391020001a791020002a991020001b791020002c091020008d2910200010d9b0200012a9b020001d6ad0200"
     "0165ae0200809e00f7ae02000ef8ae020001")
 GL_TRAILER = bytes.fromhex("0a000002") + b"\x04uuid.lib\x00" + b"\x0a/manifestdependency:x\x00"
+# Probe p2 (/O2): the `__CT` throw record (flags 0xA3: the named-segment number 0x0A5D, `.xdata$x`, after
+# the extra byte), the vtable `??_7W` it used to hide, an initializer pointer with its `dyninit` number,
+# and the `__TI`/`__CTA` records. A segment number whose low byte is below 0x80 desynchronised the decoder.
+THROW_GL = bytes.fromhex(
+    "0100600a265f43543f3f5f52303f41555468726f776e40404038340086060002011ca0a300805d0a000200090a263f3f5f37"
+    "57404036424000860600040108a021000401003c0a2464796e5f696e69745f76616c756524696e697469616c697a657224"
+    "0086040002040480838000390a00210a01005c0a265f5449313f41555468726f776e404000860600020110a0a300805d0a00"
+    "01005e0a265f435441313f41555468726f776e404000860600020108a0a300805d0a00")
+SEGMENT_GL = bytes.fromhex("095d0a2e786461746124780004434f4e53540000000000")
 GL_FILE = GL_HEADER + (len(GL_HEADER) + 4 + len(GL_RECORDS)).to_bytes(4, "little") + GL_RECORDS + GL_TRAILER
 
 BD_OUTPUT = """a.cpp
@@ -157,6 +166,29 @@ class SyTests(unittest.TestCase):
 
 
 class GlTests(unittest.TestCase):
+    def test_throw_records_keep_the_next_record(self):
+        records, unparsed = t.decode_records(THROW_GL)
+        self.assertEqual(unparsed, [])
+        self.assertEqual([(r.kind, r.fields["name"], r.fields["number"]) for r in records], [
+            ("data", "_CT??_R0?AUThrown@@@84", 2656), ("array", "??_7W@@6B@", 2569),
+            ("data", "dyn_init_value$initializer$", 2620), ("data", "_TI1?AUThrown@@", 2652),
+            ("data", "_CTA1?AUThrown@@", 2654)])
+        ct, _, init = (r.fields for r in records[:3])
+        self.assertEqual((ct["flags"], ct["extra"], ct["segment"], ct["extra2"]), (0xA3, 0x80, 0x0A5D, 0))
+        self.assertEqual((init["flags"], init["extra"], init["segment"], init["dyninit"]), (0x8083, 0, 0x0A39, 0x0A21))
+
+    def test_segment_record(self):
+        records, unparsed = t.decode_records(SEGMENT_GL + SEGMENT_GL)
+        self.assertEqual(unparsed, [])
+        self.assertEqual((records[0].kind, records[0].fields["number"], records[0].fields["name"],
+                          records[0].fields["segattr"], records[0].fields["class"]),
+                         ("segment", 0x0A5D, ".xdata$x", 4, "CONST"))
+        data = (GL_HEADER + (len(GL_HEADER) + 4 + len(SEGMENT_GL + THROW_GL)).to_bytes(4, "little")
+                + SEGMENT_GL + THROW_GL)
+        gl = t.parse_gl(data)
+        self.assertEqual((gl.unparsed, gl.segments), ([], {0x0A5D: ".xdata$x"}))
+        self.assertIn(("??_7W@@6B@", 2569), t.scan_gl_names(data))
+
     def test_header(self):
         data = bytes.fromhex("1186032918320155 1b0100 0001".replace(" ", ""))
         self.assertEqual(t.parse_gl_header(data)["symbol_count"], 0x11B55)

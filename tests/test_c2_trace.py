@@ -448,12 +448,6 @@ class IlModelTests(unittest.TestCase):
         obj[5]["relocs"] = ["__TI1", "??_C@a", "??_7A"]     # literals referenced in the other order
         self.assertFalse(ct.full_sections_report(["?f", "??__Ex"], obj)["full_ok"])
 
-    def test_gl_names_recovers_unparsed_records(self):
-        import cl_trace
-        gl = cl_trace.GlFile({}, [], [(3, "")], [], {}, [])
-        data = b"\x02\x00\x00" + cl_trace.encode_losh(2569) + b"\x26??_7W@@6B@\x00\x86"
-        self.assertEqual(ct.gl_names(gl, data), {2569: "??_7W@@6B@"})
-
     def test_call_graph_flags(self):
         self.assertTrue(ct.call_graph_flags(["/O2", "/Gy"]))
         self.assertFalse(ct.call_graph_flags(["/O2", "/Od"]))
