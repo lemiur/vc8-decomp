@@ -6,7 +6,7 @@
     python tools/link_trace.py order --obj a.obj b.obj [--model DIR/model.json] [--root _main]
     python tools/link_trace.py order --obj a.obj b.obj --icf-trace DIR/icf.json   (ICF survivors)
     python tools/link_trace.py icf-trace --obj a.obj b.obj --flags "/OPT:REF,ICF" --out DIR [--crc]
-    python tools/link_trace.py experiment --set E1|E2|E4|all|layout --out DIR   (docs/link-trace.md tables)
+    python tools/link_trace.py experiment --set E1|E2|E4|L1|L2|all|layout --out DIR   (docs/link-trace.md tables)
 
 `run` links the objects with the pinned toolchain, adding /VERBOSE (REF and ICF
 decisions), /MAP and /MAPINFO:EXPORTS, then joins four sources into one model:
@@ -325,14 +325,29 @@ def parse_archive(data, path="<lib>"):
     return {"path": str(path), "members": members, "dictionary": dictionary}
 
 
+def _export_symbol(spec, directive=False):
+    """The symbol an /EXPORT:entryname[=internalname][,@ordinal[,NONAME]][,DATA] references: the
+    internal name, else the entry name; taken as given in a .drectve (`/EXPORT:exp_lib` there is
+    LNK2001 `exp_lib`), with `_` prepended on the command line (`/EXPORT:exp_cmd` finds
+    `_exp_cmd`) unless it is a C++ name. Only undecorated command-line names were traced."""
+    name = spec.split(",", 1)[0]
+    name = name.split("=", 1)[1] if "=" in name else name
+    if not directive and not name.startswith("?"):
+        name = "_" + name
+    return name
+
+
 def parse_directives(text):
     """The options of a .drectve section that the library search reads, in order."""
     out = []
     for tok in shlex.split(text, posix=False):
         tok = tok.strip()
-        m = re.match(r'(?i)^[-/](DEFAULTLIB|NODEFAULTLIB|INCLUDE)(?::(.*))?$', tok)
+        m = re.match(r'(?i)^[-/](DEFAULTLIB|NODEFAULTLIB|INCLUDE|EXPORT|ALTERNATENAME)(?::(.*))?$', tok)
         if m:
-            out.append((m.group(1).upper(), (m.group(2) or "").strip('"') or None))
+            arg = (m.group(2) or "").strip('"') or None
+            if m.group(1).upper() == "EXPORT" and arg:
+                arg = _export_symbol(arg, directive=True)
+            out.append((m.group(1).upper(), arg))
     return out
 
 
@@ -448,12 +463,16 @@ def search_libraries(inputs, libpath=(), include=(), defaults=(), rounds=((),), 
     when none remains the walk starts again from the first library, if a library has loaded a
     member that added new undefined symbols. The search ends on reaching the last library that
     did so, when a library leaves nothing unresolved, or when a whole walk loads nothing new.
-    `rounds`: the symbols each later ResolveExternalsInLibs call adds (the linker's own
-    references, e.g. `__load_config_used`), searched the same way after the first."""
+    `rounds`: the symbols each ResolveExternalsInLibs call adds (the linker's own references:
+    the entry point in the first, `__load_config_used`), searched the same way; an entry may be
+    a function of the search state ({"defined", "undefined", "exports", "alternates"}: the
+    modules' /EXPORT and /ALTERNATENAME directives) returning the names, or None when link makes
+    no such call."""
     load = load or _read_cached
     undef, known, defined = [], set(), set()
     libs, dls, nodl = [], [], set()
     events, searches = [], []
+    exports, alternates = [], {}
     nmod = [0]
 
     def add_module(info):
@@ -468,6 +487,10 @@ def search_libraries(inputs, libpath=(), include=(), defaults=(), rounds=((),), 
             elif kind == "INCLUDE" and arg and arg not in defined and arg not in known:
                 ref(arg)
                 new = True
+            elif kind == "EXPORT" and arg:
+                exports.append(arg)
+            elif kind == "ALTERNATENAME" and arg and "=" in arg:
+                alternates.setdefault(*arg.split("=", 1))
         for name, is_def, weak in info["symbols"]:
             # A weak external of a module resolves a symbol that is still undefined (msvcrt.lib's
             # almap members alias ??1type_info@@UAE@XZ to its default); otherwise it is a weak
@@ -581,7 +604,14 @@ def search_libraries(inputs, libpath=(), include=(), defaults=(), rounds=((),), 
             i = undef.index(prev) + 1 if prev in known else 0
         return notfound, added
 
-    for rnd, extra in enumerate(rounds):
+    rnd, seeds = -1, []
+    for extra in rounds:
+        if callable(extra):
+            extra = extra({"defined": defined, "undefined": known, "exports": exports, "alternates": alternates})
+            if extra is None:
+                continue
+        rnd += 1
+        seeds.append(list(extra))
         for name in extra:
             ref(name)
         last, cur, walking, notfound = None, None, True, True
@@ -610,7 +640,7 @@ def search_libraries(inputs, libpath=(), include=(), defaults=(), rounds=((),), 
             undef.remove("___ImageBase")
             known.discard("___ImageBase")
         defined.add("___ImageBase")
-    return {"events": events, "searches": searches, "unresolved": list(undef),
+    return {"events": events, "searches": searches, "unresolved": list(undef), "seeds": seeds,
             "libraries": [l["path"] or l["name"] for l in libs]}
 
 
@@ -664,14 +694,62 @@ def _round_seeds(loads, include=()):
     return seeds
 
 
-def simulate_command(command, loads=(), inputs=None, env_lib=None):
-    """`search_libraries` for a link command line (response files expanded, /LIBPATH then LIB),
-    the later rounds seeded from a traced log's `loads`. `inputs` replaces the command's inputs."""
+ENTRY_BY_MAIN = (("_wWinMain@16", "_wWinMainCRTStartup"), ("_WinMain@16", "_WinMainCRTStartup"),
+                 ("_wmain", "_wmainCRTStartup"), ("_main", "_mainCRTStartup"))
+
+
+def linker_seeds(command, inputs=None):
+    """The symbols link references itself, per ResolveExternalsInLibs round, without a trace:
+    round 0 the entry point (none under /NOENTRY; `_` + the /ENTRY name; for a /DLL
+    `__DllMainCRTStartup@12`; otherwise the CRT startup of the main the objects define, `_main`
+    by default), joining the undefined list after every input's references; then, when there are
+    exports, the round after the .exp is generated: the `trace.exp` module references every
+    exported symbol (command line and directives) in name order; then, when an
+    /ALTERNATENAME:a=b has `a` still undefined, a round that references the defaults `b`;
+    last `__load_config_used` (x86). `search_check` compares them with every traced log
+    (`seeds`)."""
+    t_inputs = link_inputs(command)[0]
+    args = [a.strip('"') for a in command[1:]]
+    explicit = [a.split(":", 1)[1].strip('"') for a in args if re.match(r"(?i)^[-/]ENTRY:", a)]
+    if any(re.match(r"(?i)^[-/]NOENTRY$", a) for a in args):
+        entry = None
+    elif explicit:
+        entry = "_" + explicit[-1]
+    elif any(re.match(r"(?i)^[-/]DLL$", a) for a in args):
+        entry = "__DllMainCRTStartup@12"
+    else:
+        defined = set()
+        for kind, path in inputs or t_inputs:
+            if kind == "obj" and os.path.isfile(path):
+                defined |= {n for n, d, _ in module_symbols(_read_cached(path), path)["symbols"] if d}
+        entry = next((e for m, e in ENTRY_BY_MAIN if m in defined), "_mainCRTStartup")
+    command_exports = [_export_symbol(a.split(":", 1)[1]) for a in args if re.match(r"(?i)^[-/]EXPORT:", a)]
+
+    def export_round(state):
+        names = command_exports + state["exports"]
+        if not names:
+            return None
+        return sorted(dict.fromkeys(names), key=lambda n: n.lstrip("_"))
+
+    def alternate_round(state):
+        # The source stays on the undefined list (the walk goes on past the default's library).
+        bound = [(a, b) for a, b in state["alternates"].items() if a in state["undefined"]]
+        names = [b for _, b in bound if b not in state["defined"]]
+        return names or None
+
+    return [[entry] if entry else [], export_round, alternate_round, ["__load_config_used"]]
+
+
+def simulate_command(command, loads=None, inputs=None, env_lib=None):
+    """`search_libraries` for a link command line (response files expanded, /LIBPATH then LIB).
+    The linker's own references come from `linker_seeds`, or with `loads` from a traced log
+    (`_round_seeds`). `inputs` replaces the command's inputs."""
     t_inputs, libpath, include, defaults = link_inputs(command)
     if env_lib is None:
         env_lib = toolchain_env()[1].get("LIB", "")
     libpath = libpath + [d for d in env_lib.split(os.pathsep) if d]
-    return search_libraries(inputs or t_inputs, libpath, include, defaults, _round_seeds(list(loads), include))
+    seeds = _round_seeds(list(loads), include) if loads is not None else linker_seeds(command, inputs)
+    return search_libraries(inputs or t_inputs, libpath, include, defaults, seeds)
 
 
 def search_check(command, verbose_text, env_lib=None):
@@ -679,7 +757,11 @@ def search_check(command, verbose_text, env_lib=None):
     log: the `Searching` sequence and the `Found`/`Loaded` sequence (symbol, member). Returns the
     comparison and the simulation."""
     loads, rounds = parse_loads(verbose_text), parse_searches(verbose_text)
-    sim = simulate_command(command, loads, env_lib=env_lib)
+    sim = simulate_command(command, env_lib=env_lib)
+    seeds, traced_seeds = sim["seeds"], _round_seeds(loads, link_inputs(command)[2])
+    # A seed already defined, or found in no library, leaves no `Found` line: compare the logged ones.
+    seeds_equal = len(traced_seeds) <= len(seeds) and all(
+        t == [s for s in m if s in t] for m, t in zip(seeds, traced_seeds))
     member = lambda s: re.split(r"[\\/]", s)[-1].lower()
     truth = [(e["symbol"], member(e["loaded"].split("(", 1)[1].rstrip(")")) if "(" in e["loaded"] else
               member(e["loaded"])) for e in loads if e["loaded"]]
@@ -694,7 +776,7 @@ def search_check(command, verbose_text, env_lib=None):
             "predicted_at": pred[first:first + 3] if first is not None else None,
             "searches": len(t_s), "searches_equal": t_s == p_s,
             "truth_searches": t_s if t_s != p_s else None, "predicted_searches": p_s if t_s != p_s else None,
-            "simulation": sim}
+            "seeds": seeds, "seeds_equal": seeds_equal, "simulation": sim}
 
 
 _MAP_SECTION = re.compile(r"^\s*([0-9a-fA-F]{4}):([0-9a-fA-F]{8}) ([0-9a-fA-F]{8})H (\S+)\s+(\S+)\s*$")
@@ -794,8 +876,30 @@ def _origin_key(name):
     return Path(name).name.casefold()
 
 
-def build_model(objs, verbose_text, map_text, image, command=None):
-    """Join the objects, the verbose log, the map and the image into one model."""
+def _traced_folds(icf):
+    """{(object file name, section number): survivor con} from the ICFFold calls of an icf-trace
+    (every fold, the associative children's included: /VERBOSE names a folded static COMDAT such
+    as a `.text$x` unwind funclet only by its section)."""
+    if not icf:
+        return None
+    cons = {c["id"]: c for c in icf["cons"]}
+    keep = {f["fold"]: f["keep"] for f in icf["folds"]}
+    out = {}
+    for f in keep:
+        s = f
+        while s in keep:
+            s = keep[s]
+        c = cons[f]
+        if c["lib"] is None and c.get("section_index") is not None:
+            out[(_origin_key(c["obj"]), c["section_index"])] = cons[s]
+    return out
+
+
+def build_model(objs, verbose_text, map_text, image, command=None, icf=None):
+    """Join the objects, the verbose log, the map and the image into one model. With `icf` (the
+    result of `icf_trace` for this link) the folds of the objects' contributions are taken from
+    the traced ICFFold calls instead of /VERBOSE's names."""
+    traced = _traced_folds(icf)
     verbose = parse_verbose(verbose_text)
     mp = parse_map(map_text)
     pe = parse_pe(image)
@@ -840,7 +944,14 @@ def build_model(objs, verbose_text, map_text, image, command=None):
                    "relocs": []}
             parent = obj["sections"][sec["associated"] - 1] if sec["associated"] else None
             row["associated_with"] = comdat_symbol(parent) if parent else None
-            if sym and (sym, key) in folded:
+            if traced is not None and (key, sec["index"]) in traced:
+                surv = traced[(key, sec["index"])]
+                row.update(status="folded", reason="/OPT:ICF (traced ICFFold): identical to %s #%d from %s, which survives"
+                           % (surv.get("symbol"), surv.get("section_index") or 0, Path(surv["obj"] or "?").name))
+                row["_survivor"] = (_origin_key(surv["obj"] or ""), surv.get("section_index"), surv.get("symbol"))
+                if sym and (sym, key) in folded:
+                    row["fold_group"] = folded[(sym, key)][0]
+            elif sym and (sym, key) in folded and traced is None:
                 gid, surv = folded[(sym, key)]
                 row.update(status="folded", fold_group=gid,
                            reason="/OPT:ICF: identical to %s from %s, which survives" % (surv["symbol"], surv["origin"]))
@@ -849,7 +960,8 @@ def build_model(objs, verbose_text, map_text, image, command=None):
                     row["rva"] = hit[0]["va"] - base
             elif sym and (sym, key) in discarded:
                 row.update(status="removed", reason="/OPT:REF: unreferenced COMDAT")
-            elif sym and (sym, key) in placed:
+            elif sym and (sym, key) in placed and (traced is None or (sym, key) not in folded
+                                                    or not sec["comdat"]):
                 p = placed[(sym, key)]
                 row.update(status="kept", rva=p["va"] - base, reason="placed by the map")
                 if (sym, key) in survivors:
@@ -872,6 +984,17 @@ def build_model(objs, verbose_text, map_text, image, command=None):
                         row["output_section"] = s["name"]
                 row["relocs"] = _resolve_relocs(sec, row["rva"], image, pe, names)
             contributions.append(row)
+    if traced is not None:
+        at = {(_origin_key(c["obj"]), c["section_index"]): c for c in contributions}
+        for c in contributions:
+            surv = c.pop("_survivor", None)
+            if surv is None:
+                continue
+            target = at.get(surv[:2])
+            if target is not None and target["rva"] is not None:
+                c["rva"] = target["rva"]
+            elif surv[2] in by_symbol:
+                c["rva"] = by_symbol[surv[2]][0]["va"] - base
     # Padding between adjacent traced contributions with nothing mapped in between.
     kept = sorted((c for c in contributions if c["status"] == "kept" and c["rva"] is not None), key=lambda c: c["rva"])
     starts = sorted({p["va"] - base for p in mp["publics"] + mp["statics"]})
@@ -929,6 +1052,164 @@ def _resolve_relocs(sec, rva, image, pe, names):
                 row["target"] = names.get(target)
         out.append(row)
     return out
+
+
+# ---------------------------------------------------------------- imports
+
+def _pe_cstr(image, pe, rva, limit=512):
+    for sec in pe["sections"]:
+        if sec["rva"] <= rva < sec["rva"] + sec["raw_size"]:
+            off = sec["raw_pointer"] + rva - sec["rva"]
+            raw = image[off:min(off + limit, sec["raw_pointer"] + sec["raw_size"])]
+            return raw.split(b"\0")[0].decode("latin-1")
+    return ""
+
+
+def parse_imports(image, pe=None):
+    """The import directory of an image: descriptors in table order, each with its DLL name and
+    the RVAs of its name, INT (.idata$4) and IAT (.idata$5), and its entries in slot order (slot
+    RVA, INT value, hint, name, hint/name RVA; an ordinal import has no name)."""
+    pe = pe or parse_pe(image)
+    at = struct.unpack_from("<I", image, 0x3C)[0] + 24
+    magic = struct.unpack_from("<H", image, at)[0]
+    dirs = at + (96 if magic == 0x10B else 112)
+    rva, size = struct.unpack_from("<II", image, dirs + 8)
+    out = []
+    while rva and size:
+        raw = pe_read(image, pe, rva + 20 * len(out), 20)
+        if raw is None:
+            break
+        oft, _, _, name_rva, ft = struct.unpack("<IIIII", raw)
+        if not (oft or name_rva or ft):
+            break
+        desc = {"dll": _pe_cstr(image, pe, name_rva), "name_rva": name_rva, "int_rva": oft,
+                "iat_rva": ft, "descriptor_rva": rva + 20 * len(out), "entries": []}
+        i = 0
+        while True:
+            word = pe_read(image, pe, (oft or ft) + 4 * i, 4)
+            value = struct.unpack("<I", word)[0] if word else 0
+            if not value:
+                break
+            ent = {"slot_rva": ft + 4 * i, "int": value, "hint": None, "name": None, "hint_name_rva": None}
+            if not value & 0x80000000:
+                hn = pe_read(image, pe, value, 2) or b"\0\0"
+                ent.update(hint=struct.unpack("<H", hn)[0], hint_name_rva=value,
+                           name=_pe_cstr(image, pe, value + 2))
+            desc["entries"].append(ent)
+            i += 1
+        out.append(desc)
+    return out
+
+
+def _import_hint_name(symbol, name_type):
+    """The hint/name string of an import object (IMPORT_OBJECT_NAME_TYPE): 1 the symbol, 2 without
+    its first `?`, `@` or `_`, 3 that and truncated at the first `@`; 0 (ordinal) none."""
+    if name_type == 0:
+        return None
+    if name_type >= 2 and symbol[:1] in ("?", "@", "_"):
+        symbol = symbol[1:]
+    if name_type == 3:
+        symbol = symbol.split("@")[0]
+    return symbol
+
+
+def import_members(loads):
+    """The library members of a traced link's `Loaded` lines that make up its imports: an
+    IMPORT_OBJECT_HEADER member, which link expands (CImplib) into `.idata$5`, `.idata$4`,
+    `.idata$6` and, for code, a `.text` thunk; the `__IMPORT_DESCRIPTOR_x` member (`.idata$2` and the
+    DLL name in `.idata$6`); the `\\x7fx_NULL_THUNK_DATA` member (the zero `.idata$5`/`$4`
+    terminators); `__NULL_IMPORT_DESCRIPTOR` (`.idata$3`). One row per member in load order: kind
+    (`import`, `descriptor`, `null_thunk`, `null_descriptor`), `dll` (the member name, which is
+    link's module name), the import's `symbol` and `hint_name`, and its load index."""
+    rows = []
+    for li, e in enumerate([e for e in loads if e["loaded"]]):
+        m = re.match(r"^(.*)\((.*)\)$", e["loaded"])
+        if not m:
+            continue
+        member, sym, data = m.group(2), e["symbol"], None
+        try:
+            lib = parse_archive(_read_cached(e["lib"]), e["lib"]) if e["lib"] else None
+        except (OSError, LinkTraceError):
+            lib = None
+        if lib is not None:
+            off = lib["dictionary"].get(sym)
+            data = next((x["data"] for x in lib["members"] if x["offset"] == off), None)
+        if data is not None and data[:4] == b"\0\0\xff\xff":
+            name = data[20:].split(b"\0")[0].decode("latin-1")
+            kind = struct.unpack_from("<H", data, 18)[0]
+            rows.append({"kind": "import", "dll": member, "symbol": name, "code": kind & 3 == 0,
+                         "hint_name": _import_hint_name(name, (kind >> 2) & 7), "load": li})
+        elif sym.startswith("__IMPORT_DESCRIPTOR_"):
+            rows.append({"kind": "descriptor", "dll": member, "symbol": sym, "load": li})
+        elif sym == "__NULL_IMPORT_DESCRIPTOR":
+            rows.append({"kind": "null_descriptor", "dll": member, "symbol": sym, "load": li})
+        elif sym.lstrip("\x7f").endswith("_NULL_THUNK_DATA"):
+            rows.append({"kind": "null_thunk", "dll": member, "symbol": sym, "load": li})
+    return rows
+
+
+def predict_imports(members):
+    """The import layout of a link from its import members in load order (IMAGE::ImportSemantics
+    0x467530, SortPGRPByPMOD 0x427E80 and its comparator 0x427E30, MoveToEndOfPMODsPCON 0x427F30,
+    link 8.00.50727.762): `.idata$2` holds the descriptors in their members' load order, then
+    `.idata$3` the null descriptor; `.idata$4` and `.idata$5` (INT and IAT, one order) are their
+    groups' contributions in load order passed through MSVCR80 `qsort` by module name (the member
+    name, `KERNEL32.dll`, compared with wcscmp: ordinal, case-sensitive; not stable), then each
+    DLL's null thunk (CON+0 set) moved to the end of its DLL's run; `.idata$6` (hint/name entries
+    and DLL names) is not sorted: load order. The sort runs before /OPT:REF: entries removed later
+    take part in it, then leave no slot."""
+    thunks = [m for m in members if m["kind"] in ("import", "null_thunk")]
+    order = ms_qsort(thunks, lambda a, b: (a["dll"] > b["dll"]) - (a["dll"] < b["dll"]))
+    for t in [t for t in order if t["kind"] == "null_thunk"]:
+        i = order.index(t)
+        order.pop(i)
+        j = i
+        while j < len(order) and order[j]["dll"] == t["dll"]:
+            j += 1
+        order.insert(j, t)
+    return {"descriptors": [m["dll"] for m in members if m["kind"] == "descriptor"],
+            "iat": [(t["dll"], t["hint_name"] if t["kind"] == "import" else None) for t in order],
+            "names": [(m["dll"], m["hint_name"] if m["kind"] == "import" else None) for m in members
+                      if m["kind"] == "descriptor" or (m["kind"] == "import" and m["hint_name"])],
+            "thunks": [m["symbol"] for m in members if m["kind"] == "import" and m["code"]]}
+
+
+def import_check(image, loads, publics):
+    """Compare `predict_imports` with the image's import directory. Which imports survive
+    /OPT:REF is taken from the image (library members are not walked), so the predicted orders
+    are compared on the surviving entries. `thunks`: the `.text` order of the code imports'
+    `jmp [__imp_x]` thunks (map publics of a `.dll` member) against their members' load order."""
+    pe = parse_pe(image)
+    actual = parse_imports(image, pe)
+    pred = predict_imports(import_members(loads))
+    a_desc = [d["dll"].casefold() for d in actual]
+    p_desc = [x.casefold() for x in pred["descriptors"] if x.casefold() in a_desc]
+    a_iat = []
+    for d in sorted(actual, key=lambda d: d["iat_rva"]):
+        a_iat += [(d["dll"].casefold(), e["name"]) for e in d["entries"]] + [(d["dll"].casefold(), None)]
+    present = set(a_iat)
+    p_iat = [k for k in ((dll.casefold(), n) for dll, n in pred["iat"]) if k in present]
+    six = [(e["hint_name_rva"], (d["dll"].casefold(), e["name"])) for d in actual for e in d["entries"]
+           if e["hint_name_rva"]] + [(d["name_rva"], (d["dll"].casefold(), None)) for d in actual]
+    a_six = [k for _, k in sorted(six)]
+    p_six = [k for k in ((dll.casefold(), n) for dll, n in pred["names"]) if k in set(a_six)]
+    int_same = all((pe_read(image, pe, d["iat_rva"] + 4 * i, 4) or b"") == struct.pack("<I", e["int"])
+                   for d in actual for i, e in enumerate(d["entries"]))
+    base = pe["image_base"]
+    rva = {p["symbol"]: p["va"] - base for p in publics
+           if p.get("lib") and (p.get("member") or "").lower().endswith(".dll")}
+    p_thunks = [s for s in pred["thunks"] if s in rva]
+    a_thunks = sorted(p_thunks, key=lambda s: rva[s])
+    res = {"descriptors": p_desc == a_desc, "iat": p_iat == a_iat, "int_equals_iat": int_same,
+           "names": p_six == a_six, "thunks": p_thunks == a_thunks,
+           "dlls": len(actual), "entries": sum(len(d["entries"]) for d in actual),
+           "removed": sum(1 for _, n in pred["iat"] if n) - sum(len(d["entries"]) for d in actual)}
+    res["predicted_equals_actual"] = all(res[k] for k in ("descriptors", "iat", "int_equals_iat", "names", "thunks"))
+    for k, p, a in (("iat", p_iat, a_iat), ("names", p_six, a_six), ("descriptors", p_desc, a_desc),
+                    ("thunks", p_thunks, a_thunks)):
+        if not res[k]:
+            res[k + "_predicted"], res[k + "_actual"] = p, a
+    return res
 
 
 # ---------------------------------------------------------------- explain
@@ -1005,16 +1286,22 @@ def predict_order(objs, roots=None, kept=None, folded=None, fill=0xCC, start=0):
             if not sec["code"] or sec["removed"] or sec["size"] == 0:
                 continue
             sym = comdat_symbol(sec)
-            key = (obj["path"], sym if sec["comdat"] else "#%d" % sec["index"])
+            key = own = (obj["path"], sym if sec["comdat"] else "#%d" % sec["index"])
             if sec["associated"]:
+                # Kept with its parent; but folded on its own (an unwind funclet folds into an
+                # identical funclet of another function while its parent stays).
                 parent = obj["sections"][sec["associated"] - 1]
                 key = (obj["path"], comdat_symbol(parent))
-            if sec["comdat"] and (key not in kept or key in folded):
-                continue
+                if sym and own in folded:
+                    continue
             if sec["comdat"] and sec["selection"] in ("any", "same_size", "exact", "largest"):
+                # The first definer's copy is the one selected, whether it is then kept, folded
+                # by /OPT:ICF or removed: a later object's duplicate never takes its place.
                 if sym in seen_any:
                     continue
                 seen_any.add(sym)
+            if sec["comdat"] and (key not in kept or key in folded):
+                continue
             rows.append({"obj": obj["path"], "obj_index": oi, "section_index": sec["index"], "section": sec["name"],
                          "group": group_name(sec["name"]), "symbol": sym, "size": sec["size"], "align": sec["align"],
                          "icf_key": icf_key(obj, sec) if sec["comdat"] and not sec["associated"] else None})
@@ -1186,10 +1473,39 @@ def make_lib(objs, path, toolchain="sp1"):
     return Path(path)
 
 
-def trace(objs, flags, out, toolchain="sp1", output_name="trace.exe"):
+def _link_is_traceable(toolchain="sp1"):
+    import hashlib
+    try:
+        bindir, _ = toolchain_env(toolchain)
+        return hashlib.sha256((bindir / "link.exe").read_bytes()).hexdigest() == LINK_SHA256
+    except OSError:
+        return False
+
+
+def trace(objs, flags, out, toolchain="sp1", output_name="trace.exe", debug=None):
+    """`run`: link, model, check the layout. With `debug` (default: when link.exe is the build
+    whose breakpoints `icf_trace` knows) the link runs under the debugger so that the folds come
+    from the ICFFold calls (`icf.json` beside the model)."""
     parsed = [parse_obj(Path(o).read_bytes(), str(Path(o).resolve())) for o in objs if not _is_lib(o)]
-    command, verbose, mp, image = run_link(objs, flags, out, toolchain, output_name)
-    model = build_model(parsed, verbose, mp, image, command)
+    if debug is None:
+        debug = _link_is_traceable(toolchain) and sys.platform == "win32"
+    icf = None
+    if debug:
+        out = Path(out).resolve()
+        icf = icf_trace(objs, ["/MAPINFO:EXPORTS", *flags], out, toolchain, output_name)
+        (out / "icf.json").write_text(json.dumps(icf), encoding="utf-8")
+        command, verbose = icf["command"], (out / "verbose.txt").read_text(encoding="utf-8")
+        mp, image = (out / "trace.map").read_text(errors="replace"), (out / output_name).read_bytes()
+    else:
+        command, verbose, mp, image = run_link(objs, flags, out, toolchain, output_name)
+    return layout_model(parsed, verbose, mp, image, command, icf)
+
+
+def layout_model(parsed, verbose, mp, image, command=None, icf=None):
+    """`build_model` plus the layout checks of `run`: `order_check` (the traced objects' code
+    contributions in `predict_order`'s order, and every alignment gap between two of them that
+    are adjacent in the image) and `import_check` (`import_check`)."""
+    model = build_model(parsed, verbose, mp, image, command, icf=icf)
     kept, folded = model_sets(model)
     text_rows = [c for c in model["contributions"] if c["status"] == "kept" and c["code"] and c["rva"] is not None]
     if text_rows:
@@ -1198,8 +1514,28 @@ def trace(objs, flags, out, toolchain="sp1", output_name="trace.exe"):
         actual = sorted(text_rows, key=lambda c: c["rva"])
         p_order = [(r["obj"], r["symbol"]) for r in pred]
         a_order = [(c["obj"], c["symbol"]) for c in actual]
-        model["order_check"] = {"predicted_equals_actual": p_order == a_order,
-                                "first_rva": first, "predicted": len(p_order), "actual": len(a_order)}
+        # Padding: where two contributions are adjacent in the image (nothing mapped between),
+        # the predicted alignment gap must be the actual one.
+        gaps, bad = 0, []
+        if p_order == a_order:
+            for i in range(1, len(pred)):
+                if actual[i]["padding_before"] is None:
+                    continue
+                gaps += 1
+                end = actual[i - 1]["rva"] + pred[i - 1]["size"]
+                if (-end) % pred[i]["align"] != actual[i]["padding_before"]:
+                    bad.append(actual[i]["symbol"])
+        model["order_check"] = {"predicted_equals_actual": p_order == a_order and not bad,
+                                "first_rva": first, "predicted": len(p_order), "actual": len(a_order),
+                                "gaps_checked": gaps, "gaps_wrong": bad}
+        if p_order != a_order:
+            i = next((i for i, (p, a) in enumerate(zip(p_order, a_order)) if p != a), min(len(p_order), len(a_order)))
+            model["order_check"]["first_difference"] = {
+                "index": i, "predicted": list(p_order[i]) if i < len(p_order) else None,
+                "actual": list(a_order[i]) if i < len(a_order) else None}
+    loads = parse_loads(verbose)
+    if any(e["loaded"] for e in loads):
+        model["import_check"] = import_check(image, loads, parse_map(mp)["publics"])
     return model
 
 
@@ -2329,7 +2665,8 @@ def experiment(out, toolchain="sp1"):
         for g in model["fold_groups"]:
             rows.append({"order": " ".join(perm), "survivor": g["survivor"], "origin": Path(g["survivor_origin"]).stem,
                          "members": [m["symbol"] for m in g["members"]]})
-        rows.append({"order": " ".join(perm), "order_check": model.get("order_check")})
+        rows.append({"order": " ".join(perm), "order_check": model.get("order_check"),
+                     "import_check": model.get("import_check")})
     results["icf"] = rows
     results.update(_experiment_layout(out, toolchain))
     return results
@@ -2353,6 +2690,7 @@ def _experiment_layout(out, toolchain):
     for label, order in (("m a b", [m, a, b]), ("m b a", [m, b, a]), ("b a m", [b, a, m])):
         model = trace(order, ["/OPT:REF,ICF"], edir / ("link_" + label.replace(" ", "")), toolchain)
         res.setdefault("layout", []).append({"order": label, "order_check": model.get("order_check"),
+            "import_check": model.get("import_check"),
             "contributions": [{k: c[k] for k in ("obj", "section", "symbol", "status", "rva", "size", "align",
                                                  "padding_before", "padding_bytes", "selection")}
                               for c in model["contributions"]],
@@ -2363,6 +2701,7 @@ def _experiment_layout(out, toolchain):
     drv = compile_sources([("d.cpp", "int ng_main(int);\nint main(int c, char**) { return ng_main(c); }\n")],
                           edir, FLAGS, toolchain)
     model = trace([drv[0], nogy[0]], ["/OPT:REF,ICF"], edir / "link_nogy", toolchain)
+    res["nogy_checks"] = {"order_check": model.get("order_check"), "import_check": model.get("import_check")}
     res["nogy"] = [{k: c[k] for k in ("section", "symbol", "status", "size", "comdat")} for c in model["contributions"]]
     res["nogy_publics"] = [p["symbol"] for p in model["publics"] if p["symbol"].startswith("?ng_")]
     return res
@@ -2382,6 +2721,10 @@ ICF_SETS = {
                   "lb.lib m la.lib n lc.lib", "m n la.lib lb.lib lc.lib /DEFAULTLIB:le",
                   "m n la.lib lb.lib lc.lib /NODEFAULTLIB:OLDNAMES",
                   "m n la.lib lb.lib lc.lib ld.lib /NODEFAULTLIB:ld"]),
+    # The linker's own references: /EXPORT on the command line and in two objects' directives
+    # (the .exp round, name order), /ALTERNATENAME with its source left undefined (the defaults'
+    # round) or defined by a library, the entry point of an exe and of a /DLL.
+    "L2": ("l2", ["m n lx.lib /EXPORT:exp_zcmd", "n m lx.lib /EXPORT:exp_zcmd", "n lx.lib /DLL"]),
 }
 
 
@@ -2454,8 +2797,16 @@ def _traced_run(name, order, paths, flags, out, toolchain, log, crc=False):
     (Path(out) / "icf.json").write_text(json.dumps(res, indent=1) + "\n", encoding="utf-8")
     parsed = [parse_obj(Path(p).read_bytes(), str(Path(p).resolve())) for p in paths if not _is_lib(p)]
     replay = sum(icf_replay(srt, srt["flag_162"]) == srt["output"] for srt in res["sorts"])
-    check = search_check(res["command"], (Path(out) / "verbose.txt").read_text(errors="replace"))
+    verbose = (Path(out) / "verbose.txt").read_text(errors="replace")
+    check = search_check(res["command"], verbose)
     check.pop("simulation")
+    image = Path(out) / "trace.exe"  # icf_trace's output name, a DLL's included
+    if image.is_file() and (Path(out) / "trace.map").is_file():
+        lm = layout_model(parsed, verbose, (Path(out) / "trace.map").read_text(errors="replace"),
+                          image.read_bytes(), res["command"], res)
+        check["layout"] = all(lm.get(k, {"predicted_equals_actual": True})["predicted_equals_actual"]
+                              for k in ("order_check", "import_check"))
+        check["layout_detail"] = {k: lm.get(k) for k in ("order_check", "import_check")}
     log("%s %s: library search %d/%d loads, %d searches %s; ICF iterations %s" % (
         name, order, check["loads"] if check["loads_equal"] else check["first_difference"] or 0, check["loads"],
         check["searches"], "equal" if check["searches_equal"] else "DIFFERENT",
@@ -2486,7 +2837,9 @@ def icf_crosscheck(name, runs):
             wrong = [{"members": sorted(k), "truth": truth.get(k), "predicted": got.get(k)}
                      for k in set(truth) | set(got) if truth.get(k) != got.get(k)]
             rows.append({"set": name, "order": o_name, "trace": t_name, "groups": len(truth),
-                         "ok": not wrong and o_check["loads_equal"] and o_check["searches_equal"],
+                         "ok": not wrong and o_check["loads_equal"] and o_check["searches_equal"]
+                               and o_check.get("seeds_equal", True) and o_check.get("layout", True),
+                         "layout": {True: "ok", False: "MISS", None: "-"}[o_check.get("layout")],
                          "search": "%s/%s" % (o_check["loads"] if o_check["loads_equal"] else "x", o_check["loads"]),
                          "unresolved": len(pred["unresolved"]), "wrong": wrong,
                          "keys": "%d/%d" % (sum(o_keys.get(tuple(n)) == k for n, k in pred["keys"] if n[0] != "lib"),
@@ -2560,8 +2913,10 @@ def main(argv=None):
     sc.add_argument("--model", required=True, help="model.json of `run` or icf.json of `icf-trace`; its "
                     "verbose.txt is read from the same folder")
     x = sub.add_parser("experiment")
-    x.add_argument("--set", default="all", choices=["E1", "E2", "E4", "L1", "layout", "all"],
-                   help="E1/E2/E4/L1: ICF survivor cross-prediction tables (L1: with the library search checked against /VERBOSE); layout: the layout rule tables (JSON)")
+    x.add_argument("--set", default="all", choices=["E1", "E2", "E4", "L1", "L2", "layout", "all"],
+                   help="E1/E2/E4/L1/L2: ICF survivor cross-prediction tables, with the library search and the layout "
+                        "(code order and padding, imports) checked against /VERBOSE and the image; layout: the layout "
+                        "rule tables (JSON)")
     x.add_argument("--json", action="store_true")
     x.add_argument("--out", required=True)
     x.add_argument("--toolchain", default="sp1")
@@ -2579,6 +2934,11 @@ def main(argv=None):
         if "order_check" in model:
             print("order rule check: %s" % ("predicted == actual" if model["order_check"]["predicted_equals_actual"]
                                             else "MISMATCH (see model.json order_check)"))
+        if "import_check" in model:
+            ic = model["import_check"]
+            print("import layout check: %s (%d DLLs, %d entries, %d removed by /OPT:REF)"
+                  % ("predicted == actual" if ic["predicted_equals_actual"] else "MISMATCH (see model.json import_check)",
+                     ic["dlls"], ic["entries"], ic["removed"]))
         return 0
     if args.cmd == "explain":
         model = json.loads(Path(args.model).read_text(encoding="utf-8"))
@@ -2675,11 +3035,12 @@ def _print_rows(rows, as_json=False):
     if as_json:
         print(json.dumps(rows, indent=1))
         return
-    print("%-4s %-12s %-12s %6s %5s %6s %6s %10s  %s" % ("set", "order", "trace", "groups", "qsort", "keys",
-                                                          "search", "unresolved", "survivors"))
+    print("%-4s %-12s %-12s %6s %5s %6s %6s %6s %10s  %s" % ("set", "order", "trace", "groups", "qsort", "keys",
+                                                               "search", "layout", "unresolved", "survivors"))
     for r in rows:
-        print("%-4s %-12s %-12s %6d %5s %6s %6s %10d  %s" % (r["set"], r["order"], r["trace"], r["groups"],
-              r["qsort"], r["keys"], r.get("search", "-"), r["unresolved"], "OK" if r["ok"] else "MISS " + "; ".join(
+        print("%-4s %-12s %-12s %6d %5s %6s %6s %6s %10d  %s" % (r["set"], r["order"], r["trace"], r["groups"],
+              r["qsort"], r["keys"], r.get("search", "-"), r.get("layout", "-"), r["unresolved"],
+              "OK" if r["ok"] else "MISS " + "; ".join(
                   "%s not %s" % (w["truth"], w["predicted"]) for w in r["wrong"])))
     for name in sorted({r["set"] for r in rows}):
         sel = [r for r in rows if r["set"] == name]

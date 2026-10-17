@@ -8,7 +8,7 @@ a COMDAT survives and why a byte or a referent is what it is. Python stdlib only
 
 | command | what it does |
 |---|---|
-| `python tools/link_trace.py run --obj a.obj b.obj --flags "/OPT:REF,ICF /ENTRY:..." --out DIR` | links with the pinned toolchain (`config/toolchains.json`, `sp1`), adding `/VERBOSE /MAP /MAPINFO:EXPORTS /OUT`, writes `DIR/model.json`, `DIR/verbose.txt`, `DIR/trace.map`, `DIR/trace.exe`, and checks the layout rules below against the image (`order rule check`) |
+| `python tools/link_trace.py run --obj a.obj b.obj --flags "/OPT:REF,ICF /ENTRY:..." --out DIR` | links with the pinned toolchain (`config/toolchains.json`, `sp1`), adding `/VERBOSE /MAP /MAPINFO:EXPORTS /OUT`, writes `DIR/model.json`, `DIR/verbose.txt`, `DIR/trace.map`, `DIR/trace.exe`, and checks the layout rules below against the image: `order rule check` (the objects' code contributions in predicted order, and every alignment gap between two that are adjacent in the image) and `import layout check` (descriptors, IAT/INT, hint/name table, thunks; "Imports"). With link.exe 8.00.50727.762 the link runs under the debugger as `icf-trace` does (`DIR/icf.json`), so that every fold, a static `.text$x` funclet's included, is known by its contribution |
 | `python tools/link_trace.py explain --model DIR/model.json --rva 0x1012` | the contribution covering an RVA: object, COMDAT section, status and reason, padding before it, fold group, the symbol inside a multi-function section, and every relocation resolved to its target RVA and name |
 | `python tools/link_trace.py explain --model DIR/model.json --symbol ?f@@YAHH@Z` | the same for a symbol (every copy: kept, folded, duplicate, removed) |
 | `python tools/link_trace.py order --obj a.obj b.obj [--model M] [--root _main] [--json]` | predicts the code layout for an object order without running link: offset, padding, size, section; without `--model`, `/OPT:REF` is approximated by reachability from the roots and identical COMDATs are flagged as `ICF candidates` |
@@ -17,7 +17,7 @@ a COMDAT survives and why a byte or a referent is what it is. Python stdlib only
 | `python tools/link_trace.py search-trace --obj a.obj x.lib ... --flags "..." --out DIR` | links under the debug API with breakpoints in the library search (`IMAGE::ResolveExternalsInLibs` 0x4729E0, `LIB::Search` 0x48CB90, the return of its `LIB::FGetMember` call 0x48CC9A) and compares every `Search` call (library, each undefined symbol looked up in its dictionary, in order) with `search_libraries`; writes `DIR/search.json`; exit 1 on a difference |
 | `python tools/link_trace.py search-check --model DIR/model.json` | simulates the library search of a traced link (`run` or `icf-trace` output) and compares its `Searching` and `Found`/`Loaded` sequences with the folder's `verbose.txt` |
 | `python tools/link_trace.py crosscheck --obj a.obj ... --flags "..." --out DIR [--orders given,reversed,rotated]` | `icf-trace`s one link's objects in several orders (libraries keep their slots) and cross-predicts every order from every trace (the table of `experiment`); for real links |
-| `python tools/link_trace.py experiment --set E1\|E2\|E4\|L1\|all --out DIR [--json]` | compiles the ICF fixtures (`tests/fixtures/link_trace/e1`, `e2`, `e4`, `l1`; `l1`'s `l?_*.cpp` become the static libraries `l?.lib` through lib.exe) with cl 14.00.50727.762 (`/O2 /Oy /Gy /GS /EHsc /GR- /MD /fp:fast /arch:SSE2`), `icf-trace --crc`s every listed command line and prints the validation table: per (order O, trace T) the fold groups (from the traced `ICFFold` calls, library members' and associative children's included), the qsort replays, the object candidates whose predicted sort key equals O's traced key, the library search (`Loaded` sequence and `Searching` sequence simulated == O's log), and whether every survivor of O is predicted from T; exit 1 on a miss |
+| `python tools/link_trace.py experiment --set E1\|E2\|E4\|L1\|L2\|all --out DIR [--json]` | compiles the ICF fixtures (`tests/fixtures/link_trace/e1`, `e2`, `e4`, `l1`, `l2`; the `l?_*.cpp` of `l1` and `l2` become the static libraries `l?.lib` through lib.exe) with cl 14.00.50727.762 (`/O2 /Oy /Gy /GS /EHsc /GR- /MD /fp:fast /arch:SSE2`), `icf-trace --crc`s every listed command line and prints the validation table: per (order O, trace T) the fold groups (from the traced `ICFFold` calls, library members' and associative children's included), the qsort replays, the object candidates whose predicted sort key equals O's traced key, the library search (`Loaded` sequence, `Searching` sequence and the linker's own references simulated == O's log), the `layout` of O's image (`order_check` and `import_check` of `run`), and whether every survivor of O is predicted from T; exit 1 on a miss |
 | `python tools/link_trace.py experiment --set layout --out DIR` | reruns the layout experiments behind the tables below (E1 orders, E2 layout, E3 `/Gy-`; JSON) |
 
 Model fields (`model.json`): `contributions[]` (one per non-debug section of each traced object:
@@ -38,7 +38,9 @@ Evidence: `experiment` (E1: three objects with four fold groups each, all six ob
 objects sharing inline functions, a vtable, strings and floats, `#pragma code_seg(".text$aa"/".text$zz")`,
 a `try`/`catch`, three orders; E3: one object built `/Gy-`), plus a call-chain probe (E4: `leaf1/2`,
 `mid1/2`, `top1/2`, each `noinline`, and two identical `extern const int[4]` tables). Every run's
-`order_check` reproduced the image's order of the traced code exactly.
+`order_check` reproduced the image's order of the traced code exactly, and its alignment gaps.
+The real links: the avp3 code-DLL links (2 units in 2 orders: 90 code contributions, 75 gaps;
+17 units in 3 orders: 440 contributions, 386 gaps) pass `order_check` and `import_check`.
 
 ### Layout
 
@@ -53,13 +55,13 @@ a `try`/`catch`, three orders; E3: one object built `/Gy-`), plus a call-chain p
 | Without `/Gy` the object's code is one non-COMDAT `.text` section: kept whole (an unreferenced function stays), its functions 16-aligned by the compiler with `0xCC` already in the object | E3: `ng_unused` kept at `+0x10` |
 | `.rdata` output order (E2, `/MD` exe): `.idata$5` (IAT), `.CRT$X*`, `.rdata`, `.rdata$r`, `.rdata$sxdata`, `.rtc$*`, `.xdata$x`, `.idata$2/3/4/6`, `.edata`; `.data` then `.bss` | E2 map groups |
 | Associative COMDATs (`.text$x` `__ehhandler$`, `.xdata$x` `__ehfuncinfo$`) follow their parent: kept with it, placed in their own group in object order | E2 |
+| An associative child is folded on its own: an `__unwindfunclet$` identical to another function's funclet is replaced (`ICFFold`) while its parent stays, and leaves no gap; `/VERBOSE` does not name it, so `run` takes the folds from the traced `ICFFold` calls (`build_model(icf=...)`) | avp3 2-unit link: the funclets of the four `CSampleXAPOBase<...>` constructors fold into one, of the destructors into another |
 
 ### COMDAT selection and pools
 
 | rule | evidence |
 |---|---|
-| Same-name COMDATs of selection `any` (inline and virtual functions, `??_G` deleting destructors, `??_7` vtables, `??_C@` string literals, `__real@` float constants, EH `__TI`/`__CT` records): the copy of the **first object on the command line** that defines it is kept, at that object's position; the others are dropped | E2: `shared_inline`, `Get`, `??_G`, `??_7`, `pool both`, `__real@3f400000` move with the first object in all three orders |
-| String literals and float constants are therefore merged by name (the name encodes the contents), not by ICF, and laid out in the first definer's `.rdata` slot in its section order | E1, E2 |
+| Same-name COMDATs of selection `any` (inline and virtual functions, `??_G` deleting destructors, `??_7` vtables, `??_C@` string literals, `__real@` float constants, EH `__TI`/`__CT` records): the copy of the **first object on the command line** that defines it is kept, at that object's position; the others are dropped. The selection comes before `/OPT:ICF`: when the first definer's copy is then folded into another function, no later object's duplicate takes its place | E2: `shared_inline`, `Get`, `??_G`, `??_7`, `pool both`, `__real@3f400000` move with the first object in all three orders; avp3 17 units: `Map<...>::FreeNodes`/`ForEach` of `gui_model.obj` folded, the copies of `index_set.obj`, `player.obj`, `states_game_session.obj` dropped (the former first difference at code contribution 257) || String literals and float constants are therefore merged by name (the name encodes the contents), not by ICF, and laid out in the first definer's `.rdata` slot in its section order | E1, E2 |
 | Identical data in a non-COMDAT `.rdata` section is never folded (VC8 has no `/Gw`) | E4: `tbl1`, `tbl2` both kept |
 | Relocations resolve to the surviving copy: a call to a replaced function lands on the survivor's address, a reference to a dropped duplicate on the kept copy | `explain` reloc lines; E1 `str_a`/`str_b` |
 
@@ -172,11 +174,32 @@ Mechanism (disassembly of link.exe 8.00.50727.762; every rule confirmed by `sear
 | `IMAGE::ResolveExternalsInLibs` walks the libraries in command-line order (wherever they stand among the objects); past the last one it opens the next queued default library and searches it; when none is left it starts again from the first library, unless no member loaded so far added a new reference. It stops on reaching the last library whose load added a new reference, as soon as a library leaves nothing undefined, or after a walk in which nothing was added | L1: 32 to 42 `Search` calls per link, up to six passes |
 | Default libraries queue in the order they are named (`/DEFAULTLIB` on the command line, then the directives of each module as it is read, library members included); `/NODEFAULTLIB:x` (anywhere) excludes x, `/NODEFAULTLIB` all; a queued library already in the link (`msvcrt.lib` given on the command line, `ld.lib` given explicitly under `/NODEFAULTLIB:ld`) is not opened again. A library given on the command line is searched even when `/NODEFAULTLIB` names it | L1 lines 5 to 7; avp3 links |
 | Each `ResolveExternalsInLibs` call ends with `DefineImageBaseSymbol` (`___ImageBase` is defined there); later calls search the symbols the linker adds itself (`__load_config_used`), shown in `/VERBOSE` as `Found` without `Referenced in` | L1, avp3 (`Searching libraries` twice) |
+| The linker's own references (`linker_seeds`, no trace needed), one `ResolveExternalsInLibs` call each, in this order: (1) the first call adds the entry point after every input's references: none under `/NOENTRY`, `_` + the `/ENTRY` name, `__DllMainCRTStartup@12` for a `/DLL`, else the CRT startup of the main the objects define (`_wWinMain@16`, `_WinMain@16`, `_wmain`, `_main`; `_mainCRTStartup` by default); (2) when there are exports, after `Generating .exp file`: the `.exp` module references every exported symbol, the command line's and the directives' together, in name order (`Referenced in trace.exp`); a directive's `/EXPORT:x` names the symbol `x` as given (`/EXPORT:exp_lib` in a `.drectve` is LNK2001 `exp_lib`), the command line's gets a `_`; (3) when an `/ALTERNATENAME:a=b` has `a` still undefined, a call that references the default `b` (no call when every source is defined or unreferenced); `a` stays on the list, so the walk goes on past `b`'s library; (4) `__load_config_used` | L2 (`m n lx.lib /EXPORT:exp_zcmd` in two orders, `n lx.lib /DLL`): rounds `_mainCRTStartup`; `_exp_alpha`, `_exp_lib`, `_exp_n`, `_exp_zcmd`; `_f_default`; `__load_config_used`; the library-defined `_g_alt` needs no default |
 
 Validation: `search-trace` on L1 (two lines, 36 and 38 `Search` calls, 217 and 172 lookups) and
-on the 17-unit avp3 link (20 calls, 10,619 lookups, 51 loads): equal. `search-check` on every
-traced link of E1, E2, E4, L1 (68 to 81 loads each) and the two avp3 links (32 and 51 loads):
-the `Loaded` and `Searching` sequences equal.
+on the 17-unit avp3 link (20 calls, 10,619 lookups, 51 loads): equal. `search-check` (now with
+`linker_seeds` instead of the log's own references, which it compares as `seeds`) on every
+traced link of E1, E2, E4, L1, L2 (54 to 81 loads each) and the avp3 links (2 units in 2 orders,
+17 units in 3 orders; 32 and 51 loads): the `Loaded`, `Searching` and seed sequences equal.
+
+### Imports
+
+Mechanism (link.pdb publics, disassembly of `IMAGE::ImportSemantics` 0x467530,
+`SortPGRPByPMOD` 0x427E80 and its `qsort` comparator 0x427E30, `MoveToEndOfPMODsPCON` 0x427F30;
+the comparator's input read under the debugger):
+
+| rule | evidence |
+|---|---|
+| Each loaded import object (`IMPORT_OBJECT_HEADER`) becomes a module (`CImplib`) with `.idata$5` (IAT slot), `.idata$4` (INT slot), `.idata$6` (hint/name, unless by ordinal) and, for code, a `.text` `jmp [__imp_x]` thunk; the `__IMPORT_DESCRIPTOR_x` member holds `.idata$2` and the DLL name (`.idata$6`), the `\x7fx_NULL_THUNK_DATA` member the zero `.idata$5`/`$4` terminators, `__NULL_IMPORT_DESCRIPTOR` the `.idata$3` terminator | every `/MD` link; avp3 map |
+| `.idata$2`: the descriptors in their members' load order (MSVCR80, KERNEL32, USER32 in the avp3 links), then `.idata$3` | avp3 maps, `parse_imports` |
+| `.idata$4` and `.idata$5`: before `/OPT:REF`, `ImportSemantics` sorts each group's contribution list (load order) with MSVCR80 `qsort` (not stable: `ms_qsort`) by the module name at MOD+8, the member name (`KERNEL32.dll`, `MSVCR80.dll`), compared with wcscmp (ordinal, case-sensitive); then every contribution with CON+0 set (the null thunk) moves to the end of its DLL's run. So DLLs sort by name (KERNEL32 before MSVCR80 though msvcrt.lib is searched first) and within a DLL the entries follow qsort's permutation of their load order, neither load order nor hint nor name order; imports `/OPT:REF` drops afterwards (`_floor`, `__CIasin` in the avp3 links) took part in the sort and leave no slot. INT and IAT have one order | debugger: the 20-element list before and after the sort (2-unit link); `import_check` on every traced link |
+| `.idata$6` is not sorted: hint/name entries and DLL names in load order | `import_check` |
+| The thunks stay in load order in `.text` among the library modules | `import_check` |
+
+Validation (`import_check`, part of `run` and of every `experiment`/`crosscheck` row): the avp3
+2-unit link (2 DLLs, 16 entries, 2 removed) in 2 orders and the 17-unit link (3 DLLs, 31 entries,
+2 removed) in 3 orders, and every fixture link of E1, E2, E3, E4, L1, L2: descriptors, IAT, INT,
+`.idata$6` and thunk order equal.
 
 ## Limits
 
@@ -187,21 +210,22 @@ the `Loaded` and `Searching` sequences equal.
   has one (such a contribution would fall back to its traced key); only iteration 0 of
   `ICFAnalysis` is modelled and every traced link folded everything there. `icf-trace` and
   `search-trace` breakpoints are link.exe 8.00.50727.762 addresses (`LINK_SHA256`).
-- The library search model reads `/DEFAULTLIB`, `/NODEFAULTLIB` and `/INCLUDE`; other directives
-  that create references (`/EXPORT`, `/ALTERNATENAME`, `/ENTRY` of another name) and incremental
-  linking are not modelled. The symbols the linker references itself (the entry point
-  `_mainCRTStartup`, `__load_config_used`) are taken from the traced log (`Found` without
-  `Referenced in`): the entry point joins the list after every input's references, the others
-  start the later rounds. A prediction therefore needs a trace with the same entry point.
-- Layout: `run`'s `order rule check` (object order, section order, groups) holds on every fixture
-  link but not on the avp3 code-DLL links: `/VERBOSE` names a folded static COMDAT (`.text$x`
-  unwind funclets) only by its section, so `build_model` cannot tell which copy was replaced and
-  keeps several at one address; the 17-unit link also places a run of template COMDATs
-  (`Map<...>::FreeNodes`, `ForEach`) differently from the model (first difference at the 257th
-  code contribution). Both are open; the fold groups themselves come right from `icf-trace`.
-- Import thunks (`jmp [__imp_x]` for a call to an import declared without `dllimport`) are the
-  import member's code and are placed with it in load order (`__amsg_exit` between CRT objects in
-  E1); their layout is not predicted beyond that order.
+- The library search model reads `/DEFAULTLIB`, `/NODEFAULTLIB`, `/INCLUDE`, `/EXPORT` and
+  `/ALTERNATENAME`; incremental linking, `/DEF` files, `/ENTRY` of a decorated (`@n`) name and
+  command-line `/EXPORT` of an already decorated name (only undecorated ones were traced) are not
+  modelled. The export round's name order was traced with names whose order is the same with or
+  without the leading `_`.
+- Layout without the debugger (`run` on another link.exe): a folded `.text$x` unwind funclet is
+  named by `/VERBOSE` only by its section, so the model cannot tell which copy was replaced and
+  the `order rule check` fails on links with such folds (the avp3 code DLLs); with link
+  8.00.50727.762 `run` traces the folds and the check holds.
+- `import_check` takes the set of imports that survive `/OPT:REF` from the image (library
+  members are not walked); their order, the descriptors, the hint/name table and the thunks'
+  order are predicted. Delay-load imports (`.didat$*`, `SortDelayIdata`), bound imports and
+  `/MERGE` of `.idata` are not modelled. The comparator's wcscmp is evidence for a DLL whose
+  member name is lower case (`d3d9.dll` sorts after `USER32.dll`); no traced link has one.
+- Import thunks (`jmp [__imp_x]`) are the import member's `.text` and stay in load order among
+  the library modules; `import_check` checks that order, not their offsets.
 - `order`'s `/OPT:REF` is a reachability approximation over the traced objects (roots `_main` and
   the like, `/INCLUDE`s, non-COMDAT sections, weak externals followed to their default); library
   members are not walked, so a COMDAT reached only from a library is reported unreachable.

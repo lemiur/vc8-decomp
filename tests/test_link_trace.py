@@ -458,5 +458,125 @@ class IcfSurvivorModel(unittest.TestCase):
         self.assertEqual(out["b"], "a")
 
 
+def code_section(index, name, sym, selection="any", associated=0, size=1):
+    return {"index": index, "name": name, "code": True, "removed": False, "size": size, "comdat": True,
+            "selection": selection, "associated": associated, "align": 16, "raw": b"\xc3" * size,
+            "relocs": [], "characteristics": 0x60501020, "symbols": [{"name": sym, "value": 0}]}
+
+
+class LayoutRuleTests(unittest.TestCase):
+    def test_folded_first_definer_keeps_its_slot_from_later_duplicates(self):
+        # a's copy of the any-COMDAT _t is selected (first definer) and then folded by ICF: b's
+        # duplicate must not take a slot (the avp3 17-unit Map<...>::FreeNodes run).
+        a = {"path": "a.obj", "symbols": [], "sections": [code_section(1, ".text", "_f"), code_section(2, ".text", "_t")]}
+        b = {"path": "b.obj", "symbols": [], "sections": [code_section(1, ".text", "_t"), code_section(2, ".text", "_g")]}
+        kept = {("a.obj", "_f"), ("a.obj", "_t"), ("b.obj", "_t"), ("b.obj", "_g")}
+        rows = lt.predict_order([a, b], kept=kept, folded={("a.obj", "_t")})
+        self.assertEqual([(r["obj"], r["symbol"]) for r in rows], [("a.obj", "_f"), ("b.obj", "_g")])
+
+    def test_associative_child_folds_on_its_own(self):
+        # An unwind funclet folds into another function's identical funclet while its parent stays.
+        a = {"path": "a.obj", "symbols": [], "sections": [
+            code_section(1, ".text", "_p"), code_section(2, ".text$x", "__unwindfunclet$_p$0", "associative", 1),
+            code_section(3, ".text", "_q"), code_section(4, ".text$x", "__unwindfunclet$_q$0", "associative", 3)]}
+        kept = {("a.obj", "_p"), ("a.obj", "_q")}
+        rows = lt.predict_order([a], kept=kept, folded={("a.obj", "__unwindfunclet$_q$0")})
+        self.assertEqual([r["symbol"] for r in rows], ["_p", "_q", "__unwindfunclet$_p$0"])
+
+    def test_traced_folds_name_static_children(self):
+        icf = {"cons": [{"id": 0, "obj": "C:/x/a.obj", "lib": None, "section_index": 2, "symbol": "__unwindfunclet$_p$0"},
+                        {"id": 1, "obj": "C:/x/a.obj", "lib": None, "section_index": 4, "symbol": "__unwindfunclet$_q$0"},
+                        {"id": 2, "obj": "C:/x/b.obj", "lib": None, "section_index": 4, "symbol": "x"}],
+               "folds": [{"keep": 0, "fold": 1}, {"keep": 1, "fold": 2}]}
+        got = lt._traced_folds(icf)
+        self.assertEqual(sorted(got), [("a.obj", 4), ("b.obj", 4)])
+        self.assertEqual(got[("b.obj", 4)]["id"], 0)  # the root survivor of a chain of folds
+        self.assertIsNone(lt._traced_folds(None))
+
+
+class ImportLayoutTests(unittest.TestCase):
+    def test_iat_is_qsorted_by_dll_name_with_null_thunks_last(self):
+        def imp(dll, name, load):
+            return {"kind": "import", "dll": dll, "symbol": "_" + name, "hint_name": name, "code": True, "load": load}
+
+        members = [imp("MSVCR80.dll", "m%d" % i, i) for i in range(6)]
+        members += [{"kind": "descriptor", "dll": "MSVCR80.dll", "symbol": "__IMPORT_DESCRIPTOR_MSVCR80", "load": 6},
+                    {"kind": "null_thunk", "dll": "MSVCR80.dll", "symbol": "\x7fMSVCR80_NULL_THUNK_DATA", "load": 7},
+                    imp("MSVCR80.dll", "m6", 8)]
+        members += [imp("KERNEL32.dll", "k%d" % i, 9 + i) for i in range(4)]
+        members += [{"kind": "descriptor", "dll": "KERNEL32.dll", "symbol": "__IMPORT_DESCRIPTOR_KERNEL32", "load": 13},
+                    {"kind": "null_thunk", "dll": "KERNEL32.dll", "symbol": "\x7fKERNEL32_NULL_THUNK_DATA", "load": 14}]
+        pred = lt.predict_imports(members)
+        self.assertEqual(pred["descriptors"], ["MSVCR80.dll", "KERNEL32.dll"])  # load order
+        self.assertEqual([d for d, _ in pred["iat"]], ["KERNEL32.dll"] * 5 + ["MSVCR80.dll"] * 8)  # wcscmp
+        self.assertEqual([pred["iat"][4][1], pred["iat"][-1][1]], [None, None])  # null thunk closes each run
+        # qsort is not stable: the equal keys do not keep their load order.
+        thunks = [(m["dll"], m.get("hint_name")) for m in members if m["kind"] != "descriptor"]
+        expect = [x[1] for x in lt.ms_qsort(thunks, lambda a, b: (a[0] > b[0]) - (a[0] < b[0])) if x[1]]
+        self.assertEqual([n for _, n in pred["iat"] if n], expect)
+        self.assertNotEqual(expect[:4], ["k0", "k1", "k2", "k3"])
+        # .idata$6 is not sorted: hint/names and DLL names in load order.
+        self.assertEqual([n for _, n in pred["names"]][:7], ["m0", "m1", "m2", "m3", "m4", "m5", None])
+
+    def test_import_hint_name(self):
+        self.assertEqual(lt._import_hint_name("_memcpy", 2), "memcpy")
+        self.assertEqual(lt._import_hint_name("_Sleep@4", 3), "Sleep")
+        self.assertEqual(lt._import_hint_name("?terminate@@YAXXZ", 1), "?terminate@@YAXXZ")
+        self.assertIsNone(lt._import_hint_name("_x", 0))
+
+    def test_import_members_from_loads(self):
+        lib = make_archive([("X.dll", import_obj("_imp", "X.dll"), ["__imp__imp", "_imp"])])
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "x.lib").write_bytes(lib)
+            path = str(Path(tmp, "x.lib"))
+            loads = [{"symbol": "_imp", "lib": path, "refs": ["m.obj"], "loaded": "x.lib(X.dll)"},
+                     {"symbol": "__IMPORT_DESCRIPTOR_X", "lib": path, "refs": [], "loaded": "x.lib(X.dll)"}]
+            rows = lt.import_members(loads)
+        self.assertEqual([(r["kind"], r["dll"], r["symbol"]) for r in rows],
+                         [("import", "X.dll", "_imp"), ("descriptor", "X.dll", "__IMPORT_DESCRIPTOR_X")])
+        self.assertEqual((rows[0]["hint_name"], rows[0]["code"]), ("imp", True))
+
+
+class LinkerSeedTests(unittest.TestCase):
+    def test_entry_points(self):
+        def seeds(*args):
+            return lt.linker_seeds(["link.exe", *args])
+
+        self.assertEqual(seeds("/DLL", "/NOENTRY")[0], [])
+        self.assertEqual(seeds("/DLL")[0], ["__DllMainCRTStartup@12"])
+        self.assertEqual(seeds("/ENTRY:start")[0], ["_start"])
+        self.assertEqual(seeds()[0], ["_mainCRTStartup"])
+        self.assertEqual(seeds()[-1], ["__load_config_used"])
+
+    def test_export_and_alternatename_rounds(self):
+        export_round, alternate_round = lt.linker_seeds(["link.exe", "/EXPORT:exp_zcmd"])[1:3]
+        state = {"defined": {"_g_alt"}, "undefined": {"_f_alt"}, "exports": ["_exp_lib", "_exp_alpha"],
+                 "alternates": {"_f_alt": "_f_default", "_g_alt": "_g_default"}}
+        self.assertEqual(export_round(state), ["_exp_alpha", "_exp_lib", "_exp_zcmd"])
+        self.assertEqual(alternate_round(state), ["_f_default"])
+        self.assertIsNone(lt.linker_seeds(["link.exe"])[1](dict(state, exports=[])))
+        self.assertIsNone(alternate_round(dict(state, undefined=set())))
+        self.assertEqual(lt.parse_directives("/EXPORT:_e=_impl,@3 /ALTERNATENAME:_a=_b"),
+                         [("EXPORT", "_impl"), ("ALTERNATENAME", "_a=_b")])
+
+    def test_search_skips_rounds_link_does_not_make(self):
+        files = {"m.obj": fn_obj(["_main"], ["_f_alt"], "/ALTERNATENAME:_f_alt=_f_default"),
+                 "lx.lib": make_archive([("c.obj", fn_obj(["_f_default"], []), ["_f_default"]),
+                                         ("l.obj", fn_obj(["__load_config_used"], []), ["__load_config_used"])])}
+
+        def load(p):
+            return files[p.replace("\\", "/").split("/")[-1]]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in files:
+                Path(tmp, name).write_bytes(files[name])
+            seeds = lt.linker_seeds(["link.exe", "/NOENTRY", "/DLL"])
+            got = lt.search_libraries([("obj", str(Path(tmp, "m.obj"))), ("lib", str(Path(tmp, "lx.lib")))],
+                                      [tmp], rounds=seeds, load=load)
+        self.assertEqual(got["seeds"], [[], ["_f_default"], ["__load_config_used"]])
+        self.assertEqual([(e["round"], e["symbol"]) for e in got["events"]],
+                         [(1, "_f_default"), (2, "__load_config_used")])
+
+
 if __name__ == "__main__":
     unittest.main()
