@@ -929,12 +929,28 @@ GL_NEEDED = 0x20       # entry +0x50 "needed": c1xx sets it for external non-inl
 GL_INIT = 0x4          # a dynamic initializer (??__E), referenced from .CRT$XCU
 
 
-def gl_names(gl):
-    """Number -> name of every gl symbol record, spelled as c2 decorates it."""
-    return {s.number: s.name if s.name[:1] in "?@" else "_" + s.name for s in gl.symbols}
+def gl_names(gl, data=None):
+    """Number -> name of every gl symbol record, spelled as c2 decorates it.
+    With the gl bytes, also the records cl_trace.parse_gl leaves in its
+    unparsed list (it loses sync after a data record whose last field is a long
+    c32, e.g. the `__CT`/`__TI` throw records, and drops the next record: a
+    vtable such as ??_7W, `_CTA1...`): each unparsed chunk starts with the
+    record's losh number, a flag byte and the name."""
+    import cl_trace
+    names = {s.number: s.name if s.name[:1] in "?@" else "_" + s.name for s in gl.symbols}
+    for offset, _ in (gl.unparsed if data is not None else ()):
+        try:
+            number, pos = cl_trace.read_losh(data, offset)
+            end = data.index(b"\x00", pos + 1)
+        except (cl_trace.TraceError, ValueError):
+            continue
+        name = data[pos + 1:end].decode("latin-1")
+        if number not in names and len(name) > 1 and name[:1] in "?_@" and end - pos < 1024:
+            names[number] = name if name[:1] in "?@" else "_" + name
+    return names
 
 
-def gl_entries(gl):
+def gl_entries(gl, data=None):
     """_Eentry_list as c1xx writes it: the gl definition records (SSR 0E) in file
     order (cl_trace.parse_gl). Per entry: name, number, fnflags, refs (the call
     list resolved to names: functions, vtables, other referenced symbols, in
@@ -942,8 +958,8 @@ def gl_entries(gl):
     the unit: the call graph's arcs). Vector deleting destructors (SSR 10) are
     returned as a map ??_E name -> ??_G name. gl spells extern "C" names without
     the cdecl underscore (`IsEqualGUID`, `DeleteCriticalSection@4`); c2's entries
-    have it, so it is added here."""
-    names = gl_names(gl)
+    have it, so it is added here. data: the gl bytes (gl_names)."""
+    names = gl_names(gl, data)
     defs = [s for s in gl.symbols if s.kind == "definition"]
     defined = {names[s.number] for s in defs}
     vec = {names[s.number]: names.get(s.attrs.get("target")) for s in gl.symbols if s.kind == "vector-dtor"}
@@ -957,33 +973,64 @@ def gl_entries(gl):
     return out, vec
 
 
-def in_vtables(data, gl):
-    """Slots of each vtable c1xx initialises in the `in` file: per ??_7 symbol of
-    gl, the record `07 00 <losh number>` followed by items `<delta> 02 <losh
-    symbol> <c32 displacement>` (an address constant `delta` bytes after the
-    previous one), ended by the first item of another kind. Returns
-    {vtable: [slot names]}."""
+def in_initializers(data, gl, gl_data=None):
+    """Static initializers c1xx writes to the `in` file: per gl symbol a record
+    `07 00 <losh number> <c32 offset>` and items until the next record: `01
+    <count> <size> <c32 value>` (a repeated integer), `02 <losh symbol> <c32
+    displacement> <size>` (an address constant), `03 <c32 length> <bytes>` (a
+    string). Returns {symbol: [address-constant targets]} for every record."""
     import cl_trace
-    names = gl_names(gl)
+    names = gl_names(gl, gl_data)
     out = {}
     for number, name in names.items():
-        if not name.startswith("??_7"):
-            continue
         key = b"\x07\x00" + cl_trace.encode_losh(number)
         at = data.find(key)
         if at < 0:
             continue
-        pos, slots = at + len(key), []
-        while pos + 4 <= len(data) and data[pos + 1] == 0x02:
-            try:
-                slot, pos = cl_trace.read_losh(data, pos + 2)
-            except cl_trace.TraceError:
-                break
-            if pos >= len(data):
-                break
-            pos += 5 if data[pos] == 0x80 else 1
-            slots.append(names.get(slot, slot))
-        out[name] = slots
+        targets = []
+        try:
+            _, pos = cl_trace._c32(data, at + len(key))
+            while pos < len(data) and data[pos] in (1, 2, 3):
+                kind = data[pos]
+                if kind == 1:
+                    _, pos = cl_trace._c32(data, pos + 1)
+                    _, pos = cl_trace._c32(data, pos + 1)
+                elif kind == 2:
+                    target, pos = cl_trace.read_losh(data, pos + 1)
+                    _, pos = cl_trace._c32(data, pos)
+                    pos += 1
+                    targets.append(names.get(target, target))
+                else:
+                    length, pos = cl_trace._c32(data, pos + 1)
+                    pos += length
+        except (cl_trace.TraceError, cl_trace._Bad):
+            pass
+        out[name] = targets
+    return out
+
+
+def in_vtables(data, gl, gl_data=None):
+    """Slots of each vtable: the address constants of its `in` initializer
+    (in_initializers). Returns {vtable: [slot names]}."""
+    return {k: v for k, v in in_initializers(data, gl, gl_data).items() if k.startswith("??_7")}
+
+
+GL_ON_DEMAND = 0x20    # gl data attribute u06: a COMDAT c2 emits when code first references it
+
+
+def static_function_refs(data, gl, gl_data=None):
+    """Functions whose address a static data initializer takes (`int (*g_fn)(int)
+    = &helper_inl;`): c2 emits the unit's non-COMDAT data (gl u06 without
+    GL_ON_DEMAND) in ProcessSegmentInits before the first function, so these
+    functions are needed from the start, inline or not."""
+    names = gl_names(gl, gl_data)
+    static = {names[s.number] for s in gl.symbols if s.kind in ("data", "array")
+              and not s.attrs.get("u06", 0) & GL_ON_DEMAND}
+    defined = {names[s.number] for s in gl.symbols if s.kind == "definition"}
+    out = []
+    for name, targets in in_initializers(data, gl, gl_data).items():
+        if name in static:
+            out += [t for t in targets if t in defined and t not in out]
     return out
 
 
@@ -1018,14 +1065,16 @@ def recursive_arcs(entries):
     return out
 
 
-def emission_model(entries, vec=None, vtables=None, call_graph=True):
+def emission_model(entries, vec=None, vtables=None, call_graph=True, static_refs=()):
     """Predict c2's compile order from the IL alone (gl_entries + in_vtables).
     1. CgBottomUpOrder (bottom_up_order after recursive_arcs), unless /Od.
     2. Needed set at the start: every definition c1xx flagged needed
        (GL_NEEDED: external non-inline functions, operator new/delete; not
        statics, inlines, implicit instantiations) and dynamic initializers,
        closed over the call lists (a needed function's callees defined in the
-       unit are needed, whether or not c2 later inlines them).
+       unit are needed, whether or not c2 later inlines them), and every
+       function a static data initializer takes the address of
+       (static_function_refs).
     3. Compile loop: rescan the list from its head for the first needed entry
        not compiled yet; compiling it emits the vtables it references that are
        not emitted yet, and each vtable's slots become needed (??_E through its
@@ -1046,6 +1095,8 @@ def emission_model(entries, vec=None, vtables=None, call_graph=True):
     for e in entries:
         if e.get("fnflags", 0) & (GL_NEEDED | GL_INIT):
             need(e["name"])
+    for name in static_refs:
+        need(name)
     compiled, emitted, out = set(), set(), []
     while True:
         name = next((n for n in order if n in needed and n not in compiled), None)
@@ -1061,13 +1112,12 @@ def emission_model(entries, vec=None, vtables=None, call_graph=True):
 
 
 def predicted_sections(model):
-    """The COMDATs emission creates, in order: each function's .text, then the
-    vtables it emits first (its EH pieces, literals, constants and .debug$F are
-    not predicted). A dynamic initializer goes to the unit's plain .text."""
+    """The code and vtable COMDATs emission creates, in order: each function's
+    .text (a dynamic initializer's is a `.text$yc` COMDAT), then the vtables it
+    emits first. full_sections predicts the whole table."""
     out = []
     for item in model:
-        if not item.get("init"):
-            out.append(item["name"])
+        out.append(item["name"])
         out += item["vtables"]
     return out
 
@@ -1090,9 +1140,12 @@ def read_obj_sections(path):
         if name.startswith("/"):
             name = string_at(int(name[1:]))
         size, = struct.unpack_from("<I", data, at + 16)
+        relocs, = struct.unpack_from("<I", data, at + 24)
+        nrelocs, = struct.unpack_from("<H", data, at + 32)
         flags, = struct.unpack_from("<I", data, at + 36)
-        secs.append({"number": i + 1, "name": name, "size": size, "flags": flags})
-    i = 0
+        secs.append({"number": i + 1, "name": name, "size": size, "flags": flags,
+                     "_relocs": (relocs, nrelocs)})
+    i, symbol_names = 0, {}
     while i < count:
         at = table + 18 * i
         raw = data[at:at + 8]
@@ -1100,6 +1153,7 @@ def read_obj_sections(path):
             name = string_at(struct.unpack_from("<I", raw, 4)[0])
         else:
             name = raw.rstrip(b"\0").decode("latin-1")
+        symbol_names[i] = name
         value, sec, _, storage, aux = struct.unpack_from("<IhHBB", data, at + 8)
         if 0 < sec <= nsec:
             entry = secs[sec - 1]
@@ -1112,7 +1166,155 @@ def read_obj_sections(path):
             elif entry["flags"] & 0x1000 and "comdat" not in entry and storage in (2, 3, 6):
                 entry["comdat"] = name
         i += 1 + aux
+    for i, entry in enumerate(secs):
+        at, n = entry.pop("_relocs")
+        entry["relocs"] = [symbol_names.get(struct.unpack_from("<I", data, at + 10 * r + 4)[0], "?")
+                           for r in range(n)] if at else []
+        entry["reloc_at"] = [struct.unpack_from("<I", data, at + 10 * r)[0] for r in range(n)] if at else []
+        if entry["name"].startswith(".text") and entry["flags"] & 0x20:
+            entry["fld1"] = x87_fld1_offsets(data, 20 + opt + 40 * i)
     return secs
+
+
+def x87_fld1_offsets(data, header):
+    """Offsets of `fld1` in a code section (capstone, if installed). LoFinalLower
+    (+0x10c6, MscFindFloatValue) rewrites an x87 load of the pooled constant 1.0
+    as fld1 after the constant was put on the function's emit list, so its
+    __real@ COMDAT is emitted although no relocation references it."""
+    import struct
+    try:
+        import capstone
+    except ImportError:
+        return []
+    size, raw = struct.unpack_from("<II", data, header + 16)
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+    return [ins.address for ins in md.disasm(data[raw:raw + size], 0) if ins.mnemonic == "fld1"]
+
+
+FLD1_CONSTANTS = ("__real@3f800000", "__real@3ff0000000000000")
+
+
+STATIC_SEGMENTS = (".bss", ".rdata", ".data")   # _BSS, CONST, _DATA: c2's segment list is prepended
+HEADER_SECTIONS = (".drectve", ".debug$S", ".debug$T")
+
+
+def section_label(sec, sections):
+    """A section as full_sections names it: `.text ?f`, `.rdata ??_7X@@6B@`, an
+    associative section by its function (`.xdata$x ?f`), a plain one by name."""
+    if sec.get("selection") == 5 and 0 < sec.get("assoc", 0) <= len(sections):
+        return "%s %s" % (sec["name"], sections[sec["assoc"] - 1].get("comdat", "?"))
+    return "%s %s" % (sec["name"], sec["comdat"]) if sec.get("comdat") else sec["name"]
+
+
+def full_sections(order, sections):
+    """Predict the obj's whole section table from the compile order (names, as
+    emission_model gives them) and, per function, what its compiled code holds
+    (inlining decides it, so it is read from the obj): the relocations of its
+    sections and which associative EH sections it has. The rule, from the
+    traced CoffCreateSection / CoffCreateComdatSection calls (each creates the
+    next section number):
+    - obj_start: .drectve, .debug$S (and .debug$T when present);
+    - ProcessSegmentInits, before the first function: the COMDAT literals the
+      static data initializers reference, then the plain .bss, .rdata, .data
+      (c2's segment list in reverse creation order: _BSS, CONST, _DATA);
+    - per function (EmitFunction): its .text (`.text$yc` for a dynamic
+      initializer); the `.text$x` funclet COMDAT when it starts with unwind
+      funclets; the data COMDATs its code references first (strings, `__real@`
+      and `__xmm@` constants, vtables, `__TI` throw records), newest reference
+      first (c2 prepends each to the function's emit list); the `.text$x` when
+      it holds only the `__ehhandler$` stub; `.xdata$x` (`__ehfuncinfo$` with
+      its unwind and try-block tables); the data the emitted data references
+      (`??_R0` type descriptors, `__CTA`, `__CT`) last-referenced first, each
+      adding its own; `.sxdata` at the first function with EH data; `.debug$F`;
+    - obj_end: the remaining plain sections (`.CRT$XCU`).
+    Returns (labels, unplaced): unplaced are the data COMDATs no relocation of
+    an emitted section references (a constant whose last use the optimizer
+    removed after it was put on the emit list)."""
+    by_comdat = {s["comdat"]: s for s in sections if s.get("comdat") and s.get("selection") != 5}
+    data = {name for name, s in by_comdat.items() if not s["name"].startswith(".text")}
+    kids = {}
+    for s in sections:
+        if s.get("selection") == 5:
+            kids.setdefault(s.get("assoc"), []).append(s)
+    plain = [s for s in sections if not s.get("comdat") and s.get("selection") != 5]
+    out, done, pending = [], set(), []
+
+    def put(sec):
+        if sec["number"] not in done:
+            done.add(sec["number"])
+            out.append(section_label(sec, sections))
+
+    def emit_data(name):
+        sec = by_comdat[name]
+        if sec["number"] in done:
+            return False
+        put(sec)
+        pending.extend(r for r in sec["relocs"] if r in data)
+        return True
+
+    def drain():
+        while pending:
+            emit_data(pending.pop())
+
+    for name in HEADER_SECTIONS:
+        for s in plain:
+            if s["name"] == name:
+                put(s)
+    statics = [s for name in STATIC_SEGMENTS for s in plain if s["name"] == name]
+    for s in statics:
+        for r in s["relocs"]:
+            if r in data:
+                emit_data(r)
+    drain()
+    for s in statics:
+        put(s)
+    for name in order:
+        sec = by_comdat.get(name)
+        if sec is None:
+            out.append(".text? %s" % name)
+            continue
+        put(sec)
+        assoc = kids.get(sec["number"], [])
+        textx = [k for k in assoc if k["name"] == ".text$x"]
+        xdata = [k for k in assoc if k["name"] == ".xdata$x"]
+        if textx and textx[0].get("comdat", "").startswith("__unwindfunclet$"):
+            put(textx[0])
+        refs, coded = [], list(zip(sec.get("reloc_at", []), sec["relocs"]))
+        for offset in sec.get("fld1", []):
+            coded += [(offset, r) for r in FLD1_CONSTANTS if r in data][:1]
+        for _, r in sorted(coded, key=lambda item: item[0]):
+            if r in data and r not in refs:
+                refs.append(r)
+        for r in reversed(refs):
+            emit_data(r)
+        for k in textx:
+            put(k)
+            pending.extend(r for r in k["relocs"] if r in data)
+        for k in xdata:
+            put(k)
+            pending.extend(r for r in k["relocs"] if r in data)
+        drain()
+        if xdata:
+            for s in plain:
+                if s["name"] == ".sxdata":
+                    put(s)
+        for k in assoc:
+            put(k)
+    for s in plain:
+        put(s)
+    unplaced = [s["comdat"] for s in sections if s.get("comdat") in data and s["number"] not in done]
+    return out, unplaced
+
+
+def full_sections_report(order, sections):
+    """full_sections against the obj: the predicted and obj labels, whether they
+    are equal, and each difference explained when the obj section is a data
+    COMDAT no emitted code references (unplaced)."""
+    predicted, unplaced = full_sections(order, sections)
+    obj = [section_label(s, sections) for s in sections]
+    rest = [label for label in obj if label.split(" ", 1)[-1] not in set(unplaced)]
+    return {"full_predicted": predicted, "full_obj": obj, "full_unplaced": unplaced,
+            "full_ok": predicted == obj, "full_ok_but_unplaced": predicted == rest}
 
 
 def obj_order_sections(sections):
@@ -1136,11 +1338,14 @@ def il_model(prefix, call_graph=True):
     """Read the kept IL (`/Bk<prefix>`: prefix+gl, prefix+in) and predict the
     compile order: (entries, model, vtables)."""
     import cl_trace
-    gl = cl_trace.parse_gl(Path(str(prefix) + "gl").read_bytes())
-    entries, vec = gl_entries(gl)
+    gl_data = Path(str(prefix) + "gl").read_bytes()
+    gl = cl_trace.parse_gl(gl_data)
+    entries, vec = gl_entries(gl, gl_data)
     in_path = Path(str(prefix) + "in")
-    vtables = in_vtables(in_path.read_bytes(), gl) if in_path.exists() else {}
-    return entries, emission_model(entries, vec, vtables, call_graph), vtables
+    in_data = in_path.read_bytes() if in_path.exists() else b""
+    vtables = in_vtables(in_data, gl, gl_data)
+    static = static_function_refs(in_data, gl, gl_data)
+    return entries, emission_model(entries, vec, vtables, call_graph, static), vtables
 
 
 def emit_order_report(events, sections, il=None):
@@ -1176,6 +1381,7 @@ def emit_order_report(events, sections, il=None):
             "vtable_slots": vtables,
             "not_needed": [n for n in gl_order if n not in set(predicted)]})
         report["predicted_sections_ok"] = report["predicted_sections"] == report["obj_sections"]
+        report.update(full_sections_report(predicted, sections))
         if not bu:
             report["blocked_by"] = blocking_callees(recursive_arcs(entries))
     return report
@@ -1254,11 +1460,19 @@ def emit_order_main(argv):
         at = next((i for i, (a, b) in enumerate(zip(pred, obj)) if a != b), min(len(pred), len(obj)))
         print("first difference at COMDAT %d: predicted %s, obj %s" % (
             at, pred[at] if at < len(pred) else "-", obj[at] if at < len(obj) else "-"))
+    full, obj = report["full_predicted"], report["full_obj"]
+    print("full section table (%d sections): %s" % (len(obj), "equal" if report["full_ok"] else "DIFFERS"))
+    for name in report["full_unplaced"]:
+        print("  unplaced: %s (a data COMDAT no relocation of the emitted code references; obj section %d)"
+              % (name, next(i + 1 for i, label in enumerate(obj) if label.endswith(" " + name))))
+    if not report["full_ok"]:
+        at = next((i for i, (a, b) in enumerate(zip(full, obj)) if a != b), min(len(full), len(obj)))
+        print("first difference at section %d: predicted %s, obj %s" % (
+            at + 1, full[at] if at < len(full) else "-", obj[at] if at < len(obj) else "-"))
     if args.all_sections:
-        for sec in report["sections"]:
-            print("  sec %3d %-10s %s%s" % (sec["number"], sec["name"], sec.get("comdat", ""),
-                                            " assoc=%d" % sec["assoc"] if "assoc" in sec else ""))
-    ok = report["predicted_sections_ok"] and (not events or (
+        for i, sec in enumerate(report["sections"]):
+            print("  sec %3d %-34s predicted %s" % (sec["number"], obj[i][:34], full[i] if i < len(full) else "-"))
+    ok = report["predicted_sections_ok"] and report["full_ok"] and (not events or (
         report["model_ok"] is not False and report["sections_ok"] and report["predicted_ok"]))
     return 0 if ok else 1
 

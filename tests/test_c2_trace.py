@@ -413,6 +413,47 @@ class IlModelTests(unittest.TestCase):
         self.assertNotIn("?unused@@YAHH@Z", [m["name"] for m in model])
         self.assertEqual(ct.predicted_sections(model)[:2], ["??1D@@UAE@XZ", "??_7D@@6B@"])
 
+    def test_static_initializer_function_refs_are_needed(self):
+        entries, vec = ct.gl_entries(self.gl())
+        model = ct.emission_model(entries, vec, {}, static_refs=["?unused@@YAHH@Z"])
+        self.assertIn("?unused@@YAHH@Z", [m["name"] for m in model])
+
+    def test_full_sections_places_eh_literals_and_statics(self):
+        def sec(n, name, comdat=None, sel=2, assoc=0, relocs=(), fld1=()):
+            s = {"number": n, "name": name, "relocs": list(relocs), "reloc_at": list(range(len(relocs))),
+                 "fld1": list(fld1)}
+            if comdat:
+                s["comdat"] = comdat
+            if sel:
+                s["selection"] = sel
+            if assoc:
+                s["assoc"] = assoc
+            return s
+        obj = [sec(1, ".drectve", sel=None), sec(2, ".debug$S", sel=None),
+               sec(3, ".rdata", "??_C@s"), sec(4, ".bss", sel=None),
+               sec(5, ".data", sel=None, relocs=["??_C@s"]),
+               sec(6, ".text", "?f", relocs=["__ehhandler$?f", "??_7A", "??_C@a", "__TI1"]),
+               sec(7, ".text$x", "__unwindfunclet$?f$0", 5, 6),
+               sec(8, ".xdata$x", "__TI1", relocs=["__CTA1"]),
+               sec(9, ".rdata", "??_C@a"), sec(10, ".rdata", "??_7A"),
+               sec(11, ".xdata$x", "__ehfuncinfo$?f", 5, 6, relocs=["??_R0"]),
+               sec(12, ".data", "??_R0"), sec(13, ".xdata$x", "__CTA1", relocs=["__CT"]),
+               sec(14, ".xdata$x", "__CT", relocs=["??_R0"]), sec(15, ".sxdata", sel=None),
+               sec(16, ".debug$F", None, 5, 6),
+               sec(17, ".text$yc", "??__Ex", fld1=[0]), sec(18, ".rdata", "__real@3f800000"),
+               sec(19, ".debug$F", None, 5, 17), sec(20, ".CRT$XCU", sel=None)]
+        report = ct.full_sections_report(["?f", "??__Ex"], obj)
+        self.assertEqual(report["full_unplaced"], [])
+        self.assertTrue(report["full_ok"], report["full_predicted"])
+        obj[5]["relocs"] = ["__TI1", "??_C@a", "??_7A"]     # literals referenced in the other order
+        self.assertFalse(ct.full_sections_report(["?f", "??__Ex"], obj)["full_ok"])
+
+    def test_gl_names_recovers_unparsed_records(self):
+        import cl_trace
+        gl = cl_trace.GlFile({}, [], [(3, "")], [], {}, [])
+        data = b"\x02\x00\x00" + cl_trace.encode_losh(2569) + b"\x26??_7W@@6B@\x00\x86"
+        self.assertEqual(ct.gl_names(gl, data), {2569: "??_7W@@6B@"})
+
     def test_call_graph_flags(self):
         self.assertTrue(ct.call_graph_flags(["/O2", "/Gy"]))
         self.assertFalse(ct.call_graph_flags(["/O2", "/Od"]))

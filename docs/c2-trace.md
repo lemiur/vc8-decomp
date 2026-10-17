@@ -26,8 +26,10 @@ unit, reads the object's section table and prints the compile order with each fu
 callees that held it back and the vtables it emits (see "Function emission order"). `R.json` holds the gl
 and traced IL orders, the traced and modelled bottom-up orders, the predicted and traced compile orders, the
 predicted and obj COMDATs, the vtable slots, the entries never needed, and the sections; the trace goes to
-`R.jsonl`. `--no-trace` skips the debugger and compares the prediction with the obj only. Exit 0 when the
-prediction equals the obj's code and vtable COMDATs (and, traced, the model reproduces `CgBottomUpOrder`,
+`R.jsonl`. It also predicts the whole section table (`full_predicted` against `full_obj`, "The whole
+section table"; `--all-sections` prints both side by side). `--no-trace` skips the debugger and compares the
+prediction with the obj only. Exit 0 when the prediction equals the obj's code and vtable COMDATs and its
+whole section table (and, traced, the model reproduces `CgBottomUpOrder`,
 the code COMDATs follow `ReadFunction` and the prediction equals it), 1 otherwise.
 
 `python tools/c2_trace.py diff A.jsonl B.jsonl [--renumber LOW:HIGH:DELTA] [--all] [--ordinals]` aligns two
@@ -259,11 +261,38 @@ is decided in three steps, and `emit-order` predicts all three from the IL alone
    slot is compiled at the next rescan, before anything later in the list, even when it stands earlier
    (`curve_tracks`: `GetType@CurveTrackOf<Vector2>`, IL 36, right after the destructor that emits its vtable).
 
-Each function's sections follow its `.text` COMDAT in the order its emission creates them: EH pieces
-(`.text$x` unwind funclets and `__ehhandler$`, `.xdata$x` `__ehfuncinfo$`, `__TI`/`__CT` records), the data
-COMDATs it is the first to reference (`??_C@` strings, `__real@` constants, `??_7` vtables), then its
-`.debug$F`. A dynamic initializer goes to the plain `.text`. `/Gy` is implied by `/O2` and does not change
-the order.
+**The whole section table.** Each `CoffCreateSection` / `CoffCreateComdatSection` call creates the next
+section number (traced with `newseg`, `newcomdat`, `EhEmitFuncinfo`, `obj_initializer`; `newcomdat` only
+makes the logical COMDAT, most of them at read time). `full_sections` predicts the table from the compile
+order and, per function, the relocations of its compiled sections and its associative EH sections (what the
+code references is decided by inlining, so it is read from the obj):
+
+1. `obj_start`: `.drectve`, `.debug$S`.
+2. `ProcessSegmentInits`, before the first function: the COMDAT literals the static initializers reference
+   (`const char* g_name = "..."`), then the plain `.bss`, `.rdata`, `.data` that exist (c2 prepends each
+   segment to its list: `_BSS`, `CONST`, `_DATA`). A function whose address a static initializer takes
+   (`Fn g_fn = &helper_inl;`, `in` item `02 <symbol>`) is needed from the start, inline or not
+   (`static_function_refs`; gl data without `u06` bit 0x20, the on-demand COMDATs, are the static ones).
+3. Per function, in `EmitFunction`: its `.text` (a dynamic initializer's is a `.text$yc` COMDAT); its
+   `.text$x` when that starts with unwind funclets; the data COMDATs its code references that are not
+   emitted yet (`??_C@` strings, `__real@`/`__xmm@` constants, `??_7` vtables, `__TI` throw records),
+   **newest reference first** (each is prepended to the function's emit list: `puts("alpha"); puts("beta");
+   ... 0.5f ... 3.25f` gives `3.25, 0.5, beta, alpha`); the `.text$x` when it holds only the `__ehhandler$`
+   stub (a function whose catch blocks stay in `.text`); `.xdata$x` (`__ehfuncinfo$`, with the
+   `__unwindtable$`, `__tryblocktable$` and `__catchsym$` symbols in the same section); then the data the
+   emitted data references, last-pushed first, each pushing its own (`__TI1` pushes `__CTA1`, the funcinfo
+   pushes the catch type `??_R0`: `??_R0, __CTA1, __CT`); `.sxdata` at the first function with EH data;
+   `.debug$F`.
+4. `obj_end`: the remaining plain sections (`.CRT$XCU`).
+
+An x87 load of the pooled 1.0 becomes `fld1` in `LoFinalLower` (+0x10c6, `MscFindFloatValue`) after the
+constant was put on the emit list: its `__real@3f800000` COMDAT is still emitted there although no
+relocation references it, so `fld1` (decoded with capstone) counts as a reference at its offset. A vtable
+reached only through an inlined callee is attributed correctly by the IL model too: a callee of a needed
+function is needed and stands earlier in the bottom-up list, so it is compiled (and emits the vtable)
+first (`make_w` inlines `??0W`, which emits `??_7W`). `cl_trace.parse_gl` drops the record after a data
+record ending in a long c32 (`__CT`, `__TI`; e.g. `??_7W`, `__CTA1`); `gl_names` recovers those names from
+its unparsed chunks. `/Gy` is implied by `/O2` and does not change the order.
 
 **Rule.** A function is emitted in source order unless it calls (or takes the address of) a function of the
 unit whose IL comes later: a later definition (`h1` -> `plain_after`), a template instantiation (`h6` ->
@@ -282,7 +311,10 @@ compiled: operator new/delete, `Float_ToInt`, the lock members and the stream de
 constructors and destructors, the `??_G` slots after the later functions), `curve_tracks.cpp` (92 entries,
 58 compiled; explicit and implicit template instantiations, 5 vtables): the gl order
 equals the traced list, the modelled arcs and recursive arcs equal the traced ones, and the predicted
-compile order and the code and vtable COMDATs equal the trace and the obj's section table. A probe with
+compile order and the code and vtable COMDATs equal the trace and the obj's section table; `--no-trace`
+predicts their whole tables (81, 98 and 143 sections) exactly, as for two probes with statics, strings,
+constants, try/catch with a throw, a dynamic initializer, an initializer taking an inline function's address
+and vtables emitted next to literals (50 and 43 sections). A probe with
 later definitions, statics, templates, implicit constructors, `noinline`, two- and three-node and self
 recursion and a dynamic initializer agrees at `/O2` as well.
 
@@ -294,15 +326,29 @@ recursion and a dynamic initializer agrees at `/O2` as well.
   starts from the external functions only, a static or inline function is compiled at the next rescan after
   its first caller (`h2`, `helper`; `user`, `il2`, `il1`), a constructor's vtable slots before its other
   callees (`??0Q`, `V`, `??_G`, `~Q`, `~Base`). Modelling it needs the references of each `ex` body.
-- Vtables are attributed to the first compiled function whose own call list references them; a reference
-  that reaches a function only through an inlined callee is not modelled (in the units checked the callee is
-  always compiled first). EH pieces, `??_C@` strings and `__real@` constants are not predicted (they depend on
-  inlining); they belong to the function before them. The initializer list's `SsrSortInitializerEvalOrder`
-  variant, data initializers that take an inline function's address, and `/GL` (LTCG) ordering are not
-  modelled.
-- The routine that rewrites the LEA as an ADD inside `LoFinalLower` is not isolated; the reload rule covers
-  the integer class (`_IntPhysRegs`), not `_GFXPhysRegs`/`_XMMXPhysRegs`, and with `_Speed` = 0 (not
-  checked which options clear it) step (c) replaces the round-robin.
+- `full_sections` takes what each function's code references (relocations, `fld1`) and whether it has EH
+  sections from the obj: those are inlining results. A constant whose every use a later pass removes in
+  another way than `fld1` (`fldz` is not checked) is reported as `unplaced` with its obj section.
+- Not modelled (probe `p4`: three dynamic initializers, a global with a constructor and destructor): the
+  `??__F` atexit destructor (`.text$yd`), which the bottom-up model places first and c2 last, so the
+  initializers' order (`SsrSortInitializerEvalOrder`, not traced further) is unchecked when one exists; and
+  data whose only contents are dynamically initialized, whose `.bss` c2 creates at `obj_end`
+  (`SsrEmitDelayedInit`, before `.CRT$XCU`), not in `ProcessSegmentInits` (gl data flag 0x40 marks a
+  dynamic initializer). Under `/Zi`, `.debug$T` and the per-function debug sections come elsewhere and the
+  code relocations no longer name the literals: not modelled. `/GL` (LTCG) ordering is not modelled.
+- `_Speed` is bit 23 (0x800000) of the function's optimization word (`[f+0x1c]`, copied by
+  `MscProcessPragstat` at each function's start; bit 8 goes to `_DefaultInt`, bit 31 to `_StackCheck`).
+  c1xx sets it by default (`/Ot`, implied by `/O2`, `/Ox`, also under `/Og` and `/Od`) and clears it for
+  `/O1`, `/Os` and `#pragma optimize("t", off)` (traced: `/O2` 0xA01804, `/O1` 0x201804); under POGO it goes
+  to `_PogoSavedFuncSpeedFlag` instead, and `GetInlinee` sets it while it reads an inlinee. Without it
+  RegAssign takes step (c) instead of the round-robin, and `LoFinalLower` turns `lea r,[r+1]`/`[r-1]` into
+  INC/DEC (opcodes 0x21/0x1E) instead of ADD.
+- The LEA to ADD rewrite is not a routine of its own: it is LoFinalLower's LEA case after
+  `LoFinalLEAtoMOV` declines (+0x1EE). `lea d,[d+disp]` (leaf 0x27C, base register = destination) becomes
+  `ADD d, disp` (+0x205; opcode 0x2D, `TupMakeIntConst`), `lea d,[a+b]` without displacement or scale
+  (leaf 0x27D, +0x2EE) becomes `ADD d, other` when either register is the destination's (`TupReplaceSrc`,
+  `TupMakePhysReg`, `CCSetUse`). The reload rule covers the integer class (`_IntPhysRegs`), not
+  `_GFXPhysRegs`/`_XMMXPhysRegs`.
 - Layouts and conventions hold for the pinned `c2.dll` only; they come from its disassembly, not from an API.
 - `symnum` is c2's numbering (pool slot, by first use); the front-end number is `fe` (see "The 64-cycle").
 - Hot routines (`OptHashNode`: ~1100 calls for one small function) are slow, one debug round trip per call
