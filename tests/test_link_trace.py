@@ -266,5 +266,60 @@ class OrderTests(unittest.TestCase):
         self.assertEqual(rows[0]["icf_candidates"], ["_g", "_g"])
 
 
+class IcfSurvivorModel(unittest.TestCase):
+    def test_qsort_sorts_and_is_not_stable(self):
+        import random
+        rng = random.Random(7)
+        for n in (0, 1, 2, 8, 9, 40, 200):
+            data = [rng.randrange(6) for _ in range(n)]
+            items = list(range(n))
+            out = lt.ms_qsort(items, lambda x, y: (data[x] > data[y]) - (data[x] < data[y]))
+            self.assertEqual(sorted(out), items)
+            self.assertEqual([data[i] for i in out], sorted(data))
+        # shortsort moves the maximum to the end: two equal keys swap places.
+        self.assertEqual(lt.ms_qsort(["a", "b"], lambda x, y: 0), ["b", "a"])
+
+    def test_compare_key_order(self):
+        live = [1, 0, 0, 12, 0xFFFFFFFF, 5]
+        self.assertEqual(lt.icf_compare(live, [0] + live[1:]), -1)        # live first under /OPT:REF
+        self.assertEqual(lt.icf_compare(live, [0] + live[1:], ref=False), 0)
+        self.assertEqual(lt.icf_compare(live[:1] + [1] + live[2:], live), 1)  # cycle byte last
+        self.assertEqual(lt.icf_compare(live, live[:3] + [13] + live[4:]), -1)  # size ascending
+        self.assertEqual(lt.icf_compare(live, list(live)), 0)
+
+    def test_survivor_is_lowest_unless_a_caller_folds_first(self):
+        keys = {k: [1, 0, 1, 16, 9, c] for k, c in (("leaf1", 1), ("leaf2", 1), ("top1", 2), ("top2", 2))}
+        same = lambda x, y: x[:-1] == y[:-1]
+        deps = {"top1": ["leaf1"], "top2": ["leaf2"]}
+        # Callers sorted first: top2 absorbs top1 and its callee leaf2 absorbs leaf1.
+        out = lt.icf_survivors(["top2", "top1", "leaf1", "leaf2"], keys, same, lambda x: deps.get(x, ()))
+        self.assertEqual(out, {"leaf1": "leaf2", "top1": "top2"})
+        out = lt.icf_survivors(["leaf1", "leaf2", "top2", "top1"], keys, same, lambda x: deps.get(x, ()))
+        self.assertEqual(out, {"leaf2": "leaf1", "top1": "top2"})
+
+    def test_sig_is_pdb_crc32(self):
+        self.assertEqual(lt._sig(b"", 0xFFFFFFFF), 0xFFFFFFFF)
+        s = 0xFFFFFFFF
+        for b in b"abc":   # SigForPbCb: sig = (sig >> 8) ^ T[(sig ^ b) & 0xFF]
+            s ^= b
+            for _ in range(8):
+                s = (s >> 1) ^ (0xEDB88320 if s & 1 else 0)
+        self.assertEqual(lt._sig(b"abc", 0xFFFFFFFF), s)
+
+    def test_static_keys_leaf_and_caller(self):
+        leaf = b"\x8b\x44\x24\x04\xc3"
+        caller = b"\xe8\x00\x00\x00\x00\xc3"
+        aux = lambda size, nrel, ck, sel: struct.pack("<IHHIHB3x", size, nrel, 0, ck, 0, sel)
+        data = make_obj([(".text", CODE | 0x1000, leaf, []), (".text", CODE | 0x1000, caller, [(1, 4, 0x14)])],
+                        [(".text", 0, 1, 0, 3, aux(5, 0, 0x11, 2)), (".text", 0, 2, 0, 3, aux(6, 1, 0x22, 1)),
+                         ("_leaf", 0, 1, 0x20, 2, None), ("_caller", 0, 2, 0x20, 2, None)])
+        obj = lt.parse_obj(data, "a.obj")
+        rows = lt.icf_candidates([obj])
+        keys = lt.icf_static_keys([obj], rows)
+        self.assertEqual(keys[(0, 1)], [1, 0, 0, 5, 0xFFFFFFFF, 0x11])
+        edge = lt._sig(struct.pack("<II", 1, 0x14 | 2 << 16 | 0x1000000), 0xFFFFFFFF)
+        self.assertEqual(keys[(0, 2)], [1, 0, 1, 6, lt._sig(struct.pack("<I", 0xFFFFFFFF), edge), 0x22])
+
+
 if __name__ == "__main__":
     unittest.main()
