@@ -5,8 +5,8 @@
     python tools/link_trace.py explain --model DIR/model.json --symbol ?f@@YAHH@Z
     python tools/link_trace.py order --obj a.obj b.obj [--model DIR/model.json] [--root _main]
     python tools/link_trace.py order --obj a.obj b.obj --icf-trace DIR/icf.json   (ICF survivors)
-    python tools/link_trace.py icf-trace --obj a.obj b.obj --flags "/OPT:REF,ICF" --out DIR
-    python tools/link_trace.py experiment --out DIR      (the docs/link-trace.md rule tables)
+    python tools/link_trace.py icf-trace --obj a.obj b.obj --flags "/OPT:REF,ICF" --out DIR [--crc]
+    python tools/link_trace.py experiment --set E1|E2|E4|all|layout --out DIR   (docs/link-trace.md tables)
 
 `run` links the objects with the pinned toolchain, adding /VERBOSE (REF and ICF
 decisions), /MAP and /MAPINFO:EXPORTS, then joins four sources into one model:
@@ -203,6 +203,85 @@ def parse_verbose(text):
             if stripped:
                 mode = None
     return {"discarded": discarded, "fold_groups": groups, "icf_savings": icf_savings, "passes": passes}
+
+
+_FOUND = re.compile(r"^\s+Found " + _SYM + r"\s*$")
+_REFERENCED = re.compile(r"^\s+Referenced in (?P<origin>.+?)\s*$")
+_LOADED = re.compile(r"^\s+Loaded (?P<origin>.+?)\s*$")
+_SEARCHING = re.compile(r"^\s+Searching (?P<lib>.+?):\s*$")
+
+
+def parse_loads(text):
+    """The library search of a /VERBOSE log: one event per `Found` symbol, in log order, with the
+    library searched, the inputs it was `Referenced in` and the member `Loaded` for it (None when
+    an already loaded member defines it). Link numbers the modules in this order: the objects
+    1..N in command-line order, then each `Loaded` member."""
+    events, lib, cur = [], None, None
+    for line in text.splitlines():
+        m = _SEARCHING.match(line)
+        if m:
+            lib, cur = m.group("lib"), None
+            continue
+        m = _FOUND.match(line)
+        if m:
+            cur = {"symbol": _sym(m), "lib": lib, "refs": [], "loaded": None}
+            events.append(cur)
+            continue
+        if cur is None:
+            continue
+        m = _REFERENCED.match(line)
+        if m:
+            cur["refs"].append(m.group("origin"))
+            continue
+        m = _LOADED.match(line)
+        if m:
+            cur["loaded"] = m.group("origin")
+            cur = None
+    return events
+
+
+def library_pulls(objs, events):
+    """Predict the library modules' load order for this object order from a traced search
+    (`parse_loads` of any order of the same inputs). Link walks its unresolved externals in the
+    order the objects first referenced them (command-line order, each object's symbol table in
+    order), so the members the objects pull are reordered among their own slots of the traced
+    sequence; the members pulled for the entry point and for other library members keep their
+    traced slots (their order is the library's, the same in E1, E2 and E4). Returns the `Found`
+    symbols that load a member, in predicted load order: module number = len(objs) + 1 + position."""
+    objnames = {_origin_key(o["path"]) for o in objs}
+    first = {}
+    for obj in objs:
+        for sym in obj["symbols"]:
+            if sym["external"] and sym["section"] == 0:
+                first.setdefault(sym["name"], len(first))
+    seq = [e for e in events if e["loaded"]]
+    slots = [i for i, e in enumerate(seq) if any(_origin_key(r) in objnames for r in e["refs"])]
+    moved = sorted((seq[i] for i in slots), key=lambda e: first.get(e["symbol"], 1 << 30))
+    out = list(seq)
+    for i, e in zip(slots, moved):
+        out[i] = e
+    # A member's own references are searched after those of the members loaded before it: the
+    # events first referenced by a member the objects pulled follow that member's new position.
+    # Import members share one name (`MSVCRT.lib(MSVCR80.dll)`): an event referenced only by such
+    # members (the DLL's import descriptor, referenced by each) follows the first one loaded.
+    names = [e["loaded"] for e in out]
+    first_of = {}
+    for i, e in enumerate(out):
+        first_of.setdefault(e["loaded"], i)
+
+    def referencer(e):
+        r = e["refs"][0] if e["refs"] else None
+        if r is None or r not in first_of or first_of[r] not in set(slots):
+            return None
+        if names.count(r) == 1 or (len(e["refs"]) > 1 and all(x == r for x in e["refs"])):
+            return first_of[r]
+        return None
+
+    second = [i for i, e in enumerate(out) if i not in set(slots) and referencer(e) is not None]
+    later = sorted((out[i] for i in second), key=referencer)
+    for i, e in zip(second, later):
+        out[i] = e
+    return [e["symbol"] for e in out]
 
 
 _MAP_SECTION = re.compile(r"^\s*([0-9a-fA-F]{4}):([0-9a-fA-F]{8}) ([0-9a-fA-F]{8})H (\S+)\s+(\S+)\s*$")
@@ -709,6 +788,13 @@ LINK_SHA256 = "16beda175e8e83f45187c0cd18eed06d0ec26a401d0bbc3544074c57eeebaff5"
 LINK_BASE = 0x400000
 BP_QSORT, BP_QSORT_RET, BP_FOLD = 0x4558E2, 0x4558E8, 0x4541C0
 PIMAGE = 0x4B2B5C            # ICFCompareContext::pimage (IMAGE*)
+# CrcEdges (0x4539F0): entry, every SigForPbCb call site (what it hashes there) and the store of the
+# result; CrcEdgesLoop (0x453C90): entry and its one SigForPbCb call.
+BP_CRC = 0x4539F0
+BP_CRC_SITES = {0x453AE7: "edge", 0x453B1E: "import", 0x453B4F: "value", 0x453BD1: "icfid",
+                0x453C08: "crc", 0x453C34: "name", 0x453C40: "name+2c", 0x453C4C: "name+30"}
+BP_CRC_DONE = 0x453C6E
+BP_LOOP, BP_LOOP_SITE = 0x453C90, 0x453DEE
 
 
 class LinkDebugger:
@@ -824,9 +910,58 @@ class IcfRecorder:
     +0x3C fold target. MOD: +8 object name, +0x94 node array (20 bytes each), +0x98 LIB*,
     +0x9C CON array, +0xBC CON count. Node: +8 and +0x11 are comparator keys."""
 
-    def __init__(self):
+    def __init__(self, crc=False):
         self.sorts, self.folds, self.cons = [], [], {}
         self._pending = None
+        self.crc = crc
+        self.crc_log, self._node_con, self._crc_open = [], {}, {}
+
+    def breaks(self):
+        out = [BP_QSORT, BP_QSORT_RET, BP_FOLD]
+        if self.crc:
+            out += [BP_CRC, BP_CRC_DONE, BP_LOOP, BP_LOOP_SITE, *BP_CRC_SITES]
+        return out
+
+    @staticmethod
+    def node_of(d, pcon):
+        rd = d.dbg.read_u32
+        mod = rd(pcon + 0x10)
+        rgcon, ccon = rd(mod + 0x9C), rd(mod + 0xBC)
+        if rgcon <= pcon <= rgcon + (ccon << 6):
+            return rd(mod + 0x94) + ((pcon - rgcon) >> 6) * 20
+        return pcon + 0x40
+
+    def crc_event(self, d, va, ctx):
+        """CrcEdges/CrcEdgesLoop: log each SigForPbCb input (site, bytes, seed) per contribution."""
+        rd, esp = d.dbg.read_u32, ctx.Esp
+        if va == BP_CRC:
+            pcon = rd(esp + 8)
+            self._node_con[self.node_of(d, pcon)] = pcon
+            return
+        if va == BP_LOOP:
+            pcon = ctx.Eax
+            node = self.node_of(d, pcon)
+            self._node_con[node] = pcon
+            self._loop = {"con": self.con(d, pcon), "loop": True, "round": d.dbg.read(esp + 8, 1)[0],
+                          "chunks": []}
+            self.crc_log.append(self._loop)
+            return
+        if va == BP_LOOP_SITE:
+            pb, cb, seed = rd(esp), rd(esp + 4), rd(esp + 8)
+            self._loop["chunks"].append(["loop", d.dbg.read(pb, cb).hex(), seed])
+            return
+        if va == BP_CRC_DONE:
+            node = ctx.Eax
+            entry = self._crc_open.pop(node, None) or {"con": self.con(d, self._node_con[node]), "chunks": []}
+            entry["value"], entry["cyclic"] = ctx.Esi, ctx.Ecx & 0xFF
+            self.crc_log.append(entry)
+            return
+        node = rd(esp + 0x1C)
+        entry = self._crc_open.get(node)
+        if entry is None:
+            entry = self._crc_open[node] = {"con": self.con(d, self._node_con[node]), "chunks": []}
+        pb, cb, seed = rd(esp), rd(esp + 4), rd(esp + 8)
+        entry["chunks"].append([BP_CRC_SITES[va], d.dbg.read(pb, cb).hex(), seed])
 
     def con(self, d, pcon):
         if pcon in self.cons:
@@ -845,6 +980,7 @@ class IcfRecorder:
         lib = rd(mod + 0x98)
         lib_name = d.wstr(rd(lib)) if lib and not (rd(lib + 0x30) >> 4) & 1 else None
         rec = {"id": len(self.cons), "obj": d.wstr(rd(mod + 8)), "lib": lib_name, "con_index": index,
+               "module": rd(mod + 0x4C),
                "flags": word(4), "size": word(8), "size_adjust": word(0x1C), "checksum": word(0x20),
                "node_8": struct.unpack_from("<I", nraw, 8)[0], "node_11": nraw[0x11],
                "mod_ac": struct.unpack_from("<H", d.dbg.read(mod + 0xAC, 2))[0],
@@ -867,16 +1003,17 @@ class IcfRecorder:
         flags|type); for a target outside the objects, what CrcEdges hashes: an import's name
         (flags 0x4000000, from the IMAGE+0x250 string table) or the ICFId (module, section)."""
         rd = d.dbg.read_u32
-        mod = rd(pcon + 0x10)
-        node = rd(mod + 0x94) + ((pcon - rd(mod + 0x9C)) >> 6) * 20
-        blk, out = rd(node), []
+        blk, out = rd(self.node_of(d, pcon)), []
         while blk:
             for e in range(min(rd(blk + 4), 4096)):
                 t, off, flags = struct.unpack("<III", d.dbg.read(blk + 8 + 12 * e, 12))
                 row = {"offset": off, "flags": flags}
                 if flags & 0x4000000:
                     row["import"] = self.cstr(d, rd(rd(d.u32(PIMAGE) + 0x250)) + rd(t + 4))
+                elif flags & 0x2000000:
+                    row["other"] = d.dbg.read(t, 8).hex() if t else None
                 elif t:
+                    row["con"] = self.con(d, t)
                     tm = rd(t + 0x10)
                     lib = rd(tm + 0x98)
                     row["module"] = rd(tm + 0x4C)
@@ -905,12 +1042,14 @@ class IcfRecorder:
     def __call__(self, d, va, ctx):
         esp = ctx.Esp
         rd = d.dbg.read_u32
+        if va not in (BP_QSORT, BP_QSORT_RET, BP_FOLD):
+            return self.crc_event(d, va, ctx)
         if va == BP_QSORT:
             base, num = rd(esp), rd(esp + 4)
             pcons = [rd(base + 4 * i) for i in range(num)]
             ids = [self.con(d, p) for p in pcons]
             for p in pcons:
-                if not self.cons[p]["lib"] and "edges" not in self.cons[p]:
+                if "edges" not in self.cons[p]:
                     self.cons[p]["edges"] = self.edges(d, p)
             self._pending = {"iteration": rd(esp + 0x34), "group": rd(esp + 0x28), "base": base, "input": ids,
                              "keys": [self.keys(d, p) for p in pcons],
@@ -1059,7 +1198,7 @@ def icf_survivors(order, keys, identical, deps=lambda x: (), out=None):
     return out
 
 
-def icf_trace(objs, flags, out, toolchain="sp1", output_name="trace.exe"):
+def icf_trace(objs, flags, out, toolchain="sp1", output_name="trace.exe", crc=False):
     """Link under the debugger; return the recorded ICF sorts and folds, joined to the objects."""
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -1070,8 +1209,8 @@ def icf_trace(objs, flags, out, toolchain="sp1", output_name="trace.exe"):
     image = out / output_name
     command = [str(bindir / "link.exe"), "/NOLOGO", "/VERBOSE", "/MAP:" + str(out / "trace.map"),
                "/OUT:" + str(image), *flags, *[str(Path(o).resolve()) for o in objs]]
-    rec = IcfRecorder()
-    code, log = LinkDebugger((BP_QSORT, BP_QSORT_RET, BP_FOLD), rec).run(command, env, out)
+    rec = IcfRecorder(crc)
+    code, log = LinkDebugger(rec.breaks(), rec).run(command, env, out)
     (out / "verbose.txt").write_text(log, encoding="utf-8")
     if code:
         raise LinkTraceError("link failed (%d): %s" % (code, log[-2000:]))
@@ -1084,8 +1223,11 @@ def icf_trace(objs, flags, out, toolchain="sp1", output_name="trace.exe"):
             sec = obj["sections"][c["con_index"]]
             c["section_index"] = sec["index"]
             c["symbol"] = comdat_symbol(sec)
-    return {"command": command, "cons": cons, "sorts": rec.sorts, "folds": rec.folds,
-            "verbose": parse_verbose(log)}
+    res = {"command": command, "cons": cons, "sorts": rec.sorts, "folds": rec.folds,
+           "verbose": parse_verbose(log), "loads": parse_loads(log)}
+    if crc:
+        res["crc_log"] = rec.crc_log
+    return res
 
 
 # ---------------------------------------------------------------- ICF survivor model
@@ -1132,16 +1274,72 @@ def icf_candidates(objs, live=None):
     return rows
 
 
-def icf_static_keys(objs, rows, externals=None):
-    """ICFComparePcon keys computed from the objects (IcfRecorder.keys order), or None for a
-    contribution on a reference cycle (CrcEdgesLoop, not modelled) or that references a symbol
-    no traced object defines (an import or a library member: its edge hash needs link's view).
+def _trace_view(objs, trace):
+    """What a trace of the same inputs (any object order) says about the contributions the objects
+    cannot describe: the library members' contributions (their ICF edges, candidacy and keys), the
+    edges from the objects to them or to imports, by symbol name, and each traced module's number
+    in this object order (objects by name, library members by `library_pulls`)."""
+    view = {"cons": {}, "ext": {}, "module": {}, "cand": set(), "keys": {}, "obj_of": {}, "section": {}}
+    if not trace:
+        return view
+    cons = trace["cons"]
+    names = {_origin_key(o["path"]): i for i, o in enumerate(objs)}
+    tobjs = [a for a in trace["command"] if a.lower().endswith(".obj")]
+    nt = len(tobjs)
+    events = trace.get("loads") or []
+    tseq = [e["symbol"] for e in events if e["loaded"]]
+    newpos = {sym: i for i, sym in enumerate(library_pulls(objs, events))} if events else {}
+    for m in range(1, nt + 1):
+        view["module"][m] = names.get(_origin_key(tobjs[m - 1]), -1) + 1
+    for m, sym in enumerate(tseq, nt + 1):
+        view["module"][m] = len(objs) + 1 + newpos[sym] if sym in newpos else m
+    for s in trace["sorts"]:
+        if s["iteration"]:
+            continue
+        for i, k in zip(s["input"], s["keys"]):
+            view["cand"].add(i)
+            view["keys"][i] = k
+    for c in cons:
+        view["cons"][c["id"]] = c
+        for e in c.get("edges") or ():
+            if "con" in e and "section" in e:
+                view["section"].setdefault(e["con"], e["section"])
+        if not c["lib"] and c["con_index"] is not None and _origin_key(c["obj"] or "") in names:
+            view["obj_of"][c["id"]] = (names[_origin_key(c["obj"])], c["con_index"] + 1)
+    for c in cons:
+        sec_index = c.get("section_index")
+        if c["lib"] or not c.get("edges") or not sec_index or _origin_key(c["obj"] or "") not in names:
+            continue
+        obj = objs[names[_origin_key(c["obj"])]]
+        sec = obj["sections"][sec_index - 1]
+        edges = [e for e in c["edges"] if e["flags"] != 0xFFFF]
+        if len(sec["relocs"]) != len(edges):
+            continue
+        by_index = {x["index"]: x for x in obj["symbols"]}
+        for rel, edge in zip(sec["relocs"], edges):
+            t = by_index.get(rel["symbol_index"])
+            if t and t["external"] and ("import" in edge or edge.get("library") or "other" in edge):
+                view["ext"].setdefault(t["name"], edge)
+    return view
 
-    Edge CRC (CrcEdges 0x4539F0): start 0xFFFFFFFF; per relocation, in table order, hash
-    (offset, type | storage class << 16 | 0x1000000 for a function symbol), then for a target
-    that is itself a candidate its edge CRC, for any other section its ICFId (module number =
-    1-based object position, section number); 0 becomes 1."""
-    externals = externals or {}
+
+def icf_static_keys(objs, rows, trace=None, log=None, graph=None):
+    """ICFComparePcon keys of the objects' candidates (IcfRecorder.keys order) and, with a trace of
+    the same inputs, of the library members' candidates: {node: key or None}. Object nodes are
+    (obj_index, section_index), library nodes ("lib", trace con id). None: not modelled (a target
+    neither the objects nor the trace describe). `log` ({node: [[site, hex]]}) receives what each
+    node hashes, in the form of IcfRecorder's crc_log.
+
+    Edge CRC (CrcEdges 0x4539F0, mspdb80 SigForPbCb): start 0xFFFFFFFF; for each ICF edge in order
+    (an (offset 0, 0xFFFF) edge per associative child, then one per relocation: offset, type |
+    storage class << 16 | 0x1000000 for a function | 0x4000000 for an import) hash the 8-byte edge,
+    then for its target: an import's name; for a contribution that is not an ICF candidate its
+    ICFId (module number, 1-based section; (-1, -1) for a module flagged 0x800 at +0xAC); nothing
+    for an associative candidate (selection 5 with a parent: `__ehfuncinfo$`, `__ehhandler$`); for
+    any other candidate its own edge CRC, or nothing and the cycle flag when it is on or reaches a
+    reference cycle. 0 becomes 1. Module numbers: objects 1..N in command-line order, then the
+    library members in load order (`library_pulls`)."""
+    view = _trace_view(objs, trace)
     defs = {}
     for oi, obj in enumerate(objs):
         for sec in obj["sections"]:
@@ -1153,110 +1351,175 @@ def icf_static_keys(objs, rows, externals=None):
     for r in rows:
         if r["symbol"]:
             chosen.setdefault(r["symbol"], (r["obj_index"], r["section_index"]))
-    memo, active, edges = {}, set(), {}
     children = icf_children(objs)
-    assoc = lambda k: bool(objs[k[0]]["sections"][k[1] - 1]["associated"])
+    tcons = view["cons"]
 
-    def crc(key):
-        """CrcEdges: (partial CRC, on/reaching a cycle) or None when a target is not modelled."""
-        if key in memo:
-            return memo[key]
-        if key in active:
-            return "active"
-        active.add(key)
-        oi, si = key
+    def lib_node(cid):
+        if cid in view["obj_of"]:
+            return view["obj_of"][cid]
+        return ("lib", cid) if cid in tcons else None
+
+    def is_cand(n):
+        return n in cand if n[0] != "lib" else n[1] in view["cand"]
+
+    def is_assoc(n):
+        if n[0] == "lib":
+            raw = bytes.fromhex(tcons[n[1]]["con_raw"])
+            return raw[0x34] == 5 and struct.unpack_from("<I", raw, 0x3C)[0] != 0
+        sec = objs[n[0]]["sections"][n[1] - 1]
+        return sec["selection"] == "associative" and bool(sec["associated"])
+
+    def icfid(n):
+        if n[0] != "lib":
+            return struct.pack("<II", n[0] + 1, n[1])
+        c = tcons[n[1]]
+        if c["mod_ac"] >> 11 & 1:
+            return struct.pack("<ii", -1, -1)
+        section = c["con_index"] + 1 if c["con_index"] is not None else view["section"].get(n[1], 0)
+        return struct.pack("<II", view["module"].get(c["module"], c["module"]), section)
+
+    def traced_edge(head, e):
+        if "import" in e:
+            return head, ("import", e["import"])
+        if "other" in e:
+            return head, (("other",) if e["flags"] & 0x8000000 else None)
+        return head, lib_node(e.get("con"))
+
+    def edges_of(n):
+        """[(edge bytes, target)]: target ("import", name), ("other",), a node, or None (unknown)."""
+        if n[0] == "lib":
+            return [traced_edge(struct.pack("<II", e["offset"], e["flags"]), e)
+                    for e in tcons[n[1]].get("edges") or ()]
+        out = []
+        oi, si = n
         obj = objs[oi]
         sec = obj["sections"][si - 1]
         by_index = {x["index"]: x for x in obj["symbols"]}
-        s, cyclic, result, out_edges = 0xFFFFFFFF, False, True, []
-        # The associative children come first, as edges (0, 0xFFFF) to each child section.
-        for child in children.get(key, ()):
-            s = _sig(struct.pack("<II", 0, 0xFFFF), s)
-            if child in cand and not assoc(child):
-                sub = crc(child)
-                if sub is None:
-                    result = None
-                    break
-                out_edges.append(child)
-                if sub == "active" or sub[1]:
-                    cyclic = True
-                else:
-                    s = _sig(struct.pack("<I", sub[0]), s)
-            else:
-                s = _sig(struct.pack("<II", child[0] + 1, child[1]), s)
-        for rel in sec["relocs"] if result else ():
+        for child in children.get(n, ()):
+            out.append((struct.pack("<II", 0, 0xFFFF), child))
+        for rel in sec["relocs"]:
             t = by_index.get(rel["symbol_index"])
             if t is None:
-                result = None
-                break
+                out.append((b"", None))
+                continue
             d1 = REL_CODE.get(rel["type"], 0) | (t["storage"] << 16) | (0x1000000 if t["function"] else 0)
-            if t["external"]:
+            target = None
+            if t["external"] or t["storage"] == 105:  # 105: weak external (`??_E` to `??_G`)
                 target = defs.get(t["name"])
                 if target is None and t.get("weak_default"):
                     target = defs.get(t["weak_default"])
-            else:
-                target = (oi, t["section"]) if t["section"] > 0 else None
-            if target is None and t["name"] in externals:
-                ext = externals[t["name"]]
-                s = _sig(struct.pack("<II", rel["offset"], ext["flags"]), s)
-                if "import" in ext:
-                    s = _sig(ext["import"].encode("latin-1"), s)
-                else:
-                    s = _sig(struct.pack("<II", ext["module"], ext["section"]), s)
-                continue
-            s = _sig(struct.pack("<II", rel["offset"], d1), s)
-            if target is None:
-                result = None
-                break
-            tsec = objs[target[0]]["sections"][target[1] - 1]
-            if tsec["comdat"] and comdat_symbol(tsec) in chosen and not tsec["associated"]:
-                target = chosen[comdat_symbol(tsec)]
+                if target is None and t["name"] in view["ext"]:
+                    e = view["ext"][t["name"]]
+                    out.append(traced_edge(struct.pack("<II", rel["offset"], e["flags"]), e))
+                    continue
+            elif t["section"] > 0:
+                target = (oi, t["section"])
+            if target is not None:
                 tsec = objs[target[0]]["sections"][target[1] - 1]
-            if assoc(target):
-                continue  # CrcEdges skips an associative COMDAT (selection 5, parent at +0x3C)
-            if target in cand:
+                if tsec["comdat"] and not tsec["associated"] and comdat_symbol(tsec) in chosen:
+                    target = chosen[comdat_symbol(tsec)]
+            out.append((struct.pack("<II", rel["offset"], d1), target))
+        return out
+
+    memo, active, cyc_edges = {}, set(), {}
+
+    def crc(n):
+        """CrcEdges: (CRC, cyclic) or None when an edge is not modelled; "active" while on the stack."""
+        if n in memo:
+            return memo[n]
+        if n in active:
+            return "active"
+        active.add(n)
+        s, cyclic, ok, chunks, loop = 0xFFFFFFFF, False, True, [], []
+
+        def h(site, data):
+            nonlocal s
+            s = _sig(data, s)
+            chunks.append([site, data.hex()])
+
+        for head, target in edges_of(n):
+            if target is None or not head:
+                ok = False
+                chunks.append(["unmodelled", head.hex()])
+                break
+            h("edge", head)
+            if target[0] == "import":
+                h("import", target[1].encode("latin-1"))
+            elif target[0] == "other":
+                pass
+            elif not is_cand(target):
+                h("icfid", icfid(target))
+            elif is_assoc(target):
+                pass
+            else:
                 sub = crc(target)
                 if sub is None:
-                    result = None
+                    ok = False
+                    chunks.append(["unmodelled target", repr(target)])
                     break
-                out_edges.append(target)
+                loop.append(target)
                 if sub == "active" or sub[1]:
                     cyclic = True
                 else:
-                    s = _sig(struct.pack("<I", sub[0]), s)
-            else:
-                s = _sig(struct.pack("<II", target[0] + 1, target[1]), s)
-        active.discard(key)
-        memo[key] = ((s or 1), cyclic) if result else None
-        edges[key] = out_edges
-        return memo[key]
+                    h("crc", struct.pack("<I", sub[0]))
+        active.discard(n)
+        memo[n] = ((s or 1), cyclic) if ok else None
+        cyc_edges[n] = loop
+        if log is not None:
+            log[n] = chunks
+        return memo[n]
 
-    for r in rows:
-        crc((r["obj_index"], r["section_index"]))
-    # CrcEdgesLoop (0x453C90), three rounds over the contributions on cycles: each starts from its
-    # own value in one slot (node+4 or node+8), hashes the other-slot-free values of its cyclic
-    # targets read from that slot, and writes the other slot; rounds 3 and 1 write node+8.
-    slot4 = {k: (v[0] if v[1] else 0) for k, v in memo.items() if v}
-    slot8 = {k: v[0] for k, v in memo.items() if v}
-    cyc = [k for k, v in memo.items() if v and v[1]]
-    if any(memo.get(t) is None for k in cyc for t in edges[k]):
-        cyc = []
+    nodes = [(r["obj_index"], r["section_index"]) for r in rows]
+    nodes += [("lib", i) for i in sorted(view["cand"]) if tcons[i]["lib"]]
+    for n in nodes:
+        crc(n)
+    # CrcEdgesLoop (0x453C90), rounds 3, 2, 1 over the contributions on cycles: each starts from its
+    # own value in one slot (node+4 in odd rounds, node+8 in round 2), hashes the values its cyclic
+    # candidate targets hold in that slot and writes the other slot.
+    done = {k: v for k, v in memo.items() if v and v != "active"}
+    slot4 = {k: (v[0] if v[1] else 0) for k, v in done.items()}
+    slot8 = {k: v[0] for k, v in done.items()}
+    cyc = [k for k in done if done[k][1]]
+    unknown = {k for k in cyc if any(memo.get(t) is None for t in cyc_edges.get(k, ()))}
     for rnd in (3, 2, 1):
         src, dst = (slot8, slot4) if not rnd & 1 else (slot4, slot8)
         new = {}
         for k in cyc:
             v = src[k]
-            for t in edges[k]:
-                if memo[t][1]:
+            for t in cyc_edges[k]:
+                if t in done and done[t][1]:
                     v = _sig(struct.pack("<I", src[t]), v)
             new[k] = v or 1
         dst.update(new)
     out = {}
-    for r in rows:
-        k = (r["obj_index"], r["section_index"])
-        sec = objs[r["obj_index"]]["sections"][r["section_index"] - 1]
-        v = memo.get(k)
-        out[k] = None if v is None or (v[1] and k not in cyc) else             [1 if r["live"] else 0, 1 if v[1] else 0, len(sec["relocs"]), sec["size"], slot8[k], sec["checksum"] or 0]
+    for n in nodes:
+        v = memo.get(n)
+        if not v or v == "active" or n in unknown:
+            out[n] = None
+            continue
+        if n[0] == "lib":
+            k = list(view["keys"][n[1]])
+            k[1], k[4] = 1 if v[1] else 0, slot8[n]
+            out[n] = k
+            continue
+        r = cand[n]
+        sec = objs[n[0]]["sections"][n[1] - 1]
+        out[n] = [1 if r["live"] else 0, 1 if v[1] else 0, len(sec["relocs"]), sec["size"], slot8[n],
+                  sec["checksum"] or 0]
+    if graph is not None:
+        def group_key(n):
+            """ICFCompareIcfGrp (0x453810) order of a contribution's output group: characteristics
+            & 0x1E0 (code before data), then the group name (strcmp)."""
+            if n[0] == "lib":
+                c = tcons[n[1]]
+                return (c["flags"] & 0x1E0, c["group"] or "")
+            sec = objs[n[0]]["sections"][n[1] - 1]
+            return (sec["characteristics"] & 0x1E0, sec["name"])
+
+        graph.update({"group_key": group_key, "icfid": icfid, "is_cand": is_cand,
+                      "targets": {n: [t for head, t in edges_of(n) if t is not None and t[0] not in ("import", "other")
+                                      and not struct.unpack_from("<I", head, 4)[0] & 0x6000000]
+                                  for n in nodes}})
     return out
 
 
@@ -1318,42 +1581,23 @@ def icf_children(objs):
     return out
 
 
-def icf_externals(objs, trace):
-    """From an icf-trace: what each object relocation to a symbol outside the objects hashes in
-    the edge CRC (import name or library ICFId, with link's edge flags), by symbol name."""
-    externals = {}
-    for c in (trace or {}).get("cons", []):
-        sec_index = c.get("section_index")
-        path = next((o for o in objs if _origin_key(o["path"]) == _origin_key(c["obj"] or "")), None)
-        if c["lib"] or not c.get("edges") or path is None or not sec_index:
-            continue
-        sec = path["sections"][sec_index - 1]
-        edges = [e for e in c["edges"] if e["flags"] != 0xFFFF]
-        if len(sec["relocs"]) != len(edges):
-            continue
-        by_index = {x["index"]: x for x in path["symbols"]}
-        for rel, edge in zip(sec["relocs"], edges):
-            t = by_index.get(rel["symbol_index"])
-            if t and t["external"] and ("import" in edge or edge.get("library")):
-                externals.setdefault(t["name"], edge)
-    return externals
-
-
 def icf_predict(objs, trace=None, ref=True):
     """Predict each ICF fold group's survivor for this object order.
 
-    The candidate arrays are rebuilt in ICFAddPCON order (icf_candidates), keyed with the static
-    keys; a contribution the static model cannot key (a reference cycle, an import thunk or a
-    library member) and the library members' own candidates come from `trace` (an icf-trace result
-    of the same objects and libraries, any order). Each group is sorted with ms_qsort/icf_compare
-    and walked as ICFLocateICs does. Returns {"groups": [...], "unresolved": [...]}."""
+    The candidate arrays are rebuilt in ICFAddPCON order (icf_candidates, then the library
+    members' candidates of `trace` in their predicted load order), keyed by icf_static_keys over
+    the objects and the trace's library contributions and edges (an icf-trace result of the same
+    objects and libraries, any order); a key the model cannot compute falls back to the traced one
+    (listed as unresolved for an object). Each group is sorted with ms_qsort/icf_compare and walked
+    as ICFLocateICs does. Returns {"groups": [...], "unresolved": [...]}."""
     live = reachable(objs)
     rows = icf_candidates(objs, live)
-    externals = icf_externals(objs, trace)
-    keys = icf_static_keys(objs, rows, externals)
+    graph = {}
+    keys = icf_static_keys(objs, rows, trace, graph=graph)
+    view = _trace_view(objs, trace)
     cls, deps = icf_classes(objs, rows)
     names = [_origin_key(o["path"]) for o in objs]
-    traced, libs, lib_class, group_rank = {}, {}, {}, {}
+    traced, libs, lib_class = {}, {}, {}
     if trace:
         ref = bool(trace["sorts"][0]["flag_162"]) if trace["sorts"] else ref
         cons = trace["cons"]
@@ -1363,7 +1607,6 @@ def icf_predict(objs, trace=None, ref=True):
                 continue
             for i, k in zip(s["input"], s["keys"]):
                 c = cons[i]
-                group_rank.setdefault(c["group"], s["group"])
                 if c["lib"]:
                     libs.setdefault(c["group"], []).append(("lib", i))
                     traced[("lib", i)] = k
@@ -1384,21 +1627,45 @@ def icf_predict(objs, trace=None, ref=True):
             key = traced.get((names[r["obj_index"]], r["section_index"]))
             if key is not None:
                 key = [1 if r["live"] else 0] + key[1:]
-        if key is None:
+        if keys[k] is None:
             unresolved.append({"obj": r["obj"], "symbol": r["symbol"], "section": r["section"]})
+        if key is None:
             continue
         keys[k] = key
         by_group.setdefault(r["group"], []).append(k)
     for g, members in libs.items():
+        c = trace["cons"]
+        members = sorted(members, key=lambda m: (view["module"].get(c[m[1]]["module"], c[m[1]]["module"]),
+                                                 c[m[1]]["con_index"] or 0))
         by_group.setdefault(g, []).extend(members)
         for m in members:
-            keys[m] = traced[m]
+            if keys.get(m) is None:
+                keys[m] = traced[m]
     klass = dict(cls)
     klass.update(lib_class)
     groups, folds, sorted_arrays = [], {}, {}
-    # ICFAnalysis walks the groups in g_rgICFGrp order (sorted by ICFCompareIcfGrp): taken from the
-    # trace; without one, by name. A dependency in a later group can be folded from an earlier one.
-    for g in sorted(by_group, key=lambda g: (group_rank.get(g, 1 << 30), g)):
+    # ICFAnalysis walks the groups in g_rgICFGrp order (ICFCompareIcfGrp: code before data, then by
+    # name). A dependency in a later group can be folded from an earlier one. Before sorting every
+    # group but the first, it remixes each member's edge CRC (0x453E30): for each edge, in order,
+    # to a candidate of an earlier group, the ICFId of that target's survivor so far.
+    gk = graph["group_key"]
+
+    def rep(x):
+        while x in folds:
+            x = folds[x]
+        return x
+
+    for gi, g in enumerate(sorted(by_group, key=lambda g: gk(by_group[g][0]))):
+        if gi:
+            for x in by_group[g]:
+                if x not in graph["targets"]:
+                    continue
+                v = keys[x][4]
+                for t in graph["targets"][x]:
+                    r = rep(t)
+                    if graph["is_cand"](r) and gk(r) < gk(x):
+                        v = _sig(graph["icfid"](r), v)
+                keys[x] = keys[x][:4] + [v] + keys[x][5:]
         order = ms_qsort(by_group[g], lambda x, y: icf_compare(keys[x], keys[y], ref))
         sorted_arrays[g] = order
         icf_survivors(order, keys, lambda x, y: klass.get(x) == klass.get(y) and (x in cls) == (y in cls),
@@ -1421,35 +1688,27 @@ def icf_predict(objs, trace=None, ref=True):
         for s, fs in members.items():
             groups.append({"group": g, "survivor": label(s), "replaced": [label(f) for f in fs],
                            "sorted_positions": [order.index(x) if x in order else None for x in [s] + fs]})
-    return {"groups": groups, "unresolved": unresolved, "ref": ref, "library_candidates": bool(libs)}
+    return {"groups": groups, "unresolved": unresolved, "ref": ref, "library_candidates": bool(libs),
+            "keys": [[list(n), keys[n]] for g in sorted_arrays.values() for n in g]}
 
 
 # ---------------------------------------------------------------- experiments
 
 FLAGS = ["/O2", "/Oy", "/Gy", "/GS", "/EHsc", "/GR-", "/MD", "/fp:fast", "/arch:SSE2"]
+FIXTURES = ROOT / "tests/fixtures/link_trace"
 
 
-def _body(k):
-    return "{ return x * %d + %d; }" % (3 + k, 1000 + 7 * k)
+def _fixture(sub):
+    return [(p.name, p.read_text(encoding="utf-8")) for p in sorted((FIXTURES / sub).glob("*.cpp"))]
 
 
 def experiment(out, toolchain="sp1"):
-    """Run the rule experiments and return their tables (rows of dicts)."""
+    """Run the layout rule experiments and return their tables (rows of dicts)."""
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     results = {}
     # E1 ICF survivor: groups of identical functions spread over objects, every object order.
-    names = {"o0": ["f_%s_%d" % (c, k) for k, c in enumerate("pqrs")],
-             "o1": ["g_%s_%d" % (c, k) for k, c in enumerate("dcba")],
-             "o2": ["h_%s_%d" % (c, k) for k, c in enumerate("mzan")]}
-    order_in_obj = {"o0": [0, 1, 2, 3], "o1": [3, 2, 1, 0], "o2": [1, 3, 0, 2]}
-    srcs = []
-    for o in ("o0", "o1", "o2"):
-        lines = ["int %s(int x) %s" % (names[o][k], _body(k)) for k in order_in_obj[o]]
-        srcs.append((o + ".cpp", "\n".join(lines) + "\n"))
-    calls = " + ".join("%s(argc)" % n for o in names for n in names[o])
-    decls = "".join("int %s(int);\n" % n for o in names for n in names[o])
-    srcs.append(("m.cpp", decls + "int main(int argc, char**) { return %s; }\n" % calls))
+    srcs = _fixture("e1")
     edir = out / "e1"
     edir.mkdir(exist_ok=True)
     objs = compile_sources(srcs, edir, FLAGS, toolchain)
@@ -1467,46 +1726,6 @@ def experiment(out, toolchain="sp1"):
     return results
 
 
-E2_A = """
-#include <stdio.h>
-inline __declspec(noinline) int shared_inline(int x) { return x * 41 + 3; }
-int a_first(int x) { return shared_inline(x) + 1; }
-const char* a_str() { return "pool both"; }
-float a_flt(float x) { return x * 0.75f; }
-struct Base { virtual int Get() { return 1; } virtual ~Base() {} };
-int a_vt(Base* b) { return b->Get(); }
-Base* a_make() { return new Base; }
-int a_eh(int x) { try { if (x) throw x; } catch (int y) { return y; } return 0; }
-#pragma code_seg(".text$zz")
-int a_late(int x) { return x - 9; }
-#pragma code_seg(".text$aa")
-int a_early(int x) { return x - 19; }
-#pragma code_seg()
-int a_last(int x) { return x * x * x; }
-"""
-E2_B = """
-inline __declspec(noinline) int shared_inline(int x) { return x * 41 + 3; }
-int b_first(int x) { return shared_inline(x) + 2; }
-const char* b_str() { return "pool both"; }
-const char* b_str2() { return "pool b only"; }
-float b_flt(float x) { return x * 0.75f + 0.5f; }
-struct Base { virtual int Get() { return 1; } virtual ~Base() {} };
-Base* b_make() { return new Base; }
-#pragma code_seg(".text$aa")
-int b_early(int x) { return x - 29; }
-#pragma code_seg()
-"""
-E2_M = """
-struct Base { virtual int Get() { return 1; } virtual ~Base() {} };
-int a_first(int); const char* a_str(); float a_flt(float); int a_vt(Base*); Base* a_make(); int a_eh(int);
-int a_late(int); int a_early(int); int a_last(int);
-int b_first(int); const char* b_str(); const char* b_str2(); float b_flt(float); Base* b_make(); int b_early(int);
-int main(int argc, char** argv) {
-    Base* p = argc > 5 ? a_make() : b_make();
-    return a_first(argc) + b_first(argc) + *a_str() + *b_str() + *b_str2() + (int)a_flt((float)argc)
-        + (int)b_flt((float)argc) + a_vt(p) + a_eh(argc) + a_late(argc) + a_early(argc) + a_last(argc) + b_early(argc);
-}
-"""
 E2_NOGY = """
 int ng_one(int x) { return x + 11; }
 int ng_unused(int x) { return x + 12; }
@@ -1517,7 +1736,7 @@ int ng_two(int x) { return x + 13; }
 def _experiment_layout(out, toolchain):
     edir = out / "e2"
     edir.mkdir(exist_ok=True)
-    objs = compile_sources([("a.cpp", E2_A), ("b.cpp", E2_B), ("m.cpp", E2_M)], edir, FLAGS, toolchain)
+    objs = compile_sources(_fixture("e2"), edir, FLAGS, toolchain)
     nogy = compile_sources([("ng.cpp", E2_NOGY + "int ng_main(int x) { return ng_one(x) + ng_two(x); }\n")],
                            edir, [f for f in FLAGS if f != "/Gy"] + ["/Gy-"], toolchain)
     a, b, m = objs
@@ -1538,6 +1757,67 @@ def _experiment_layout(out, toolchain):
     res["nogy"] = [{k: c[k] for k in ("section", "symbol", "status", "size", "comdat")} for c in model["contributions"]]
     res["nogy_publics"] = [p["symbol"] for p in model["publics"] if p["symbol"].startswith("?ng_")]
     return res
+
+
+# The ICF survivor experiments: fixture sources and the object orders traced (docs/link-trace.md).
+ICF_SETS = {
+    "E1": ("e1", ["m o0 o1 o2", "m o0 o2 o1", "m o1 o0 o2", "m o1 o2 o0", "m o2 o0 o1", "m o2 o1 o0",
+                  "o0 o1 o2 m", "o1 m o2 o0"]),
+    "E2": ("e2", ["m a b", "m b a", "b a m"]),
+    "E4": ("e4", ["c m", "m c"]),
+}
+
+
+def _fold_sets(groups, survivor, members):
+    out = {}
+    for g in groups:
+        s = survivor(g)
+        if s is None:
+            continue
+        out[frozenset([s] + members(g))] = s
+    return out
+
+
+def icf_experiment(name, out, toolchain="sp1", log=print):
+    """Compile one ICF fixture set, icf-trace every listed object order and cross-predict: the
+    trace of order T predicts the survivors of order O, compared with O's /VERBOSE. Returns rows."""
+    sub, orders = ICF_SETS[name]
+    edir = Path(out).resolve() / sub
+    edir.mkdir(parents=True, exist_ok=True)
+    srcs = _fixture(sub)
+    objs = {Path(o).stem: o for o in compile_sources(srcs, edir, FLAGS, toolchain)}
+    runs = {}
+    for order in orders:
+        paths = [objs[x] for x in order.split()]
+        res = icf_trace(paths, ["/OPT:REF,ICF"], edir / ("t_" + order.replace(" ", "")), toolchain, crc=True)
+        (edir / ("t_" + order.replace(" ", "")) / "icf.json").write_text(json.dumps(res, indent=1) + "\n", encoding="utf-8")
+        parsed = [parse_obj(Path(p).read_bytes(), str(Path(p).resolve())) for p in paths]
+        replay = sum(icf_replay(srt, srt["flag_162"]) == srt["output"] for srt in res["sorts"])
+        runs[order] = (res, parsed, replay)
+    rows = []
+    for o_name, (o_trace, o_objs, replay) in runs.items():
+        names = {_origin_key(o["path"]): i for i, o in enumerate(o_objs)}
+        o_keys = {}
+        for srt in o_trace["sorts"]:
+            for i, k in zip(srt["input"], srt["keys"]):
+                c = o_trace["cons"][i]
+                if not srt["iteration"] and not c["lib"] and _origin_key(c["obj"] or "") in names:
+                    o_keys[(names[_origin_key(c["obj"])], c["con_index"] + 1)] = k
+        truth = _fold_sets(o_trace["verbose"]["fold_groups"],
+                           lambda g: None if g["survivor"]["lib"] else g["survivor"]["symbol"],
+                           lambda g: [x["symbol"] for x in g["replaced"]])
+        for t_name, (t_trace, _, _) in runs.items():
+            pred = icf_predict(o_objs, t_trace)
+            got = _fold_sets(pred["groups"], lambda g: None if g["survivor"].get("lib") else g["survivor"]["symbol"],
+                             lambda g: [x["symbol"] for x in g["replaced"]])
+            wrong = [{"members": sorted(k), "truth": truth.get(k), "predicted": got.get(k)}
+                     for k in set(truth) | set(got) if truth.get(k) != got.get(k)]
+            rows.append({"set": name, "order": o_name, "trace": t_name, "groups": len(truth), "ok": not wrong,
+                         "unresolved": len(pred["unresolved"]), "wrong": wrong,
+                         "keys": "%d/%d" % (sum(o_keys.get(tuple(n)) == k for n, k in pred["keys"] if n[0] != "lib"),
+                                            len(o_keys)),
+                         "qsort": "%d/%d" % (replay, len(o_trace["sorts"]))})
+    return rows
 
 
 # ---------------------------------------------------------------- CLI
@@ -1568,7 +1848,12 @@ def main(argv=None):
     t.add_argument("--flags", default="/OPT:REF,ICF")
     t.add_argument("--out", required=True)
     t.add_argument("--toolchain", default="sp1")
+    t.add_argument("--crc", action="store_true", help="also log every SigForPbCb input of CrcEdges and "
+                   "CrcEdgesLoop (icf.json crc_log)")
     x = sub.add_parser("experiment")
+    x.add_argument("--set", default="all", choices=["E1", "E2", "E4", "layout", "all"],
+                   help="E1/E2/E4: ICF survivor cross-prediction tables; layout: the layout rule tables (JSON)")
+    x.add_argument("--json", action="store_true")
     x.add_argument("--out", required=True)
     x.add_argument("--toolchain", default="sp1")
     args = ap.parse_args(argv)
@@ -1592,7 +1877,7 @@ def main(argv=None):
             print(line)
         return 0
     if args.cmd == "icf-trace":
-        res = icf_trace(args.obj, shlex.split(args.flags, posix=False), args.out, args.toolchain)
+        res = icf_trace(args.obj, shlex.split(args.flags, posix=False), args.out, args.toolchain, crc=args.crc)
         path = Path(args.out) / "icf.json"
         path.write_text(json.dumps(res, indent=1) + "\n", encoding="utf-8")
         cons = res["cons"]
@@ -1638,8 +1923,26 @@ def main(argv=None):
                       r["section"], Path(r["obj"]).name, r["symbol"], fold))
         return 0
     if args.cmd == "experiment":
-        print(json.dumps(experiment(args.out, args.toolchain), indent=1))
-        return 0
+        if args.set == "layout":
+            print(json.dumps(experiment(args.out, args.toolchain), indent=1))
+            return 0
+        rows = []
+        for name in (ICF_SETS if args.set == "all" else [args.set]):
+            rows += icf_experiment(name, args.out, args.toolchain)
+        if args.json:
+            print(json.dumps(rows, indent=1))
+        else:
+            print("%-4s %-12s %-12s %6s %5s %6s %10s  %s" % ("set", "order", "trace", "groups", "qsort", "keys",
+                                                             "unresolved", "survivors"))
+            for r in rows:
+                print("%-4s %-12s %-12s %6d %5s %6s %10d  %s" % (r["set"], r["order"], r["trace"], r["groups"], r["qsort"],
+                      r["keys"], r["unresolved"], "OK" if r["ok"] else "MISS " + "; ".join(
+                          "%s not %s" % (w["truth"], w["predicted"]) for w in r["wrong"])))
+            for name in sorted({r["set"] for r in rows}):
+                sel = [r for r in rows if r["set"] == name]
+                print("%s: %d/%d cross-predictions exact" % (name, sum(r["ok"] for r in sel), len(sel)))
+        bad = [r for r in rows if not r["ok"]]
+        return 1 if bad else 0
     return 1
 
 

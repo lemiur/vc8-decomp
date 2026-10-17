@@ -320,6 +320,44 @@ class IcfSurvivorModel(unittest.TestCase):
         edge = lt._sig(struct.pack("<II", 1, 0x14 | 2 << 16 | 0x1000000), 0xFFFFFFFF)
         self.assertEqual(keys[(0, 2)], [1, 0, 1, 6, lt._sig(struct.pack("<I", 0xFFFFFFFF), edge), 0x22])
 
+    def test_associative_candidate_child_hashes_only_its_edge(self):
+        parent = b"\xc3"
+        child = b"\xcc\xcc\xcc\xcc"
+        aux = lambda size, nrel, ck, sel, assoc=0: struct.pack("<IHHIHB3x", size, nrel, 0, ck, assoc, sel)
+        data = make_obj([(".text", CODE | 0x1000, parent, []), (".text$x", CODE | 0x1000, child, [])],
+                        [(".text", 0, 1, 0, 3, aux(1, 0, 0x11, 2)), (".text$x", 0, 2, 0, 3, aux(4, 0, 0x22, 5, 1)),
+                         ("_parent", 0, 1, 0x20, 2, None)])
+        obj = lt.parse_obj(data, "a.obj")
+        rows = lt.icf_candidates([obj])
+        log = {}
+        keys = lt.icf_static_keys([obj], rows, log=log)
+        # CrcEdges: the (0, 0xFFFF) edge to the child, nothing for an associative candidate.
+        self.assertEqual(log[(0, 1)], [["edge", struct.pack("<II", 0, 0xFFFF).hex()]])
+        self.assertEqual(keys[(0, 1)][4], lt._sig(struct.pack("<II", 0, 0xFFFF), 0xFFFFFFFF))
+
+    def test_parse_loads(self):
+        text = "\n".join(["Searching libraries", "    Searching C:/lib/MSVCRT.lib:", "      Found __fltused",
+                          "        Referenced in m.obj", "        Referenced in a.obj",
+                          "        Loaded MSVCRT.lib(dllsupp.obj)", "      Found _mainCRTStartup",
+                          "        Loaded MSVCRT.lib(crtexe.obj)"])
+        ev = lt.parse_loads(text)
+        self.assertEqual([e["symbol"] for e in ev], ["__fltused", "_mainCRTStartup"])
+        self.assertEqual(ev[0]["refs"], ["m.obj", "a.obj"])
+        self.assertEqual(ev[1]["loaded"], "MSVCRT.lib(crtexe.obj)")
+
+    def test_library_pulls_follow_first_reference(self):
+        ext = lambda *names: [{"name": n, "external": True, "section": 0} for n in names]
+        ev = lambda sym, refs, loaded: {"symbol": sym, "lib": "L", "refs": refs, "loaded": loaded}
+        # Traced with m before c: m pulls ftol2 (which references sse2), c pulls new (an import).
+        events = [ev("__ftol2", ["m.obj"], "L(ftol2.obj)"), ev("??2", ["c.obj"], "L(X.dll)"),
+                  ev("_entry", [], "L(crtexe.obj)"), ev("__sse2", ["L(ftol2.obj)"], "L(cpu.obj)"),
+                  ev("__IMPORT_DESCRIPTOR_X", ["L(X.dll)", "L(X.dll)"], "L(X.dll)")]
+        m = {"path": "m.obj", "symbols": ext("__ftol2")}
+        c = {"path": "c.obj", "symbols": ext("??2")}
+        self.assertEqual(lt.library_pulls([m, c], events), ["__ftol2", "??2", "_entry", "__sse2", "__IMPORT_DESCRIPTOR_X"])
+        # c first: its import member loads first, so the descriptor precedes ftol2's own reference.
+        self.assertEqual(lt.library_pulls([c, m], events), ["??2", "__ftol2", "_entry", "__IMPORT_DESCRIPTOR_X", "__sse2"])
+
 
 if __name__ == "__main__":
     unittest.main()

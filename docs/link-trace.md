@@ -12,9 +12,10 @@ a COMDAT survives and why a byte or a referent is what it is. Python stdlib only
 | `python tools/link_trace.py explain --model DIR/model.json --rva 0x1012` | the contribution covering an RVA: object, COMDAT section, status and reason, padding before it, fold group, the symbol inside a multi-function section, and every relocation resolved to its target RVA and name |
 | `python tools/link_trace.py explain --model DIR/model.json --symbol ?f@@YAHH@Z` | the same for a symbol (every copy: kept, folded, duplicate, removed) |
 | `python tools/link_trace.py order --obj a.obj b.obj [--model M] [--root _main] [--json]` | predicts the code layout for an object order without running link: offset, padding, size, section; without `--model`, `/OPT:REF` is approximated by reachability from the roots and identical COMDATs are flagged as `ICF candidates` |
-| `python tools/link_trace.py icf-trace --obj a.obj b.obj --flags "/OPT:REF,ICF" --out DIR` | links under the Windows debug API with breakpoints in `ICFAnalysis` and `ICFFold`; writes `DIR/icf.json` (every candidate: object or library member, section, comparator keys, ICF edges; each sort's input and output arrays; each fold as keep/fold) and checks the qsort model against every traced sort |
+| `python tools/link_trace.py icf-trace --obj a.obj b.obj --flags "/OPT:REF,ICF" --out DIR [--crc]` | links under the Windows debug API with breakpoints in `ICFAnalysis` and `ICFFold`; writes `DIR/icf.json` (every candidate: object or library member, module number, section, comparator keys, ICF edges with their target contribution; each sort's input and output arrays; each fold as keep/fold; the library search, `loads`) and checks the qsort model against every traced sort. `--crc` also breaks at every `SigForPbCb` call of `CrcEdges` and `CrcEdgesLoop` and logs what each contribution hashes (`crc_log`: site, bytes, seed) |
 | `python tools/link_trace.py order --obj a.obj b.obj --icf-trace DIR/icf.json [--json]` | predicts each fold group's survivor for this object order (see "ICF survivor"); the trace may come from any order of the same objects and libraries |
-| `python tools/link_trace.py experiment --out DIR` | compiles the test objects with cl 14.00.50727.762 (`/O2 /Oy /Gy /GS /EHsc /GR- /MD /fp:fast /arch:SSE2`) and reruns the experiments behind the tables below (JSON) |
+| `python tools/link_trace.py experiment --set E1\|E2\|E4\|all --out DIR [--json]` | compiles the ICF fixtures (`tests/fixtures/link_trace/e1`, `e2`, `e4`) with cl 14.00.50727.762 (`/O2 /Oy /Gy /GS /EHsc /GR- /MD /fp:fast /arch:SSE2`), `icf-trace --crc`s every listed object order and prints the validation table: per (order O, trace T) the fold groups, the qsort replays, the object candidates whose predicted sort key equals O's traced key, and whether every survivor of O is predicted from T; exit 1 on a miss |
+| `python tools/link_trace.py experiment --set layout --out DIR` | reruns the layout experiments behind the tables below (E1 orders, E2 layout, E3 `/Gy-`; JSON) |
 
 Model fields (`model.json`): `contributions[]` (one per non-debug section of each traced object:
 `obj`, `section_index`, `section`, `symbol`, `symbols[]` with offsets, `selection`, `checksum`, `size`,
@@ -83,11 +84,34 @@ Mechanism (link.pdb publics, disassembly of link.exe 8.00.50727.762, confirmed b
    count, size, edge CRC, COMDAT checksum (the aux-record checksum of the raw bytes). Identical
    copies compare 0. The edge CRC (`CrcEdges` 0x4539F0) is mspdb80 `SigForPbCb` (reflected CRC-32,
    seed 0xFFFFFFFF, no final complement) over the ICF edges: one (0, 0xFFFF) edge per associative
-   child, then per relocation (offset, type | storage class << 16 | 0x1000000 for a function
-   symbol | 0x4000000 for an import), followed by the target's edge CRC when it is a candidate,
-   its ICFId (module number = 1-based input position, section number) when it is not, or an
-   import's name; associative targets add nothing. A contribution that reaches a cycle gets the
-   cycle byte and three `CrcEdgesLoop` rounds over its cyclic targets.
+   child, then one per relocation (offset, type | storage class << 16 | 0x1000000 for a function
+   symbol | 0x4000000 for an import). After each 8-byte edge comes its target: an import's name;
+   for a contribution that is not an ICF candidate (`FICFCandidate` 0x429360: a writable section,
+   a library's data, an import thunk, the linker's own module) its ICFId (module number, 1-based
+   section number; (-1, -1) for a module flagged 0x800 at +0xAC); **nothing for an associative
+   candidate** (selection 5 with a parent, +0x34/+0x3C: the `__ehhandler$` and `__ehfuncinfo$`
+   of a function, from its parent and from each other); for any other candidate its own edge
+   CRC, or nothing and the cycle flag when the target is on the stack or reaches a cycle. 0
+   becomes 1. Weak externals (storage class 105, a vtable's `??_E` slot) resolve to their default.
+   `0x453FD0` runs `CrcEdges` over every group, then three `CrcEdgesLoop` rounds (0x453C90) over
+   the contributions on cycles: each starts from its own value in one slot (node+4 in rounds 3
+   and 1, node+8 in round 2), hashes the values its cyclic candidate targets hold in that slot
+   and writes the other slot; node+4 is then cleared.
+   **Module numbers** are the objects' 1..N in command-line order, then each library member in
+   load order (the `Loaded` lines of `/VERBOSE`), so every ICFId of a library target, and the
+   edge CRCs of the library members, depend on the object order. Link searches the unresolved
+   externals in the order the objects first referenced them (command-line order, each object's
+   symbol table in order): the members the objects pull take the traced slots of such members in
+   that order; the entry point's and the library's own pulls keep their slots, except that a
+   symbol first referenced by a member the objects pulled follows that member (the DLL's import
+   descriptor, referenced by every import member, follows the first one) (`library_pulls`: 77 of
+   77 load sequences of E1, E2, E4 predicted from every other order).
+   **Remix** (0x453E30): before sorting every group but the first, `ICFAnalysis` remixes each
+   member's edge CRC with, for each edge in order (imports excluded), the ICFId of the target's
+   survivor so far when that target is a candidate of an earlier group (`ICFCompareIcfGrp`
+   0x453810: characteristics & 0x1E0, so code before data, then the group name). So the CRCs of
+   `.text$x`, `.rdata` (vtables) and `.xdata$x` contributions carry the module numbers of their
+   `.text` targets and the folds already made there.
 3. **Sort.** MSVCR80 `qsort` (VC8 `crt/src/qsort.c`: median of three, partition element followed,
    equal elements skipped, smaller side first, `shortsort` max-to-end selection sort for <= 8
    elements; not stable). `ms_qsort` reproduces link's output array in every traced sort (E1 x8
@@ -99,25 +123,27 @@ Mechanism (link.pdb publics, disassembly of link.exe 8.00.50727.762, confirmed b
    first, in which case it is the callee of the surviving caller** (E4: `top2` sorts before
    `top1` and drags `mid2` over `mid1`, though `mid1` sorts first).
 
-Because the qsort permutation depends on every candidate (CRT members included) and the keys of
-contributions that call library code depend on link's module numbering, `order --icf-trace`
-keys the objects' own candidates from the objects (`icf_static_keys`), and takes the library
-members' candidates and the edges into library code from a trace of the same inputs in any order.
+Because the qsort permutation depends on every candidate (CRT members included), `order
+--icf-trace` keys the objects' candidates from the objects and the library members' candidates
+from the trace's edges (`icf_static_keys`), renumbering the traced modules for the new object
+order; a trace of the same inputs in any order serves (the library members' edges, candidacy and
+the library search are taken from it).
 
-Validation (cross-prediction: the trace of order T predicts the survivors of every traced order O,
-compared with O's `/VERBOSE`): E1 64/64 (8 orders x 4 groups each), E4 4/4 (call chains, a static
-table, an import), E2 4/9: the misses are `a_make`/`b_make` (cycle through the vtable) and
-`a_str`/`b_str` when the orders differ, because the `.text$x`/`.xdata$x` EH contributions
-(`__ehhandler$`, `__ehfuncinfo$`, both associative) do not yet get link's edge CRC: the edge from
-the handler to its associative funcinfo hashes something the model does not reproduce, and a
-wrong key there moves other elements in the qsort. Self-prediction (T = O) is exact everywhere.
+Validation (`experiment --set all`: the trace of order T predicts the survivors of every traced
+order O, compared with O's `/VERBOSE`): E1 64/64 (8 orders x 8 traces), E2 9/9 (C++ EH, a vtable
+cycle, `.text$aa`/`.text$zz`, strings and floats), E4 4/4 (call chains, a static table, an
+import); in every pair the predicted sort key of every object candidate equals O's traced key
+(E1 13/13, E2 31/31, E4 12/12) and the qsort model replays every traced sort.
 
 ## Limits
 
-- ICF survivor prediction needs an `icf-trace` of the same inputs (library candidates and edges into
-  library code); edges from associative EH COMDATs (`__ehhandler$` to `__ehfuncinfo$`) are not
-  reproduced, so a unit with C++ EH or with vtable cycles can be mispredicted across orders; only
-  iteration 0 of `ICFAnalysis` is modelled (every traced link folded everything there). `icf-trace`
+- ICF survivor prediction needs an `icf-trace` of the same inputs (library members' candidates,
+  edges and library search). The library load order is modelled from the traced one
+  (`library_pulls`), validated only on these fixtures: a library-internal pull that depends on the
+  object order other than through a member the objects pulled is not reordered, nor are several
+  libraries searched in passes. Edges flagged 0x2000000 (hashed through 0x455E90, not seen in the
+  fixtures) are not modelled: such a contribution falls back to its traced key. Only iteration 0
+  of `ICFAnalysis` is modelled (every traced link folded everything there). `icf-trace`
   breakpoints are link.exe 8.00.50727.762 addresses (`LINK_SHA256`).
 - `order`'s `/OPT:REF` is a reachability approximation over the traced objects (roots `_main` and the like,
   non-COMDAT sections, weak externals followed to their default); library members are not parsed, so a
