@@ -15,6 +15,9 @@ import subprocess
 import sys
 import uuid
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import checkout_paths
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -37,7 +40,7 @@ def project_paths(binary, config=None):
     config = Path(config or ROOT / "config/project.json")
     project = read_json(config)
     entry = project["binaries"][binary]
-    primary = Path(project.get("primary_checkout", ROOT))
+    primary, _ = checkout_paths(project, config.resolve().parents[1])
     image = Path(entry.get("path", Path(project["toolchain_root"]) / "bin" / entry["filename"]))
     return project, entry, primary, image
 

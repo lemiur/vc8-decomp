@@ -7,6 +7,9 @@ import json
 from pathlib import Path
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import checkout_paths
+
 import ledger
 
 
@@ -174,7 +177,7 @@ def main(argv=None):
         unknown = set(binaries) - set(config["binaries"])
         if unknown:
             raise ValueError("unconfigured binaries: " + ", ".join(sorted(unknown)))
-        evidence_dir = args.evidence_dir or Path(config["primary_checkout"]) / "build/evidence"
+        evidence_dir = args.evidence_dir or checkout_paths(config, args.project.resolve().parents[1])[0] / "build/evidence"
         rows = ledger.read(args.ledger)
         unscored = []
         for argument in args.scores:

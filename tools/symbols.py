@@ -23,6 +23,8 @@ import sys
 import uuid
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import checkout_paths
 
 class SymbolError(ValueError):
     """Malformed, unsupported, or mismatched input evidence."""
@@ -407,7 +409,8 @@ def main(argv=None):
         project = json.loads(args.config.read_text(encoding="utf-8"))
         names = list(project["binaries"]) if args.all else [args.binary]
         require(not args.all or not (args.pdb or args.binary_path), "explicit input paths require --binary")
-        output = args.output_dir or Path(project["primary_checkout"]) / "build/evidence"
+        primary, symbols_root = checkout_paths(project, args.config.resolve().parents[1])
+        output = args.output_dir or primary / "build/evidence"
         for name in names:
             require(name in project["binaries"], "unknown configured binary: " + name)
             filename = project["binaries"][name]["filename"]
@@ -415,7 +418,7 @@ def main(argv=None):
             pe = read_pe(binary.read_bytes())
             rsds = pe["rsds"]
             pdb_name = rsds["path"].replace("\\", "/").split("/")[-1]
-            pdb = args.pdb or Path(project["symbols_root"]) / pdb_name / (rsds["guid"] + format(rsds["age"], "X")) / pdb_name
+            pdb = args.pdb or symbols_root / pdb_name / (rsds["guid"] + format(rsds["age"], "X")) / pdb_name
             result = extract(binary, pdb)
             write_map(result, output)
             print(name + ": " + json.dumps(result["summary"], sort_keys=True) + " identity=" + result["identity"]["age_verdict"])

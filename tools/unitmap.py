@@ -20,6 +20,8 @@ from pathlib import Path
 import re
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import checkout_paths
 
 class EvidenceError(ValueError):
     """Evidence is malformed or cannot safely support the requested map."""
@@ -304,7 +306,7 @@ def main(argv=None):
         project = read_json(args.project)
         if args.binary not in project["binaries"]:
             raise EvidenceError(f"unknown binary {args.binary}")
-        source = args.symbols or Path(project["primary_checkout"]) / f"build/evidence/{args.binary}.symbols.json"
+        source = args.symbols or checkout_paths(project, args.project.resolve().parents[1])[0] / f"build/evidence/{args.binary}.symbols.json"
         stem = args.binary + (f".{args.lane}" if args.lane else "")
         output = args.output or args.project.resolve().parents[1] / f"build/evidence/{stem}.units.json"
         symbols = read_json(source)

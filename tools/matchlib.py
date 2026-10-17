@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 import hashlib
 import json
 from pathlib import Path
+import re
 import struct
 from typing import Iterable, Mapping
 import uuid
@@ -43,14 +44,94 @@ def sha256_of(path):
     return digest.hexdigest()
 
 
+# The project adapter: what one VC8 matching project asks of these tools. The
+# "project" block of config/project.json overrides any key (dicts key by key);
+# docs/match-harness.md documents each. The defaults are VC8 toolchain facts
+# and the strictest policies: a pinned PDB, /GL for every unit.
+ADAPTER_DEFAULTS = {
+    "binaries": None,  # ordered target binaries; default: the keys of "binaries"
+    "compiler": "cl.exe",
+    "linker": "link.exe",
+    "pdb_required": True,
+    "gl": True,  # /GL + /LTCG; per binary or unit: "gl" in config/<binary>.json
+    "annotation": {
+        "pattern": r"^\s*//\s*(?P<kind>FUNCTION|DATA):\s+(?P<binary>[a-zA-Z0-9_]+)\s+(?P<va>0x[0-9a-fA-F]+)\s*$",
+        "prefix": r"//\s*(FUNCTION|DATA):",
+        "function": "FUNCTION",
+    },
+    "link_flags": ["/OPT:NOREF,NOICF"],
+    "toolchain_pins": ["cl.exe", "c1.dll", "c1xx.dll", "c2.dll", "link.exe", "cvtres.exe",
+                       "mspdb80.dll", "mspdbcore.dll", "mspdbsrv.exe", "msobj80.dll", "pgodb80.dll",
+                       "pgort80.dll", "pgort80ui.dll", "msvcr80.dll", "msvcp80.dll",
+                       "clui.dll", "linkui.dll", "dumpbin.exe", "lib.exe", "undname.exe",
+                       "cl.exe.config", "link.exe.config", "Microsoft.VC80.CRT.manifest"],
+    "toolchain_core": ["cl.exe", "c1.dll", "c1xx.dll", "c2.dll", "link.exe"],
+    "rtm": {"iso": None, "out": "ref-rtm", "seven_zip": "7z", "platform_sdk": None},
+}
+
+
+def primary_checkout(root):
+    """The checkout holding the ignored shared inputs: for a git worktree, its main one."""
+    root = Path(root).resolve()
+    marker = root / ".git"
+    if marker.is_file():
+        text = marker.read_text(encoding="utf-8").strip()
+        if text.startswith("gitdir:"):
+            gitdir = (root / text[len("gitdir:"):].strip()).resolve()
+            common = gitdir / "commondir"
+            if common.is_file():
+                return (gitdir / common.read_text(encoding="utf-8").strip()).resolve().parent
+    return root
+
+
+def checkout_paths(project, root):
+    """Primary checkout and symbol store: explicit keys, else derived from the checkout."""
+    root = Path(root).resolve()
+    primary = (root / project["primary_checkout"]).resolve() if "primary_checkout" in project else primary_checkout(root)
+    symbols = (primary / project.get("symbols_root", "symbols")).resolve()
+    return primary, symbols
+
+
+def adapter_of(project):
+    """Merge a loaded project.json's "project" block over ADAPTER_DEFAULTS."""
+    result = json.loads(json.dumps(ADAPTER_DEFAULTS))
+    for key, value in project.get("project", {}).items():
+        if key not in result:
+            raise ValueError("unknown project adapter key: " + key)
+        result[key] = dict(result[key], **value) if isinstance(result[key], dict) else value
+    configured = list(project.get("binaries", {}))
+    if result["binaries"] is None:
+        result["binaries"] = configured
+    if not set(result["binaries"]) <= set(configured):
+        raise ValueError("adapter names an unconfigured binary")
+    pattern = re.compile(result["annotation"]["pattern"], re.M)
+    if not {"binary", "va"} <= set(pattern.groupindex):
+        raise ValueError("annotation pattern needs named groups binary and va")
+    return result
+
+
+def load_adapter(root=None):
+    return adapter_of(load_project(root))
+
+
+def annotation_pattern(adapter):
+    return re.compile(adapter["annotation"]["pattern"], re.M)
+
+
+def unit_gl(adapter, options, unit):
+    """Whether a unit compiles with /GL: unit option, else binary option, else project."""
+    return options.get("units", {}).get(unit, {}).get("gl", options.get("gl", adapter["gl"]))
+
+
 def load_project(root=None):
     root = Path(root or ROOT).resolve()
     with (root / "config/project.json").open(encoding="utf-8") as stream:
         project = json.load(stream)
     project["root"] = str(root)
-    for key in ("primary_checkout", "toolchain_root", "symbols_root"):
-        if key in project:
-            project[key] = str((root / project[key]).resolve())
+    if "toolchain_root" in project:
+        project["toolchain_root"] = str((root / project["toolchain_root"]).resolve())
+    primary, symbols = checkout_paths(project, root)
+    project["primary_checkout"], project["symbols_root"] = str(primary), str(symbols)
     return project
 
 
@@ -442,10 +523,10 @@ class PEImage:
         return {name: record["va"] for record in self.export_records() if record["va"] is not None
                 for name in record["names"]}
 
-    def metadata(self):
+    def metadata(self, pdb=True):
         return dict(filename=Path(self.path).name, size=len(self.data), sha256=self.sha256(),
                     machine=self.machine, image_base=self.base, timestamp=self.timestamp,
-                    version=self.version, pdb=self.pdb)
+                    version=self.version, pdb=self.pdb if pdb else None)
 
 
 class Retail(PEImage):
@@ -456,11 +537,14 @@ class Retail(PEImage):
 
     def verify_identity(self, expected=None):
         expected = self.build if expected is None else expected
-        required = ("sha256", "size", "machine", "image_base", "timestamp", "version", "pdb")
+        required = ("sha256", "size", "machine", "image_base", "timestamp", "version")
+        # A PDB-less project pins no RSDS record; a pinned one is always checked.
+        if "pdb" in expected or adapter_of(self.build.get("project", {}))["pdb_required"]:
+            required += ("pdb",)
         missing = [key for key in required if key not in expected]
         if missing:
             raise IdentityError("missing retail identity pins: " + ", ".join(missing))
-        actual = self.metadata()
+        actual = self.metadata(pdb="pdb" in required)
         for key in required:
             wanted = expected[key]
             if key in ("size", "machine", "image_base", "timestamp"):
