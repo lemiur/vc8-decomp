@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import struct
+import tempfile
 import unittest
 
 
@@ -74,6 +75,50 @@ def sample_obj():
                (".text$x", 0, 4, 0, 3, secdef(1, 0, 0, 1, 5)),         # 10,11
                ("__unwind$f", 0, 4, 0x20, 3, None)]                    # 12
     return make_obj(sections, symbols)
+
+
+def fn_obj(defs, refs, directives=""):
+    """An object defining functions `defs` (one COMDAT each) and referencing `refs`."""
+    sections, symbols = [], []
+    for i, name in enumerate(defs):
+        sections.append((".text", CODE | 0x1000, b"\xc3", []))
+        symbols.append((".text", 0, i + 1, 0, 3, secdef(1, 0, 0, 0, 2)))
+        symbols.append((name, 0, i + 1, 0x20, 2, None))
+    if directives:
+        sections.append((".drectve", 0x100A00, directives.encode(), []))
+    for name in refs:
+        symbols.append((name, 0, 0, 0x20, 2, None))
+    return make_obj(sections, symbols)
+
+
+def import_obj(name, dll):
+    """A short import object (IMPORT_OBJECT_HEADER) for a code import."""
+    tail = name.encode() + b"\0" + dll.encode() + b"\0"
+    return struct.pack("<HHHHIIHH", 0, 0xFFFF, 0, 0x14C, 0, len(tail), 0, 0x8) + tail
+
+
+def make_archive(members):
+    """A COFF archive: first linker member (big-endian offsets, symbol names), second linker
+    member (empty), then the members [(name, data, [symbols])]."""
+    def head(name, size):
+        return (name.ljust(16) + "0".ljust(12) + "".ljust(6) + "".ljust(6) + "0".ljust(8) +
+                str(size).ljust(10) + "`\n").encode()
+    syms = [(s, i) for i, (_, _, ss) in enumerate(members) for s in ss]
+    first_size = 4 + 4 * len(syms) + sum(len(s) + 1 for s, _ in syms)
+    second = struct.pack("<II", 0, 0)
+    at = 8 + 60 + first_size + (first_size & 1) + 60 + len(second)
+    offsets = []
+    for name, data, _ in members:
+        offsets.append(at)
+        at += 60 + len(data) + (len(data) & 1)
+    first = struct.pack(">I", len(syms)) + b"".join(struct.pack(">I", offsets[i]) for _, i in syms) + \
+        b"".join(s.encode() + b"\0" for s, _ in syms)
+    out = bytearray(b"!<arch>\n")
+    for name, data in [("/", first), ("/", second)] + [(n + "/", d) for n, d, _ in members]:
+        out += head(name, len(data)) + data
+        if len(data) & 1:
+            out += b"\n"
+    return bytes(out)
 
 
 VERBOSE = """Starting pass 1
@@ -357,6 +402,60 @@ class IcfSurvivorModel(unittest.TestCase):
         self.assertEqual(lt.library_pulls([m, c], events), ["__ftol2", "??2", "_entry", "__sse2", "__IMPORT_DESCRIPTOR_X"])
         # c first: its import member loads first, so the descriptor precedes ftol2's own reference.
         self.assertEqual(lt.library_pulls([c, m], events), ["??2", "__ftol2", "_entry", "__IMPORT_DESCRIPTOR_X", "__sse2"])
+
+
+    def test_parse_archive_and_import_members(self):
+        lib = make_archive([("a1.obj", fn_obj(["_a1"], ["_b1"]), ["_a1"]),
+                            ("X.dll", import_obj("_imp", "X.dll"), ["__imp__imp", "_imp"])])
+        arch = lt.parse_archive(lib, "la.lib")
+        self.assertEqual([m["name"] for m in arch["members"]], ["a1.obj", "X.dll"])
+        self.assertEqual(set(arch["dictionary"]), {"_a1", "__imp__imp", "_imp"})
+        info = lt.module_symbols(arch["members"][1]["data"])
+        self.assertEqual(info["import"], "X.dll")
+        self.assertEqual([s[0] for s in info["symbols"]], ["__imp__imp", "_imp", "__IMPORT_DESCRIPTOR_X"])
+
+    def test_parse_directives(self):
+        self.assertEqual(lt.parse_directives('/DEFAULTLIB:"ld" -defaultlib:MSVCRT /NODEFAULTLIB /INCLUDE:_x /MERGE:a=b'),
+                         [("DEFAULTLIB", "ld"), ("DEFAULTLIB", "MSVCRT"), ("NODEFAULTLIB", None), ("INCLUDE", "_x")])
+
+    def test_search_libraries_passes_and_default_libs(self):
+        files = {
+            "m.obj": fn_obj(["_main"], ["_a1"]),
+            "la.lib": make_archive([("a1.obj", fn_obj(["_a1"], ["_b1"]), ["_a1"]),
+                                    ("a2.obj", fn_obj(["_a2"], []), ["_a2"])]),
+            "lb.lib": make_archive([("b1.obj", fn_obj(["_b1"], ["_d1"], "/DEFAULTLIB:ld"), ["_b1"])]),
+            "ld.lib": make_archive([("d1.obj", fn_obj(["_d1"], ["_a2"]), ["_d1"])]),
+        }
+        load = lambda p: files[p.replace("\\", "/").split("/")[-1]]
+        inputs = [("obj", "m.obj"), ("lib", "la.lib"), ("lib", "lb.lib")]
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in files:
+                Path(tmp, name).write_bytes(files[name])
+            got = lt.search_libraries([(k, str(Path(tmp, a))) for k, a in inputs], [tmp], load=load)
+            # la, lb, then the default library ld (named by b1.obj): each walk goes on through the
+            # references its loads appended; a second pass finds a2 in la.
+            self.assertEqual([(Path(s["lib"]).name, s["tried"]) for s in got["searches"]],
+                             [("la.lib", ["_a1", "_b1"]), ("lb.lib", ["_b1", "_d1"]), ("ld.lib", ["_d1", "_a2"]),
+                              ("la.lib", ["_a2"])])
+            self.assertEqual([(e["symbol"], e["member"], e["module"]) for e in got["events"]],
+                             [("_a1", "a1.obj", 2), ("_b1", "b1.obj", 3), ("_d1", "d1.obj", 4), ("_a2", "a2.obj", 5)])
+            # /NODEFAULTLIB:ld: d1 stays unresolved; the second pass ends on reaching lb, the last
+            # library whose load added a reference.
+            got = lt.search_libraries([(k, str(Path(tmp, a))) for k, a in inputs], [tmp],
+                                      defaults=[("NODEFAULTLIB", "ld")], load=load)
+            self.assertEqual(got["unresolved"], ["_d1"])
+            self.assertEqual([Path(s["lib"]).name for s in got["searches"]], ["la.lib", "lb.lib", "la.lib"])
+
+    def test_round_seeds(self):
+        loads = [{"symbol": "_a", "refs": ["m.obj"], "loaded": "L(a.obj)", "round": 0},
+                 {"symbol": "__load_config_used", "refs": [], "loaded": "L(loadcfg.obj)", "round": 1}]
+        self.assertEqual(lt._round_seeds(loads), [[], ["__load_config_used"]])
+
+    def test_survivors_guard_cycles(self):
+        keys = {x: [1, 1, 1, 5, 7, 9] for x in "abcd"}
+        deps = {"a": ["a"], "b": ["b"], "c": ["d"], "d": ["c"]}
+        out = lt.icf_survivors(["a", "b", "c", "d"], keys, lambda x, y: True, lambda x: deps[x])
+        self.assertEqual(out["b"], "a")
 
 
 if __name__ == "__main__":
