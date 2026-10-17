@@ -39,12 +39,14 @@ from pathlib import Path
 import re
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling tools when loaded by path
+from matchlib import annotation_pattern, load_adapter
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MATCH_RULES = ("R1", "R2", "R4", "R13", "R17", "R18")
 EXTENSIONS = {".c", ".cpp", ".cxx", ".cc", ".h", ".hpp", ".hxx", ".inl"}
 HEADERS = {".h", ".hpp", ".hxx", ".inl"}
-ANNOTATION = re.compile(r"^\s*//\s*(FUNCTION|DATA):\s+([a-zA-Z0-9_]+)\s+(0x[0-9a-fA-F]+)\s*$", re.M)
 TYPE = re.compile(r"\b(struct|class|union|enum)\s+([A-Za-z_]\w*)\s*(?::[^;{}]*)?\s*([;{])")
 TYPEDEF = re.compile(r"\btypedef\b[^;{}]+;", re.S)
 EXTERN = re.compile(r"\bextern\s+([^;{}()]+?)\b([A-Za-z_]\w*)\s*(?:\[[^\]]*\]\s*)*;", re.S)
@@ -114,19 +116,20 @@ def line_at(raw, offset):
     return raw.count("\n", 0, offset) + 1
 
 
-def find_functions(source, findings):
+def find_functions(source, findings, adapter):
     raw, code, comments = source["raw"], source["code"], source["comments"]
     functions = []
     annotations = []
+    pattern, function = annotation_pattern(adapter), adapter["annotation"]["function"]
     for offset, comment in comments:
-        if re.match(r"//\s*(FUNCTION|DATA):", comment):
-            match = ANNOTATION.fullmatch(comment)
-            if not match or (match and match[2] not in {"cl", "c1", "c1xx", "c2", "link"}):
+        if re.match(adapter["annotation"]["prefix"], comment):
+            match = pattern.fullmatch(comment)
+            if not match or match["binary"] not in adapter["binaries"]:
                 findings.append(finding(source, offset, "ANNOTATION", "blocking", "malformed FUNCTION/DATA annotation"))
             else:
                 annotations.append((offset, match))
     for index, (offset, match) in enumerate(annotations):
-        if match[1] != "FUNCTION":
+        if match.groupdict().get("kind", function) != function:
             continue
         end_limit = annotations[index + 1][0] if index + 1 < len(annotations) else len(code)
         start = offset + len(match[0])
@@ -147,7 +150,7 @@ def find_functions(source, findings):
         if not valid:
             findings.append(finding(source, offset, "ANNOTATION", "blocking", "annotation has no supported complete function definition"))
             end = end_limit - 1
-        functions.append({"binary": match[2], "va": hex(int(match[3], 16)),
+        functions.append({"binary": match["binary"], "va": hex(int(match["va"], 16)),
                           "source_path": source["path"], "source_sha256": source["sha256"],
                           "line": line_at(raw, offset), "end_line": line_at(raw, max(offset, end)),
                           "name": name or "?", "_start": offset, "_end": max(offset, end), "_valid": valid})
@@ -206,6 +209,7 @@ def identity(entry):
 def check(paths=None, *, root=ROOT, policy_path=None):
     """Return schema-v1 report. Callers still need independent compiled-byte gates."""
     root = Path(root).resolve()
+    adapter = load_adapter(root)
     paths = [root / "matching"] if paths is None else [Path(path) for path in paths]
     files = set()
     for path in paths:
@@ -254,7 +258,7 @@ def check(paths=None, *, root=ROOT, policy_path=None):
     policy = load_policy(policy_file)
     findings, functions, types, externs = [], [], {}, {}
     for source in sources:
-        functions.extend(find_functions(source, findings))
+        functions.extend(find_functions(source, findings, adapter))
         for rule, pattern, message in PATTERNS:
             for match in re.finditer(pattern, source["code"], re.S):
                 findings.append(finding(source, match.start(), rule, "blocking", message))

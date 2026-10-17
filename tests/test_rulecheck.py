@@ -22,7 +22,9 @@ class RulecheckTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / "matching/cl").mkdir(parents=True)
         (self.root / "config").mkdir()
-        self.policy = {"schema_version": 1, "reviews": [], "exceptions": []}
+        binaries = {name: {} for name in ("cl", "c1", "c1xx", "c2", "link")}
+        (self.root / "config/project.json").write_text(json.dumps({"binaries": binaries}), encoding="utf-8")
+        self.policy ={"schema_version": 1, "reviews": [], "exceptions": []}
         self.write_policy()
 
     def write_policy(self):
@@ -280,6 +282,7 @@ class RulecheckTests(unittest.TestCase):
     def test_cli_json_root_independent_and_exit_codes(self):
         (self.root / "tools").mkdir()
         shutil.copyfile(MODULE, self.root / "tools/rulecheck.py")
+        shutil.copyfile(MODULE.with_name("matchlib.py"), self.root / "tools/matchlib.py")
         command = [sys.executable, str(self.root / "tools/rulecheck.py"), "matching", "--json", "-"]
         completed = subprocess.run(command, cwd=self.root.parent, capture_output=True, text=True)
         self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -296,6 +299,7 @@ class RulecheckTests(unittest.TestCase):
     def test_cli_writes_json_file(self):
         (self.root / "tools").mkdir()
         shutil.copyfile(MODULE, self.root / "tools/rulecheck.py")
+        shutil.copyfile(MODULE.with_name("matchlib.py"), self.root / "tools/matchlib.py")
         target = self.root / "result.json"
         completed = subprocess.run([sys.executable, str(self.root / "tools/rulecheck.py"), "matching", "--json", str(target)], capture_output=True, text=True)
         self.assertEqual(completed.returncode, 0, completed.stderr)
