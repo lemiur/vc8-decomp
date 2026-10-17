@@ -448,6 +448,68 @@ class IlModelTests(unittest.TestCase):
         obj[5]["relocs"] = ["__TI1", "??_C@a", "??_7A"]     # literals referenced in the other order
         self.assertFalse(ct.full_sections_report(["?f", "??__Ex"], obj)["full_ok"])
 
+    def test_initializer_sort_and_atexit_destructors_last(self):
+        # p4: d_b waits for `later`, s_obj for its ??__F; SsrSortInitializerEvalOrder moves the
+        # initializers in .CRT$XCU order, and the ??__F left in the second list goes last.
+        entries = [entry("Ea", init=True), entry("Eb", "later", init=True), entry("S0"),
+                   entry("Es", "S0", "Fs", init=True), entry("Fs", init=True), entry("Ec", init=True),
+                   entry("later"), entry("Ed", init=True), entry("use")]
+        self.assertEqual(ct.bottom_up_order(entries, ["Ea", "Eb", "Es", "Ec", "Ed"]),
+                         ["S0", "later", "use", "Ea", "Eb", "Es", "Ec", "Ed", "Fs"])
+        self.assertEqual(ct.bottom_up_order(entries)[3:], ["Ea", "Fs", "Ec", "Ed", "Eb", "Es"])
+
+    def test_initializer_order_from_in_records(self):
+        import cl_trace
+        sym = lambda kind, n, name, **attrs: cl_trace.GlSymbol(kind, n, name, attrs=attrs)
+        gl = cl_trace.GlFile({}, [], [], [
+            sym("definition", 1, "??__Ea@@YAXXZ", fnflags=0x184C), sym("definition", 2, "??__Eb@@YAXXZ", fnflags=0x184C),
+            sym("data", 5, "b$initializer$", segment=9), sym("data", 4, "a$initializer$", segment=9)],
+            {}, [], {9: ".CRT$XCU"})
+        head = bytes([7, 0])
+        item = lambda n, target: (head + cl_trace.encode_losh(n) + bytes([4, 2]) + cl_trace.encode_losh(target)
+                                  + bytes([0, 4]))
+        self.assertEqual(ct.initializer_order(item(4, 1) + item(5, 2), gl), ["??__Ea@@YAXXZ", "??__Eb@@YAXXZ"])
+
+    def test_od_model_marks_needs_as_it_compiles(self):
+        # p1 at /Od: no call lists; a static is compiled at the rescan after its caller, the
+        # constructor's vtable slots before its other references, the initializer last.
+        e = lambda name, flags: {"name": name, "fnflags": flags, "refs": [], "init": bool(flags & ct.GL_INIT)}
+        entries = [e("~B", 0x8C8), e("VB", 0x8C8), e("GB", 0x8C8), e("~Q", 0x8C8), e("VQ", 0x8C8), e("GQ", 0x8C8),
+                   e("make", 0x68), e("Q0", 0xDC8), e("B0", 0x8C8), e("helper", 0x48), e("h2", 0x68),
+                   e("Edyn", 0x84C), e("user", 0x68)]
+        refs = {"make": ["new", "Q0"], "Q0": ["B0", "vtQ"], "GQ": ["~Q", "delete"], "~Q": ["vtQ", "~B"],
+                "~B": ["vtB"], "GB": ["~B"], "B0": ["vtB"], "h2": ["helper"], "Edyn": ["h2"]}
+        vtables = {"vtQ": ["EQ", "VQ"], "vtB": ["EB", "VB"]}
+        model = ct.emission_model(entries, {"EQ": "GQ", "EB": "GB"}, vtables, call_graph=False, code_refs=refs,
+                                  init_order=["Edyn"])
+        self.assertEqual([m["name"] for m in model],
+                         ["make", "Q0", "VQ", "GQ", "~Q", "~B", "VB", "GB", "B0", "h2", "helper", "user", "Edyn"])
+
+    def test_full_sections_delayed_bss_and_literal_rdata(self):
+        def sec(n, name, comdat=None, relocs=(), symbols=None):
+            s = {"number": n, "name": name, "relocs": list(relocs), "reloc_at": list(range(len(relocs))), "fld1": []}
+            if comdat:
+                s.update(comdat=comdat, selection=2)
+            if symbols:
+                s["symbols"] = symbols
+            return s
+        # /Od p1: the .bss holds only `dyn` (dynamically initialized): created at obj_end.
+        obj = [sec(1, ".drectve"), sec(2, ".debug$S"), sec(3, ".data", symbols=["?fp"]), sec(4, ".text", "?h1"),
+               sec(5, ".text$yc", "??__Edyn", relocs=["?h1", "?dyn"]), sec(6, ".bss", symbols=["?dyn"]),
+               sec(7, ".CRT$XCU", relocs=["??__Edyn"])]
+        self.assertTrue(ct.full_sections_report(["?h1", "??__Edyn"], obj, ["?dyn"])["full_ok"])
+        self.assertFalse(ct.full_sections_report(["?h1", "??__Edyn"], obj)["full_ok"])
+        # /Od p5e and p5b: string literals alone in a plain .rdata come after the plain sections,
+        # or first when a static data initializer references one.
+        obj = [sec(1, ".drectve"), sec(2, ".debug$S"), sec(3, ".bss", symbols=["?g_b"]),
+               sec(4, ".data", symbols=["?g_d"]), sec(5, ".rdata", symbols=["$SG1"]), sec(6, ".text", "?f0"),
+               sec(7, ".text", "?f", relocs=["$SG1"])]
+        self.assertTrue(ct.full_sections_report(["?f0", "?f"], obj)["full_ok"])
+        obj = [sec(1, ".drectve"), sec(2, ".debug$S"), sec(3, ".rdata", symbols=["$SG1"]),
+               sec(4, ".bss", symbols=["?g_b"]), sec(5, ".data", relocs=["$SG1"], symbols=["?g_s"]),
+               sec(6, ".text", "?f")]
+        self.assertTrue(ct.full_sections_report(["?f"], obj)["full_ok"])
+
     def test_call_graph_flags(self):
         self.assertTrue(ct.call_graph_flags(["/O2", "/Gy"]))
         self.assertFalse(ct.call_graph_flags(["/O2", "/Od"]))

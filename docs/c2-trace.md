@@ -246,8 +246,13 @@ is decided in three steps, and `emit-order` predicts all three from the IL alone
    creation order (`_CGnodes` is built by prepending) and flags every arc to a node on the DFS stack, a
    self-call included, as recursive. `CgBottomUpOrder` then moves entries without a call-graph node to the
    front and makes passes over the rest in list order: an entry is placed when each of its callees is already
-   placed (recursive arcs ignored), otherwise it waits for the next pass (dynamic initializers placed in a
-   pass go to a list appended at the end).
+   placed (recursive arcs ignored), otherwise it waits for the next pass. Entries flagged init (`fnflags`
+   0x4: the dynamic initializers `??__E`, `.text$yc`, and the atexit destructors `??__F`, `.text$yd`) placed
+   in a pass go to a second list. `SsrSortInitializerEvalOrder` then walks the initializer pointers
+   (`x$initializer$`, gl data in a named segment, `.CRT$XCU`; segments sorted by name, stably, pointers in
+   the order of their `in` records, which is source order) and moves the function each one names to the end
+   of the main list; what is left of the second list (the `??__F`, which only an `atexit` argument names)
+   follows in pass order (`initializer_order`).
 3. **Needed set and compile loop.** An entry is compiled only once flagged needed (+0x50 bit 0x20). At the
    start that is every definition whose gl `fnflags` has 0x20 (c1xx sets it for external non-inline
    functions and for `operator new`/`delete`, `??2`/`??3`; not for statics, inline functions or implicit
@@ -261,6 +266,18 @@ is decided in three steps, and `emit-order` predicts all three from the IL alone
    slot is compiled at the next rescan, before anything later in the list, even when it stands earlier
    (`curve_tracks`: `GetType@CurveTrackOf<Vector2>`, IL 36, right after the destructor that emits its vtable).
 
+**`/Od`.** Without a call graph the gl header's IL flags lack 0x100 (`cl_trace.IL_CALL_GRAPH`), every
+definition record ends after `formals` (no call list), there is no `CgBottomUpOrder`, and c2 marks needs as
+it compiles. The list stays in IL order; the needed set starts with the `fnflags` 0x20 definitions and the
+functions static data takes the address of, without closure; compiling a function needs what its code
+references (the relocations of its code and associated sections, read from the obj: nothing is inlined) and
+the slots of the vtables it emits, and the rescan goes on. The init entries are left out of the rescan: once
+no other needed entry is left, the next initializer in `initializer_order` is compiled (then the rescan
+picks up what it needed: `??__Es_obj` before `??0S`), and the `??__F` come last in list order. So a static or
+inline function follows its first caller (`h2`, `helper`; `user`, `il2`, `il1`) and a constructor's vtable
+slots come before the callees of those slots (`??0Q`, `V@Q`, `??_GQ`, `~Q`, `~Base`). `/Gy` is needed for the
+per-function sections the prediction is checked against.
+
 **The whole section table.** Each `CoffCreateSection` / `CoffCreateComdatSection` call creates the next
 section number (traced with `newseg`, `newcomdat`, `EhEmitFuncinfo`, `obj_initializer`; `newcomdat` only
 makes the logical COMDAT, most of them at read time). `full_sections` predicts the table from the compile
@@ -272,7 +289,12 @@ code references is decided by inlining, so it is read from the obj):
    (`const char* g_name = "..."`), then the plain `.bss`, `.rdata`, `.data` that exist (c2 prepends each
    segment to its list: `_BSS`, `CONST`, `_DATA`). A function whose address a static initializer takes
    (`Fn g_fn = &helper_inl;`, `in` item `02 <symbol>`) is needed from the start, inline or not
-   (`static_function_refs`; gl data without `u06` bit 0x20, the on-demand COMDATs, are the static ones).
+   (`static_function_refs`; gl data without `u06` bit 0x20, the on-demand COMDATs, are the static ones;
+   an initializer pointer in a named segment is not). Under `/Od` without `/GF` string literals are `$SG`
+   symbols in a plain `.rdata`: a `.rdata` holding only those comes first when a static initializer
+   references one (`const char* g_s = "y";`), else after the other plain sections; with other constant
+   data (`static const int t[2]`) it keeps its place between `.bss` and `.data`. A `.bss` whose symbols are
+   all dynamically initialized (gl data flags 0x40: `int dyn = h1(3);`) is not created here.
 3. Per function, in `EmitFunction`: its `.text` (a dynamic initializer's is a `.text$yc` COMDAT); its
    `.text$x` when that starts with unwind funclets; the data COMDATs its code references that are not
    emitted yet (`??_C@` strings, `__real@`/`__xmm@` constants, `??_7` vtables, `__TI` throw records),
@@ -283,7 +305,8 @@ code references is decided by inlining, so it is read from the obj):
    emitted data references, last-pushed first, each pushing its own (`__TI1` pushes `__CTA1`, the funcinfo
    pushes the catch type `??_R0`: `??_R0, __CTA1, __CT`); `.sxdata` at the first function with EH data;
    `.debug$F`.
-4. `obj_end`: the remaining plain sections (`.CRT$XCU`).
+4. `obj_end`: a `.bss` holding only dynamically initialized data (`SsrEmitDelayedInit`), then the
+   remaining plain sections (`.CRT$XCU`).
 
 An x87 load of the pooled 1.0 becomes `fld1` in `LoFinalLower` (+0x10c6, `MscFindFloatValue`) after the
 constant was put on the emit list: its `__real@3f800000` COMDAT is still emitted there although no
@@ -312,28 +335,27 @@ equals the traced list, the modelled arcs and recursive arcs equal the traced on
 compile order and the code and vtable COMDATs equal the trace and the obj's section table; `--no-trace`
 predicts their whole tables (81, 98 and 143 sections) exactly, as for two probes with statics, strings,
 constants, try/catch with a throw, a dynamic initializer, an initializer taking an inline function's address
-and vtables emitted next to literals (50 and 43 sections). A probe with
-later definitions, statics, templates, implicit constructors, `noinline`, two- and three-node and self
-recursion and a dynamic initializer agrees at `/O2` as well.
+and vtables emitted next to literals (50 and 43 sections), and for probe `p4` (five dynamic initializers,
+one held back by a later definition, a global with a constructor and destructor: 22 sections; traced, the
+modelled bottom-up list equals `CgBottomUpOrder`'s). A probe with later definitions, statics, templates,
+implicit constructors, `noinline`, two- and three-node and self recursion and a dynamic initializer agrees at
+`/O2` as well. At `/Od /Gy` (same options otherwise) `--no-trace` predicts the three avp3 units' tables (48,
+61 and 86 sections) and those of `p1` to `p4` and six small segment probes exactly; traced, `p4`'s compile
+order equals `ReadFunction`'s.
 
 ## Limits
 
-- `emit-order` predicts COMDAT order for builds with a call graph. Under `/Od` c1xx writes no call lists in
-  the gl definition records (the record ends after `formals`; `cl_trace.parse_gl` then decodes no
-  definition, so the prediction is empty) and c2 marks needs lazily, as it compiles: the traced `/Od` probe
-  starts from the external functions only, a static or inline function is compiled at the next rescan after
-  its first caller (`h2`, `helper`; `user`, `il2`, `il1`), a constructor's vtable slots before its other
-  callees (`??0Q`, `V`, `??_G`, `~Q`, `~Base`). Modelling it needs the references of each `ex` body.
+- The `/Od` model takes each function's references from the obj's relocations, not from its `ex` body
+  (the `ex` names symbols the code does not keep, such as an unwind destructor without `/EHsc`). A
+  reference c2 marks needed but that leaves no relocation is not seen. Several `??__F`, initializer
+  segments other than `.CRT$XCU` (`#pragma init_seg`) and the `/Od` segment rules beyond the probes are
+  untested.
 - `full_sections` takes what each function's code references (relocations, `fld1`) and whether it has EH
   sections from the obj: those are inlining results. A constant whose every use a later pass removes in
   another way than `fld1` (`fldz` is not checked) is reported as `unplaced` with its obj section.
-- Not modelled (probe `p4`: three dynamic initializers, a global with a constructor and destructor): the
-  `??__F` atexit destructor (`.text$yd`), which the bottom-up model places first and c2 last, so the
-  initializers' order (`SsrSortInitializerEvalOrder`, not traced further) is unchecked when one exists; and
-  data whose only contents are dynamically initialized, whose `.bss` c2 creates at `obj_end`
-  (`SsrEmitDelayedInit`, before `.CRT$XCU`), not in `ProcessSegmentInits` (gl data flag 0x40 marks a
-  dynamic initializer). Under `/Zi`, `.debug$T` and the per-function debug sections come elsewhere and the
-  code relocations no longer name the literals: not modelled. `/GL` (LTCG) ordering is not modelled.
+- Under `/Zi`, `.debug$T` and the per-function debug sections come elsewhere and the code relocations no
+  longer name the literals; its gl file also holds records `cl_trace.parse_gl` does not decode: not
+  modelled. `/GL` (LTCG) ordering is not modelled.
 - `_Speed` is bit 23 (0x800000) of the function's optimization word (`[f+0x1c]`, copied by
   `MscProcessPragstat` at each function's start; bit 8 goes to `_DefaultInt`, bit 31 to `_StackCheck`).
   c1xx sets it by default (`/Ot`, implied by `/O2`, `/Ox`, also under `/Og` and `/Od`) and clears it for
