@@ -88,3 +88,28 @@ sizes and boundary evidence come from `config/gate-allow.json`. Without those,
 the next MAP symbol supplies only an unverified inspection span; a function
 with no following symbol has size zero. Such candidates cannot be admitted.
 The harness never prints the gate's green line.
+
+## Project adapter
+
+The tools read one project's policy from the `"project"` block of
+`config/project.json`; `matchlib.ADAPTER_DEFAULTS` supplies every key it omits,
+and an unknown key is an error. This repository's block restates the policy
+keys at their default values.
+
+| key | default | meaning |
+|---|---|---|
+| `binaries` | keys of `"binaries"` | ordered targets the gate, audit, rule checker and pilot accept |
+| `compiler`, `linker` | `cl.exe`, `link.exe` | executables under the toolchain's `bin/` |
+| `pdb_required` | `true` | retail identity must pin one RSDS record; `false` pins none (a pinned one is still checked) |
+| `gl` | `true` | compile with `/GL` and link with `/LTCG`; `config/<binary>.json` may set `"gl"` for a binary or under `"units"` for one unit |
+| `annotation` | `FUNCTION`/`DATA` form | `pattern` with named groups `binary`, `va` and optionally `kind`; `prefix` marks comments that must parse; `function` is the `kind` that annotates functions |
+| `link_flags` | `["/OPT:NOREF,NOICF"]` | base candidate link options |
+| `toolchain_pins`, `toolchain_core` | VC8 file names | files `probe_toolchain.py inventory` pins; files every pinned toolchain must contain |
+| `rtm` | `out: ref-rtm`, `seven_zip: 7z` | `rtm.py` defaults; `iso` and `out` are relative to the primary checkout; `platform_sdk` defaults to the toolchain root's `PlatformSDK` |
+
+A unit without `/GL` builds a plain `object` candidate; a group with no `/GL`
+object links without `/LTCG`. The gate checks each compile's `/GL` use against
+its unit's configured mode. `primary_checkout` and `symbols_root` are optional:
+the primary checkout is derived from git worktree metadata and the symbol store
+defaults to its `symbols/`. `probe_toolchain.py layout --type T --field F ...
+[--header H] [--binary B]` builds a compiler layout witness for any aggregate.

@@ -3,7 +3,8 @@
 `python tools/report.py` writes deterministic per-binary JSON and `progress.md`
 under ignored `build/reports/`. It consumes local `build/gate/latest.json`, the
 tracked `ledger.tsv`, and shared public-symbol maps from
-`config/project.json`'s `primary_checkout` plus `build/evidence/`. It does not
+the primary checkout's `build/evidence/` (`config/project.json`'s
+`primary_checkout`, else derived from git worktree metadata). It does not
 run the gate, change a baseline, or update the tracked ledger. Use `--gate`,
 `--ledger`, `--evidence-dir`, `--output-dir`, and `--project` to select inputs.
 Repeat `--binary cl` to limit selected binaries.
