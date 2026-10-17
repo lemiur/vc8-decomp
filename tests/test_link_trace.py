@@ -380,6 +380,28 @@ class IcfSurvivorModel(unittest.TestCase):
         self.assertEqual(log[(0, 1)], [["edge", struct.pack("<II", 0, 0xFFFF).hex()]])
         self.assertEqual(keys[(0, 1)][4], lt._sig(struct.pack("<II", 0, 0xFFFF), 0xFFFFFFFF))
 
+    def test_debug_child_hashes_its_output_section(self):
+        # /DEBUG (avp3 2-unit link): a function's .debug$F is a contribution, not a candidate; the
+        # parent's edge CRC hashes its (0, 0xFFFF) edge, ".debug" and twice 0x42000040.
+        aux = lambda size, ck, sel, assoc=0: struct.pack("<IHHIHB3x", size, 0, 0, ck, assoc, sel)
+        data = make_obj([(".text", CODE | 0x1000, b"\xc3", []), (".debug$F", 0x42101040, bytes(16), [])],
+                        [(".text", 0, 1, 0, 3, aux(1, 0x11, 2)), (".debug$F", 0, 2, 0, 3, aux(16, 0x22, 5, 1)),
+                         ("_parent", 0, 1, 0x20, 2, None)])
+        obj = lt.parse_obj(data, "a.obj")
+        rows = lt.icf_candidates([obj])
+        self.assertEqual(lt.icf_static_keys([obj], rows)[(0, 1)][4], 0xFFFFFFFF)
+        self.assertTrue(lt.link_debug(["link.exe", "/dll", "-debug"]))
+        self.assertFalse(lt.link_debug(["link.exe", "/DLL", "a.obj"]))
+        log = {}
+        keys = lt.icf_static_keys([obj], rows, log=log, command=["link.exe", "/DEBUG"])
+        flags = struct.pack("<I", 0x42000040)
+        self.assertEqual(log[(0, 1)], [["edge", struct.pack("<II", 0, 0xFFFF).hex()], ["name", b".debug".hex()],
+                                       ["name+2c", flags.hex()], ["name+30", flags.hex()]])
+        crc = 0xFFFFFFFF
+        for chunk in (struct.pack("<II", 0, 0xFFFF), b".debug", flags, flags):
+            crc = lt._sig(chunk, crc)
+        self.assertEqual(keys[(0, 1)][4], crc)
+
     def test_parse_loads(self):
         text = "\n".join(["Searching libraries", "    Searching C:/lib/MSVCRT.lib:", "      Found __fltused",
                           "        Referenced in m.obj", "        Referenced in a.obj",

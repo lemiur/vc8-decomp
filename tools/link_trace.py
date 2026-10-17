@@ -2243,7 +2243,8 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
     (an (offset 0, 0xFFFF) edge per associative child, then one per relocation: offset, type |
     storage class << 16 | 0x1000000 for a function | 0x4000000 for an import) hash the 8-byte edge,
     then for its target: an import's name; for a contribution that is not an ICF candidate its
-    ICFId (module number, 1-based section; (-1, -1) for a module flagged 0x800 at +0xAC); nothing
+    ICFId (module number, 1-based section; (-1, -1) for a module flagged 0x800 at +0xAC), or for
+    a `.debug$*` child under /DEBUG its output section's name and characteristics; nothing
     for an associative candidate (selection 5 with a parent: `__ehfuncinfo$`, `__ehhandler$`); for
     any other candidate its own edge CRC, or nothing and the cycle flag when it is on or reaches a
     reference cycle. 0 becomes 1. Module numbers: objects 1..N in command-line order, then the
@@ -2262,7 +2263,8 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
     for r in rows:
         if r["symbol"]:
             chosen.setdefault(r["symbol"], (r["obj_index"], r["section_index"]))
-    children = icf_children(objs)
+    debug = link_debug(command or (trace or {}).get("command"))
+    children = icf_children(objs, debug)
     tcons = view["cons"]
 
     def lib_node(cid):
@@ -2289,6 +2291,20 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
         section = c["con_index"] + 1 if c["con_index"] is not None else view["section"].get(n[1], 0)
         return struct.pack("<II", view["module"].get(c["module"], c["module"]), section)
 
+    def debug_section(n):
+        """/DEBUG: a `.debug$*` child is hashed by its output section's name (`.debug`) and, twice,
+        its characteristics without the alignment, COMDAT and 0x2000 bits (0x42000040), not by
+        ICFId (a library member's traced contribution flags carry 0x2000)."""
+        if n[0] == "lib":
+            c = tcons.get(n[1]) or {}
+            name, flags = c.get("group") or "", c.get("flags") or 0
+        else:
+            sec = objs[n[0]]["sections"][n[1] - 1]
+            name, flags = sec["name"], sec["characteristics"]
+        if not name.startswith(".debug"):
+            return None
+        return name.split("$", 1)[0].encode("latin-1"), struct.pack("<I", flags & ~0x00F03000)
+
     def traced_edge(head, e):
         if "import" in e:
             return head, ("import", e["import"])
@@ -2299,8 +2315,12 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
     def edges_of(n):
         """[(edge bytes, target)]: target ("import", name), ("other",), a node, or None (unknown)."""
         if n[0] == "lib":
+            # A trace of a /DEBUG link gives library members their `.debug$F` child edges; a
+            # link without /DEBUG has none (and the converse cannot be added from the trace).
             return [traced_edge(struct.pack("<II", e["offset"], e["flags"]), e)
-                    for e in tcons[n[1]].get("edges") or ()]
+                    for e in tcons[n[1]].get("edges") or ()
+                    if debug or e["flags"] != 0xFFFF
+                    or not (tcons.get(e.get("con")) or {}).get("group", "").startswith(".debug")]
         out = []
         oi, si = n
         obj = objs[oi]
@@ -2368,6 +2388,11 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
                 h("import", target[1].encode("latin-1"))
             elif target[0] == "other":
                 pass
+            elif debug_section(target):
+                name, flags = debug_section(target)
+                h("name", name)
+                h("name+2c", flags)
+                h("name+30", flags)
             elif not is_cand(target):
                 h("icfid", icfid(target))
             elif is_assoc(target):
@@ -2491,13 +2516,21 @@ def icf_classes(objs, rows):
         cls = new
 
 
-def icf_children(objs):
-    """Associative children of each section (non-debug), in section order: link's ICF edges
-    (0, 0xFFFF) that precede the relocation edges."""
+def link_debug(command):
+    """Whether a link command line (response files expanded) has /DEBUG."""
+    return any(re.match(r"(?i)^[-/]DEBUG(:.*)?$", a.strip('"')) for a in command_args(command or ["link"]))
+
+
+def icf_children(objs, debug=False):
+    """Associative children of each section, in section order: link's ICF edges (0, 0xFFFF) that
+    precede the relocation edges. Without /DEBUG the `.debug$*` sections are discarded at read
+    and are no children; under /DEBUG they are contributions (`.debug$F` FPO records, under /Zi
+    the per-function `.debug$S`), not ICF candidates, so each adds an edge hashed with its ICFId
+    and changes the parent's key and with it the survivors (avp3 2-unit link)."""
     out = {}
     for oi, obj in enumerate(objs):
         for sec in obj["sections"]:
-            if sec["associated"] and not sec["name"].startswith(".debug") and sec["size"]:
+            if sec["associated"] and (debug or not sec["name"].startswith(".debug")) and sec["size"]:
                 out.setdefault((oi, sec["associated"]), []).append((oi, sec["index"]))
     return out
 

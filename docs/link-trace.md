@@ -161,6 +161,19 @@ orders, 9/9, 48 fold groups (vtables, `.text$x` unwind funclets, `.xdata$x` EH t
 recursive `Map::ForEach`), 1020/1020 keys, no key left to the trace. Every traced link ran one
 `ICFAnalysis` iteration and none had an edge flagged 0x2000000.
 
+### /DEBUG
+
+Evidence: the avp3 2-unit link (`audio_effects`, `platform_audio_streams`, its `/DLL /NOENTRY /FORCE
+/OPT:REF /OPT:ICF ...` options) run and `icf-trace --crc`d with and without `/DEBUG`, then without the
+`/OPT` options; the 17-unit link run and `crosscheck`ed with `/DEBUG`.
+
+| rule | evidence |
+|---|---|
+| With `/OPT:REF` and `/OPT:ICF` given, `/DEBUG` leaves the `.text` layout, padding, the `/OPT:REF` discards and the fold groups' members as they are; `run`'s `order rule check` and `import layout check` hold | 2 units: 187 contributions; 17 units with `/DEBUG`: both checks hold (619 kept, 48 groups) |
+| Without `/OPT` options `/DEBUG` turns both off (`/OPT:NOREF,NOICF`): no fold, nothing removed; without `/DEBUG` the default folds (6 groups instead of 17 here) | 2 units |
+| `/DEBUG` adds the debug directory (`IMAGE_DEBUG_DIRECTORY`, 0x1C bytes) at the head of the `.rdata` group after the IAT (`.idata$5`; here at 0x50, the next 16-byte boundary), and the CodeView record (`.rdata$debug`: `RSDS`, GUID, age, PDB path) after `.rdata`, so the `.rdata` contributions move by 0x20 to 0x24 | 2-unit map: `.rdata` at 0x50 instead of 0x48, `.rdata$debug` 0x94 bytes |
+| It changes ICF survivors: the objects' `.debug$F` (and, from `/Zi` objects, per-function `.debug$S`) sections become contributions, so each code COMDAT gains an associative edge (0, 0xFFFF) to them. They are not candidates and are hashed by their output section's name, `.debug`, and twice its characteristics (0x42000040: the section's without alignment and COMDAT bits), not by ICFId; the keys, so the sorts and the survivors, change (`?Reset@CXAPOBase` survives without `/DEBUG`, `OnSetTypedParameters<XapoCrackle>` with it). `link_debug` reads `/DEBUG` from the command line; a trace with or without it predicts the other link (its library members' debug edges are dropped, or are absent and were not decisive) | 2 units: keys 183/183, survivors exact in both orders and across traces with and without `/DEBUG`; 17 units: reversed order 1020/1020 keys and exact, given order see Limits |
+
 ### Library search
 
 Mechanism (disassembly of link.exe 8.00.50727.762; every rule confirmed by `search-trace`):
@@ -234,4 +247,10 @@ Validation (`import_check`, part of `run` and of every `experiment`/`crosscheck`
   bounded by the next map public. `run`'s model matches objects to map and verbose lines by file
   name: two inputs with one file name are ambiguous there.
 - `/GL` objects are not COFF and are refused; trace after LTCG with the code-generation output instead.
+  avp3 builds without `/GL`, so LTCG is out of scope.
+- `/DEBUG`, 17-unit link in the given order: 1016/1020 keys; the four `__ehfuncinfo$` of the
+  `CSampleXAPOBase<...>` destructors and their unwind funclets take another survivor than predicted
+  (the traced folds fold an earlier survivor into a later one in the `.xdata$x` walk). The `.rdata`
+  debug directory and CodeView record are described, not predicted by `order`; incremental linking
+  (`/DEBUG` without `/OPT:REF` and without `/FORCE`) is not modelled.
 - No vc8-decomp `cl` pilot link was traced: the validation of real links is the avp3 code DLL's.
