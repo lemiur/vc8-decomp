@@ -332,15 +332,42 @@ class IcfSurvivorModel(unittest.TestCase):
         self.assertEqual(lt.icf_compare(live, live[:3] + [13] + live[4:]), -1)  # size ascending
         self.assertEqual(lt.icf_compare(live, list(live)), 0)
 
+    @staticmethod
+    def walk(order, keys, edges, out=None):
+        call = lambda t: (struct.pack("<II", 4, 0x1010014), t)
+        return lt.icf_walk(order, keys, lambda n: [call(t) if len(t) == 1 else t for t in edges.get(n, ())],
+                           lambda x, y: True, lambda x, y: False, out)
+
     def test_survivor_is_lowest_unless_a_caller_folds_first(self):
-        keys = {k: [1, 0, 1, 16, 9, c] for k, c in (("leaf1", 1), ("leaf2", 1), ("top1", 2), ("top2", 2))}
-        same = lambda x, y: x[:-1] == y[:-1]
-        deps = {"top1": ["leaf1"], "top2": ["leaf2"]}
+        keys = {(k,): [1, 0, 1, 16, 9, c] for k, c in (("leaf1", 1), ("leaf2", 1), ("top1", 2), ("top2", 2))}
+        edges = {("top1",): [("leaf1",)], ("top2",): [("leaf2",)]}
         # Callers sorted first: top2 absorbs top1 and its callee leaf2 absorbs leaf1.
-        out = lt.icf_survivors(["top2", "top1", "leaf1", "leaf2"], keys, same, lambda x: deps.get(x, ()))
-        self.assertEqual(out, {"leaf1": "leaf2", "top1": "top2"})
-        out = lt.icf_survivors(["leaf1", "leaf2", "top2", "top1"], keys, same, lambda x: deps.get(x, ()))
-        self.assertEqual(out, {"leaf2": "leaf1", "top1": "top2"})
+        out = self.walk([("top2",), ("top1",), ("leaf1",), ("leaf2",)], keys, edges)
+        self.assertEqual(out, {("leaf1",): ("leaf2",), ("top1",): ("top2",)})
+        out = self.walk([("leaf1",), ("leaf2",), ("top2",), ("top1",)], keys, edges)
+        self.assertEqual(out, {("leaf2",): ("leaf1",), ("top1",): ("top2",)})
+
+    def test_identical_children_of_differing_callers_stay_folded(self):
+        # avp3 code DLL, /DEBUG, given order: the CSampleXAPOBase<Chorus> and <Flanger> destructors
+        # differ (their vtables), but their unwind funclets, compared first as associative children,
+        # fold into the copy of the caller sorted first, though the callers never fold.
+        child = struct.pack("<II", 0, 0xFFFF)
+        keys = {("p1",): [1, 1, 2, 16, 9, 3], ("p2",): [1, 1, 2, 16, 9, 3],
+                ("c1",): [1, 0, 1, 8, 5, 4], ("c2",): [1, 0, 1, 8, 5, 4],
+                ("v1",): [1, 0, 1, 8, 6, 0], ("v2",): [1, 0, 1, 8, 7, 0]}
+        edges = {("p1",): [(child, ("c1",)), ("v1",)], ("p2",): [(child, ("c2",)), ("v2",)]}
+        self.assertEqual(self.walk([("p1",), ("p2",)], keys, edges), {("c2",): ("c1",)})
+        self.assertEqual(self.walk([("p2",), ("p1",)], keys, edges), {("c1",): ("c2",)})
+        # Only a bucket of equal keys (edge CRC included) is compared: no comparison, no fold.
+        keys[("p2",)] = [1, 1, 2, 16, 8, 3]
+        self.assertEqual(self.walk([("p1",), ("p2",)], keys, edges), {})
+
+    def test_deferred_cycle_folds_with_its_root(self):
+        # x -> a -> x and y -> b -> y: the (a, b) comparison reaches (x, y) on the stack, so it is
+        # left to the fold of (x, y), whose FoldAssocEdges folds b into a.
+        keys = {(n,): [1, 1, 1, 8, 5, 6 if n in "xy" else 7] for n in ("x", "y", "a", "b")}
+        edges = {("x",): [("a",)], ("y",): [("b",)], ("a",): [("x",)], ("b",): [("y",)]}
+        self.assertEqual(self.walk([("x",), ("y",), ("a",), ("b",)], keys, edges), {("y",): ("x",), ("b",): ("a",)})
 
     def test_sig_is_pdb_crc32(self):
         self.assertEqual(lt._sig(b"", 0xFFFFFFFF), 0xFFFFFFFF)
@@ -474,10 +501,11 @@ class IcfSurvivorModel(unittest.TestCase):
         self.assertEqual(lt._round_seeds(loads), [[], ["__load_config_used"]])
 
     def test_survivors_guard_cycles(self):
-        keys = {x: [1, 1, 1, 5, 7, 9] for x in "abcd"}
-        deps = {"a": ["a"], "b": ["b"], "c": ["d"], "d": ["c"]}
-        out = lt.icf_survivors(["a", "b", "c", "d"], keys, lambda x, y: True, lambda x: deps[x])
-        self.assertEqual(out["b"], "a")
+        keys = {(x,): [1, 1, 1, 5, 7, 9] for x in "abcd"}
+        edges = {("a",): [("a",)], ("b",): [("b",)], ("c",): [("d",)], ("d",): [("c",)]}
+        out = self.walk([("a",), ("b",), ("c",), ("d",)], keys, edges)
+        self.assertEqual(out[("b",)], ("a",))
+        self.assertEqual(out[("d",)], ("c",))
 
 
 def code_section(index, name, sym, selection="any", associated=0, size=1):

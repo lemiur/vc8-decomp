@@ -2004,41 +2004,127 @@ def icf_replay(sort, ref=True):
     return ms_qsort(sort["input"], lambda x, y: icf_compare(keys[x], keys[y], ref))
 
 
-def icf_survivors(order, keys, identical, deps=lambda x: (), out=None):
-    """ICFLocateICs (0x455730) over a sorted array: walking up, each unfolded element x absorbs
-    every later unfolded element y with the same checksum that is identical to it
-    (FICFIdenticalCONs). FFoldCONsEx folds the pair's differing dependencies the same way first:
-    the target of x keeps, the target of y at the same relocation folds into it, recursively. So a
-    survivor is the lowest sorted member of its group unless a caller's fold chose it earlier.
-    `identical(x, y)` stands for the byte/relocation comparison, `deps(x)` lists x's relocation
-    targets in order. `out` ({folded: survivor}) carries folds across groups; returned."""
+def icf_walk(order, keys, edges, same_bytes, oracle, out=None, ref=True, is_debug=lambda n: False):
+    """ICFLocateICs (0x455730) as link runs it, comparisons and folds included.
+
+    The walk takes each unfolded live element x of the sorted array and, for every later element
+    y with the same checksum, runs FICFIdenticalCONs (0x455310) in an ICFCompareContext (level,
+    x, y, lowest level reached = -1): FIdenticalDependencies (0x454CE0) over the two edge lists
+    (`edges(n)`: (8-byte head, target), associative children first) before the raw bytes
+    (`same_bytes`). An edge pair matches on offset, type, storage class and function bit; an
+    import by name; two `.debug` children are skipped; any other target pair goes through
+    FFoldCONsEx (0x454650): equal through the fold chains; else both ICF candidates (`keys`;
+    under /OPT:REF live), and nodes on the comparison stack (node+4 = their level) pair only with
+    each other (a cycle: the context's lowest level drops to theirs); else same relocation count,
+    size, edge CRC (node+8, the sort key so far: remixed when its group came) and checksum (CON+0x28,
+    when both have one), then FFoldCONs (0x4552B0): a nested comparison one level down that, when
+    identical, is folded at once (ICFFold) unless it reached a pair above its level (it is then
+    left to that pair's fold). So a dependency pair found identical is folded while its caller is
+    still being compared, and stays folded when the caller turns out to differ. ICFFold (0x4541C0)
+    then folds, in FoldAssocEdges (0x454270), every differing edge target pair of the folded pair,
+    the keeper's target keeping, `.debug` targets excepted. `oracle(x, y)` decides a pair whose
+    edges are not all modelled (library members, unknown targets). Under /OPT:REF (`ref`) only
+    the live contributions are walked. `out` ({folded: keeper}) carries folds across groups."""
     out = {} if out is None else out
+    mark, memo = {}, {}
+    INF = 1 << 32
 
     def rep(x):
         while x in out:
             x = out[x]
         return x
 
-    active = set()
+    def edges_of(n):
+        if n not in memo:
+            memo[n] = edges(n)
+        return memo[n]
 
-    def fold(x, y):
-        # A pair already being folded further up (a cycle of calls or vtable slots) is not
-        # entered again.
-        active.add((x, y))
-        for tx, ty in zip(deps(x), deps(y)):
-            tx, ty = rep(tx), rep(ty)
-            if tx != ty and tx in keys and ty in keys and (tx, ty) not in active and identical(tx, ty):
-                fold(tx, ty)
-        active.discard((x, y))
-        out[y] = x
+    def node(t):
+        return t is not None and t[0] not in ("import", "other")
 
+    def cand(n):
+        return keys.get(n) is not None and (not ref or keys[n][0])
+
+    def fold(k, f):
+        if k == f:
+            return
+        out[f] = k
+        for (hk, tk), (hf, tf) in zip(edges_of(k), edges_of(f)):
+            if len(hk) < 8 or struct.unpack_from("<I", hk, 4)[0] & 0x6000000:
+                continue
+            if not (node(tk) and node(tf)):
+                continue
+            a, b = rep(tk), rep(tf)
+            if a != b and not is_debug(a) and cand(a) and cand(b):
+                fold(a, b)
+
+    def same_dep(x, y, level, low):
+        x, y = rep(x), rep(y)
+        if x == y:
+            return True
+        if not (cand(x) and cand(y)):
+            return False
+        lx, ly = mark.get(x, 0), mark.get(y, 0)
+        if lx and lx == ly:
+            low[0] = min(low[0], lx)
+            return True
+        if lx or ly:
+            return False
+        kx, ky = keys[x], keys[y]
+        if kx[2:5] != ky[2:5] or (kx[5] and ky[5] and kx[5] != ky[5]):
+            return False
+        return fold_cons(x, y, level + 1, low)
+
+    def fold_cons(x, y, level, parent):
+        low = [INF]
+        if not identical(x, y, level, low):
+            return False
+        if level > low[0]:
+            parent[0] = min(parent[0], low[0])
+            return True
+        fold(x, y)
+        return True
+
+    def identical(x, y, level, low):
+        ex, ey = edges_of(x), edges_of(y)
+        if x[0] == "lib" or y[0] == "lib" or any(t is None or len(h) < 8 for h, t in ex + ey):
+            return oracle(x, y)
+        if len(ex) != len(ey):
+            return False
+        mark[x] = mark[y] = level
+        try:
+            for (hx, tx), (hy, ty) in zip(ex, ey):
+                ox, fx = struct.unpack("<II", hx)
+                oy, fy = struct.unpack("<II", hy)
+                if ox != oy or (fx ^ fy) & 0x01FFFFFF:
+                    return False
+                if (fx | fy) & 0x2000000:
+                    return oracle(x, y)
+                if not (node(tx) and node(ty)):
+                    if tx != ty:
+                        return False
+                    continue
+                if is_debug(tx) and is_debug(ty):
+                    continue
+                if not same_dep(tx, ty, level, low):
+                    return False
+            return same_bytes(x, y)
+        finally:
+            mark.pop(x, None)
+            mark.pop(y, None)
+
+    # ICFAnalysis hands ICFLocateICs one bucket at a time (FICFGetNextBucket: a run of equal
+    # liveness, size, relocation count, edge CRC and cycle flag), which stops at another checksum.
     for i, x in enumerate(order):
-        if x in out:
+        if x in out or (ref and not keys[x][0]):
             continue
         for y in order[i + 1:]:
-            if keys[y][5] != keys[x][5] and keys[x][5]:
+            if keys[y][:5] != keys[x][:5] or (keys[y][5] != keys[x][5] and keys[x][5]):
                 break
-            if y not in out and y != x and x not in out and identical(x, y):
+            if y in out or y == x:
+                continue
+            low = [INF]
+            if identical(x, y, 1, low) and 1 <= low[0]:
                 fold(x, y)
     return out
 
@@ -2264,6 +2350,7 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
         if r["symbol"]:
             chosen.setdefault(r["symbol"], (r["obj_index"], r["section_index"]))
     debug = link_debug(command or (trace or {}).get("command"))
+    trace_debug = link_debug((trace or {}).get("command"))
     children = icf_children(objs, debug)
     tcons = view["cons"]
 
@@ -2298,6 +2385,8 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
         if n[0] == "lib":
             c = tcons.get(n[1]) or {}
             name, flags = c.get("group") or "", c.get("flags") or 0
+        elif n[0] == "libdbg":
+            name, flags = n[1], n[2]
         else:
             sec = objs[n[0]]["sections"][n[1] - 1]
             name, flags = sec["name"], sec["characteristics"]
@@ -2315,12 +2404,26 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
     def edges_of(n):
         """[(edge bytes, target)]: target ("import", name), ("other",), a node, or None (unknown)."""
         if n[0] == "lib":
-            # A trace of a /DEBUG link gives library members their `.debug$F` child edges; a
-            # link without /DEBUG has none (and the converse cannot be added from the trace).
-            return [traced_edge(struct.pack("<II", e["offset"], e["flags"]), e)
-                    for e in tcons[n[1]].get("edges") or ()
-                    if debug or e["flags"] != 0xFFFF
-                    or not (tcons.get(e.get("con")) or {}).get("group", "").startswith(".debug")]
+            # A trace of a /DEBUG link gives library members their `.debug$*` child edges; a
+            # link without /DEBUG has none. For a /DEBUG link from a trace without it, the
+            # member's own associative `.debug$*` sections (the CRT's `.debug$S`) are added among
+            # its child edges in section order, as ("libdbg", name, characteristics).
+            c = tcons[n[1]]
+            out = [(e.get("section") or 0, traced_edge(struct.pack("<II", e["offset"], e["flags"]), e))
+                   for e in c.get("edges") or ()
+                   if debug or e["flags"] != 0xFFFF
+                   or not (tcons.get(e.get("con")) or {}).get("group", "").startswith(".debug")]
+            if debug and not trace_debug and c["con_index"] is not None:
+                member = _lib_member_obj(c["lib"], c["obj"])
+                if member:
+                    out += [(sec["index"], (struct.pack("<II", 0, 0xFFFF),
+                                            ("libdbg", sec["name"], sec["characteristics"])))
+                            for sec in member["sections"]
+                            if sec["associated"] == c["con_index"] + 1 and sec["size"]
+                            and sec["name"].startswith(".debug")]
+                    child = [x for x in out if x[1][0] == struct.pack("<II", 0, 0xFFFF)]
+                    out = sorted(child, key=lambda x: x[0]) + [x for x in out if x not in child]
+            return [x[1] for x in out]
         out = []
         oi, si = n
         obj = objs[oi]
@@ -2462,7 +2565,8 @@ def icf_static_keys(objs, rows, trace=None, log=None, graph=None, command=None):
             sec = objs[n[0]]["sections"][n[1] - 1]
             return (sec["characteristics"] & 0x1E0, sec["name"])
 
-        graph.update({"group_key": group_key, "icfid": icfid, "is_cand": is_cand,
+        graph.update({"group_key": group_key, "icfid": icfid, "is_cand": is_cand, "edges": edges_of,
+                      "debug_section": debug_section,
                       "targets": {n: [t for head, t in edges_of(n) if t is not None and t[0] not in ("import", "other")
                                       and not struct.unpack_from("<I", head, 4)[0] & 0x6000000]
                                   for n in nodes}})
@@ -2631,6 +2735,14 @@ def icf_predict(objs, trace=None, ref=True, command=None):
     # to a candidate of an earlier group, the ICFId of that target's survivor so far.
     gk = graph["group_key"]
 
+    def same_class(x, y):
+        return (klass.get(x) == klass.get(y) and klass.get(x) is not None
+                and (not ref or (keys[x][0] and keys[y][0])))
+
+    def same_bytes(x, y):
+        sx, sy = (objs[n[0]]["sections"][n[1] - 1] for n in (x, y))
+        return (sx["name"], sx["characteristics"], sx["raw"]) == (sy["name"], sy["characteristics"], sy["raw"])
+
     def rep(x):
         while x in folds:
             x = folds[x]
@@ -2651,9 +2763,10 @@ def icf_predict(objs, trace=None, ref=True, command=None):
         sorted_arrays[g] = order
         # Under /OPT:REF a contribution /OPT:REF discards (key[0] == 0) is sorted but never folded:
         # two identical dead copies both stay unfolded (avp3 audio_effects: _sinf, ?sin@@YAMM@Z).
-        icf_survivors(order, keys, lambda x, y: klass.get(x) == klass.get(y) and klass.get(x) is not None
-                      and (not ref or (keys[x][0] and keys[y][0])),
-                      lambda x: deps.get(x, ()), folds)
+        # ICFLocateICs compares and folds as link does: a dependency pair found identical while a
+        # caller pair is compared stays folded when the callers differ (icf_walk).
+        icf_walk(order, keys, graph["edges"], same_bytes, same_class, folds, ref,
+                 lambda n: bool(graph["debug_section"](n)))
     for g, order in sorted_arrays.items():
         members = {}
         for f, s in folds.items():

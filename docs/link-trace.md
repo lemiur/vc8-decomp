@@ -119,12 +119,31 @@ Mechanism (link.pdb publics, disassembly of link.exe 8.00.50727.762, confirmed b
    equal elements skipped, smaller side first, `shortsort` max-to-end selection sort for <= 8
    elements; not stable). `ms_qsort` reproduces link's output array in every traced sort (E1 x8
    orders, E2 x3, E4 x2: 38 of 38).
-4. **Walk** (`ICFLocateICs` 0x455730): each unfolded element absorbs every later element with the
-   same checksum that `FICFIdenticalCONs` finds identical; `FFoldCONsEx` first folds the pair's
-   differing dependencies the same way (the keeper's callee keeps). So **the survivor is the
-   member at the lowest position of the sorted array, unless the fold of a caller pair reached it
-   first, in which case it is the callee of the surviving caller** (E4: `top2` sorts before
-   `top1` and drags `mid2` over `mid1`, though `mid1` sorts first).
+4. **Walk** (`ICFLocateICs` 0x455730, modelled by `icf_walk`): `ICFAnalysis` hands it one
+   bucket at a time (`FICFGetNextBucket`: a run of equal liveness, size, relocation count, edge
+   CRC and cycle flag); each unfolded element absorbs every later element of the bucket with the
+   same checksum that `FICFIdenticalCONs` (0x455310) finds identical. That comparison marks the
+   pair's nodes with its level (node+4) and walks both edge lists (`FIdenticalDependencies`
+   0x454CE0: associative children first, then the relocations; offset, type, storage class and
+   function bit; imports by name; two `.debug` targets skipped) **before** the raw bytes. A
+   target pair goes through `FFoldCONsEx` (0x454650): equal through the fold chains; else both
+   candidates, marked nodes pair only with each other (a cycle: the context's lowest level
+   drops), same relocation count, size, edge CRC (node+8, as remixed so far) and checksum; then
+   `FFoldCONs` (0x4552B0) compares the pair one level down and, when it is identical, folds it at
+   once (`ICFFold`), unless it reached a pair higher on the stack (it is then left to that pair).
+   `ICFFold` (0x4541C0) folds, in `FoldAssocEdges` (0x454270), every differing edge target pair
+   of the folded pair, the keeper's target keeping. So **the survivor is the member at the lowest
+   position of the sorted array, unless the fold of a caller pair reached it first, in which case
+   it is the callee of the surviving caller** (E4: `top2` sorts before `top1` and drags `mid2`
+   over `mid1`, though `mid1` sorts first), **and a dependency pair found identical while a
+   caller pair is compared stays folded when the callers differ** (avp3 17 units with `/DEBUG`,
+   given order: the scalar deleting destructors of `CSampleXAPOBase<XapoChorus>` and
+   `<XapoFlanger>` are compared in the `.text` walk, their destructors differ by the
+   `CXAPOBase` vtable, but the destructors' unwind funclets and `__ehfuncinfo$`, compared first
+   as associative children, are folded Flanger into Chorus; the `.text$x` walk then folds Chorus
+   into Filter, whose funclet sorts before Chorus's, and Filter survives instead of Flanger, the
+   lowest of the four; the bucket keeps Filter's and Crackle's destructors, with other edge CRCs,
+   out of the comparison).
 
 5. **Dead copies.** Under `/OPT:REF` a contribution the reference pass discards (key 0 = 0) is
    sorted with the others but never folded: two identical dead copies both stay (avp3
@@ -142,7 +161,7 @@ the object's own symbol name, with the traced target flags and this relocation's
 object COMDAT identical to a library member's (the trace folded them together) shares its
 class. Objects are matched to the trace by full path when every traced path is one of them,
 else by file name (refused when two objects share one). A cycle of identical callers (vtable
-slots, recursion) is folded once (`icf_survivors` does not re-enter a pair on its stack).
+slots, recursion) is folded once, at the pair where the comparison entered it.
 
 Validation (`experiment --set all`: the trace of T predicts the fold groups and survivors of
 every traced command line O, compared with O's `ICFFold` calls): E1 64/64 (8 orders x 8 traces),
@@ -157,8 +176,9 @@ every traced sort. Real links (`crosscheck`, avp3 code-DLL links from
 /OPT:REF /OPT:ICF`, `/INCLUDE` roots, msvcrt kernel32 user32 winmm ole32 oleaut32 and the
 default uuid and OLDNAMES): `platform_audio_streams` + `audio_effects` in 2 orders, 4/4, 17 fold
 groups, 183/183 keys; 17 units (`alien_moves_ai` ... `trigger_value`, the two audio units) in 3
-orders, 9/9, 48 fold groups (vtables, `.text$x` unwind funclets, `.xdata$x` EH tables,
-recursive `Map::ForEach`), 1020/1020 keys, no key left to the trace. Every traced link ran one
+orders with and without `/DEBUG`, 36/36 (each of the 6 traces predicts each of the 6 links), 48
+fold groups (vtables, `.text$x` unwind funclets, `.xdata$x` EH tables, recursive
+`Map::ForEach`), 1020/1020 keys, no key left to the trace. Every traced link ran one
 `ICFAnalysis` iteration and none had an edge flagged 0x2000000.
 
 ### /DEBUG
@@ -172,7 +192,7 @@ Evidence: the avp3 2-unit link (`audio_effects`, `platform_audio_streams`, its `
 | With `/OPT:REF` and `/OPT:ICF` given, `/DEBUG` leaves the `.text` layout, padding, the `/OPT:REF` discards and the fold groups' members as they are; `run`'s `order rule check` and `import layout check` hold | 2 units: 187 contributions; 17 units with `/DEBUG`: both checks hold (619 kept, 48 groups) |
 | Without `/OPT` options `/DEBUG` turns both off (`/OPT:NOREF,NOICF`): no fold, nothing removed; without `/DEBUG` the default folds (6 groups instead of 17 here) | 2 units |
 | `/DEBUG` adds the debug directory (`IMAGE_DEBUG_DIRECTORY`, 0x1C bytes) at the head of the `.rdata` group after the IAT (`.idata$5`; here at 0x50, the next 16-byte boundary), and the CodeView record (`.rdata$debug`: `RSDS`, GUID, age, PDB path) after `.rdata`, so the `.rdata` contributions move by 0x20 to 0x24 | 2-unit map: `.rdata` at 0x50 instead of 0x48, `.rdata$debug` 0x94 bytes |
-| It changes ICF survivors: the objects' `.debug$F` (and, from `/Zi` objects, per-function `.debug$S`) sections become contributions, so each code COMDAT gains an associative edge (0, 0xFFFF) to them. They are not candidates and are hashed by their output section's name, `.debug`, and twice its characteristics (0x42000040: the section's without alignment and COMDAT bits), not by ICFId; the keys, so the sorts and the survivors, change (`?Reset@CXAPOBase` survives without `/DEBUG`, `OnSetTypedParameters<XapoCrackle>` with it). `link_debug` reads `/DEBUG` from the command line; a trace with or without it predicts the other link (its library members' debug edges are dropped, or are absent and were not decisive) | 2 units: keys 183/183, survivors exact in both orders and across traces with and without `/DEBUG`; 17 units: reversed order 1020/1020 keys and exact, given order see Limits |
+| It changes ICF survivors: the objects' `.debug$F` (and, from `/Zi` objects, per-function `.debug$S`) sections become contributions, so each code COMDAT gains an associative edge (0, 0xFFFF) to them. They are not candidates and are hashed by their output section's name, `.debug`, and twice its characteristics (0x42000040: the section's without alignment and COMDAT bits), not by ICFId; the keys, so the sorts and the survivors, change (`?Reset@CXAPOBase` survives without `/DEBUG`, `OnSetTypedParameters<XapoCrackle>` with it). `link_debug` reads `/DEBUG` from the command line; a trace with or without it predicts the other link: a `/DEBUG` trace's library members lose their debug edges, and for a `/DEBUG` link from a trace without it each library member gains a child edge for each associative `.debug$*` section of its object (the CRT's `.debug$S`, read from the library), among its children in section order | 2 units: keys 183/183, survivors exact in both orders and across traces with and without `/DEBUG` (36/36); 17 units: given, reversed and rotated orders with and without `/DEBUG`, 1020/1020 keys and exact (36/36) |
 
 ### Library search
 
@@ -248,9 +268,11 @@ Validation (`import_check`, part of `run` and of every `experiment`/`crosscheck`
   name: two inputs with one file name are ambiguous there.
 - `/GL` objects are not COFF and are refused; trace after LTCG with the code-generation output instead.
   avp3 builds without `/GL`, so LTCG is out of scope.
-- `/DEBUG`, 17-unit link in the given order: 1016/1020 keys; the four `__ehfuncinfo$` of the
-  `CSampleXAPOBase<...>` destructors and their unwind funclets take another survivor than predicted
-  (the traced folds fold an earlier survivor into a later one in the `.xdata$x` walk). The `.rdata`
-  debug directory and CodeView record are described, not predicted by `order`; incremental linking
-  (`/DEBUG` without `/OPT:REF` and without `/FORCE`) is not modelled.
+- `/DEBUG`: the `.rdata` debug directory and CodeView record are described, not predicted by
+  `order`; incremental linking (`/DEBUG` without `/OPT:REF` and without `/FORCE`) and links
+  without `/OPT:ICF` are not modelled by `order --icf-trace`.
+- The walk compares an object pair as link does; a pair with a library member, or with an edge
+  the model does not resolve, is decided by the equivalence classes (`icf_classes`, and the
+  trace's folds for library members) without walking its dependencies, so a fold left behind by
+  such a comparison is not modelled (no traced link had one).
 - No vc8-decomp `cl` pilot link was traced: the validation of real links is the avp3 code DLL's.
