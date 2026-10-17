@@ -1251,7 +1251,8 @@ FLD1_CONSTANTS = ("__real@3f800000", "__real@3ff0000000000000")
 
 
 STATIC_SEGMENTS = (".bss", ".rdata", ".data")   # _BSS, CONST, _DATA: c2's segment list is prepended
-HEADER_SECTIONS = (".drectve", ".debug$S", ".debug$T")
+HEADER_SECTIONS = (".drectve", ".debug$S")
+DEBUG_TYPES = ".debug$T"   # /Zi: the type records, created at obj_end after every other section
 
 
 def section_label(sec, sections):
@@ -1269,7 +1270,7 @@ def full_sections(order, sections, dynamic=()):
     sections and which associative EH sections it has. The rule, from the
     traced CoffCreateSection / CoffCreateComdatSection calls (each creates the
     next section number):
-    - obj_start: .drectve, .debug$S (and .debug$T when present);
+    - obj_start: .drectve, .debug$S;
     - ProcessSegmentInits, before the first function: the COMDAT literals the
       static data initializers reference, then the plain .bss, .rdata, .data
       (c2's segment list in reverse creation order: _BSS, CONST, _DATA);
@@ -1287,7 +1288,12 @@ def full_sections(order, sections, dynamic=()):
       (as a literal COMDAT would), else after the other plain sections;
     - obj_end: a `.bss` that holds only dynamically initialized data (dynamic:
       their names, gl data flag GL_DYNAMIC; SsrEmitDelayedInit creates it),
-      then the remaining plain sections (`.CRT$XCU`).
+      then the remaining plain sections, the initializer segments (`.CRT$XCU`,
+      `.CRT$XCL` of `#pragma init_seg(lib)`, a named one) last, sorted by name
+      as their evaluation order is (SsrSortInitializerEvalOrder);
+    - /Zi: each function's `.debug$S` right after its `.text` (it replaces the
+      `.debug$F`); the `.debug$S` of a data COMDAT (a static local's guard)
+      after the plain sections; `.debug$T` after every other section.
     Returns (labels, unplaced): unplaced are the data COMDATs no relocation of
     an emitted section references (a constant whose last use the optimizer
     removed after it was put on the emit list)."""
@@ -1344,6 +1350,9 @@ def full_sections(order, sections, dynamic=()):
             continue
         put(sec)
         assoc = kids.get(sec["number"], [])
+        for k in assoc:
+            if k["name"] == ".debug$S":     # /Zi: the function's symbols, created with its code
+                put(k)
         textx = [k for k in assoc if k["name"] == ".text$x"]
         xdata = [k for k in assoc if k["name"] == ".xdata$x"]
         if textx and textx[0].get("comdat", "").startswith("__unwindfunclet$"):
@@ -1369,7 +1378,13 @@ def full_sections(order, sections, dynamic=()):
                     put(s)
         for k in assoc:
             put(k)
-    for s in delayed + plain:
+    rest = [s for s in plain if s["number"] not in done and s["name"] != DEBUG_TYPES]
+    init_segs = [s for s in rest if s.get("symbols") and all(n.endswith("$initializer$") for n in s["symbols"])]
+    others = [s for s in rest if s not in init_segs]
+    # /Zi: the symbols of a function-local static's data COMDAT (the guard `?$S1@`) come last.
+    data_debug = [s for s in sections if s.get("selection") == 5 and s["name"] == ".debug$S"
+                  and sections[s["assoc"] - 1].get("comdat") in data]
+    for s in delayed + others + sorted(init_segs, key=lambda s: s["name"].encode("latin-1")) + data_debug + plain:
         put(s)
     unplaced = [s["comdat"] for s in sections if s.get("comdat") in data and s["number"] not in done]
     return out, unplaced
@@ -1424,6 +1439,17 @@ def il_model(prefix, call_graph=True, sections=None):
             gl_dynamic(gl), inits)
 
 
+def folded_initializers(model, sections):
+    """Dynamic initializers (`??__E`) c2 compiles but emits no section for: their
+    value folded to a constant (`int dyn = h1(3);` with h1 inlined), so the
+    datum became static data and neither the `.text$yc` COMDAT nor its
+    `.CRT$XCU` pointer exist. An optimization result, read from the obj like
+    the code references."""
+    have = {s.get("comdat") for s in sections}
+    return [m["name"] for m in model if m.get("init") and m["name"].startswith("??__E")
+            and m["name"] not in have]
+
+
 def emit_order_report(events, sections, il=None):
     """Join a trace (CgBottomUpOrder + ReadFunction) with the object's section
     table: IL order, bottom-up order (traced and modelled), compile order, the
@@ -1449,15 +1475,18 @@ def emit_order_report(events, sections, il=None):
         entries, model, vtables, *rest = il
         predicted = [m["name"] for m in model]
         gl_order = [e["name"] for e in entries]
+        folded = folded_initializers(model, sections)
+        emitted = [m for m in model if m["name"] not in folded]
         report.update({
             "gl_order": gl_order, "gl_order_ok": gl_order == il_names if bu else None,
             "predicted_order": predicted, "predicted_ok": predicted == reads if events else None,
-            "predicted_sections": predicted_sections(model), "obj_sections": obj_order_sections(sections),
+            "folded_initializers": folded,
+            "predicted_sections": predicted_sections(emitted), "obj_sections": obj_order_sections(sections),
             "emits_vtables": {m["name"]: m["vtables"] for m in model if m["vtables"]},
             "vtable_slots": vtables,
             "not_needed": [n for n in gl_order if n not in set(predicted)]})
         report["predicted_sections_ok"] = report["predicted_sections"] == report["obj_sections"]
-        report.update(full_sections_report(predicted, sections, rest[0] if rest else ()))
+        report.update(full_sections_report([m["name"] for m in emitted], sections, rest[0] if rest else ()))
         if not bu:
             report["blocked_by"] = blocking_callees(recursive_arcs(entries))
     return report
@@ -1539,6 +1568,8 @@ def emit_order_main(argv):
             at, pred[at] if at < len(pred) else "-", obj[at] if at < len(obj) else "-"))
     full, obj = report["full_predicted"], report["full_obj"]
     print("full section table (%d sections): %s" % (len(obj), "equal" if report["full_ok"] else "DIFFERS"))
+    for name in report.get("folded_initializers", []):
+        print("  folded: %s (compiled; its value became static data, no section)" % name)
     for name in report["full_unplaced"]:
         print("  unplaced: %s (a data COMDAT no relocation of the emitted code references; obj section %d)"
               % (name, next(i + 1 for i, label in enumerate(obj) if label.endswith(" " + name))))

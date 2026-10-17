@@ -510,6 +510,35 @@ class IlModelTests(unittest.TestCase):
                sec(6, ".text", "?f")]
         self.assertTrue(ct.full_sections_report(["?f"], obj)["full_ok"])
 
+    def test_full_sections_zi_and_init_segments(self):
+        def sec(n, name, comdat=None, relocs=(), symbols=None, assoc=0):
+            s = {"number": n, "name": name, "relocs": list(relocs), "reloc_at": list(range(len(relocs))), "fld1": []}
+            if comdat:
+                s.update(comdat=comdat, selection=2)
+            if assoc:
+                s.update(selection=5, assoc=assoc)
+            if symbols:
+                s["symbols"] = symbols
+            return s
+        # /Zi probe f1: each function's .debug$S follows its .text, a static local's guard
+        # COMDAT has its .debug$S after the plain sections, .debug$T is last; probe s_mix: the
+        # initializer segments come in name order (#pragma init_seg(lib): .CRT$XCL first).
+        obj = [sec(1, ".drectve"), sec(2, ".debug$S"), sec(3, ".text", "?f", relocs=["?$S1"]),
+               sec(4, ".debug$S", assoc=3), sec(5, ".bss", "?$S1"), sec(6, ".text$yc", "??__Ed1"),
+               sec(7, ".debug$S", assoc=6), sec(8, ".bss", symbols=["?d1", "?d0"]),
+               sec(9, ".CRT$XCL", relocs=["??__Ed1"], symbols=["_d1$initializer$"]),
+               sec(10, ".CRT$XCU", relocs=["??__Ed0"], symbols=["_d0$initializer$"]),
+               sec(11, ".debug$S", assoc=5), sec(12, ".debug$T")]
+        self.assertTrue(ct.full_sections_report(["?f", "??__Ed1"], obj, ["?d1", "?d0"])["full_ok"])
+        obj[8]["name"], obj[9]["name"] = ".CRT$XCV", ".CRT$XCU"     # init_seg(".CRT$XCV") after the default
+        self.assertFalse(ct.full_sections_report(["?f", "??__Ed1"], obj, ["?d1", "?d0"])["full_ok"])
+
+    def test_folded_initializer(self):
+        # /O2 p1: `int dyn = h1(3);` with h1 inlined: ??__Edyn is compiled, no section is emitted.
+        model = [{"name": "?h1", "init": False}, {"name": "??__Edyn", "init": True}]
+        self.assertEqual(ct.folded_initializers(model, [{"comdat": "?h1"}]), ["??__Edyn"])
+        self.assertEqual(ct.folded_initializers(model, [{"comdat": "?h1"}, {"comdat": "??__Edyn"}]), [])
+
     def test_call_graph_flags(self):
         self.assertTrue(ct.call_graph_flags(["/O2", "/Gy"]))
         self.assertFalse(ct.call_graph_flags(["/O2", "/Od"]))

@@ -306,7 +306,17 @@ code references is decided by inlining, so it is read from the obj):
    pushes the catch type `??_R0`: `??_R0, __CTA1, __CT`); `.sxdata` at the first function with EH data;
    `.debug$F`.
 4. `obj_end`: a `.bss` holding only dynamically initialized data (`SsrEmitDelayedInit`), then the
-   remaining plain sections (`.CRT$XCU`).
+   remaining plain sections, the initializer segments last in name order, the order their initializers
+   are evaluated in (`#pragma init_seg(lib)` after a default initializer: `.CRT$XCL`, `.CRT$XCU`;
+   `init_seg("mysec")`: `.CRT$XCU`, `mysec`; `compiler` is `.CRT$XCC`, `user` `.CRT$XCU`; a unit may
+   switch from the default to one `init_seg` only, C2356 otherwise).
+
+Under `/Zi` each function's associative `.debug$S` follows its `.text` at once (before its `.text$x`,
+literals and EH data) and replaces its `.debug$F`; the `.debug$S` of a data COMDAT (the guard `?$S1@` of
+a function-local static) comes after the plain sections, and `.debug$T` last. The compile order and the
+other sections are those without `/Zi`. A dynamic initializer whose value folds to a constant (`int dyn =
+h1(3);` with `h1` inlined) is compiled (`ReadFunction`, traced) but emits nothing: no `.text$yc`, no
+`.CRT$XCU`; `folded_initializers` reads that from the obj and the table is predicted without it.
 
 An x87 load of the pooled 1.0 becomes `fld1` in `LoFinalLower` (+0x10c6, `MscFindFloatValue`) after the
 constant was put on the emit list: its `__real@3f800000` COMDAT is still emitted there although no
@@ -341,21 +351,28 @@ modelled bottom-up list equals `CgBottomUpOrder`'s). A probe with later definiti
 implicit constructors, `noinline`, two- and three-node and self recursion and a dynamic initializer agrees at
 `/O2` as well. At `/Od /Gy` (same options otherwise) `--no-trace` predicts the three avp3 units' tables (48,
 61 and 86 sections) and those of `p1` to `p4` and six small segment probes exactly; traced, `p4`'s compile
-order equals `ReadFunction`'s.
+order equals `ReadFunction`'s. Under `/Zi` (`/O2` and `/Od`) `--no-trace` predicts the three avp3 units'
+tables (82, 99, 144 sections at `/O2`; 79, 89, 145 at `/Od`) and those of `p1` to `p4`. The atexit
+destructors and initializer segments: probe `f1` (six globals with destructors, an `int` initializer, a
+global whose constructor calls a later definition, a function-local static with a destructor: seven
+`??__E`, seven `??__F` in IL order after them, the static's `??__F` among them) and the `init_seg` probes
+(`compiler`, `lib`, `user`, `".CRT$XCT"`, and the default followed by `lib`, `".CRT$XCV"` or `"mysec"`)
+are predicted exactly at `/O2` and `/Od`, with and without `/Zi`; traced, `f1` and the default-then-`lib`
+probe at `/O2` and `f1` at `/Od` give the modelled `CgBottomUpOrder` and `ReadFunction` order.
 
 ## Limits
 
 - The `/Od` model takes each function's references from the obj's relocations, not from its `ex` body
   (the `ex` names symbols the code does not keep, such as an unwind destructor without `/EHsc`). A
-  reference c2 marks needed but that leaves no relocation is not seen. Several `??__F`, initializer
-  segments other than `.CRT$XCU` (`#pragma init_seg`) and the `/Od` segment rules beyond the probes are
-  untested.
+  reference c2 marks needed but that leaves no relocation is not seen. The `/Od` segment rules beyond
+  the probes are untested.
 - `full_sections` takes what each function's code references (relocations, `fld1`) and whether it has EH
   sections from the obj: those are inlining results. A constant whose every use a later pass removes in
   another way than `fld1` (`fldz` is not checked) is reported as `unplaced` with its obj section.
-- Under `/Zi`, `.debug$T` and the per-function debug sections come elsewhere and the code relocations no
-  longer name the literals; its gl file also holds records `cl_trace.parse_gl` does not decode: not
-  modelled. `/GL` (LTCG) ordering is not modelled.
+- Which data COMDATs get a `.debug$S` under `/Zi` (a static local's guard did, the static itself did
+  not) is read from the obj, not predicted. Whether an initializer folds is an optimization result, read
+  from the obj. `/GL` (LTCG) ordering is not modelled: c2 then runs at link time on IL from every
+  object, and avp3 builds without `/GL` (`/Gy`, no LTCG), so it is out of scope.
 - `_Speed` is bit 23 (0x800000) of the function's optimization word (`[f+0x1c]`, copied by
   `MscProcessPragstat` at each function's start; bit 8 goes to `_DefaultInt`, bit 31 to `_StackCheck`).
   c1xx sets it by default (`/Ot`, implied by `/O2`, `/Ox`, also under `/Og` and `/Od`) and clears it for
