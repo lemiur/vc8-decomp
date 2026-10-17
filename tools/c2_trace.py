@@ -924,6 +924,154 @@ def blocking_callees(entries):
     return out
 
 
+GL_INLINE = 0x800      # gl definition fnflags (= entry +0x50 at read): an inline/COMDAT body
+GL_NEEDED = 0x20       # entry +0x50 "needed": c1xx sets it for external non-inline definitions and new/delete
+GL_INIT = 0x4          # a dynamic initializer (??__E), referenced from .CRT$XCU
+
+
+def gl_names(gl):
+    """Number -> name of every gl symbol record, spelled as c2 decorates it."""
+    return {s.number: s.name if s.name[:1] in "?@" else "_" + s.name for s in gl.symbols}
+
+
+def gl_entries(gl):
+    """_Eentry_list as c1xx writes it: the gl definition records (SSR 0E) in file
+    order (cl_trace.parse_gl). Per entry: name, number, fnflags, refs (the call
+    list resolved to names: functions, vtables, other referenced symbols, in
+    the order c1xx recorded them) and callees (the refs that are definitions of
+    the unit: the call graph's arcs). Vector deleting destructors (SSR 10) are
+    returned as a map ??_E name -> ??_G name. gl spells extern "C" names without
+    the cdecl underscore (`IsEqualGUID`, `DeleteCriticalSection@4`); c2's entries
+    have it, so it is added here."""
+    names = gl_names(gl)
+    defs = [s for s in gl.symbols if s.kind == "definition"]
+    defined = {names[s.number] for s in defs}
+    vec = {names[s.number]: names.get(s.attrs.get("target")) for s in gl.symbols if s.kind == "vector-dtor"}
+    out = []
+    for s in defs:
+        refs = [names.get(n, n) for n, _ in s.attrs.get("calls", [])]
+        out.append({"name": names[s.number], "number": s.number, "fnflags": s.attrs.get("fnflags", 0),
+                    "refs": refs, "node": True, "init": s.name.startswith("??__E"),
+                    "inline": bool(s.attrs.get("fnflags", 0) & GL_INLINE),
+                    "callees": [r for r in refs if r in defined]})
+    return out, vec
+
+
+def in_vtables(data, gl):
+    """Slots of each vtable c1xx initialises in the `in` file: per ??_7 symbol of
+    gl, the record `07 00 <losh number>` followed by items `<delta> 02 <losh
+    symbol> <c32 displacement>` (an address constant `delta` bytes after the
+    previous one), ended by the first item of another kind. Returns
+    {vtable: [slot names]}."""
+    import cl_trace
+    names = gl_names(gl)
+    out = {}
+    for number, name in names.items():
+        if not name.startswith("??_7"):
+            continue
+        key = b"\x07\x00" + cl_trace.encode_losh(number)
+        at = data.find(key)
+        if at < 0:
+            continue
+        pos, slots = at + len(key), []
+        while pos + 4 <= len(data) and data[pos + 1] == 0x02:
+            try:
+                slot, pos = cl_trace.read_losh(data, pos + 2)
+            except cl_trace.TraceError:
+                break
+            if pos >= len(data):
+                break
+            pos += 5 if data[pos] == 0x80 else 1
+            slots.append(names.get(slot, slot))
+        out[name] = slots
+    return out
+
+
+def recursive_arcs(entries):
+    """CgIdentifyRecursion: a DFS from each node in reverse creation order (nodes
+    are created in list order and prepended to _CGnodes), over the callee arcs
+    in list order; an arc to a node on the DFS stack (a self-call included) is
+    recursive. Returns copies of the entries with those arcs moved from
+    callees to recursive."""
+    by_name = {e["name"]: e for e in entries}
+    visited, recursive = set(), set()
+
+    def dfs(name, stack):
+        visited.add(name)
+        stack.append(name)
+        for callee in by_name[name].get("callees", []):
+            if callee in stack:
+                recursive.add((name, callee))
+            elif callee not in visited and callee in by_name:
+                dfs(callee, stack)
+        stack.pop()
+    for e in reversed(entries):
+        if e["name"] not in visited:
+            dfs(e["name"], [])
+    out = []
+    for e in entries:
+        e = dict(e)
+        callees = e.get("callees", [])
+        e["recursive"] = [c for c in callees if (e["name"], c) in recursive]
+        e["callees"] = [c for c in callees if (e["name"], c) not in recursive]
+        out.append(e)
+    return out
+
+
+def emission_model(entries, vec=None, vtables=None, call_graph=True):
+    """Predict c2's compile order from the IL alone (gl_entries + in_vtables).
+    1. CgBottomUpOrder (bottom_up_order after recursive_arcs), unless /Od.
+    2. Needed set at the start: every definition c1xx flagged needed
+       (GL_NEEDED: external non-inline functions, operator new/delete; not
+       statics, inlines, implicit instantiations) and dynamic initializers,
+       closed over the call lists (a needed function's callees defined in the
+       unit are needed, whether or not c2 later inlines them).
+    3. Compile loop: rescan the list from its head for the first needed entry
+       not compiled yet; compiling it emits the vtables it references that are
+       not emitted yet, and each vtable's slots become needed (??_E through its
+       ??_G, closed over call lists as in 2).
+    Returns [{"name", "vtables": [vtables this function emits]}] in compile order."""
+    vec, vtables = vec or {}, vtables or {}
+    entries = recursive_arcs(entries)
+    by_name = {e["name"]: e for e in entries}
+    order = bottom_up_order(entries) if call_graph else [e["name"] for e in entries]
+    needed = set()
+
+    def need(name):
+        name = vec.get(name, name)
+        if name in by_name and name not in needed:
+            needed.add(name)
+            for callee in by_name[name].get("refs", []):
+                need(callee)
+    for e in entries:
+        if e.get("fnflags", 0) & (GL_NEEDED | GL_INIT):
+            need(e["name"])
+    compiled, emitted, out = set(), set(), []
+    while True:
+        name = next((n for n in order if n in needed and n not in compiled), None)
+        if name is None:
+            return out
+        compiled.add(name)
+        tables = [r for r in by_name[name].get("refs", []) if r in vtables and r not in emitted]
+        for table in tables:
+            emitted.add(table)
+            for slot in vtables[table]:
+                need(slot)
+        out.append({"name": name, "vtables": tables, "init": bool(by_name[name].get("init"))})
+
+
+def predicted_sections(model):
+    """The COMDATs emission creates, in order: each function's .text, then the
+    vtables it emits first (its EH pieces, literals, constants and .debug$F are
+    not predicted). A dynamic initializer goes to the unit's plain .text."""
+    out = []
+    for item in model:
+        if not item.get("init"):
+            out.append(item["name"])
+        out += item["vtables"]
+    return out
+
+
 def read_obj_sections(path):
     """Section table of a COFF object: number, name, size, flags, and for a
     COMDAT the COMDAT symbol, selection and associated section."""
@@ -967,63 +1115,152 @@ def read_obj_sections(path):
     return secs
 
 
-def emit_order_report(events, sections):
+def obj_order_sections(sections):
+    """The obj's non-associative COMDATs that predicted_sections names: code
+    (.text) and vtables (??_7), in section order."""
+    return [s["comdat"] for s in sections if s.get("comdat") and s.get("selection") != 5
+            and (s["name"].startswith(".text") or s["comdat"].startswith("??_7"))]
+
+
+def call_graph_flags(flags):
+    """Whether cl builds a call graph (CgBottomUpOrder): the last of /Od /O1 /O2
+    /Ox /Og decides; cl's default is /Od."""
+    last = None
+    for flag in flags:
+        if flag[:1] in "/-" and flag[1:3] in ("Od", "O1", "O2", "Ox", "Og"):
+            last = flag[1:3]
+    return last not in (None, "Od")
+
+
+def il_model(prefix, call_graph=True):
+    """Read the kept IL (`/Bk<prefix>`: prefix+gl, prefix+in) and predict the
+    compile order: (entries, model, vtables)."""
+    import cl_trace
+    gl = cl_trace.parse_gl(Path(str(prefix) + "gl").read_bytes())
+    entries, vec = gl_entries(gl)
+    in_path = Path(str(prefix) + "in")
+    vtables = in_vtables(in_path.read_bytes(), gl) if in_path.exists() else {}
+    return entries, emission_model(entries, vec, vtables, call_graph), vtables
+
+
+def emit_order_report(events, sections, il=None):
     """Join a trace (CgBottomUpOrder + ReadFunction) with the object's section
     table: IL order, bottom-up order (traced and modelled), compile order, the
-    code COMDATs in section order, and whether they agree."""
+    code COMDATs in section order, and whether they agree. With il = (entries,
+    model, vtables) from il_model, also the prediction from the IL alone and
+    whether it equals the traced compile order and the obj's code and vtable
+    COMDATs. events may be empty (no trace: the prediction against the obj)."""
     bu = next((e for e in events if e["break"] == "CgBottomUpOrder" and "entries" in e), None)
     reads = [e.get("function") for e in events if e["break"] == "ReadFunction"]
-    il = [e["name"] for e in bu["entries"]] if bu else []
+    il_names = [e["name"] for e in bu["entries"]] if bu else []
     traced = [e["name"] for e in bu.get("entries_after", [])] if bu else []
     modelled = bottom_up_order(bu["entries"]) if bu else []
     code = [s.get("comdat") for s in sections
             if s["name"].startswith(".text") and s.get("selection") != 5 and s.get("comdat")]
     code_set = set(code)
-    return {"il_order": il, "bottom_up_traced": traced, "bottom_up_model": modelled,
-            "model_ok": (traced == modelled) if bu else None, "compile_order": reads,
-            "blocked_by": blocking_callees(bu["entries"]) if bu else {},
-            "code_sections": code, "sections_ok": code == [r for r in reads if r in code_set],
-            "sections": sections}
+    report = {"il_order": il_names, "bottom_up_traced": traced, "bottom_up_model": modelled,
+              "model_ok": (traced == modelled) if bu else None, "compile_order": reads,
+              "blocked_by": blocking_callees(bu["entries"]) if bu else {},
+              "code_sections": code,
+              "sections_ok": code == [r for r in reads if r in code_set] if events else None,
+              "sections": sections}
+    if il is not None:
+        entries, model, vtables = il
+        predicted = [m["name"] for m in model]
+        gl_order = [e["name"] for e in entries]
+        report.update({
+            "gl_order": gl_order, "gl_order_ok": gl_order == il_names if bu else None,
+            "predicted_order": predicted, "predicted_ok": predicted == reads if events else None,
+            "predicted_sections": predicted_sections(model), "obj_sections": obj_order_sections(sections),
+            "emits_vtables": {m["name"]: m["vtables"] for m in model if m["vtables"]},
+            "vtable_slots": vtables,
+            "not_needed": [n for n in gl_order if n not in set(predicted)]})
+        report["predicted_sections_ok"] = report["predicted_sections"] == report["obj_sections"]
+        if not bu:
+            report["blocked_by"] = blocking_callees(recursive_arcs(entries))
+    return report
 
 
 def emit_order_main(argv):
     parser = argparse.ArgumentParser(prog="c2_trace.py emit-order",
                                      description="trace and explain the order c2 compiles and emits a unit's "
-                                     "functions")
+                                     "functions, and predict it from the IL")
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--flags", default="/O2 /Gy", help="cl options (one string)")
     parser.add_argument("--include", action="append", default=[], type=Path)
     parser.add_argument("--out", type=Path, required=True, help="JSON report (the trace goes next to it)")
     parser.add_argument("--toolchain", default="sp1")
     parser.add_argument("--all-sections", action="store_true", help="also print the whole section table")
+    parser.add_argument("--no-trace", action="store_true",
+                        help="no debugger: compile once, predict from the IL and compare with the obj")
     args = parser.parse_args(argv)
     trace = args.out.with_suffix(".jsonl")
-    cli = ["--source", str(args.source), "--flags", args.flags, "--break", "CgBottomUpOrder,ReadFunction",
-           "--out", str(trace), "--toolchain", args.toolchain, "--summary-lines", "0"]
-    for inc in args.include:
-        cli += ["--include", str(inc)]
-    status = main(cli)
-    if status:
-        return status
-    work = trace.parent / (trace.stem + ".work")
-    report = emit_order_report(load_trace(trace), read_obj_sections(work / (args.source.stem + ".obj")))
-    args.out.write_text(json.dumps(report, indent=1), encoding="utf-8")
-    il_pos = {n: i for i, n in enumerate(report["il_order"])}
-    if report["model_ok"] is None:
-        model = "no call graph (no CgBottomUpOrder, e.g. /Od): compiled in IL order"
+    work = (trace.parent / (trace.stem + ".work")).resolve()
+    work.mkdir(parents=True, exist_ok=True)
+    prefix = work / "il_"
+    flags = args.flags + " /Bk" + str(prefix)
+    if args.no_trace:
+        import probe_toolchain
+        toolchain = probe_toolchain.load_toolchain(args.toolchain)
+        env = probe_toolchain.toolchain_environment(toolchain)
+        if args.include:
+            env["INCLUDE"] = os.pathsep.join([*map(str, args.include), env["INCLUDE"]])
+        proc = subprocess.run(compile_command(toolchain, args.source, flags.split(), args.include, work),
+                              cwd=str(work), env=env, capture_output=True, text=True, errors="replace")
+        (work / "cl-output.log").write_text(proc.stdout + proc.stderr, encoding="utf-8")
+        if proc.returncode:
+            print("cl.exe exit %d (see %s)" % (proc.returncode, work / "cl-output.log"), file=sys.stderr)
+            return 3
+        events = []
     else:
-        model = "bottom-up model %s the traced CgBottomUpOrder" % ("matches" if report["model_ok"] else "DIFFERS FROM")
-    print("%s; obj code sections %s the compile order" % (
-        model, "follow" if report["sections_ok"] else "DO NOT follow"))
-    print("compile order (ReadFunction), IL position, held back by:")
-    for i, name in enumerate(report["compile_order"]):
+        cli = ["--source", str(args.source), "--flags", flags, "--break", "CgBottomUpOrder,ReadFunction",
+               "--out", str(trace), "--toolchain", args.toolchain, "--summary-lines", "0"]
+        for inc in args.include:
+            cli += ["--include", str(inc)]
+        status = main(cli)
+        if status:
+            return status
+        events = load_trace(trace)
+    il = il_model(prefix, call_graph_flags(flags.split()))
+    report = emit_order_report(events, read_obj_sections(work / (args.source.stem + ".obj")), il)
+    args.out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+    il_pos = {n: i for i, n in enumerate(report["gl_order"])}
+    if events:
+        if report["model_ok"] is None:
+            model = "no call graph (no CgBottomUpOrder, e.g. /Od): compiled in IL order"
+        else:
+            model = "bottom-up model %s the traced CgBottomUpOrder" % (
+                "matches" if report["model_ok"] else "DIFFERS FROM")
+        print("%s; obj code sections %s the compile order; gl order %s the traced IL list" % (
+            model, "follow" if report["sections_ok"] else "DO NOT follow",
+            {True: "equals", False: "DIFFERS FROM", None: "(no list traced)"}[report["gl_order_ok"]]))
+        print("IL prediction: compile order %s, code and vtable COMDATs %s" % (
+            "equal" if report["predicted_ok"] else "DIFFER",
+            "equal" if report["predicted_sections_ok"] else "DIFFER"))
+    else:
+        print("IL prediction: code and vtable COMDATs %s the obj's" % (
+            "equal" if report["predicted_sections_ok"] else "DIFFER FROM"))
+    order = report["compile_order"] if events else report["predicted_order"]
+    print("compile order (%s), IL position, held back by; vtables emitted:" % (
+        "ReadFunction" if events else "predicted"))
+    for i, name in enumerate(order):
         why = report["blocked_by"].get(name)
-        print("  %3d  il %3s  %s%s" % (i + 1, il_pos.get(name, "?"), name, "  <- " + ", ".join(why) if why else ""))
+        tables = report["emits_vtables"].get(name)
+        print("  %3d  il %3s  %s%s%s" % (i + 1, il_pos.get(name, "?"), name,
+                                        "  <- " + ", ".join(why) if why else "",
+                                        "  emits " + ", ".join(tables) if tables else ""))
+    if not report["predicted_sections_ok"]:
+        pred, obj = report["predicted_sections"], report["obj_sections"]
+        at = next((i for i, (a, b) in enumerate(zip(pred, obj)) if a != b), min(len(pred), len(obj)))
+        print("first difference at COMDAT %d: predicted %s, obj %s" % (
+            at, pred[at] if at < len(pred) else "-", obj[at] if at < len(obj) else "-"))
     if args.all_sections:
         for sec in report["sections"]:
             print("  sec %3d %-10s %s%s" % (sec["number"], sec["name"], sec.get("comdat", ""),
                                             " assoc=%d" % sec["assoc"] if "assoc" in sec else ""))
-    return 0 if report["model_ok"] is not False and report["sections_ok"] else 1
+    ok = report["predicted_sections_ok"] and (not events or (
+        report["model_ok"] is not False and report["sections_ok"] and report["predicted_ok"]))
+    return 0 if ok else 1
 
 
 # ---------------------------------------------------------------- debugger

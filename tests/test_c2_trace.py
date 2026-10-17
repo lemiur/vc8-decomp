@@ -371,5 +371,54 @@ class EmitOrderTests(unittest.TestCase):
         self.assertEqual((secs[1]["selection"], secs[1]["assoc"], secs[1]["comdat"]), (5, 1, "$unw"))
 
 
+class IlModelTests(unittest.TestCase):
+    def gl(self):
+        import cl_trace
+        sym = lambda kind, n, name, **attrs: cl_trace.GlSymbol(kind, n, name, attrs=attrs)
+        symbols = [sym("data", 9, "??_7D@@6B@"), sym("function", 8, "ext@4"),
+                   sym("definition", 1, "??1D@@UAE@XZ", fnflags=0x18C8, calls=[(9, 1)]),
+                   sym("definition", 2, "?V@D@@UAEHXZ", fnflags=0x18C8, calls=[]),
+                   sym("definition", 3, "??_GD@@UAEPAXI@Z", fnflags=0x18C8, calls=[(1, 1)]),
+                   sym("definition", 4, "?unused@@YAHH@Z", fnflags=0x18C8, calls=[]),
+                   sym("definition", 5, "f", fnflags=0x1068, calls=[(6, 1), (8, 1)]),
+                   sym("definition", 6, "?st@@YAHH@Z", fnflags=0x1048, calls=[(6, 1), (1, 1)]),
+                   sym("vector-dtor", 7, "??_ED@@UAEPAXI@Z", target=3)]
+        return cl_trace.GlFile({}, [], [], symbols, {}, [])
+
+    def test_gl_entries_names_refs_and_callees(self):
+        entries, vec = ct.gl_entries(self.gl())
+        self.assertEqual([e["name"] for e in entries][-2:], ["_f", "?st@@YAHH@Z"])
+        self.assertEqual(entries[-2]["refs"], ["?st@@YAHH@Z", "_ext@4"])
+        self.assertEqual(entries[-1]["callees"], ["?st@@YAHH@Z", "??1D@@UAE@XZ"])
+        self.assertEqual(vec, {"??_ED@@UAEPAXI@Z": "??_GD@@UAEPAXI@Z"})
+
+    def test_in_vtables_reads_address_items(self):
+        import cl_trace
+        data = (b"\x05\x07\x00" + cl_trace.encode_losh(9) + b"\x00\x02" + cl_trace.encode_losh(7) + b"\x00"
+                + b"\x04\x02" + cl_trace.encode_losh(2) + b"\x00\x04\x07\x00c\x00")
+        self.assertEqual(ct.in_vtables(data, self.gl()), {"??_7D@@6B@": ["??_ED@@UAEPAXI@Z", "?V@D@@UAEHXZ"]})
+
+    def test_recursive_arcs_from_reverse_creation_order(self):
+        entries = [entry("q1", "q2"), entry("q2", "q3"), entry("q3", "q1"), entry("s", "s")]
+        arcs = {e["name"]: (e["callees"], e["recursive"]) for e in ct.recursive_arcs(entries)}
+        self.assertEqual(arcs, {"q1": (["q2"], []), "q2": ([], ["q3"]), "q3": (["q1"], []), "s": ([], ["s"])})
+
+    def test_needed_closure_and_vtable_slots(self):
+        entries, vec = ct.gl_entries(self.gl())
+        model = ct.emission_model(entries, vec, {"??_7D@@6B@": ["??_ED@@UAEPAXI@Z", "?V@D@@UAEHXZ"]})
+        # f needs st (a static) needs ~D; ~D emits the vtable and its slots V and ??_G become
+        # needed; they stand before st and f in the bottom-up list, so the rescan takes them next.
+        self.assertEqual([m["name"] for m in model],
+                         ["??1D@@UAE@XZ", "?V@D@@UAEHXZ", "??_GD@@UAEPAXI@Z", "?st@@YAHH@Z", "_f"])
+        self.assertNotIn("?unused@@YAHH@Z", [m["name"] for m in model])
+        self.assertEqual(ct.predicted_sections(model)[:2], ["??1D@@UAE@XZ", "??_7D@@6B@"])
+
+    def test_call_graph_flags(self):
+        self.assertTrue(ct.call_graph_flags(["/O2", "/Gy"]))
+        self.assertFalse(ct.call_graph_flags(["/O2", "/Od"]))
+        self.assertFalse(ct.call_graph_flags(["/GS-"]))
+        self.assertTrue(ct.call_graph_flags(["-O1"]))
+
+
 if __name__ == "__main__":
     unittest.main()

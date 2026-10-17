@@ -19,12 +19,16 @@ ChoosePhysReg), `immed` (the 64-cycle routines), `reload` (Spill, RegSimpleAssig
 SsaPeepsMd, tuples at each), `emit` (CgBottomUpOrder, ReadFunction, EmitFunction; module-level, so without
 `--function`). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset is given.
 
-`python tools/c2_trace.py emit-order --source X.cpp [--flags ...] [--include DIR] --out R.json [--all-sections]`
-traces `CgBottomUpOrder` and `ReadFunction` over the whole unit, reads the object's section table and prints
-the compile order with each function's IL position and the callees that held it back (see "Function emission
-order"). `R.json` holds the IL order, the traced and modelled bottom-up orders, the compile order and the
-sections; the trace goes to `R.jsonl`. Exit 0 when the model reproduces the traced reordering (or there is no
-call graph, `/Od`) and the code COMDATs follow the compile order, 1 otherwise.
+`python tools/c2_trace.py emit-order --source X.cpp [--flags ...] [--include DIR] --out R.json [--all-sections]
+[--no-trace]` compiles the unit with `/Bk` (the IL is kept in `R.work/il_*`), predicts the compile order and
+the code and vtable COMDATs from the IL alone, traces `CgBottomUpOrder` and `ReadFunction` over the whole
+unit, reads the object's section table and prints the compile order with each function's IL position, the
+callees that held it back and the vtables it emits (see "Function emission order"). `R.json` holds the gl
+and traced IL orders, the traced and modelled bottom-up orders, the predicted and traced compile orders, the
+predicted and obj COMDATs, the vtable slots, the entries never needed, and the sections; the trace goes to
+`R.jsonl`. `--no-trace` skips the debugger and compares the prediction with the obj only. Exit 0 when the
+prediction equals the obj's code and vtable COMDATs (and, traced, the model reproduces `CgBottomUpOrder`,
+the code COMDATs follow `ReadFunction` and the prediction equals it), 1 otherwise.
 
 `python tools/c2_trace.py diff A.jsonl B.jsonl [--renumber LOW:HIGH:DELTA] [--all] [--ordinals]` aligns two
 traces record by record and prints the first divergent record (or `--all` of them) and any change in the call
@@ -226,59 +230,79 @@ ECX and the LEA would stay an LEA (or the other operand would match).
 
 `dop2` compiles and emits one function at a time (`ReadFunction`, `dop2_Codegen`, `EmitFunction`), each
 `EmitFunction` creating its sections at once, so an object's section table is c2's compile order. That order
-is decided in three steps:
+is decided in three steps, and `emit-order` predicts all three from the IL alone (`/Bk` keeps it):
 
-1. **IL order (c1xx).** `_Eentry_list` starts in the order c1xx wrote the functions: definitions in source
-   order, inline and in-class member functions (also those of headers) at their definition, virtual members
-   at their class; an implicitly defined special member (a constructor with a vtable, `??_G`) right after the
-   function whose body first needed it (E2 `??0Base` after `a_make`; t3 `??0Q` after `h8`); template
-   instantiations at the end of the unit.
+1. **IL order (c1xx).** `_Eentry_list` is the list of `gl` definition records (SSR 0E, `cl_trace.parse_gl`) in
+   file order: every function body c1xx handed to c2, compiled or not (inline helpers of the headers included).
+   c1xx writes them as it finishes each body: definitions in source order, inline and in-class members at
+   their definition, virtual members at their class, an implicit special member (`??0Q`, `??_G`) right after
+   the function whose body first needed it, template instantiations at the end of the unit. gl spells extern
+   "C" names without the cdecl `_` (`IsEqualGUID`); c2's entries have it.
 2. **Call-graph order (`CgBuildCallGraph` -> `CgBottomUpOrder`, every `/O1` `/O2` build, also `/Ob0`; not
-   `/Od`).** `CgIdentifyRecursion` runs a DFS from each node in reverse creation order (`_CGnodes` is built by
-   prepending) and flags every arc to a node on the DFS stack as a recursive arc. `CgBottomUpOrder` then moves
-   entries without a call-graph node to the front and makes passes over the rest in list order: an entry is
-   placed when each of its callees that has an entry is already placed (recursive arcs ignored), otherwise it
-   waits for the next pass (dynamic initializers placed in a pass go to a list appended at the end). Edges are
-   calls and address references to functions defined in the unit, whatever their size or `noinline`.
-3. **Compile loop.** `dop2` rescans the list from its head and compiles the first entry flagged needed (+0x50
-   bit 0x20) and not yet compiled (bit 2). Out-of-line functions are needed from the start; an inline function
-   only once referenced; one first referenced by emitted code (a vtable's slots when the constructor is
-   emitted) is compiled at the next rescan, before anything later in the list.
+   `/Od`).** The arcs are each record's call list (callees defined in the unit, in record order; references
+   to vtables and external symbols are not arcs). `CgIdentifyRecursion` runs a DFS from each node in reverse
+   creation order (`_CGnodes` is built by prepending) and flags every arc to a node on the DFS stack, a
+   self-call included, as recursive. `CgBottomUpOrder` then moves entries without a call-graph node to the
+   front and makes passes over the rest in list order: an entry is placed when each of its callees is already
+   placed (recursive arcs ignored), otherwise it waits for the next pass (dynamic initializers placed in a
+   pass go to a list appended at the end).
+3. **Needed set and compile loop.** An entry is compiled only once flagged needed (+0x50 bit 0x20). At the
+   start that is every definition whose gl `fnflags` has 0x20 (c1xx sets it for external non-inline
+   functions and for `operator new`/`delete`, `??2`/`??3`; not for statics, inline functions or implicit
+   template instantiations) and every dynamic initializer (`fnflags` 0x4, `??__E`), closed over the call
+   lists: a needed function's callees in the unit are needed, whether or not c2 later inlines every call
+   (`Lock`, `??1CriticalSection` are emitted although inlined everywhere). `dop2` then rescans the list from
+   its head and compiles the first needed entry not compiled yet (bit 2). Compiling a function emits the
+   vtables its call list references that are not emitted yet; each vtable's slots, read from its initializer
+   in the `in` file (`07 00 <vtable number>`, then items `<delta> 02 <symbol> <displacement>`), become needed
+   with their call-list closure, `??_E` through its vector-dtor record (SSR 10) to the `??_G` it aliases. So a
+   slot is compiled at the next rescan, before anything later in the list, even when it stands earlier
+   (`curve_tracks`: `GetType@CurveTrackOf<Vector2>`, IL 36, right after the destructor that emits its vtable).
 
 Each function's sections follow its `.text` COMDAT in the order its emission creates them: EH pieces
 (`.text$x` unwind funclets and `__ehhandler$`, `.xdata$x` `__ehfuncinfo$`, `__TI`/`__CT` records), the data
 COMDATs it is the first to reference (`??_C@` strings, `__real@` constants, `??_7` vtables), then its
-`.debug$F`. `/Gy` is implied by `/O2` and does not change the order.
+`.debug$F`. A dynamic initializer goes to the plain `.text`. `/Gy` is implied by `/O2` and does not change
+the order.
 
 **Rule.** A function is emitted in source order unless it calls (or takes the address of) a function of the
 unit whose IL comes later: a later definition (`h1` -> `plain_after`), a template instantiation (`h6` ->
-`Box<int>::Get`), an implicit special member generated for it (`a_make` -> `??0Base`), or a function held back
+`Box<int>::Get`), an implicit special member generated for it (`a_make` -> `??0Q`), or a function held back
 itself (`h4` -> `h3`). Such a function moves after all the functions placed in the same pass, one pass per
 level of such dependencies (`k1` -> `k3` -> `k5` gives `... k5, k3, k1` at the end). Recursion does not hold
 back the function that the DFS reaches first in a cycle (`m1` <-> `m2` stay in order; in `q1 -> q2 -> q3 -> q1`
-only `q2` stays).
+only `q2` stays). An inline function is emitted only if a needed function's call list or an emitted vtable
+reaches it; it then takes its place in that list order.
 
-**Evidence.** `emit-order` on five probes (`t1`-`t5`: later definitions, statics, templates, implicit and
-user-defined constructors, `noinline`, address-taken, large callees, self, two- and three-node recursion), the
-E2 fixture `a.cpp` (explains `a_make` after `a_last`) and avp3 `matching/platform_audio_streams.cpp` (its exact
-`vc8_trace passes` options, `/O2 /Oy /arch:SSE2 /fp:fast /GS /EHsc /GR- /MD /Gy /W3 /EHa`): in all of them
-the model reproduces the traced `CgBottomUpOrder` and the code COMDATs follow the compile order. For
-`platform_audio_streams` the prediction from the source (no in-unit callee is defined after its caller, so the
-13 unit functions in source order with nothing held back) was confirmed; ahead of them come the referenced
-header inlines in header order (operator new/delete, `Float_ToInt`, the `CriticalSection`/`EngineLock`/
-`ScopedLock` members, the `DataStream`/`ChunkStream` destructors with their vtables' inline slots).
+**Evidence.** `emit-order` traces `CgBottomUpOrder` and `ReadFunction` and checks the prediction against both
+the trace and the obj. With the exact `vc8_trace passes` options (`/O2 /Oy /arch:SSE2 /fp:fast /GS /EHsc
+/GR- /MD /Gy /W3 /EHa`), on copies of three avp3 units: `platform_audio_streams.cpp` (58 IL entries, 30
+compiled: operator new/delete, `Float_ToInt`, the lock members and the stream destructors before the unit's
+13 functions; 3 vtables), `human_moves_idle_cover.cpp` (68 entries, 27 compiled, 6 vtables emitted by
+constructors and destructors, the `??_G` slots after the later functions), `curve_tracks.cpp` (92 entries,
+58 compiled; explicit and implicit template instantiations, 5 vtables): the gl order
+equals the traced list, the modelled arcs and recursive arcs equal the traced ones, and the predicted
+compile order and the code and vtable COMDATs equal the trace and the obj's section table. A probe with
+later definitions, statics, templates, implicit constructors, `noinline`, two- and three-node and self
+recursion and a dynamic initializer agrees at `/O2` as well.
 
 ## Limits
 
-- `emit-order` explains the c2 step from the traced IL list; c1xx's IL order (step 1) is stated from the probes,
-  not traced. Which inline functions are needed, and the order in which emission marks them (`/O2`: `V`,
-  `~Q`, `??_G` after `??0Q`; `/Od`: `V`, `??_G`, `~Q`; `/Od` also emits a static after its first caller) comes
-  from the trace, not from a model. The initializer list's `SsrSortInitializerEvalOrder` variant and `/GL`
-  (LTCG) ordering are not modelled.
+- `emit-order` predicts COMDAT order for builds with a call graph. Under `/Od` c1xx writes no call lists in
+  the gl definition records (the record ends after `formals`; `cl_trace.parse_gl` then decodes no
+  definition, so the prediction is empty) and c2 marks needs lazily, as it compiles: the traced `/Od` probe
+  starts from the external functions only, a static or inline function is compiled at the next rescan after
+  its first caller (`h2`, `helper`; `user`, `il2`, `il1`), a constructor's vtable slots before its other
+  callees (`??0Q`, `V`, `??_G`, `~Q`, `~Base`). Modelling it needs the references of each `ex` body.
+- Vtables are attributed to the first compiled function whose own call list references them; a reference
+  that reaches a function only through an inlined callee is not modelled (in the units checked the callee is
+  always compiled first). EH pieces, `??_C@` strings and `__real@` constants are not predicted (they depend on
+  inlining); they belong to the function before them. The initializer list's `SsrSortInitializerEvalOrder`
+  variant, data initializers that take an inline function's address, and `/GL` (LTCG) ordering are not
+  modelled.
 - The routine that rewrites the LEA as an ADD inside `LoFinalLower` is not isolated; the reload rule covers
   the integer class (`_IntPhysRegs`), not `_GFXPhysRegs`/`_XMMXPhysRegs`, and with `_Speed` = 0 (not
   checked which options clear it) step (c) replaces the round-robin.
-
 - Layouts and conventions hold for the pinned `c2.dll` only; they come from its disassembly, not from an API.
 - `symnum` is c2's numbering (pool slot, by first use); the front-end number is `fe` (see "The 64-cycle").
 - Hot routines (`OptHashNode`: ~1100 calls for one small function) are slow, one debug round trip per call
