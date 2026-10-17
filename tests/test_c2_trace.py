@@ -242,5 +242,134 @@ class DiffTests(unittest.TestCase):
             self.assertIn("1 divergent records", out.getvalue())
 
 
+class RegAssignTests(unittest.TestCase):
+    """Local register assignment: _RegSym entries (stride 0x60, +0x1C number),
+    _RegName strings, _IntPhysRegs / _NextIntPos, _RegMap, _BvConflicts."""
+
+    def setUp(self):
+        mem = self.mem = FakeMemory()
+        self.regsym, names = 0x20000, 0x30000
+        syms = {"_RegSym": self.regsym, "_RegName": names, "_IntPhysRegs": 0x31000, "_NextIntPos": 0x31100,
+                "_RegMap": 0x32000, "_BvConflicts": 0x33000, "_BESymTab": 0x100}
+        for number, name in enumerate(("none", "eax", "ecx", "edx", "esi")):
+            mem.put(names + 4 * number, 0x30100 + 0x10 * number)
+            mem.raw[0x30100 + 0x10 * number] = name.encode() + b"\0"
+            mem.put(self.regsym + 0x60 * number + 0x1C, number)
+        mem.put(0x31000, 1, 2, 3, 4, 0)               # eax ecx edx esi
+        mem.put(0x31100, 0x31004)                     # cursor at ecx
+        mem.put(0x32000 + 4 * 1, self.regsym + 0x60 * 1)   # eax holds itself (a physreg)
+        mem.put(0x33000 + 4 * 2, 0x34000)             # ecx conflicts with symbol 162
+        mem.put(0x34000, 0x34100)
+        mem.put(0x34100, 128, 0, 1 << (162 - 128 - 32), 0)
+        self.tmp = 0x40000                            # tmpreg s162, no descriptor
+        mem.put(self.tmp + 0x1C, 162)
+        mem.put(0x41000, 0, 0, 1, 0, 0, 0, self.tmp, self.tmp)   # leaf: kind 1, +0x18 = +0x1C = tmpreg
+        mem.put(0x42000, 0, 1, 0x100, 0, 0, 0, 0, 0, 0, 0, 0x43000, 0x41000)  # tuple: opcode 1, dst, src
+        mem.put(0x43000, 0, 0, 7, 0, 0, 0, 5)                    # source #5
+        self.model = ct.C2Model(mem.u32, mem.bytes, syms.get)
+
+    def test_entry_and_exit(self):
+        dec = ct.RegAssignDecoder()
+        info, state = dec.entry(self.model, {}, [0, 0x41000, 0x42000])
+        self.assertEqual(info["tmpreg"], "s162")
+        self.assertEqual(info["tuple"], "1 s162 = #5")
+        self.assertEqual(info["int_regs"], ["eax", "ecx", "edx", "esi"])
+        self.assertEqual(info["next"], ["ecx", "edx", "esi"])
+        self.assertEqual(info["conflicts"], ["ecx"])
+        self.assertEqual(info["busy"], {"eax": "eax"})
+        self.assertNotIn("pref", info)
+        self.mem.put(self.tmp + 0x30, self.regsym + 0x60 * 3)   # preference set during the call
+        out = dec.exit(self.model, {"eax": self.regsym + 0x60 * 3}, state)
+        self.assertEqual(out, {"chosen": "edx", "pref_after": "edx"})
+        line = ct.format_event({"break": "RegAssign", "function": "F", **info, **out})
+        self.assertIn("RegAssign s162 [1 s162 = #5] pref=edx next=ecx,edx,esi", line)
+        self.assertTrue(line.endswith("conflicts=ecx -> edx"))
+
+    def test_colored_leaf_shows_its_register(self):
+        self.assertEqual(self.model.leaf_text(0x41000), "s162")
+        self.mem.put(0x41000 + 0x1C, self.regsym + 0x60 * 1)
+        self.assertEqual(self.model.leaf_text(0x41000), "s162/eax")
+
+
+class PresetTests(unittest.TestCase):
+    def test_default_break_only_without_break_or_preset(self):
+        self.assertEqual(ct.preset_breaks(None, "", []), ("ChoosePhysReg", ""))
+        breaks, tuples = ct.preset_breaks(None, "", ["reload"])
+        self.assertIn("RegAssign", breaks.split(","))
+        self.assertNotIn("ChoosePhysReg", breaks.split(","))
+        self.assertIn("Spill", tuples.split(","))
+        breaks, tuples = ct.preset_breaks("Color", "Color", ["emit"])
+        self.assertEqual(breaks.split(",")[:2], ["Color", "CgBottomUpOrder"])
+        self.assertEqual(tuples, "Color")
+
+
+def entry(name, *callees, node=True, init=False, recursive=()):
+    out = {"name": name, "flags": 0, "node": node, "init": init, "callees": list(callees)}
+    if recursive:
+        out["recursive"] = list(recursive)
+    return out
+
+
+class EmitOrderTests(unittest.TestCase):
+    def test_passes_hold_back_callers_of_later_callees(self):
+        # t4.cpp: k1 -> k3 -> k5, all defined in order k1..k5.
+        entries = [entry("k1", "k3"), entry("k2"), entry("k3", "k5", "ext"), entry("k4"), entry("k5")]
+        self.assertEqual(ct.bottom_up_order(entries), ["k2", "k4", "k5", "k3", "k1"])
+        self.assertEqual(ct.blocking_callees(entries), {"k1": ["k3"], "k3": ["k5"]})
+
+    def test_recursive_arcs_do_not_block(self):
+        # t5.cpp: q1 -> q2 -> q3 -> q1; the DFS from q3 flags q2 -> q3 recursive.
+        entries = [entry("q1", "q2"), entry("qa"), entry("q2", recursive=["q3"]), entry("qb"),
+                   entry("q3", "q1")]
+        self.assertEqual(ct.bottom_up_order(entries), ["qa", "q2", "qb", "q1", "q3"])
+
+    def test_entries_without_node_first_and_initializers_last(self):
+        entries = [entry("a", "c"), entry("init", init=True), entry("nonode", node=False), entry("c")]
+        self.assertEqual(ct.bottom_up_order(entries), ["nonode", "c", "a", "init"])
+
+    def test_report_joins_trace_and_sections(self):
+        events = [{"break": "CgBottomUpOrder", "entries": [entry("?a@@YAXXZ", "?b@@YAXXZ"), entry("?b@@YAXXZ")],
+                   "entries_after": [{"name": "?b@@YAXXZ"}, {"name": "?a@@YAXXZ"}]},
+                  {"break": "ReadFunction", "function": "?b@@YAXXZ"},
+                  {"break": "ReadFunction", "function": "?a@@YAXXZ"}]
+        sections = [{"number": 1, "name": ".text", "comdat": "?b@@YAXXZ", "selection": 1},
+                    {"number": 2, "name": ".rdata", "comdat": "__real@3f800000", "selection": 2},
+                    {"number": 3, "name": ".text$x", "comdat": "__unwindfunclet$?b@@YAXXZ$0", "selection": 5},
+                    {"number": 4, "name": ".text", "comdat": "?a@@YAXXZ", "selection": 1}]
+        report = ct.emit_order_report(events, sections)
+        self.assertTrue(report["model_ok"])
+        self.assertTrue(report["sections_ok"])
+        self.assertEqual(report["code_sections"], ["?b@@YAXXZ", "?a@@YAXXZ"])
+        self.assertEqual(report["blocked_by"], {"?a@@YAXXZ": ["?b@@YAXXZ"]})
+        report = ct.emit_order_report(events[1:], list(reversed(sections)))
+        self.assertIsNone(report["model_ok"])
+        self.assertFalse(report["sections_ok"])
+
+    def test_read_obj_sections_names_comdats(self):
+        import tempfile
+
+        def symbol(name, value, section, storage, aux):
+            raw = name.encode().ljust(8, b"\0")
+            return raw + struct.pack("<IhHBB", value, section, 0x20 if storage == 2 else 0, storage, aux)
+        names = b"?long_function_name@@YAXXZ\0"
+        sections = b""
+        for name in (b".text", b".text$x"):
+            sections += name.ljust(8, b"\0") + struct.pack("<IIIIIIHHI", 0, 0, 0, 0, 0, 0, 0, 0, 0x60501020)
+        syms = symbol(".text", 0, 1, 3, 1) + struct.pack("<IHHIHBxxx", 0, 0, 0, 0, 0, 2)
+        syms += b"\0\0\0\0" + struct.pack("<I", 4) + struct.pack("<IhHBB", 0, 1, 0x20, 2, 0)
+        syms += symbol(".text$x", 0, 2, 3, 1) + struct.pack("<IHHIHBxxx", 0, 0, 0, 0, 1, 5)
+        syms += symbol("$unw", 0, 2, 3, 0)
+        table = 20 + len(sections)
+        data = struct.pack("<HHIIIHH", 0x14C, 2, 0, table, 6, 0, 0) + sections + syms
+        data += struct.pack("<I", 4 + len(names)) + names
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "x.obj"
+            path.write_bytes(data)
+            secs = ct.read_obj_sections(path)
+        self.assertEqual([s["name"] for s in secs], [".text", ".text$x"])
+        self.assertEqual((secs[0]["comdat"], secs[0]["selection"]), ("?long_function_name@@YAXXZ", 2))
+        self.assertEqual((secs[1]["selection"], secs[1]["assoc"], secs[1]["comdat"]), (5, 1, "$unw"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -14,6 +14,17 @@ Further options: `--break-module REGEX` adds every function public of the matchi
 (`.` = all ~9000; 50k calls and 15 s for one small function with `--entry-only`), `--exclude` names to leave
 out, `--entry-only` (no return breakpoints, no `ret`), `--symtab NAMES` (those entry events carry the c2 symbol
 table) and `--tuples NAMES` (they carry the function's instruction tuples, `opcode dsts = srcs`).
+`--preset NAME` (repeatable) adds a named set of breaks and tuple points: `color` (OrderGlobregs,
+ChoosePhysReg), `immed` (the 64-cycle routines), `reload` (Spill, RegSimpleAssignBody, RegAssign, LoFinalLower,
+SsaPeepsMd, tuples at each), `emit` (CgBottomUpOrder, ReadFunction, EmitFunction; module-level, so without
+`--function`). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset is given.
+
+`python tools/c2_trace.py emit-order --source X.cpp [--flags ...] [--include DIR] --out R.json [--all-sections]`
+traces `CgBottomUpOrder` and `ReadFunction` over the whole unit, reads the object's section table and prints
+the compile order with each function's IL position and the callees that held it back (see "Function emission
+order"). `R.json` holds the IL order, the traced and modelled bottom-up orders, the compile order and the
+sections; the trace goes to `R.jsonl`. Exit 0 when the model reproduces the traced reordering (or there is no
+call graph, `/Od`) and the code COMDATs follow the compile order, 1 otherwise.
 
 `python tools/c2_trace.py diff A.jsonl B.jsonl [--renumber LOW:HIGH:DELTA] [--all] [--ordinals]` aligns two
 traces record by record and prints the first divergent record (or `--all` of them) and any change in the call
@@ -76,7 +87,14 @@ before ebx before ebp for class 0) wins, so the coloring order decides.
   for a field).
 - `--symtab`: `symnum`, `kind`, and `name` + `fe` (front-end `$N`) or `base` + `offset` (an equivalence:
   a field of a base symbol).
-- `--tuples`: leaves print as `#n` (constant), `&name$fe` (address), `name$fe` / `sN` (symbol, tmpreg),
+- `RegAssign` (regasg.obj; see "Reloads and local register assignment"): entry `tmpreg`, `opcode`, `tuple`,
+  `pref` (`[sym+0x30]`), `int_regs` (`_IntPhysRegs`), `next` (the list from `_NextIntPos`), `busy` (`_RegMap`:
+  register -> symbol), `conflicts` (registers whose `_BvConflicts` set holds the tmpreg); exit `chosen`,
+  `pref_after`.
+- `CgBuildCallGraph`, `CgBottomUpOrder` (cg.obj): `entries` (`_Eentry_list` at entry: name, flags +0x50,
+  `node`, `init`, `callees`, `recursive` arcs) and `entries_after` (the list at return).
+- `--tuples`: leaves print as `#n` (constant), `&name$fe` (address), `name$fe` / `sN` (symbol, tmpreg; `sN/eax`
+  once the local allocator gave the leaf a register: leaf+0x1C, a `_RegSym` entry of the operand's width),
   `[a+b+disp]` (effective address), register names, `kK:...` (other kinds).
 
 ### Fields
@@ -157,7 +175,109 @@ immediates (and constants' values), not on the local's number: the `_rect$N` cor
 both shifting with any declaration above. Source-level, what matters is how many front-end symbols are created
 between and before those globals' first declarations.
 
+## Reloads and local register assignment
+
+Case: the `Gui_FinishDraw` repro of "The 64-cycle" (g8: `left` ends in EAX; g9: `right`). Traced with
+`--preset reload` and `--tuples` at every later phase: the tuple lists of g8 and g9 differ only in which field
+each reload reads, from the first `Spill` to `Encode`.
+
+1. **Reload placement.** `Spill` (one call per globreg, in globreg-number order) rewrites each use of the
+   spilled field as a new tmpreg loaded immediately before the using tuple (`LoLdsrcTmpreg`), after any reload
+   already inserted there. The operand keeps its position in the tuple. So before the add the reloads stand in
+   spill order, the lower globreg's first: g8 `s162 = [rect.left]; s161 = [rect.right]; s139 = [s161+s162]`,
+   g9 `s162 = [rect.right]; s161 = [rect.left]; s139 = [s162+s161]`. Reload tmpregs come from the tmpreg free
+   list newest-freed first (s162, s161, then s160, s137), which decides their numbers but not their registers.
+2. **Local assignment.** `RegSimpleAssignBody` walks the tuples forward with `_RegMap` (register -> symbol).
+   `RegAssignSrcs` finds each source's register in `_RegMap` and frees it at its last use;
+   `RegAssignDsts` calls `RegAssign(leaf, tuple)` for each destination tmpreg not colored yet. `RegAssign`
+   takes (a) the preference `[sym+0x30]`, set for a copy (opcodes 1, 0x11F, 0x1FD, 0x17F, 0x181, 0x125, 0x189)
+   from a colored tmpreg to that register and for `LEA d,[base+index]` without displacement (and, with an
+   index, scale 1) to the base's register, if that register is free, available and not in conflict; else (b) under `/O2`
+   (`_Speed`) **round-robin**: from `_NextIntPos`, the first free conflict-free register among the
+   `_IntPhysRegs` entries numbered below 4 (eax, ecx, edx), wrapping to eax, and `_NextIntPos` moves past it;
+   else (c) the first free conflict-free register of the whole list (esi, edi, ebx, ebp), else `RegSpill` of
+   the register whose next use is farthest (`RegFindPhysRegUse`). A preference does not move the cursor.
+3. **LEA to ADD.** The add stays `LEA s139,[a+b]` through register allocation; s139 was colored EAX
+   globally (it feeds `CDQ`). In `LoFinalLower` (after `LoFinalLEAtoMOV` declines it) an LEA whose destination
+   register equals one source becomes `ADD dest, other`, whichever operand position that source holds.
+   The scheduler then moves the other reload earlier, so the EAX reload is the last load before the add.
+
+Trace, g8 (g9 identical but for the field):
+
+```
+RegAssign s160 [1 s160 = k2:s10] next=ecx,edx,...   -> ecx      top    (y = top + bottom)
+RegAssign s137 [1 s137 = k2:s12] next=edx,...       -> edx      bottom; cursor wraps to eax
+RegAssign s140 [1 s169 = s170/eax] pref=eax          -> eax      copy preference, cursor unchanged
+RegAssign s162 [1 s162 = k2:s5] next=eax,ecx,...     -> eax      g8: rect.left    g9: rect.right
+RegAssign s161 [1 s161 = k2:s7] busy=eax:s162        -> ecx      g8: rect.right   g9: rect.left
+18 s139/eax = [s161/ecx+s162/eax]  ->  45 s139,cc = s139,ecx    (add eax, ecx)
+```
+
+**Rule.** The reload of the field spilled first (the lower globreg number) is inserted first, so it is the
+first of the two definitions the forward walk meets and takes the round-robin cursor's register; here the
+cursor stood at EAX (it had wrapped after `bottom` took EDX), so that field is in EAX, the LEA's destination
+register, and becomes the add's destination; the other field takes the next register (ECX). Which register a
+reload gets is the cursor position, i.e. it depends on every round-robin assignment since the function start
+(and on the copy preferences that skip it); which operand is the destination is "the source in the LEA
+destination's register", not an operand position. With the cursor at ECX instead, the first reload would take
+ECX and the LEA would stay an LEA (or the other operand would match).
+
+## Function emission order
+
+`dop2` compiles and emits one function at a time (`ReadFunction`, `dop2_Codegen`, `EmitFunction`), each
+`EmitFunction` creating its sections at once, so an object's section table is c2's compile order. That order
+is decided in three steps:
+
+1. **IL order (c1xx).** `_Eentry_list` starts in the order c1xx wrote the functions: definitions in source
+   order, inline and in-class member functions (also those of headers) at their definition, virtual members
+   at their class; an implicitly defined special member (a constructor with a vtable, `??_G`) right after the
+   function whose body first needed it (E2 `??0Base` after `a_make`; t3 `??0Q` after `h8`); template
+   instantiations at the end of the unit.
+2. **Call-graph order (`CgBuildCallGraph` -> `CgBottomUpOrder`, every `/O1` `/O2` build, also `/Ob0`; not
+   `/Od`).** `CgIdentifyRecursion` runs a DFS from each node in reverse creation order (`_CGnodes` is built by
+   prepending) and flags every arc to a node on the DFS stack as a recursive arc. `CgBottomUpOrder` then moves
+   entries without a call-graph node to the front and makes passes over the rest in list order: an entry is
+   placed when each of its callees that has an entry is already placed (recursive arcs ignored), otherwise it
+   waits for the next pass (dynamic initializers placed in a pass go to a list appended at the end). Edges are
+   calls and address references to functions defined in the unit, whatever their size or `noinline`.
+3. **Compile loop.** `dop2` rescans the list from its head and compiles the first entry flagged needed (+0x50
+   bit 0x20) and not yet compiled (bit 2). Out-of-line functions are needed from the start; an inline function
+   only once referenced; one first referenced by emitted code (a vtable's slots when the constructor is
+   emitted) is compiled at the next rescan, before anything later in the list.
+
+Each function's sections follow its `.text` COMDAT in the order its emission creates them: EH pieces
+(`.text$x` unwind funclets and `__ehhandler$`, `.xdata$x` `__ehfuncinfo$`, `__TI`/`__CT` records), the data
+COMDATs it is the first to reference (`??_C@` strings, `__real@` constants, `??_7` vtables), then its
+`.debug$F`. `/Gy` is implied by `/O2` and does not change the order.
+
+**Rule.** A function is emitted in source order unless it calls (or takes the address of) a function of the
+unit whose IL comes later: a later definition (`h1` -> `plain_after`), a template instantiation (`h6` ->
+`Box<int>::Get`), an implicit special member generated for it (`a_make` -> `??0Base`), or a function held back
+itself (`h4` -> `h3`). Such a function moves after all the functions placed in the same pass, one pass per
+level of such dependencies (`k1` -> `k3` -> `k5` gives `... k5, k3, k1` at the end). Recursion does not hold
+back the function that the DFS reaches first in a cycle (`m1` <-> `m2` stay in order; in `q1 -> q2 -> q3 -> q1`
+only `q2` stays).
+
+**Evidence.** `emit-order` on five probes (`t1`-`t5`: later definitions, statics, templates, implicit and
+user-defined constructors, `noinline`, address-taken, large callees, self, two- and three-node recursion), the
+E2 fixture `a.cpp` (explains `a_make` after `a_last`) and avp3 `matching/platform_audio_streams.cpp` (its exact
+`vc8_trace passes` options, `/O2 /Oy /arch:SSE2 /fp:fast /GS /EHsc /GR- /MD /Gy /W3 /EHa`): in all of them
+the model reproduces the traced `CgBottomUpOrder` and the code COMDATs follow the compile order. For
+`platform_audio_streams` the prediction from the source (no in-unit callee is defined after its caller, so the
+13 unit functions in source order with nothing held back) was confirmed; ahead of them come the referenced
+header inlines in header order (operator new/delete, `Float_ToInt`, the `CriticalSection`/`EngineLock`/
+`ScopedLock` members, the `DataStream`/`ChunkStream` destructors with their vtables' inline slots).
+
 ## Limits
+
+- `emit-order` explains the c2 step from the traced IL list; c1xx's IL order (step 1) is stated from the probes,
+  not traced. Which inline functions are needed, and the order in which emission marks them (`/O2`: `V`,
+  `~Q`, `??_G` after `??0Q`; `/Od`: `V`, `??_G`, `~Q`; `/Od` also emits a static after its first caller) comes
+  from the trace, not from a model. The initializer list's `SsrSortInitializerEvalOrder` variant and `/GL`
+  (LTCG) ordering are not modelled.
+- The routine that rewrites the LEA as an ADD inside `LoFinalLower` is not isolated; the reload rule covers
+  the integer class (`_IntPhysRegs`), not `_GFXPhysRegs`/`_XMMXPhysRegs`, and with `_Speed` = 0 (not
+  checked which options clear it) step (c) replaces the round-robin.
 
 - Layouts and conventions hold for the pinned `c2.dll` only; they come from its disassembly, not from an API.
 - `symnum` is c2's numbering (pool slot, by first use); the front-end number is `fe` (see "The 64-cycle").

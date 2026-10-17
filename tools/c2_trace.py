@@ -42,6 +42,27 @@ DBG_CONTINUE = 0x00010002
 DBG_EXCEPTION_NOT_HANDLED = 0x80010001
 REGS = ("eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi", "eip")
 DEFAULT_BREAKS = ("ChoosePhysReg",)
+PRESETS = {
+    "color": {"breaks": "OrderGlobregs,ChoosePhysReg", "doc": "global coloring order and choices"},
+    "immed": {"breaks": "GrgImmedTupleHash,CreateGlobregs,GrgNewGlobreg,Spill",
+              "doc": "immediate globregs, globreg numbering and spills (the 64-cycle)"},
+    "reload": {"breaks": "Spill,RegSimpleAssignBody,RegAssign,LoFinalLower,SsaPeepsMd",
+               "tuples": "Spill,RegSimpleAssignBody,LoFinalLower,SsaPeepsMd",
+               "doc": "spill reloads, local register assignment, LEA->ADD (tuples at each phase)"},
+    "emit": {"breaks": "CgBottomUpOrder,ReadFunction,EmitFunction",
+             "doc": "call-graph reordering and the compile/emit loop (unfiltered: omit --function)"},
+}
+
+
+def preset_breaks(breaks, tuples, presets):
+    """--break/--tuples text after adding the presets' (the default break only
+    when neither --break nor a preset is given)."""
+    breaks_text = breaks if breaks is not None else ("" if presets else ",".join(DEFAULT_BREAKS))
+    tuples_text = tuples or ""
+    for name in presets:
+        breaks_text = ",".join(x for x in (breaks_text, PRESETS[name]["breaks"]) if x)
+        tuples_text = ",".join(x for x in (tuples_text, PRESETS[name].get("tuples", "")) if x)
+    return breaks_text, tuples_text
 
 
 class TraceError(RuntimeError):
@@ -342,6 +363,13 @@ class C2Model:
         sym = self.u32(leaf + 0x18)
         text = self.sym_text(sym) if sym else "?"
         if kind == 1:
+            # +0x1C: the register the leaf was given (RegAssignDsts/RegAssignSrcs store the
+            # _RegSym entry of the right width); equal to +0x18 until then (MdTmpregIsColored).
+            colored = self.u32(leaf + 0x1C)
+            if colored and colored != sym and self.physreg_of(sym) is None:
+                reg = self.physreg_of(colored)
+                if reg is not None:
+                    return "%s/%s" % (text, self.reg_name(reg))
             return text
         if kind == 3:
             return "&" + text
@@ -367,9 +395,75 @@ class C2Model:
             return items
         while node and node != end and len(out) < limit:
             if self.u32(node + 8) & 0x100:
-                out.append("%d %s = %s" % (self.u32(node + 4), ",".join(leaves(self.u32(node + 0x2C))),
-                                           ",".join(leaves(self.u32(node + 0x28)))))
+                out.append(self.tuple_text(node))
             node = self.u32(node)
+        return out
+
+    def tuple_text(self, node):
+        """'opcode dsts = srcs' of one instruction tuple."""
+        def leaves(head):
+            items = []
+            while head and len(items) < 8:
+                items.append(self.leaf_text(head))
+                head = self.u32(head)
+            return items
+        return "%d %s = %s" % (self.u32(node + 4), ",".join(leaves(self.u32(node + 0x2C))),
+                               ",".join(leaves(self.u32(node + 0x28))))
+
+    REGMAP_SIZE = 0x5C   # RegAssignDsts: cmp esi, 0x5c before indexing _RegMap
+
+    def phys_list(self, va):
+        """Zero-terminated register-number list (_IntPhysRegs, a _Next*Pos cursor)."""
+        out = []
+        while va and len(out) < self.MAX_ORDER:
+            reg = self.u32(va + 4 * len(out))
+            if not reg:
+                break
+            out.append(reg)
+        return out
+
+    def reg_map(self):
+        """_RegMap: physical register number -> symbol it holds (RegSimpleAssignBody's state)."""
+        base = self.sym("_RegMap")
+        out = {}
+        for reg in range(1, self.REGMAP_SIZE):
+            sym = self.u32(base + 4 * reg)
+            if sym:
+                out[self.reg_name(reg)] = self.sym_text(sym)
+        return out
+
+    ENTRY_NEXT = 0x80    # dop2: the compile loop walks _Eentry_list by +0x80
+    ENTRY_FLAGS = 0x50   # dop2: bit 0x20 = has a body to compile, bit 2 = compiled
+
+    ENTRY_CGNODE = 0x88  # CgAddNode: entry+0x88 = call-graph node, node+4 = entry
+    ENTRY_INIT = 0x400000  # CgBottomUpOrder: entry+0x20 bit -> the dynamic-initializer list
+
+    def entry_list(self, limit=20000, edges=False):
+        """_Eentry_list in list order: decorated name (+4) and flags (+0x50);
+        with edges, the call-graph callees (node+0xC list {+0 next, +4 callee
+        node, +0xC bit 0 = recursive arc}, in list order) and whether the entry
+        has a node and is a dynamic initializer."""
+        head = self.sym("_Eentry_list")
+        out = []
+        entry = self.u32(head) if head is not None else 0
+        while entry and len(out) < limit:
+            item = {"name": self.cstr(self.u32(entry + 4), 512), "flags": self.u32(entry + self.ENTRY_FLAGS)}
+            if edges:
+                node = self.u32(entry + self.ENTRY_CGNODE)
+                item["node"] = bool(node)
+                item["init"] = bool(self.u32(entry + 0x20) & self.ENTRY_INIT)
+                callees, recursive = [], []
+                edge = self.u32(node + 0xC) if node else 0
+                while edge and len(callees) + len(recursive) < 4096:
+                    target = self.u32(edge + 4)
+                    name = self.cstr(self.u32(self.u32(target + 4) + 4), 512) if target else None
+                    (recursive if self.u32(edge + 0xC) & 1 else callees).append(name)
+                    edge = self.u32(edge)
+                item["callees"] = callees
+                if recursive:
+                    item["recursive"] = recursive
+            out.append(item)
+            entry = self.u32(entry + self.ENTRY_NEXT)
         return out
 
     def symtab(self, limit=4096):
@@ -530,9 +624,73 @@ class SpillDecoder(Decoder):
         return {}
 
 
+class RegAssignDecoder(Decoder):
+    """RegAssign([esp+4]=destination leaf, [esp+8]=tuple); ret 8. Local
+    register assignment (RegSimpleAssignBody walks the tuples forward;
+    RegAssignSrcs looks each source up in _RegMap and frees it at its last use,
+    RegAssignDsts calls this for a destination tmpreg not in _RegMap yet).
+    Order of choice, for the tmpreg sym = [leaf+0x1C]:
+    1. preference [sym+0x30]: if unset, a copy (opcode 1, 0x11F, 0x1FD, 0x17F,
+       0x181, 0x125, 0x189) from an already colored tmpreg prefers that
+       register, and an LEA (0x12) [base+index] with no displacement and
+       scale prefers the BASE's register; the preference is taken if the
+       register is free in _RegMap, available and has no _BvConflicts bit for
+       sym;
+    2. /O2 (_Speed): round-robin over _IntPhysRegs from _NextIntPos, only
+       registers numbered below 4 (wrapping to the list start), the first free
+       one without a conflict; _NextIntPos moves past it;
+    3. otherwise the first free conflict-free register in list order, else
+       RegSpill of the register whose next use is farthest (RegFindPhysRegUse).
+    Entry: tmpreg, opcode and tuple, the preference, the cursor's remaining
+    order, the _RegMap occupancy, the registers whose conflict set holds sym.
+    Exit: chosen register and the preference after step 1."""
+
+    def entry(self, model, regs, stack):
+        leaf, tup = stack[1], stack[2]
+        sym = model.u32(leaf + 0x1C)
+        info = {"tmpreg": model.sym_text(sym), "symnum": model.u32(sym + 0x1C),
+                "opcode": model.u32(tup + 4), "tuple": model.tuple_text(tup)}
+        pref = model.u32(sym + 0x30)
+        if pref:
+            info["pref"] = model.reg_name(model.u32(pref + 0x1C))
+        start, cursor = model.sym("_IntPhysRegs"), model.sym("_NextIntPos")
+        if start is not None and cursor is not None:
+            info["int_regs"] = [model.reg_name(r) for r in model.phys_list(start)]
+            info["next"] = [model.reg_name(r) for r in model.phys_list(model.u32(cursor))]
+            conflicts_va = model.sym("_BvConflicts")
+            if conflicts_va is not None:
+                info["conflicts"] = [model.reg_name(r) for r in model.phys_list(start)
+                                     if info["symnum"] in read_sparse_bv(model.u32,
+                                                                         model.u32(conflicts_va + 4 * r))]
+        info["busy"] = model.reg_map()
+        return info, {"sym": sym}
+
+    def exit(self, model, regs, state):
+        reg = model.physreg_of(regs["eax"])
+        out = {"chosen": model.reg_name(reg) if reg is not None else None}
+        pref = model.u32(state["sym"] + 0x30)
+        if pref:
+            out["pref_after"] = model.reg_name(model.u32(pref + 0x1C))
+        return out
+
+
+class EntryListDecoder(Decoder):
+    """Module-level routines that build or reorder _Eentry_list (the order in
+    which dop2 compiles and emits functions): the list at entry (with the call
+    graph's callee edges) and at return. CgBottomUpOrder (called by
+    CgBuildCallGraph after CgIdentifyRecursion) is modelled by bottom_up_order."""
+
+    def entry(self, model, regs, stack):
+        return {"entries": model.entry_list(edges=True)}
+
+    def exit(self, model, regs, state):
+        return {"entries_after": model.entry_list()}
+
+
 DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobregsDecoder,
             "SymAlloc": SymAllocDecoder, "SymFree": SymFreeDecoder, "GrgImmedTupleHash": ImmedHashDecoder,
-            "GrgNewGlobreg": NewGlobregDecoder, "Spill": SpillDecoder}
+            "GrgNewGlobreg": NewGlobregDecoder, "Spill": SpillDecoder, "RegAssign": RegAssignDecoder,
+            "CgBuildCallGraph": EntryListDecoder, "CgBottomUpOrder": EntryListDecoder}
 # Inliner predicates: arguments not decoded (LTCG-private conventions), signed EAX logged.
 for _name in ("InlineeIsTooBig", "ShouldInlineCallTuple", "ShouldInlineInlinee", "InlBadCandidate",
               "InlCallTupleIsCandidate", "InlBenefit", "ConsiderCandidate", "InlCallGraphDecision"):
@@ -575,6 +733,11 @@ def format_event(event):
         return "%s  OrderGlobregs class=%s: %s" % (func, event.get("class"), " ".join(
             "g%s(sym%s,p%s,l%s)" % (g.get("globreg"), g.get("symnum"), g.get("priority"), g.get("lastref"))
             for g in event["order"]))
+    if name == "RegAssign" and "tmpreg" in event:
+        return "%s  RegAssign %s [%s] pref=%s next=%s busy=%s conflicts=%s -> %s" % (
+            func, event["tmpreg"], event.get("tuple"), event.get("pref_after") or event.get("pref"),
+            ",".join(event.get("next", [])), ",".join("%s:%s" % kv for kv in sorted(event.get("busy", {}).items())),
+            ",".join(event.get("conflicts", [])) or "-", event.get("chosen"))
     fields = {k: v for k, v in event.items() if k not in ("break", "function", "seq", "tid", "depth")}
     return "%s  %s %s" % (func, name, json.dumps(fields, sort_keys=True))
 
@@ -714,6 +877,153 @@ def diff_main(argv):
         names_r = ",".join(e["break"] for e in right[j1:j2][:6])
         print("  call sequence %s: left %d-%d [%s] right %d-%d [%s]" % (tag, i1 + 1, i2, names_l, j1 + 1, j2, names_r))
     return 1
+
+
+# ---------------------------------------------------------------- emission order
+
+def bottom_up_order(entries):
+    """CgBottomUpOrder on _Eentry_list (entries as EntryListDecoder records
+    them). First the entries without a call-graph node, in list order; then
+    passes over the rest in list order: an entry is placed when every callee
+    with an entry still waiting (recursive arcs, flagged by
+    CgIdentifyRecursion's DFS, excepted) has been placed, else it waits for the
+    next pass. Dynamic initializers placed in a pass go to a second list
+    appended at the end (the SsrSortInitializerEvalOrder variant is not
+    modelled). Returns the names in the new list order."""
+    out = [e["name"] for e in entries if not e.get("node", True)]
+    waiting = [e for e in entries if e.get("node", True)]
+    names = {e["name"] for e in waiting}
+    inits = []
+    placed = set(out)
+    while waiting:
+        rest = []
+        for e in waiting:
+            if any(c in names and c not in placed for c in e.get("callees", [])):
+                rest.append(e)
+                continue
+            (inits if e.get("init") else out).append(e["name"])
+            placed.add(e["name"])
+        if len(rest) == len(waiting):   # no progress (cannot happen once recursive arcs are removed)
+            out.extend(e["name"] for e in rest)
+            break
+        waiting = rest
+    return out + inits
+
+
+def blocking_callees(entries):
+    """Per entry, the callees that made CgBottomUpOrder hold it back: callees
+    placed after the entry's IL position would allow (recursive arcs excepted)."""
+    order = bottom_up_order(entries)
+    pos = {n: i for i, n in enumerate(order)}
+    il = {e["name"]: i for i, e in enumerate(entries)}
+    out = {}
+    for e in entries:
+        late = [c for c in e.get("callees", []) if c in il and (il[c] > il[e["name"]] or c in out)]
+        if late and pos.get(e["name"], 0) > 0:
+            out[e["name"]] = late
+    return out
+
+
+def read_obj_sections(path):
+    """Section table of a COFF object: number, name, size, flags, and for a
+    COMDAT the COMDAT symbol, selection and associated section."""
+    import struct
+    data = Path(path).read_bytes()
+    _, nsec, _, table, count, opt, _ = struct.unpack_from("<HHIIIHH", data)
+    strings = table + count * 18
+
+    def string_at(offset):
+        start = strings + offset
+        return data[start:data.index(b"\0", start)].decode("latin-1")
+    secs = []
+    for i in range(nsec):
+        at = 20 + opt + 40 * i
+        name = data[at:at + 8].rstrip(b"\0").decode("latin-1")
+        if name.startswith("/"):
+            name = string_at(int(name[1:]))
+        size, = struct.unpack_from("<I", data, at + 16)
+        flags, = struct.unpack_from("<I", data, at + 36)
+        secs.append({"number": i + 1, "name": name, "size": size, "flags": flags})
+    i = 0
+    while i < count:
+        at = table + 18 * i
+        raw = data[at:at + 8]
+        if raw[:4] == b"\0\0\0\0":
+            name = string_at(struct.unpack_from("<I", raw, 4)[0])
+        else:
+            name = raw.rstrip(b"\0").decode("latin-1")
+        value, sec, _, storage, aux = struct.unpack_from("<IhHBB", data, at + 8)
+        if 0 < sec <= nsec:
+            entry = secs[sec - 1]
+            if storage == 3 and value == 0 and aux and name == entry["name"]:
+                if entry["flags"] & 0x1000:     # IMAGE_SCN_LNK_COMDAT: aux = section definition
+                    number, selection = struct.unpack_from("<HB", data, table + 18 * (i + 1) + 12)
+                    entry["selection"] = selection
+                    if selection == 5:
+                        entry["assoc"] = number
+            elif entry["flags"] & 0x1000 and "comdat" not in entry and storage in (2, 3, 6):
+                entry["comdat"] = name
+        i += 1 + aux
+    return secs
+
+
+def emit_order_report(events, sections):
+    """Join a trace (CgBottomUpOrder + ReadFunction) with the object's section
+    table: IL order, bottom-up order (traced and modelled), compile order, the
+    code COMDATs in section order, and whether they agree."""
+    bu = next((e for e in events if e["break"] == "CgBottomUpOrder" and "entries" in e), None)
+    reads = [e.get("function") for e in events if e["break"] == "ReadFunction"]
+    il = [e["name"] for e in bu["entries"]] if bu else []
+    traced = [e["name"] for e in bu.get("entries_after", [])] if bu else []
+    modelled = bottom_up_order(bu["entries"]) if bu else []
+    code = [s.get("comdat") for s in sections
+            if s["name"].startswith(".text") and s.get("selection") != 5 and s.get("comdat")]
+    code_set = set(code)
+    return {"il_order": il, "bottom_up_traced": traced, "bottom_up_model": modelled,
+            "model_ok": (traced == modelled) if bu else None, "compile_order": reads,
+            "blocked_by": blocking_callees(bu["entries"]) if bu else {},
+            "code_sections": code, "sections_ok": code == [r for r in reads if r in code_set],
+            "sections": sections}
+
+
+def emit_order_main(argv):
+    parser = argparse.ArgumentParser(prog="c2_trace.py emit-order",
+                                     description="trace and explain the order c2 compiles and emits a unit's "
+                                     "functions")
+    parser.add_argument("--source", required=True, type=Path)
+    parser.add_argument("--flags", default="/O2 /Gy", help="cl options (one string)")
+    parser.add_argument("--include", action="append", default=[], type=Path)
+    parser.add_argument("--out", type=Path, required=True, help="JSON report (the trace goes next to it)")
+    parser.add_argument("--toolchain", default="sp1")
+    parser.add_argument("--all-sections", action="store_true", help="also print the whole section table")
+    args = parser.parse_args(argv)
+    trace = args.out.with_suffix(".jsonl")
+    cli = ["--source", str(args.source), "--flags", args.flags, "--break", "CgBottomUpOrder,ReadFunction",
+           "--out", str(trace), "--toolchain", args.toolchain, "--summary-lines", "0"]
+    for inc in args.include:
+        cli += ["--include", str(inc)]
+    status = main(cli)
+    if status:
+        return status
+    work = trace.parent / (trace.stem + ".work")
+    report = emit_order_report(load_trace(trace), read_obj_sections(work / (args.source.stem + ".obj")))
+    args.out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+    il_pos = {n: i for i, n in enumerate(report["il_order"])}
+    if report["model_ok"] is None:
+        model = "no call graph (no CgBottomUpOrder, e.g. /Od): compiled in IL order"
+    else:
+        model = "bottom-up model %s the traced CgBottomUpOrder" % ("matches" if report["model_ok"] else "DIFFERS FROM")
+    print("%s; obj code sections %s the compile order" % (
+        model, "follow" if report["sections_ok"] else "DO NOT follow"))
+    print("compile order (ReadFunction), IL position, held back by:")
+    for i, name in enumerate(report["compile_order"]):
+        why = report["blocked_by"].get(name)
+        print("  %3d  il %3s  %s%s" % (i + 1, il_pos.get(name, "?"), name, "  <- " + ", ".join(why) if why else ""))
+    if args.all_sections:
+        for sec in report["sections"]:
+            print("  sec %3d %-10s %s%s" % (sec["number"], sec["name"], sec.get("comdat", ""),
+                                            " assoc=%d" % sec["assoc"] if "assoc" in sec else ""))
+    return 0 if report["model_ok"] is not False and report["sections_ok"] else 1
 
 
 # ---------------------------------------------------------------- debugger
@@ -1007,12 +1317,18 @@ def main(argv=None):
     argv = sys.argv[1:] if argv is None else list(argv)
     if argv[:1] == ["diff"]:
         return diff_main(argv[1:])
+    if argv[:1] == ["emit-order"]:
+        return emit_order_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--flags", default="/O2", help="cl options (one string)")
     parser.add_argument("--include", action="append", default=[], type=Path)
-    parser.add_argument("--break", dest="breaks", default=",".join(DEFAULT_BREAKS),
-                        help="comma-separated c2 public names (plain or decorated)")
+    parser.add_argument("--break", dest="breaks", default=None,
+                        help="comma-separated c2 public names (plain or decorated; default %s)"
+                        % ",".join(DEFAULT_BREAKS))
+    parser.add_argument("--preset", action="append", default=[], choices=sorted(PRESETS),
+                        help="add a named set of breaks (and --tuples points): " + "; ".join(
+                            "%s = %s" % (k, v["doc"]) for k, v in sorted(PRESETS.items())))
     parser.add_argument("--function", help="only log while c2 compiles a function whose name contains this")
     parser.add_argument("--dump", action="append", default=[], help="EXPR:COUNT dwords to dump at each entry")
     parser.add_argument("--out", type=Path, required=True, help="JSONL trace")
@@ -1029,6 +1345,7 @@ def main(argv=None):
     parser.add_argument("--tuples", default="", help="comma-separated break names whose entry events carry "
                         "the function's instruction tuples (opcode, destinations, sources)")
     args = parser.parse_args(argv)
+    breaks_text, tuples_text = preset_breaks(args.breaks, args.tuples, args.preset)
     if os.name != "nt":
         print("c2_trace: requires Windows", file=sys.stderr)
         return 2
@@ -1040,7 +1357,11 @@ def main(argv=None):
         work.mkdir(parents=True, exist_ok=True)
         data = load_symbols(ROOT / "build/c2-trace")
         table = symbol_table(data["rows"])
-        breaks = [resolve_name(name.strip(), table) for name in args.breaks.split(",") if name.strip()]
+        breaks, seen = [], set()
+        for name in breaks_text.split(","):
+            if name.strip() and plain_name(name.strip()) not in seen:
+                seen.add(plain_name(name.strip()))
+                breaks.append(resolve_name(name.strip(), table))
         if args.break_module:
             have = {va for _, va in breaks}
             exclude = {plain_name(n) for n in args.exclude.split(",") if n}
@@ -1048,7 +1369,7 @@ def main(argv=None):
         symtab_at = [plain_name(n) for n in args.symtab.split(",") if n]
         tracer = Tracer(table, data["image_base"], breaks, args.function, args.dump, args.max_events,
                         entry_only=args.entry_only, symtab_at=symtab_at,
-                        tuples_at=[plain_name(n) for n in args.tuples.split(",") if n])
+                        tuples_at=[plain_name(n) for n in tuples_text.split(",") if n])
         command = compile_command(toolchain, args.source, args.flags.split(), args.include, work)
         env = probe_toolchain.toolchain_environment(toolchain)
         if args.include:
