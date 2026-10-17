@@ -130,5 +130,117 @@ class SummaryTests(unittest.TestCase):
         self.assertTrue(cmd[4].startswith("/Fo") and cmd[5] == "/Iinc")
 
 
+class SymbolTableTests(unittest.TestCase):
+    def setUp(self):
+        self.mem = mem = FakeMemory()
+        mem.put(0x100, 0x2000)                        # _BESymTab -> table
+        mem.put(0x2000, 2, 0x2100)                    # next number 2, chunk array
+        mem.put(0x2100, 0x3000)                       # chunk 0
+        sym0, sym1 = 0x300C, 0x300C + 0x60
+        mem.put(sym0, 0x5000)                         # descriptor
+        mem.put(sym0 + 4, 4)
+        mem.put(sym0 + 8, sym0)                       # its own base
+        mem.put(sym0 + 0x1C, 0)
+        mem.put(0x5004, 0x5100)
+        mem.raw[0x5100] = b"_rect\0"
+        mem.put(0x5028, 2594)
+        mem.put(sym1 + 4, 4)
+        mem.put(sym1 + 8, sym0)                       # equivalence of sym0 at +8
+        mem.put(sym1 + 0x1C, 1)
+        mem.put(sym1 + 0x24, 8)
+        self.model = ct.C2Model(mem.u32, mem.bytes, {"_BESymTab": 0x100}.get)
+        self.sym0, self.sym1 = sym0, sym1
+
+    def test_symtab_names_front_end_numbers_and_equivalences(self):
+        table = self.model.symtab()
+        self.assertEqual(table[0], {"symnum": 0, "kind": 4, "name": "_rect", "fe": 2594})
+        self.assertEqual(table[1], {"symnum": 1, "kind": 4, "base": 0, "offset": 8})
+        self.assertEqual(self.model.sym_address(1), self.sym1)
+
+    def test_leaf_text_kinds(self):
+        mem = self.mem
+        mem.put(0x7000, 0, 0, 7, 0, 0, 0, (-5) & 0xFFFFFFFF)          # constant
+        mem.put(0x7100, 0, 0, 3, 0, 0, 0, self.sym0)                   # address of
+        mem.put(0x7200, 0, 0, 1, 0, 0, 0, self.sym1)                   # tmpreg/register
+        mem.put(0x7300, 0, 0, 5)                                       # effective address
+        mem.put(0x7324, 4, 0, 0x7200)
+        self.assertEqual(self.model.leaf_text(0x7000), "#-5")
+        self.assertEqual(self.model.leaf_text(0x7100), "&_rect$2594")
+        self.assertEqual(self.model.leaf_text(0x7200), "s1")
+        self.assertEqual(self.model.leaf_text(0x7300), "[s1+4]")
+
+    def test_symfree_decoder_reads_symbol(self):
+        out = ct.SymFreeDecoder().entry(self.model, {"eax": self.sym0}, [0] * 8)
+        self.assertEqual(out, {"symnum": 0, "kind": 4, "name": "_rect", "fe": 2594})
+
+    def test_immed_hash_decoder(self):
+        mem = self.mem
+        mem.put(0x7000, 0, 0, 3, 0, 0, 0, self.sym0)
+        out = ct.ImmedHashDecoder().entry(self.model, {"eax": 0x7000}, [0] * 8)
+        self.assertEqual(out, {"leaf_kind": 3, "name": "_rect", "fe": 2594})
+        self.assertEqual(ct.ImmedHashDecoder().exit(self.model, {"eax": 2594 & 63}, None), {"bucket": 34})
+
+
+class ModuleBreakTests(unittest.TestCase):
+    def test_selects_function_publics_of_matching_modules_once(self):
+        rows = [{"name": "@A@4", "va": 0x20, "module": "lower.obj", "function": True},
+                {"name": "_B", "va": 0x10, "module": "tuple.obj", "function": True},
+                {"name": "@A2@4", "va": 0x20, "module": "lower.obj", "function": True},
+                {"name": "_Tab", "va": 0x30, "module": "lower.obj", "function": False},
+                {"name": "@C@4", "va": 0x40, "module": "color.obj", "function": True},
+                {"name": "@D@4", "va": 0x50, "module": "lower.obj", "function": True}]
+        self.assertEqual(ct.module_breaks(rows, "lower|tuple", exclude={"D"}), [("_B", 0x10), ("@A@4", 0x20)])
+
+
+class DiffTests(unittest.TestCase):
+    def ev(self, name, **fields):
+        event = {"break": name, "depth": 0, "seq": 1, "tid": 7, "function": "f"}
+        event.update(fields)
+        return event
+
+    def test_normalize_pointers_and_signed(self):
+        self.assertEqual(ct.normalize([0x2A7B230, 0xFFFFFFFF, 12, "00D94018"]), ["ptr", -1, 12, "ptr"])
+        seen = {}
+        self.assertEqual(ct.normalize([0x2A7B230, 0x2A7C000, 0x2A7B230], ordinals=seen), ["p0", "p1", "p0"])
+
+    def test_renumber_shifts_one_side(self):
+        self.assertEqual(ct.renumber({"ecx": 2595, "x": [5, "00000A23"]}, 2500, 2700, 1),
+                         {"ecx": 2594, "x": [5, "00000A22"]})
+
+    def test_identical_after_pointer_normalisation(self):
+        left = [self.ev("A", eax=0x2A7B230, ret=1)]
+        right = [self.ev("A", eax=0x28E3CC8, ret=1, seq=9, tid=3)]
+        self.assertIsNone(ct.diff_traces(left, right))
+
+    def test_first_divergence_and_call_sequence_blocks(self):
+        left = [self.ev("A", ret=1), self.ev("B", bucket=63), self.ev("C")]
+        right = [self.ev("A", ret=1), self.ev("B", bucket=0), self.ev("D"), self.ev("C")]
+        result = ct.diff_traces(left, right)
+        self.assertEqual(result["index"], 1)
+        self.assertEqual(result["left"]["bucket"], 63)
+        self.assertEqual(result["before"][0]["break"], "A")
+        self.assertIn(("insert", (2, 2), (2, 3)), result["blocks"])
+
+    def test_renumbered_front_end_numbers_compare_equal(self):
+        left = [self.ev("Grg", fe=2559, bucket=63)]
+        right = [self.ev("Grg", fe=2560, bucket=63)]
+        self.assertIsNotNone(ct.diff_traces(left, right))
+        self.assertIsNone(ct.diff_traces(left, right, shift=(2500, 2700, 1)))
+
+    def test_diff_command_exit_codes(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            a, b = Path(tmp) / "a.jsonl", Path(tmp) / "b.jsonl"
+            a.write_text(json.dumps(self.ev("A", ret=1)) + "\n", encoding="utf-8")
+            b.write_text(json.dumps(self.ev("A", ret=2)) + "\n", encoding="utf-8")
+            import contextlib
+            import io
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(ct.main(["diff", str(a), str(a)]), 0)
+                self.assertEqual(ct.main(["diff", str(a), str(b), "--all"]), 1)
+            self.assertIn("1 divergent records", out.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

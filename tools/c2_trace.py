@@ -81,6 +81,21 @@ def resolve_name(name, table):
     raise TraceError("ambiguous c2.dll symbol %s: %s" % (name, ", ".join(h[0] for h in hits)))
 
 
+def module_breaks(rows, pattern, exclude=()):
+    """(name, va) of every function public whose object module matches the regex
+    (e.g. 'lower|tuple'); one entry per address, sorted by address."""
+    regex = re.compile(pattern)
+    seen, out = set(), []
+    for row in sorted(rows, key=lambda r: r.get("va") or 0):
+        va, module = row.get("va"), row.get("module")
+        if va is None or not module or not row.get("function", True) or va in seen:
+            continue
+        if regex.search(module) and plain_name(row["name"]) not in exclude:
+            seen.add(va)
+            out.append((row["name"], int(va)))
+    return out
+
+
 def c2_inputs(project_path=PROJECT):
     project = json.loads(Path(project_path).read_text(encoding="utf-8"))
     binary = Path(project["toolchain_root"]) / "bin" / "c2.dll"
@@ -97,7 +112,7 @@ def load_symbols(cache_dir):
     import symbols
     binary, pdb = c2_inputs()
     cache = Path(cache_dir) / "c2-publics.json"
-    key = "%s:%d:%d" % (pdb, pdb.stat().st_size, binary.stat().st_size)
+    key = "v2:%s:%d:%d" % (pdb, pdb.stat().st_size, binary.stat().st_size)
     if cache.is_file():
         data = json.loads(cache.read_text(encoding="utf-8"))
         if data.get("key") == key:
@@ -105,7 +120,9 @@ def load_symbols(cache_dir):
     result = symbols.extract(binary, pdb)
     data = {"key": key, "image_base": result["identity"]["image_base"],
             "binary_sha256": result["identity"]["binary_sha256"],
-            "rows": [{"name": r["name"], "va": r["va"]} for r in result["functions"] + result["data"]]}
+            "rows": [{"name": r["name"], "va": r["va"], "module": (r.get("module") or "").replace("\\", "/")
+                      .split("/")[-1] or None, "function": r in result["functions"]}
+                     for r in result["functions"] + result["data"]]}
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(data), encoding="utf-8")
     return data
@@ -244,7 +261,7 @@ class C2Model:
 
     def physreg_of(self, regsym_ptr):
         base = self.sym("_RegSym")
-        if not regsym_ptr or regsym_ptr < base:
+        if base is None or not regsym_ptr or regsym_ptr < base:
             return None
         delta = regsym_ptr - base
         if delta % self.REGSYM_SIZE:
@@ -275,6 +292,91 @@ class C2Model:
             info["prefs"] = prefs
         info["refs"] = ctypes.c_int32(self.u32(ptr + 0x40)).value
         return info
+
+    SYM_SIZE = 0x60      # SymAllocPool: getmem(0xC0C) = 0xC header + 32 symbols of 0x60
+    SYM_CHUNK = 32       # SymKeyToSym: chunks[key >> 5] + 0xC + (key & 31) * 0x60
+
+    def sym_address(self, symnum):
+        table = self.u32(self.sym("_BESymTab"))
+        chunks = self.u32(table + 4)
+        chunk = self.u32(chunks + 4 * (symnum // self.SYM_CHUNK))
+        return chunk + 0xC + (symnum % self.SYM_CHUNK) * self.SYM_SIZE
+
+    def symbol(self, address):
+        """c2 symbol (_BESymTab slot): +0 front-end descriptor (name at +4, the
+        front-end '$N' number at +0x28), +4 kind byte, +8 base symbol (itself
+        unless an equivalence), +0x1C c2 symbol number, +0x24 offset in the base."""
+        desc = self.u32(address)
+        info = {"symnum": self.u32(address + 0x1C), "kind": self.u32(address + 4) & 0xFF}
+        base = self.u32(address + 8)
+        if base and base != address:      # equivalence (a field of a base symbol): SymCmpSym +8, +0x24
+            info["base"] = self.u32(base + 0x1C)
+            info["offset"] = _signed(self.u32(address + 0x24))
+        if desc:
+            name = self.cstr(self.u32(desc + 4))
+            if name is not None:
+                info["name"] = name
+                info["fe"] = self.u32(desc + 0x28)
+        return info
+
+    def sym_text(self, sym):
+        """Short name of a c2 symbol pointer: register, 'name$fe', or 's<symnum>'."""
+        reg = self.physreg_of(sym)
+        if reg is not None:
+            return self.reg_name(reg)
+        info = self.symbol(sym)
+        if "name" in info:
+            return "%s$%d" % (info["name"], info["fe"])
+        return "s%d" % info["symnum"]
+
+    def leaf_text(self, leaf, depth=0):
+        """Operand leaf (+8 kind): 7 integer constant (+0x18), 5 effective address
+        (+0x24 displacement, +0x2C base leaf, +0x30 index leaf), others name the
+        symbol at +0x18 (1 register/tmpreg, 3 address of)."""
+        kind = self.u32(leaf + 8) & 0xFF
+        if kind == 7:
+            return "#%d" % _signed(self.u32(leaf + 0x18))
+        if kind == 5 and depth < 3:
+            parts = [self.leaf_text(p, depth + 1) for p in (self.u32(leaf + 0x2C), self.u32(leaf + 0x30)) if p]
+            return "[%s%+d]" % ("+".join(parts), _signed(self.u32(leaf + 0x24)))
+        sym = self.u32(leaf + 0x18)
+        text = self.sym_text(sym) if sym else "?"
+        if kind == 1:
+            return text
+        if kind == 3:
+            return "&" + text
+        return "k%d:%s" % (kind, text)
+
+    def tuple_list(self, limit=2000):
+        """Instruction tuples of the function being compiled, in list order:
+        _Function -> +8 flow graph -> first block +0x1C (head tuple), last block
+        +0x20 (end), linked by +0 (LoFinalLower's walk); +9 bit 0 marks an
+        instruction, +4 opcode, +0x2C destination leaves, +0x28 source leaves
+        (each linked by +0)."""
+        func = self.u32(self.sym("_Function"))
+        graph = self.u32(func + 8)
+        node = self.u32(self.u32(self.u32(graph) + 0x1C))
+        end = self.u32(self.u32(graph + 4) + 0x20)
+        out = []
+
+        def leaves(head):
+            items = []
+            while head and len(items) < 8:
+                items.append(self.leaf_text(head))
+                head = self.u32(head)
+            return items
+        while node and node != end and len(out) < limit:
+            if self.u32(node + 8) & 0x100:
+                out.append("%d %s = %s" % (self.u32(node + 4), ",".join(leaves(self.u32(node + 0x2C))),
+                                           ",".join(leaves(self.u32(node + 0x28)))))
+            node = self.u32(node)
+        return out
+
+    def symtab(self, limit=4096):
+        """Every allocated c2 symbol slot ([_BESymTab]+0 = next number)."""
+        table = self.u32(self.sym("_BESymTab"))
+        count = min(self.u32(table), limit)
+        return [self.symbol(self.sym_address(n)) for n in range(count)]
 
 
 # ---------------------------------------------------------------- decoders
@@ -352,7 +454,85 @@ class ReturnDecoder(Decoder):
         return {"ret": _signed(regs["eax"])}
 
 
-DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobregsDecoder}
+class SymAllocDecoder(Decoder):
+    """SymAlloc(AL=kind): pops the kind's free list ([_BESymTab]+0x2C.., the
+    freed symbol keeps its +0x1C number) or takes a new pool slot. Exit: the
+    symbol's number, so number reuse is visible."""
+
+    def entry(self, model, regs, stack):
+        return {"kind": regs["eax"] & 0xFF}
+
+    def exit(self, model, regs, state):
+        return {"symnum": model.u32(regs["eax"] + 0x1C)} if regs["eax"] else {"symnum": None}
+
+
+class SymFreeDecoder(Decoder):
+    """SymFree(EAX=symbol): pushes it on its kind's free list (LIFO)."""
+
+    def entry(self, model, regs, stack):
+        info = model.symbol(regs["eax"])
+        return {k: info[k] for k in ("symnum", "kind", "name", "fe") if k in info}
+
+    def exit(self, model, regs, state):
+        return {}
+
+
+class ImmedHashDecoder(Decoder):
+    """GrgImmedTupleHash(EAX=leaf tuple or 0, [esp+4]=fallback symbol); ret 4.
+    Bucket of _ImmedHashTable (64 chains): integer constant (leaf kind 7) ->
+    value & 0x3F; address of a symbol (kind 3) -> front-end number & 0x3F;
+    tmpreg (kind 1) -> c2 symbol number & 0x3F."""
+
+    def entry(self, model, regs, stack):
+        leaf = regs["eax"]
+        info = {}
+        if leaf:
+            info["leaf_kind"] = model.u32(leaf + 8) & 0xFF
+            if info["leaf_kind"] == 7:
+                info["value"] = _signed(model.u32(leaf + 0x18))
+            elif info["leaf_kind"] == 3:
+                sym = model.u32(leaf + 0x18)
+                desc = model.u32(model.u32(sym + 8))
+                info["name"] = model.cstr(model.u32(desc + 4))
+                info["fe"] = model.u32(desc + 0x28)
+        return info
+
+    def exit(self, model, regs, state):
+        return {"bucket": regs["eax"]}
+
+
+class NewGlobregDecoder(Decoder):
+    """GrgNewGlobreg(EAX=symbol or immediate leaf owner): pops _FreeGlobs (a
+    LIFO linked by +0x30; a freed globreg keeps its +0x1C number) or takes
+    _NextGlobregNum. Exit: the globreg number, so number reuse is visible."""
+
+    def entry(self, model, regs, stack):
+        info = model.symbol(regs["eax"]) if regs["eax"] else {}
+        return {k: info[k] for k in ("symnum", "name", "fe", "base", "offset") if k in info}
+
+    def exit(self, model, regs, state):
+        return {"globreg": model.u32(regs["eax"] + 0x1C) if regs["eax"] else None}
+
+
+class SpillDecoder(Decoder):
+    """Spill(EAX=Globreg): Color spills globregs in globreg-number order; the
+    reload tmpregs come from SymAlloc's free list in that order."""
+
+    def entry(self, model, regs, stack):
+        info = model.globreg(regs["eax"]) or {}
+        out = {k: info[k] for k in ("globreg", "symnum", "name", "priority", "refs") if info.get(k) is not None}
+        sym = model.u32(regs["eax"]) if regs["eax"] else 0
+        if sym:
+            out.update({k: v for k, v in model.symbol(sym).items() if k in ("base", "offset", "fe")})
+        return out
+
+    def exit(self, model, regs, state):
+        return {}
+
+
+DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobregsDecoder,
+            "SymAlloc": SymAllocDecoder, "SymFree": SymFreeDecoder, "GrgImmedTupleHash": ImmedHashDecoder,
+            "GrgNewGlobreg": NewGlobregDecoder, "Spill": SpillDecoder}
 # Inliner predicates: arguments not decoded (LTCG-private conventions), signed EAX logged.
 for _name in ("InlineeIsTooBig", "ShouldInlineCallTuple", "ShouldInlineInlinee", "InlBadCandidate",
               "InlCallTupleIsCandidate", "InlBenefit", "ConsiderCandidate", "InlCallGraphDecision"):
@@ -397,6 +577,143 @@ def format_event(event):
             for g in event["order"]))
     fields = {k: v for k, v in event.items() if k not in ("break", "function", "seq", "tid", "depth")}
     return "%s  %s %s" % (func, name, json.dumps(fields, sort_keys=True))
+
+
+# ---------------------------------------------------------------- diff
+
+DIFF_SKIP = ("seq", "tid", "function", "dump_strings", "symtab", "tuples", "entry_error", "exit_error")
+
+
+def normalize(value, pointer_floor=0x10000, ordinals=None):
+    """Run-independent form of an event value: dwords that look like heap or
+    image pointers (pointer_floor..-pointer_floor) become 'ptr', others signed.
+    With an ordinals dict (one per trace, filled in event order) each distinct
+    pointer becomes 'p<first-seen ordinal>' instead, so a different object at
+    the same place in the call sequence shows."""
+    if isinstance(value, bool) or value is None:
+        return value
+    if isinstance(value, int):
+        value &= 0xFFFFFFFF
+        if pointer_floor <= value <= 0x100000000 - pointer_floor:
+            if ordinals is None:
+                return "ptr"
+            return "p%d" % ordinals.setdefault(value, len(ordinals))
+        return _signed(value)
+    if isinstance(value, str) and re.fullmatch(r"[0-9A-F]{8}", value):
+        return normalize(int(value, 16), pointer_floor, ordinals)
+    if isinstance(value, list):
+        return [normalize(v, pointer_floor, ordinals) for v in value]
+    if isinstance(value, dict):
+        return {k: normalize(value[k], pointer_floor, ordinals) for k in sorted(value)}
+    return value
+
+
+def renumber(value, low, high, delta):
+    """Subtract delta from every int (or 8-digit hex dword) in [low, high]: maps
+    one side's shifted front-end numbers ('$N', +k per padding declaration) onto
+    the other's before comparing."""
+    if isinstance(value, bool) or value is None:
+        return value
+    if isinstance(value, int):
+        return value - delta if low <= value <= high else value
+    if isinstance(value, str) and re.fullmatch(r"[0-9A-F]{8}", value):
+        number = int(value, 16)
+        return "%08X" % ((number - delta) & 0xFFFFFFFF) if low <= number <= high else value
+    if isinstance(value, list):
+        return [renumber(v, low, high, delta) for v in value]
+    if isinstance(value, dict):
+        return {k: renumber(v, low, high, delta) for k, v in value.items()}
+    return value
+
+
+def event_key(event, ignore=(), pointer_floor=0x10000, shift=None, ordinals=None):
+    fields = {k: v for k, v in event.items() if k not in DIFF_SKIP and k not in ignore}
+    if shift:
+        fields = renumber(fields, *shift)
+    return json.dumps(normalize(fields, pointer_floor, ordinals), sort_keys=True)
+
+
+def divergences(left, right, ignore=(), pointer_floor=0x10000, shift=None, ordinals=False):
+    """0-based indices where the normalized records differ (lockstep), plus the
+    first index past the shorter trace when the lengths differ. ordinals: compare
+    pointers by first-seen ordinal (normalize) instead of as 'ptr'."""
+    seen_l, seen_r = ({}, {}) if ordinals else (None, None)
+    out = [i for i, (a, b) in enumerate(zip(left, right))
+           if event_key(a, ignore, pointer_floor, None, seen_l) != event_key(b, ignore, pointer_floor, shift, seen_r)]
+    if len(left) != len(right):
+        out.append(min(len(left), len(right)))
+    return out
+
+
+def diff_traces(left, right, ignore=(), pointer_floor=0x10000, context=3, shift=None, ordinals=False):
+    """First record where two traces of the same function diverge.
+
+    Returns None when the normalized traces are equal, else a dict: index (0-based),
+    left/right (the divergent records, or None past an end), before (the shared
+    records leading to it), count (divergent records in lockstep), and blocks:
+    difflib opcodes over the call sequence (break, depth) that are not 'equal',
+    as (tag, left range, right range). shift = (low, high, delta) renumbers the
+    right trace (renumber)."""
+    import difflib
+    found = divergences(left, right, ignore, pointer_floor, shift, ordinals)
+    if not found:
+        return None
+    index = found[0]
+    calls_l = ["%s/%s" % (e["break"], e.get("depth")) for e in left]
+    calls_r = ["%s/%s" % (e["break"], e.get("depth")) for e in right]
+    blocks = [(tag, (i1, i2), (j1, j2)) for tag, i1, i2, j1, j2 in
+              difflib.SequenceMatcher(None, calls_l, calls_r, autojunk=False).get_opcodes() if tag != "equal"]
+    return {"index": index, "left": left[index] if index < len(left) else None,
+            "right": right[index] if index < len(right) else None, "count": len(found),
+            "indices": found, "before": left[max(0, index - context):index], "blocks": blocks}
+
+
+def load_trace(path):
+    with open(path, encoding="utf-8") as stream:
+        return [json.loads(line) for line in stream if line.strip()]
+
+
+def diff_main(argv):
+    parser = argparse.ArgumentParser(prog="c2_trace.py diff",
+                                     description="first divergent record of two c2_trace JSONL traces")
+    parser.add_argument("left", type=Path)
+    parser.add_argument("right", type=Path)
+    parser.add_argument("--ignore", default="", help="comma-separated event fields not compared")
+    parser.add_argument("--pointer-floor", type=lambda t: int(t, 0), default=0x10000,
+                        help="dwords at least this far from 0 are pointers (default 0x10000)")
+    parser.add_argument("--context", type=int, default=3)
+    parser.add_argument("--renumber", help="LOW:HIGH:DELTA: subtract DELTA from the right trace's values in "
+                        "[LOW, HIGH] (front-end numbers shifted by padding declarations)")
+    parser.add_argument("--limit", type=int, default=40, help="records listed by --all")
+    parser.add_argument("--ordinals", action="store_true", help="compare pointers by first-seen ordinal "
+                        "(same allocation pattern -> same ordinals; a different object shows)")
+    parser.add_argument("--all", action="store_true", help="list every divergent record, not only the first")
+    args = parser.parse_args(argv)
+    left, right = load_trace(args.left), load_trace(args.right)
+    ignore = tuple(f for f in args.ignore.split(",") if f)
+    shift = tuple(int(t, 0) for t in args.renumber.split(":")) if args.renumber else None
+    if shift is not None and len(shift) != 3:
+        parser.error("--renumber takes LOW:HIGH:DELTA")
+    result = diff_traces(left, right, ignore, args.pointer_floor, args.context, shift, args.ordinals)
+    if result is None:
+        print("identical: %d records (normalized)" % len(left))
+        return 0
+    if args.all:
+        for i in result["indices"][:args.limit]:
+            for side, trace in (("<", left), (">", right)):
+                print("%d %s %s" % (i + 1, side, format_event(trace[i]) if i < len(trace) else "(end of trace)"))
+        print("%d divergent records" % result["count"])
+        return 1
+    print("records: %d vs %d; first divergence at record %d" % (len(left), len(right), result["index"] + 1))
+    for event in result["before"]:
+        print("  = " + format_event(event))
+    for side, event in (("<", result["left"]), (">", result["right"])):
+        print("  %s %s" % (side, format_event(event) if event else "(end of trace)"))
+    for tag, (i1, i2), (j1, j2) in result["blocks"][:10]:
+        names_l = ",".join(e["break"] for e in left[i1:i2][:6])
+        names_r = ",".join(e["break"] for e in right[j1:j2][:6])
+        print("  call sequence %s: left %d-%d [%s] right %d-%d [%s]" % (tag, i1 + 1, i2, names_l, j1 + 1, j2, names_r))
+    return 1
 
 
 # ---------------------------------------------------------------- debugger
@@ -478,7 +795,10 @@ class Debugger:
 
 class Tracer:
     def __init__(self, table, image_base, breaks, function_filter=None, dumps=(), max_events=200000,
-                 current_function=None):
+                 current_function=None, entry_only=False, symtab_at=(), tuples_at=()):
+        self.tuples_at = set(tuples_at)   # plain names whose entry events carry the tuple list
+        self.entry_only = entry_only      # no return breakpoints: faster, no "ret"
+        self.symtab_at = set(symtab_at)   # plain names whose entry events carry a symtab walk
         self.table, self.image_base = table, image_base
         self.breaks = breaks              # list of (public name, preferred VA)
         self.filter = function_filter
@@ -640,10 +960,20 @@ class Tracer:
                         event.setdefault("dump_strings", {})[text] = strings
                 except Exception as error:
                     event.setdefault("dump", {})[text] = repr(error)
+            if plain_name(name) in self.tuples_at:
+                try:
+                    event["tuples"] = model.tuple_list()
+                except Exception as error:
+                    event["tuples"] = repr(error)
+            if plain_name(name) in self.symtab_at:
+                try:
+                    event["symtab"] = [s for s in model.symtab() if "name" in s or "base" in s]
+                except Exception as error:
+                    event["symtab"] = repr(error)
             self.events.append(event)
         elif wanted:
             self.dropped += 1
-        if event is None:
+        if event is None or self.entry_only:
             return
         ret = stack[0]
         pending.append({"ret": ret, "esp": regs["esp"], "event": event, "decoder": decoder, "state": state})
@@ -674,6 +1004,9 @@ def compile_command(toolchain, source, flags, includes, out_dir):
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv[:1] == ["diff"]:
+        return diff_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--flags", default="/O2", help="cl options (one string)")
@@ -687,6 +1020,14 @@ def main(argv=None):
     parser.add_argument("--max-events", type=int, default=200000)
     parser.add_argument("--summary-lines", type=int, default=40)
     parser.add_argument("--toolchain", default="sp1")
+    parser.add_argument("--break-module", help="also break on every function public of the c2 object modules "
+                        "matching this regex (e.g. 'lower|tuple')")
+    parser.add_argument("--exclude", default="", help="comma-separated plain names left out of --break-module")
+    parser.add_argument("--entry-only", action="store_true", help="no return breakpoints (no 'ret'; faster)")
+    parser.add_argument("--symtab", default="", help="comma-separated break names whose entry events carry "
+                        "the c2 symbol table (symnum, kind, name, front-end number)")
+    parser.add_argument("--tuples", default="", help="comma-separated break names whose entry events carry "
+                        "the function's instruction tuples (opcode, destinations, sources)")
     args = parser.parse_args(argv)
     if os.name != "nt":
         print("c2_trace: requires Windows", file=sys.stderr)
@@ -700,7 +1041,14 @@ def main(argv=None):
         data = load_symbols(ROOT / "build/c2-trace")
         table = symbol_table(data["rows"])
         breaks = [resolve_name(name.strip(), table) for name in args.breaks.split(",") if name.strip()]
-        tracer = Tracer(table, data["image_base"], breaks, args.function, args.dump, args.max_events)
+        if args.break_module:
+            have = {va for _, va in breaks}
+            exclude = {plain_name(n) for n in args.exclude.split(",") if n}
+            breaks += [b for b in module_breaks(data["rows"], args.break_module, exclude) if b[1] not in have]
+        symtab_at = [plain_name(n) for n in args.symtab.split(",") if n]
+        tracer = Tracer(table, data["image_base"], breaks, args.function, args.dump, args.max_events,
+                        entry_only=args.entry_only, symtab_at=symtab_at,
+                        tuples_at=[plain_name(n) for n in args.tuples.split(",") if n])
         command = compile_command(toolchain, args.source, args.flags.split(), args.include, work)
         env = probe_toolchain.toolchain_environment(toolchain)
         if args.include:
