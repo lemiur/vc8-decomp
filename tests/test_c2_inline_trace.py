@@ -164,16 +164,88 @@ class Sites(unittest.TestCase):
 
 
 class LinkMode(unittest.TestCase):
-    def test_fastcall_decoder_names_an_entry_in_ecx(self):
+    def test_raw_gate_decoder_names_the_entry_of_the_context(self):
         mem = FakeMemory()
+        mem.put(0x60000, 0x70000)
         mem.put(0x70000 + it.ENTRY_NAME, 0x71000)
         mem.raw[0x71000] = b"?f@@YAXH@Z\0"
-        info, _ = it.FastcallDecoder().entry(model(mem), {"ecx": 0x70000, "edx": 3}, [0] * 8)
+        info, _ = it.RawConvGateDecoder().entry(model(mem), {"ecx": 0x60000}, [0] * 8)
         self.assertEqual(info["entry_name"], "?f@@YAXH@Z")
-        self.assertEqual(info["edx"], "0x00000003")
-        info, _ = it.FastcallDecoder().entry(model(mem), {"ecx": 0x33, "edx": 0}, [0] * 8)
-        self.assertNotIn("entry_name", info)
-        self.assertEqual(it.FastcallDecoder().exit(model(mem), {"eax": 0xFFFFFFFF}, None), {"ret": -1})
+        self.assertEqual(it.RawConvGateDecoder().exit(model(mem), {"eax": 0xFFFFFFFF}, None), {"ret": -1})
+
+    def _function(self, mem):
+        """Context 0x60000 -> entry 0x70000; tuple list: a kind-5 tuple, then the kind-0x18 tuple whose
+        formals are `this` (sym 0x82000) and `n` (sym 0x83000)."""
+        mem.put(0x60000, 0x70000, 0, 0x61000)
+        mem.put(0x61000, 0x62000)
+        mem.put(0x62000 + 0x1C, 0x63000)
+        mem.put(0x63000, 0x64000)
+        mem.raw[0x63008] = b"\x05"
+        mem.raw[0x64008] = b"\x18"
+        mem.put(0x64000 + 0x24, 0x65000)
+        for leaf, sym, nxt, name, typ in ((0x65000, 0x82000, 0x66000, b"_this", 0x1004),
+                                          (0x66000, 0x83000, 0, b"_n", 0x2004)):
+            mem.put(leaf, nxt)
+            mem.raw[leaf + 8] = b"\x01"
+            mem.raw[leaf + 0xA] = struct.pack("<H", typ)
+            mem.put(leaf + 0x18, sym)
+            mem.put(sym + 8, sym)
+            mem.put(sym, sym + 0x100)
+            mem.put(sym + 0x104, sym + 0x200)
+            mem.raw[sym + 0x200] = name + b"\0"
+        mem.put(0x70000 + it.ENTRY_NAME, 0x71000)
+        mem.raw[0x71000] = b"?f@C@@QAEXH@Z\0"
+
+    def test_dead_map_and_flex_decoders(self):
+        mem = FakeMemory()
+        self._function(mem)
+        info, state = it.DeadMapDecoder().entry(model(mem), {}, [0, 0x60000])
+        self.assertEqual([f["name"] for f in info["formals"]], ["_this", "_n"])
+        self.assertEqual(info["formals"][1]["size"], 4)
+        mem.put(0x70000 + it.ENTRY_DEAD, 0xFFFFFFFB)
+        self.assertEqual(it.DeadMapDecoder().exit(model(mem), {}, state), {"dead_map": 0xFFFFFFFB})
+        mem.put(0x70000 + it.ENTRY_FLEX, 1 | 4 << 1)          # parameter 0 in map[4]
+        mem.put(0x70000 + it.ENTRY_CONV, 0x14)
+        _, state = it.FlexDecoder().entry(model(mem), {}, [0, 0x60000])
+        out = it.FlexDecoder().exit(model(mem), {}, state)
+        self.assertEqual(out["conv"], 0x14)
+        self.assertEqual(out["flex"], 9)
+
+    def test_build_conventions(self):
+        this = {"name": "_this", "type": "0x1004", "size": 4, "sym": 1, "base": 1}
+        n = {"name": "_n", "type": "0x2004", "size": 4, "sym": 2, "base": 2}
+        k = {"name": "_k", "type": "0x2004", "size": 4, "sym": 3, "base": 3}
+        f = "?f@C@@QAEXHH@Z"
+        events = [
+            {"break": "MdmAllowFlexParams", "entry_name": f, "ret": 1},
+            {"break": "MscSetDeadParamMap", "entry_name": f, "hidden": False, "formals": [this, n, k],
+             "dead_map": 0xFFFFFFFF & ~(1 << 2)},                  # parameter number 2 (_n) dead
+            {"break": "WpaGenConstParamInfoUse", "entry_name": f, "after": [
+                {"number": 2, "kind": 1, "value": 7}, {"number": 0xFF, "kind": 1, "value": 1}]},
+            {"break": "MdmFlexParams", "entry_name": f, "flex": 1 | 4 << 1 | 3 << 4, "flex_xmm": 0,
+             "conv": 0x14, "stack_bytes": 0, "hidden": False, "formals": [this, k],
+             "flex_map": [None, "eax", "ecx", "edx", "esi", "edi", "ebp", "ebx"]},
+            {"break": "MdmAllowFlexParams", "entry_name": "?g@@YAXH@Z", "ret": 0, "globopt": 1, "wvm_safe": 0,
+             "flags20": 0x2000, "flags50": 0},
+            {"break": "MdmFlexParams", "entry_name": "?g@@YAXH@Z", "flex": 0, "conv": 0x10, "stack_bytes": 4,
+             "formals": [n]},
+        ]
+        sites = [{"callee": f, "decision": "not-inlined"}, {"callee": "?g@@YAXH@Z", "decision": "inlined"}]
+        conv = {c["function"]: c for c in it.build_conventions(events, sites)}
+        rec = conv[f]
+        self.assertTrue(rec["custom"])
+        self.assertEqual([p["location"] for p in rec["params"]], ["ESI", "removed", "EDX"])
+        self.assertEqual(rec["params"][1]["const"], {"value": 7, "kind": "int"})
+        self.assertEqual(rec["ret_pop"], 0)
+        g = conv["?g@@YAXH@Z"]
+        self.assertFalse(g["custom"])
+        self.assertIn("0x2000", g["refused"])
+        self.assertEqual(g["ret_pop"], 4)
+        self.assertEqual(g["params"][0]["location"], "stack")
+        self.assertTrue(it.function_status("?g@@YAXH@Z", list(conv.values()), sites).startswith(
+            "inlined everywhere: no convention"))
+        self.assertTrue(it.function_status(f, list(conv.values()), sites).startswith("out of line"))
+        self.assertEqual(len(it.format_conventions(list(conv.values()))), 1)
 
     def test_source_and_link_rsp_are_exclusive(self):
         with self.assertRaises(SystemExit):
@@ -187,7 +259,7 @@ class LinkMode(unittest.TestCase):
             self.skipTest("no c2 symbol cache")
         import json
         table = ct.symbol_table(json.loads(cache.read_text(encoding="utf-8"))["rows"])
-        for name in it.LTCG_BREAKS:
+        for name in it.LTCG_BREAKS + it.CONV_BREAKS:
             self.assertTrue(ct.resolve_name(name, table)[1])
 
 

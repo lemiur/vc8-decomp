@@ -9,7 +9,11 @@ Usage:
 With --link-rsp the traced process is link.exe on that response file (a /LTCG
 link of /GL objects): link.exe loads the same c2.dll and runs the link-time
 code generator in-process, so the same breakpoints see the whole-program
-inliner. The response file's folder is the working directory.
+inliner. The response file's folder is the working directory. It also decodes,
+for every function the link compiles, the link-time convention: the register
+or stack slot of each parameter, the dead parameters removed and the constant
+parameters folded, or why c2 refused a custom convention (<out>.extra.json
+"conventions").
 
 For every call site c2 looks at while it compiles a function, one JSON object:
 caller, callee, depth (1 = a call written in the caller, 2 = a call inside an
@@ -24,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import struct
 import sys
 from pathlib import Path
 
@@ -76,10 +81,13 @@ CONST_COUNT = 45
 BREAKS = ("InlCallTupleIsCandidate", "InlMightInlineEntry", "ConsiderCandidate", "ShouldInlineCallTuple",
           "InlCallGraphDecision", "InlBenefit", "InlBadCandidate", "InlCheckInlineeAttribs",
           "ShouldInlineInlinee", "InlineeIsTooBig", "InlineInlinee", "WarnForFailedInline", "InlCollectInfo")
-# The link-time code generator's whole-program parameter passes (misc.obj, cgi): logged with --link-rsp
-# as the function being compiled, ECX/EDX and the return value; their arguments are not decoded further.
-LTCG_BREAKS = ("MscAllowCallingConventionChange", "MscSetDeadParamMap", "MscRemoveDeadArguments",
-               "MscParamIsDead", "CgiRemoveConstArg")
+# The link-time parameter passes logged raw with --link-rsp (under --function): the convention gate the
+# constant-parameter pass asks, the caller-side dead-argument removal, and the inliner's dead-parameter query.
+LTCG_BREAKS = ("MscAllowCallingConventionChange", "MscRemoveDeadArguments", "MscParamIsDead")
+# The routines whose results are decoded into per-function conventions (every function, never filtered or
+# capped): MdmAllowFlexParams (the custom-convention gate), MscSetDeadParamMap (the dead-parameter map),
+# WpaGenConstParamInfoUse (constant parameters) and MdmFlexParams (the register assignment).
+CONV_BREAKS = ("MdmAllowFlexParams", "MscSetDeadParamMap", "WpaGenConstParamInfoUse", "MdmFlexParams")
 
 
 def flag_names(value, table=FLAGS50):
@@ -228,22 +236,356 @@ class GenericSiteDecoder(SiteDecoder):
         return regs[index] if kind == "reg" else stack[index]
 
 
-class FastcallDecoder(c2_trace.Decoder):
-    """A __fastcall routine (ECX, EDX): both arguments raw and, when ECX names a c2 entry (+4 decorated
-    name), that name; the exit logs ret."""
+# ------------------------------------------------------------ link-time conventions
+
+# A function context (the argument of the dop2 passes): +0 its entry, +4 nonzero when the function has a
+# hidden parameter ahead of the formals (it takes parameter number 1 in the dead map and the constant
+# records), +8 -> +0 -> +0x1C the tuple list; the tuple of kind 0x18 holds the formal parameter leaves at
+# +0x24 (leaf: +0 next, +8 kind byte, +0xA type word, +0x14 flag byte, +0x18 c2 symbol).
+# Entry fields read here (pinned c2.dll): +0x20 & 0x1C the declared convention, +0x44 the bytes of stack
+# parameters (MscProcessParams), +0x88 call-graph node (node+0x24: constant-parameter records), +0xB4 the
+# custom (flex) convention: bit 0 = allowed (MdmAllowFlexParams), 3 bits per parameter at 3n+1 = an index into
+# _MdmFlexParamMap (0 = stack), +0xB8 4 bits per parameter at 4n = XMM register - 0x53 (MdmAllocateXmmFlexParam),
+# +0xBC the dead-parameter map (MscSetDeadParamMap: bit 0 = valid, bit k clear = parameter number k removed).
+ENTRY_CONV, ENTRY_STACK_BYTES, ENTRY_FLEX, ENTRY_FLEX_XMM, ENTRY_DEAD = 0x20, 0x44, 0xB4, 0xB8, 0xBC
+CONVENTIONS = {0x00: "cdecl", 0x04: "fastcall", 0x10: "stdcall", 0x14: "thiscall"}
+CALLEE_POPS = {"fastcall", "stdcall", "thiscall"}
+FLEX_REGS_FALLBACK = (0, 1, 2, 3, 7, 8, 6, 4)   # _MdmFlexParamMap: none, eax, ecx, edx, esi, edi, ebp, ebx
+# The constant record (WpaWpaParamIsConst, WpaEqualConstInfo, WpaGenConstParamInfoUse): 24 bytes each,
+# +0 parameter number (0 ends the array, 0xFF = dropped), +8 kind byte, +0x10/+0x14 value.
+CONST_RECORD, CONST_KINDS = 24, {1: "int", 2: "float", 3: "function address", 4: "global address", 5: "global address"}
+
+
+def u8(model, address):
+    return model.bytes(address, 1)[0]
+
+
+def u16(model, address):
+    raw = model.bytes(address, 2)
+    return raw[0] | raw[1] << 8
+
+
+def entry_name(model, entry):
+    return model.cstr(model.u32(entry + ENTRY_NAME), 512) if entry else None
+
+
+def formal_leaves(model, ctx):
+    """The formal parameter leaves of the function in context CTX, in order (MdmFlexParams' walk)."""
+    tup = model.u32(model.u32(model.u32(model.u32(ctx + 8)) + 0x1C))
+    for _ in range(100000):
+        if not tup or u8(model, tup + 8) == 0x18:
+            break
+        tup = model.u32(tup)
+    out, leaf = [], model.u32(tup + 0x24) if tup else 0
+    while leaf and len(out) < 64:
+        out.append(leaf)
+        leaf = model.u32(leaf)
+    return out
+
+
+def formal_info(model, leaf):
+    """One formal: its c2 symbol, front-end name and type word (high nibble = class, low 12 bits = bytes)."""
+    kind, typ, sym = u8(model, leaf + 8), u16(model, leaf + 0xA), model.u32(leaf + 0x18)
+    info = {"kind": kind, "type": "0x%04X" % typ, "size": typ & 0xFFF, "sym": sym}
+    if sym and kind in (1, 2):
+        base = model.u32(sym + 8) or sym
+        info["base"] = base
+        desc = model.u32(base)
+        name = model.cstr(model.u32(desc + 4), 128) if desc else None
+        if name:
+            info["name"] = name
+        tup = model.u32(sym + 0x14)
+        info["skip"] = bool(tup and model.u32(tup + 4) == 0x2DC)   # MdmParamNum does not count these
+    return info
+
+
+class FlexAllowDecoder(c2_trace.Decoder):
+    """MdmAllowFlexParams(ECX = context); returns 1 and sets entry+0xB4 = 1 when the function may get a
+    custom convention. Refuses (in this order) without global optimization, under /clr:safe, entry+0x20 bits
+    0x2400, entry+0x50 bit 4 (set by PogoInlineSplitDataSet), and when MscInlineAsmAssumesCallingConvention
+    holds (a __fastcall/__thiscall function whose tuple list has an instruction tuple, i.e. __asm)."""
 
     def entry(self, model, regs, stack):
-        info = {"ecx": "0x%08X" % regs["ecx"], "edx": "0x%08X" % regs["edx"]}
-        try:
-            name = model.cstr(model.u32(regs["ecx"] + ENTRY_NAME), 512) if regs["ecx"] > 0x10000 else None
-        except Exception:
-            name = None
-        if name and name[:1] in "?_@":
-            info["entry_name"] = name
-        return info, None
+        entry = model.u32(regs["ecx"])
+        return {"entry_name": entry_name(model, entry), "flags20": model.u32(entry + ENTRY_FLAGS20),
+                "flags50": model.u32(entry + ENTRY_FLAGS50), "globopt": read_global(model, "_Globopt_flag"),
+                "wvm_safe": read_global(model, "_FWvmSafe")}, None
 
     def exit(self, model, regs, state):
         return {"ret": signed(regs["eax"])}
+
+
+class DeadMapDecoder(c2_trace.Decoder):
+    """MscSetDeadParamMap([esp+4] = context); ret 4. Under the same gate as MdmAllowFlexParams it sets
+    entry+0xBC to -1 and, walking the formals with k = 1 (2 with a hidden parameter), clears bit k of each
+    formal whose symbol is unreferenced and unlinks it from the formal list; callers then drop that argument
+    (MscRemoveDeadArguments). The entry logs every formal, the exit the map."""
+
+    def entry(self, model, regs, stack):
+        ctx = stack[1]
+        entry = model.u32(ctx)
+        formals = [formal_info(model, leaf) for leaf in formal_leaves(model, ctx)]
+        return {"entry_name": entry_name(model, entry), "hidden": bool(model.u32(ctx + 4)),
+                "formals": formals}, {"entry": entry}
+
+    def exit(self, model, regs, state):
+        return {"dead_map": model.u32(state["entry"] + ENTRY_DEAD)}
+
+
+def const_records(model, entry):
+    """The constant-parameter records of ENTRY (call-graph node +0x24)."""
+    node = model.u32(entry + ENTRY_CGNODE)
+    array = model.u32(node + 0x24) if node else 0
+    out = []
+    for i in range(64):
+        if not array:
+            break
+        rec = array + CONST_RECORD * i
+        number = u8(model, rec)
+        if number == 0:
+            break
+        kind = u8(model, rec + 8)
+        lo, hi = model.u32(rec + 0x10), model.u32(rec + 0x14)
+        item = {"number": number, "kind": kind}
+        if kind == 1:
+            value = hi << 32 | lo
+            item["value"] = value - (1 << 64) if value >> 63 else value
+        elif kind == 2:
+            item["value_ptr"] = "0x%08X" % lo
+            try:
+                item["value"] = struct.unpack("<d", model.bytes(lo, 8))[0]
+            except (OSError, struct.error, TypeError):
+                pass
+        else:   # the address of a global: lo is its front-end descriptor (+4 decorated name)
+            item["value_ptr"] = "0x%08X" % lo
+            try:
+                name = model.cstr(model.u32(lo + 4), 512) if lo > 0x10000 else None
+                if name:
+                    item["symbol"] = name
+            except OSError:
+                pass
+        out.append(item)
+    return out
+
+
+class ConstParamDecoder(c2_trace.Decoder):
+    """WpaGenConstParamInfoUse([esp+4] = context); ret 4. Uses the whole-program constant-parameter records
+    (call-graph node +0x24) to replace the uses of each constant formal; it drops the records (0xFF) it
+    cannot use and empties the array when MscAllowCallingConventionChange refuses and the parameters
+    cannot be reordered. The exit logs the surviving records."""
+
+    def entry(self, model, regs, stack):
+        entry = model.u32(stack[1])
+        return {"entry_name": entry_name(model, entry), "before": const_records(model, entry)}, {"entry": entry}
+
+    def exit(self, model, regs, state):
+        return {"after": const_records(model, state["entry"])}
+
+
+class FlexDecoder(c2_trace.Decoder):
+    """MdmFlexParams([esp+4] = context); ret 4. Runs after register allocation (dop2_CodegenUpdate) when
+    entry+0xB4 bit 0 is set: each formal whose symbol was given a register keeps it, entry+0xB4/+0xB8
+    record the register per parameter number (MdmParamNum: the position in the remaining formal list), and
+    MscProcessParams recomputes entry+0x44 for the parameters left on the stack. Callers compiled later
+    pass the arguments by that record. The exit logs the record and the formals it numbers."""
+
+    def entry(self, model, regs, stack):
+        ctx = stack[1]
+        return {"entry_name": entry_name(model, model.u32(ctx))}, {"ctx": ctx}
+
+    def exit(self, model, regs, state):
+        ctx = state["ctx"]
+        entry = model.u32(ctx)
+        table = model.sym("_MdmFlexParamMap")
+        flex_map = [model.u32(table + 4 * i) for i in range(8)] if table is not None else list(FLEX_REGS_FALLBACK)
+        return {"flex": model.u32(entry + ENTRY_FLEX), "flex_xmm": model.u32(entry + ENTRY_FLEX_XMM),
+                "conv": model.u32(entry + ENTRY_CONV) & 0x1C, "stack_bytes": model.u32(entry + ENTRY_STACK_BYTES),
+                "flags20": model.u32(entry + ENTRY_FLAGS20), "flags50": model.u32(entry + ENTRY_FLAGS50),
+                "hidden": bool(model.u32(ctx + 4)),
+                "flex_map": [model.reg_name(r) if r else None for r in flex_map],
+                "xmm_names": [model.reg_name(0x53 + i) for i in range(16)],
+                "formals": [formal_info(model, leaf) for leaf in formal_leaves(model, ctx)]}
+
+
+class RawConvGateDecoder(c2_trace.Decoder):
+    """MscAllowCallingConventionChange(ECX = context): the convention gate (MdmAllowFlexParams' checks)."""
+
+    def entry(self, model, regs, stack):
+        return {"entry_name": entry_name(model, model.u32(regs["ecx"]))}, None
+
+    def exit(self, model, regs, state):
+        return {"ret": signed(regs["eax"])}
+
+
+class RawRemoveDeadArgsDecoder(c2_trace.Decoder):
+    """MscRemoveDeadArguments([esp+4] = context of the caller): drops the arguments of every direct call
+    whose callee's dead map (entry+0xBC) clears them."""
+
+    def entry(self, model, regs, stack):
+        return {"entry_name": entry_name(model, model.u32(stack[1]))}, None
+
+    def exit(self, model, regs, state):
+        return {"ret": signed(regs["eax"])}
+
+
+class RawParamIsDeadDecoder(c2_trace.Decoder):
+    """MscParamIsDead(ESI = parameter number, [esp+4] = call tuple): the inliner's query of the callee's
+    dead map (InlBenefit)."""
+
+    def entry(self, model, regs, stack):
+        callee = callee_of_tuple(model.u32, stack[1])
+        return {"number": regs["esi"], "entry_name": entry_name(model, callee)}, None
+
+    def exit(self, model, regs, state):
+        return {"ret": signed(regs["eax"])}
+
+
+def declared_location(conv, index, formal, formals):
+    """Where the declared convention passes formal INDEX: thiscall `this` in ECX, fastcall the first two
+    integer/pointer formals of at most 4 bytes in ECX and EDX, the rest on the stack."""
+    if conv == "thiscall" and index == 0:
+        return "ECX"
+    if conv == "fastcall":
+        small = [i for i, f in enumerate(formals) if (f.get("size") or 0) <= 4 and int(f.get("type") or "0", 16) >> 12 != 5]
+        if index in small[:2]:
+            return ("ECX", "EDX")[small.index(index)]
+    return "stack"
+
+
+def refusal_reason(ev):
+    """Why MdmAllowFlexParams refused, from the fields it tests, in its order."""
+    if not ev.get("globopt"):
+        return "no global optimization (_Globopt_flag = 0)"
+    if ev.get("wvm_safe"):
+        return "/clr:safe (_FWvmSafe)"
+    flags20, flags50 = ev.get("flags20", 0), ev.get("flags50", 0)
+    if flags20 & 0x2000:
+        return ("entry+0x20 bit 0x2000: referenced from outside the call graph (seen on /INCLUDE'd, virtual, "
+                "member-pointer and initializer-table functions)")
+    if flags20 & 0x400:
+        return "entry+0x20 bit 0x400"
+    if flags50 & 4:
+        return "entry+0x50 bit 4: recursive (seen on every directly or mutually recursive function)"
+    return "inline asm assumes the declared __fastcall/__thiscall convention (MscInlineAsmAssumesCallingConvention)"
+
+
+def build_conventions(events, sites=()):
+    """One record per compiled function from the CONV_BREAKS events (docs/c2-inline-trace.md)."""
+    by_fn, order = {}, []
+    for ev in events:
+        if ev["break"] not in CONV_BREAKS:
+            continue
+        name = ev.get("entry_name") or ev.get("function")
+        if name not in by_fn:
+            by_fn[name] = {}
+            order.append(name)
+        by_fn[name].setdefault(ev["break"], []).append(ev)
+    site_counts = {}
+    for site in sites:
+        counts = site_counts.setdefault(site.get("callee"), {"inlined": 0, "not_inlined": 0})
+        counts["inlined" if site["decision"] == "inlined" else "not_inlined"] += 1
+    return [convention(name, by_fn[name], site_counts.get(name)) for name in order]
+
+
+def convention(name, evs, counts):
+    flex = evs.get("MdmFlexParams", [{}])[-1]
+    dead_ev = evs.get("MscSetDeadParamMap", [{}])[-1]
+    allow = evs.get("MdmAllowFlexParams", [None])[-1]
+    consts = evs.get("WpaGenConstParamInfoUse", [{}])[-1]
+    hidden = bool(dead_ev.get("hidden", flex.get("hidden")))
+    base = 2 if hidden else 1   # the parameter number of the first formal
+    formals = dead_ev.get("formals") or flex.get("formals") or []
+    dead_map = dead_ev.get("dead_map")
+    dead_valid = dead_map is not None and bool(dead_map & 1)
+    const_by_number = {c["number"]: c for c in consts.get("after", []) if c["number"] not in (0, 0xFF)}
+    flex_word, xmm_word = flex.get("flex"), flex.get("flex_xmm", 0)
+    allowed = bool(flex_word & 1) if flex_word is not None else bool(allow and allow.get("ret") == 1)
+    flex_map = flex.get("flex_map") or []
+    remaining, number = {}, 0   # MdmParamNum over the formals left after the dead ones were unlinked
+    for f in flex.get("formals", []):
+        if f.get("skip"):
+            continue
+        remaining[f.get("base") or f.get("sym")] = number
+        number += 1
+    conv = None
+    if "conv" in flex:
+        conv = CONVENTIONS.get(flex["conv"], "conv:0x%X" % flex["conv"])
+    params = []
+    for index, f in enumerate(formals):
+        bit = index + base
+        dead = dead_valid and bit < 32 and not dead_map & (1 << bit)
+        const = const_by_number.get(bit)
+        p = {"index": index, "name": f.get("name"), "type": f.get("type"), "size": f.get("size"),
+             "dead": bool(dead), "const": None, "location": None}
+        if const is not None:
+            p["const"] = {k: const[k] for k in ("value", "symbol", "value_ptr") if k in const}
+            p["const"]["kind"] = CONST_KINDS.get(const["kind"], const["kind"])
+        key = f.get("base") or f.get("sym")
+        if dead:
+            p["location"] = "removed"
+        elif key in remaining and flex_word is not None:
+            n = remaining[key]
+            field = (flex_word >> (3 * n + 1)) & 7 if allowed and 3 * n + 1 < 32 else 0
+            xmm = (xmm_word >> (4 * n)) & 0xF if allowed and 4 * n < 32 else 0
+            if field:
+                p["location"] = (flex_map[field] or "?").upper() if field < len(flex_map) else "map%d" % field
+            elif xmm:
+                names = flex.get("xmm_names") or []
+                p["location"] = (names[xmm] if xmm < len(names) else "reg%d" % (xmm + 0x53)).upper()
+            else:
+                p["location"] = "stack"
+        if not allowed and not dead:   # the declared convention
+            p["location"] = declared_location(conv, index, f, formals)
+        params.append(p)
+    rec = {"function": name, "custom": allowed, "declared": conv, "params": params,
+           "stack_bytes": flex.get("stack_bytes"),
+           "ret_pop": (flex.get("stack_bytes") if conv in CALLEE_POPS else 0) if conv else None,
+           "hidden_param": hidden, "refused": None,
+           "dead_map": None if dead_map is None else "0x%08X" % dead_map,
+           "flex": None if flex_word is None else "0x%08X" % flex_word}
+    if xmm_word:
+        rec["flex_xmm"] = "0x%08X" % xmm_word
+    if allow is not None and allow.get("ret") == 0:
+        rec["refused"] = refusal_reason(allow)
+    elif not allowed and allow is None:
+        rec["refused"] = "MdmAllowFlexParams not called (no global optimization, or entry+0xB4 preset)"
+    if counts:
+        rec["sites"] = counts
+        rec["inlined_everywhere"] = counts["not_inlined"] == 0
+    return rec
+
+
+def function_status(name, conventions, sites):
+    """For --function NAME: whether the link kept the function NAME out of line."""
+    calls = [s for s in sites if s.get("callee") == name]
+    inlined = sum(1 for s in calls if s["decision"] == "inlined")
+    if calls and inlined == len(calls):
+        text = "inlined everywhere: no convention (%d call sites, all inlined)" % inlined
+        rec = next((c for c in conventions if c["function"] == name), None)
+        if rec is not None and rec["custom"]:
+            text += "; c2 had recorded %s when it compiled the body ahead of its callers, unused" % (
+                " ".join("%s=%s" % (p.get("name") or "#%d" % p["index"], p["location"]) for p in rec["params"]))
+        return text
+    if not any(c["function"] == name for c in conventions):
+        return "not compiled by the link: no convention"
+    return "out of line (%d of %d traced call sites inlined)" % (inlined, len(calls))
+
+
+def format_conventions(conventions, limit=40):
+    lines = []
+    shown = [c for c in conventions if c["custom"] and any(
+        p["location"] not in ("stack", None) or p["dead"] or p["const"] is not None for p in c["params"])]
+    for c in shown[:limit]:
+        parts = []
+        for p in c["params"]:
+            text = "%s=%s" % (p.get("name") or "#%d" % p["index"], p["location"] or "?")
+            if p["const"] is not None:
+                text += "(const %s)" % p["const"].get("value", p["const"].get("symbol"))
+            parts.append(text)
+        lines.append("%-56s %-8s ret %-3s %s" % (c["function"][:56], c["declared"], c["ret_pop"], " ".join(parts)))
+    if len(shown) > limit:
+        lines.append("... %d more" % (len(shown) - limit))
+    return lines
 
 
 class CollectInfoDecoder(c2_trace.Decoder):
@@ -324,18 +666,67 @@ class ProbeDecoder(c2_trace.Decoder):
         return self.read(model, regs), None
 
 
+# Where each site routine holds its call tuple (the decoders above), for --function's callee match.
+SITE_TUPLE = {
+    "InlCallTupleIsCandidate": lambda m, r, s: s[1],
+    "ConsiderCandidate": lambda m, r, s: m.u32(s[1] + 4) if s[1] else 0,
+    "ShouldInlineCallTuple": lambda m, r, s: m.u32(r["edi"] + 4) if r["edi"] else 0,
+    "InlCallGraphDecision": lambda m, r, s: m.u32(s[2] + 4) if s[2] else 0,
+    "InlBenefit": lambda m, r, s: r["ecx"], "InlBadCandidate": lambda m, r, s: r["eax"],
+    "ShouldInlineInlinee": lambda m, r, s: r["edx"], "InlineInlinee": lambda m, r, s: r["ecx"],
+}
+
+
 class InlineTracer(c2_trace.Tracer):
     """c2_trace's Tracer; probe breakpoints (mid-function) log registers and
-    plant no return breakpoint."""
+    plant no return breakpoint. --function keeps the sites compiled in a
+    matching function and the sites whose callee matches; the convention
+    routines are always logged and do not count against --max-events.
+    Events lost to --max-events are counted per routine (dropped_by)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dropped_by, self.cg_wanted = {}, {}
+
+    def _wanted_by_callee(self, dbg, model, regs, tid, name):
+        if self.filter is None:
+            return False
+        if name.startswith("probe:"):
+            return self.cg_wanted.get(tid, False)
+        if name not in SITE_TUPLE:
+            return False
+        try:
+            function = self.current_function(model)
+            if function is not None and self.filter in function:
+                wanted = False
+            else:
+                stack = [dbg.read_u32(regs["esp"] + 4 * i) for i in range(4)]
+                callee = entry_name(model, callee_of_tuple(model.u32, SITE_TUPLE[name](model, regs, stack)))
+                wanted = bool(callee and self.filter in callee)
+        except (OSError, TypeError):
+            wanted = False
+        if name == "InlCallGraphDecision":
+            self.cg_wanted[tid] = wanted
+        return wanted
 
     def _on_entry(self, dbg, model, regs, tid, address, bp, bps, pending):
-        if not bp["entry"].startswith("probe:"):
-            return super()._on_entry(dbg, model, regs, tid, address, bp, bps, pending)
-        saved, self.entry_only = self.entry_only, True
+        name = c2_trace.plain_name(bp["entry"])
+        conv = name in CONV_BREAKS
+        unfiltered = conv or self._wanted_by_callee(dbg, model, regs, tid, name)
+        saved = self.entry_only, self.filter, self.max_events
+        if name.startswith("probe:"):
+            self.entry_only = True
+        if unfiltered:
+            self.filter = None
+        if conv:
+            self.max_events = float("inf")
+        before = self.dropped
         try:
             return super()._on_entry(dbg, model, regs, tid, address, bp, bps, pending)
         finally:
-            self.entry_only = saved
+            self.entry_only, self.filter, self.max_events = saved
+            if self.dropped > before:
+                self.dropped_by[name] = self.dropped_by.get(name, 0) + self.dropped - before
 
 
 def probe_breaks(table):
@@ -359,8 +750,15 @@ def install_decoders():
         "InlineInlinee": lambda: GenericSiteDecoder(("reg", "ecx")),
         "InlCollectInfo": CollectInfoDecoder,
     })
-    for name in LTCG_BREAKS:
-        c2_trace.DECODERS[name] = FastcallDecoder
+    c2_trace.DECODERS.update({
+        "MscAllowCallingConventionChange": RawConvGateDecoder,
+        "MscRemoveDeadArguments": RawRemoveDeadArgsDecoder,
+        "MscParamIsDead": RawParamIsDeadDecoder,
+        "MdmAllowFlexParams": FlexAllowDecoder,
+        "MscSetDeadParamMap": DeadMapDecoder,
+        "WpaGenConstParamInfoUse": ConstParamDecoder,
+        "MdmFlexParams": FlexDecoder,
+    })
 
 
 # ------------------------------------------------------------ site assembly
@@ -504,11 +902,13 @@ def main(argv=None):
     parser.add_argument("--timeout", type=int, default=600, help="seconds before the trace is abandoned")
     parser.add_argument("--flags", default="/O2", help="cl options (one string)")
     parser.add_argument("-I", "--include", action="append", default=[], type=Path)
-    parser.add_argument("--function", help="only sites in functions whose decorated name contains this")
+    parser.add_argument("--function", help="only sites in functions, or of callees, whose decorated name "
+                        "contains this (the --link-rsp conventions always cover every function)")
     parser.add_argument("--out", type=Path, required=True, help="JSONL, one call site per line")
     parser.add_argument("--raw", type=Path, help="also write the raw routine events (JSONL)")
     parser.add_argument("--toolchain", default="sp1")
-    parser.add_argument("--max-events", type=int, default=200000)
+    parser.add_argument("--max-events", type=int, default=2000000, help="cap on the logged inliner events "
+                        "(the convention events are not capped); events over it are counted as dropped")
     args = parser.parse_args(argv)
     if (args.source is None) == (args.link_rsp is None):
         parser.error("give one of --source and --link-rsp")
@@ -527,7 +927,7 @@ def main(argv=None):
         breaks = [c2_trace.resolve_name(name, table) for name in BREAKS]
         breaks += probe_breaks(table)
         if args.link_rsp:
-            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS]
+            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS + CONV_BREAKS]
         tracer = InlineTracer(table, data["image_base"], breaks, args.function, (), args.max_events)
         env = probe_toolchain.toolchain_environment(toolchain)
         if args.link_rsp:
@@ -542,7 +942,7 @@ def main(argv=None):
     except (c2_trace.TraceError, OSError, ValueError, KeyError) as error:
         print("c2_inline_trace: " + str(error), file=sys.stderr)
         return 1
-    sites = build_sites(tracer.events)
+    sites = build_sites([e for e in tracer.events if e["break"] not in LTCG_BREAKS + CONV_BREAKS])
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", encoding="utf-8") as stream:
         for site in sites:
@@ -552,16 +952,45 @@ def main(argv=None):
             for event in tracer.events:
                 stream.write(json.dumps(event, sort_keys=True) + "\n")
     extras = args.out.with_suffix(".extra.json")
-    params = [{k: e.get(k) for k in ("break", "function", "entry_name", "ecx", "edx", "ret") if k in e}
+    params = [{k: e.get(k) for k in ("break", "function", "entry_name", "number", "ret") if k in e}
               for e in tracer.events if e["break"] in LTCG_BREAKS]
+    extra = {"consts": CAPTURED_CONSTS, "param_passes": params, "dropped": tracer.dropped,
+             "dropped_by": tracer.dropped_by, "events": len(tracer.events)}
+    conventions = []
+    if args.link_rsp:
+        conventions = build_conventions(tracer.events, sites)
+        extra["conventions"] = conventions
+        if args.function:
+            extra["function_status"] = {name: function_status(name, conventions, sites)
+                                        for name in matching_names(args.function, conventions, sites)}
     with extras.open("w", encoding="utf-8") as stream:
-        json.dump({"consts": CAPTURED_CONSTS, "param_passes": params, "dropped": tracer.dropped}, stream,
-                  indent=1, sort_keys=True)
-    print("%s exit %d; %d call sites -> %s (output: %s; constants and parameter passes: %s)" % (
+        json.dump(extra, stream, indent=1, sort_keys=True)
+    print("%s exit %d; %d call sites -> %s (output: %s; constants, conventions and parameter passes: %s)" % (
         "link.exe" if args.link_rsp else "cl.exe", returncode, len(sites), args.out, log_path, extras))
+    if tracer.dropped:
+        print("WARNING: %d events dropped over --max-events %d: %s" % (
+            tracer.dropped, args.max_events, ", ".join("%s %d" % kv for kv in sorted(tracer.dropped_by.items()))))
     for line in format_sites(sites):
         print(line)
+    if args.link_rsp:
+        custom = sum(1 for c in conventions if c["custom"])
+        print("conventions: %d functions compiled, %d with a custom convention, %d refused; registers, dead and "
+              "constant parameters:" % (len(conventions), custom, sum(1 for c in conventions if c["refused"])))
+        for line in format_conventions(conventions):
+            print(line)
+        for name, status in extra.get("function_status", {}).items():
+            print("%s: %s" % (name, status))
     return 0 if returncode == 0 else 3
+
+
+def matching_names(text, conventions, sites):
+    """The decorated names --function TEXT names: itself when it is a full name, else every compiled or
+    called function containing it (at most 20)."""
+    names = {c["function"] for c in conventions} | {s.get("callee") for s in sites}
+    names.discard(None)
+    if text in names or text.startswith("?"):
+        return [text]
+    return sorted(n for n in names if text in n)[:20]
 
 
 def format_sites(sites, limit=60):

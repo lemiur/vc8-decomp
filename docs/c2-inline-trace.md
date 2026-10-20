@@ -30,11 +30,62 @@ one; the tracer slides the breakpoints to wherever it loads). Exit 3 means link.
 Under `/LTCG` c2 runs `InlInitLtcgSetting`, and the constants differ from a plain compile's: SpeedLimit **84**
 (74 plain), FoldCmpSpeedWeight 35 (30), OneCallSizeAdj1/4 45, FewCallSizeAdj 5; SizeLimit stays 9 (`_Ltcg` = 1).
 `_InlCurConsts` at the first `InlCallGraphDecision` is written with the call-graph counts to `<out>.extra.json`
-(`consts`), in both modes. With `--link-rsp` the same file has `param_passes`: every call of
-`MscAllowCallingConventionChange`, `MscSetDeadParamMap`, `MscRemoveDeadArguments`, `MscParamIsDead` and
-`CgiRemoveConstArg` while a `--function` match is compiled, with ECX, EDX, the return value and, when ECX is a
-c2 entry, its decorated name. Their arguments beyond that are not decoded yet: they say that the pass ran on
-the function and what it returned, not which parameter it removed.
+(`consts`), in both modes.
+
+With `--link-rsp`, `--function NAME` keeps the sites compiled in a function whose decorated name contains NAME
+**and** the sites whose callee contains it; without it every site of the link is kept (a 33-object link: about
+25k events, 17 s). `--max-events` (default 2,000,000) caps the inliner events only; `extra.json` reports
+`events`, `dropped` and `dropped_by` (per routine) and the tool prints a warning when anything was dropped.
+
+### Link-time conventions (`extra.json` `conventions`)
+
+Every function the link compiles (never filtered by `--function`, never capped) gets one record, decoded from
+c2's own data when four routines return:
+
+| routine (when) | decoded |
+|---|---|
+| `MdmAllowFlexParams` (MscProcessParams, after Lower) | the custom-convention gate: sets entry+0xB4 = 1 or refuses |
+| `MscSetDeadParamMap` (dop2_Codegen) | entry: the formal list; exit: entry+0xBC, the dead map (bit 0 valid, bit k clear = parameter number k removed and unlinked) |
+| `WpaGenConstParamInfoUse` | exit: the whole-program constant records (call-graph node+0x24, 24 bytes: number, kind, value) that survived |
+| `MdmFlexParams` (dop2_CodegenUpdate, after register allocation) | exit: entry+0xB4 (3 bits per remaining parameter at 3n+1, index into `_MdmFlexParamMap` = none, EAX, ECX, EDX, ESI, EDI, EBP, EBX), entry+0xB8 (4 bits per parameter: XMM register), entry+0x44 (stack parameter bytes), the declared convention (entry+0x20 & 0x1C: 0 cdecl, 4 fastcall, 0x10 stdcall, 0x14 thiscall) |
+
+Parameter numbers start at 1 (2 when the context has a hidden parameter, `hidden_param`); the register
+record numbers the formals left after the dead ones were unlinked (MdmParamNum). A callee is compiled before
+its callers, which pass arguments by its record (MscRemoveDeadArguments drops the dead ones at every direct
+call site, so dead and constant decisions are per callee, the same at all sites).
+
+```
+{"function", "custom", "declared", "ret_pop", "stack_bytes", "hidden_param", "refused",
+ "dead_map", "flex", ["flex_xmm"], ["sites": {"inlined", "not_inlined"}, "inlined_everywhere"],
+ "params": [{"index", "name", "type", "size", "location", "dead", "const"}]}
+```
+
+- `custom`: entry+0xB4 bit 0 (the gate passed). The registers are then c2's choice per parameter: `location`
+  is a register name, `XMMn`, `stack`, or `removed` (dead). A custom thiscall may pass `this` on the stack.
+  Without `custom` the location is the declared convention's (thiscall `this` in ECX, fastcall the first two
+  small integer formals in ECX/EDX).
+- `ret_pop`: `stack_bytes` for fastcall/stdcall/thiscall (callee pops, `ret N`), 0 for cdecl.
+- `const`: `{kind: int|float|function address|global address, value | symbol, value_ptr}`; a constant
+  parameter is substituted in the callee and normally also `dead` (its argument disappears at the call sites).
+- `refused`: from the fields MdmAllowFlexParams tests, in its order: no global optimization; /clr:safe;
+  entry+0x20 bit 0x2000 (set on every function referenced from outside the call graph in the test link:
+  `/INCLUDE`d, virtual, member-pointer callbacks, initializer tables); entry+0x50 bit 4 (set on every
+  recursive function seen); otherwise inline asm in a __fastcall/__thiscall function.
+- `sites`/`inlined_everywhere`: the traced call sites of the function (all of them without `--function`).
+- `type`: c2's type word (high nibble class, low 12 bits size in bytes; 0x1004 is `this`).
+
+`extra.json` `function_status` (with `--function`): per matching decorated name, `inlined everywhere: no
+convention` (with the record c2 wrote when it compiled the body, which no call uses), `out of line (...)` or
+`not compiled by the link`. The tool prints the custom conventions that put a parameter in a register, remove
+it or fold it, then the status lines. `param_passes` keeps the raw `MscAllowCallingConventionChange`,
+`MscRemoveDeadArguments` (caller) and `MscParamIsDead` (inliner query) calls under `--function`.
+
+Test link (AvP `main.both`, 33 objects): 695 functions compiled, 261 custom, 434 refused (409 bit 0x2000, 23
+recursive); 62 parameters removed, 50 constant. Checked against the linked image: `StartChild`
+(`this`=ESI, `childKind`=EDX: the callee reads both before writing them, the caller sets ESI), `FleeFrom`
+(`this`=EDI, `entry`=ESI), `AVP_Behaviour_Sentrygun` constructor (`this` on the stack, `newBrain`=EDI,
+`ret 4`), `Map<AnimationEntry>::Walk` (`this` = `g_animations`, callback constant: no arguments, the global
+read directly).
 
 ## Output
 
@@ -110,5 +161,8 @@ below), `budget`, `depth_limit`, `func_size`, and `numbers`:
 - Layouts, probe offsets and constants hold for the pinned c2.dll only (read from its disassembly).
 - The rule text is derived from which probes fired; Pogo, Wvm (/clr) and `InlineeIsTooBig` (no call graph)
   paths are decoded only coarsely. LTCG links are traced with `--link-rsp` (the same cost model with the
-  link's constants); the link-time parameter passes are logged raw.
+  link's constants).
+- Conventions: the refusal names for entry+0x20 bit 0x2000 and entry+0x50 bit 4 are read from the functions
+  that carry them, not from the code that sets them; a constant of kind 2 (float) is read as a double; the
+  register record covers the first 10 parameters (c2's limit). Pogo (/LTCG:PGO) paths are not decoded.
 - `site_weight` is c2's static block-frequency estimate, not a profile.
