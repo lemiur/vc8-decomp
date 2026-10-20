@@ -3,6 +3,13 @@
 Usage:
   python tools/c2_inline_trace.py --source X.cpp --flags="/O2 /EHsc" [-I DIR] [--function NAME]
          --out trace.jsonl [--raw raw.jsonl]
+  python tools/c2_inline_trace.py --link-rsp LINK.rsp [--linker link.exe] [--function NAME]
+         --out trace.jsonl [--raw raw.jsonl]
+
+With --link-rsp the traced process is link.exe on that response file (a /LTCG
+link of /GL objects): link.exe loads the same c2.dll and runs the link-time
+code generator in-process, so the same breakpoints see the whole-program
+inliner. The response file's folder is the working directory.
 
 For every call site c2 looks at while it compiles a function, one JSON object:
 caller, callee, depth (1 = a call written in the caller, 2 = a call inside an
@@ -69,6 +76,10 @@ CONST_COUNT = 45
 BREAKS = ("InlCallTupleIsCandidate", "InlMightInlineEntry", "ConsiderCandidate", "ShouldInlineCallTuple",
           "InlCallGraphDecision", "InlBenefit", "InlBadCandidate", "InlCheckInlineeAttribs",
           "ShouldInlineInlinee", "InlineeIsTooBig", "InlineInlinee", "WarnForFailedInline", "InlCollectInfo")
+# The link-time code generator's whole-program parameter passes (misc.obj, cgi): logged with --link-rsp
+# as the function being compiled, ECX/EDX and the return value; their arguments are not decoded further.
+LTCG_BREAKS = ("MscAllowCallingConventionChange", "MscSetDeadParamMap", "MscRemoveDeadArguments",
+               "MscParamIsDead", "CgiRemoveConstArg")
 
 
 def flag_names(value, table=FLAGS50):
@@ -217,6 +228,24 @@ class GenericSiteDecoder(SiteDecoder):
         return regs[index] if kind == "reg" else stack[index]
 
 
+class FastcallDecoder(c2_trace.Decoder):
+    """A __fastcall routine (ECX, EDX): both arguments raw and, when ECX names a c2 entry (+4 decorated
+    name), that name; the exit logs ret."""
+
+    def entry(self, model, regs, stack):
+        info = {"ecx": "0x%08X" % regs["ecx"], "edx": "0x%08X" % regs["edx"]}
+        try:
+            name = model.cstr(model.u32(regs["ecx"] + ENTRY_NAME), 512) if regs["ecx"] > 0x10000 else None
+        except Exception:
+            name = None
+        if name and name[:1] in "?_@":
+            info["entry_name"] = name
+        return info, None
+
+    def exit(self, model, regs, state):
+        return {"ret": signed(regs["eax"])}
+
+
 class CollectInfoDecoder(c2_trace.Decoder):
     """InlCollectInfo: runs after a function is compiled and records what a
     later caller's decision reads; the exit logs the function's entry fields."""
@@ -226,6 +255,9 @@ class CollectInfoDecoder(c2_trace.Decoder):
 
     def exit(self, model, regs, state):
         return {"ret": signed(regs["eax"])}
+
+
+CAPTURED_CONSTS = {}
 
 
 class CallGraphDecoder(c2_trace.Decoder):
@@ -242,6 +274,9 @@ class CallGraphDecoder(c2_trace.Decoder):
             info.update({"cg_size": signed(model.u32(callee + 0x68)), "cg_callsites": model.u32(callee + 0x90),
                          "cg_size60": model.u32(callee + 0x60)})
         info["inl_func_size"] = read_global(model, "_InlFuncSize")
+        if not CAPTURED_CONSTS:   # the constants in force (InlInitLtcgSetting sets them under /LTCG)
+            CAPTURED_CONSTS.update(read_consts(model))
+            CAPTURED_CONSTS["_Ltcg"] = read_global(model, "_Ltcg")
         if cand:   # the call block's estimated frequency, 64-bit, 100000000 = once per caller entry
             info["site_weight"] = model.u32(cand + 0x10) | (model.u32(cand + 0x14) << 32)
         return info, {"tuple": tup}
@@ -324,6 +359,8 @@ def install_decoders():
         "InlineInlinee": lambda: GenericSiteDecoder(("reg", "ecx")),
         "InlCollectInfo": CollectInfoDecoder,
     })
+    for name in LTCG_BREAKS:
+        c2_trace.DECODERS[name] = FastcallDecoder
 
 
 # ------------------------------------------------------------ site assembly
@@ -460,7 +497,11 @@ def refusal_rule(first, by, ret, numbers):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--source", required=True, type=Path)
+    parser.add_argument("--source", type=Path)
+    parser.add_argument("--link-rsp", type=Path, help="trace link.exe @RSP (a /LTCG link) instead of cl.exe")
+    parser.add_argument("--linker", type=Path, help="the link.exe to run with --link-rsp (default: the "
+                        "toolchain's); it must load the pinned c2.dll")
+    parser.add_argument("--timeout", type=int, default=600, help="seconds before the trace is abandoned")
     parser.add_argument("--flags", default="/O2", help="cl options (one string)")
     parser.add_argument("-I", "--include", action="append", default=[], type=Path)
     parser.add_argument("--function", help="only sites in functions whose decorated name contains this")
@@ -469,6 +510,8 @@ def main(argv=None):
     parser.add_argument("--toolchain", default="sp1")
     parser.add_argument("--max-events", type=int, default=200000)
     args = parser.parse_args(argv)
+    if (args.source is None) == (args.link_rsp is None):
+        parser.error("give one of --source and --link-rsp")
     if os.name != "nt":
         print("c2_inline_trace: requires Windows", file=sys.stderr)
         return 2
@@ -483,12 +526,19 @@ def main(argv=None):
         table = c2_trace.symbol_table(data["rows"])
         breaks = [c2_trace.resolve_name(name, table) for name in BREAKS]
         breaks += probe_breaks(table)
+        if args.link_rsp:
+            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS]
         tracer = InlineTracer(table, data["image_base"], breaks, args.function, (), args.max_events)
-        command = c2_trace.compile_command(toolchain, args.source, args.flags.split(), args.include, work)
         env = probe_toolchain.toolchain_environment(toolchain)
-        if args.include:
-            env["INCLUDE"] = os.pathsep.join([*map(str, args.include), env["INCLUDE"]])
-        returncode, log_path = tracer.run(command, work, env)
+        if args.link_rsp:
+            linker = args.linker or Path(toolchain["bin"]) / "link.exe"
+            rsp = args.link_rsp.resolve()
+            command, work = [str(linker), "@" + str(rsp)], rsp.parent
+        else:
+            command = c2_trace.compile_command(toolchain, args.source, args.flags.split(), args.include, work)
+            if args.include:
+                env["INCLUDE"] = os.pathsep.join([*map(str, args.include), env["INCLUDE"]])
+        returncode, log_path = tracer.run(command, work, env, timeout=args.timeout)
     except (c2_trace.TraceError, OSError, ValueError, KeyError) as error:
         print("c2_inline_trace: " + str(error), file=sys.stderr)
         return 1
@@ -501,7 +551,14 @@ def main(argv=None):
         with args.raw.open("w", encoding="utf-8") as stream:
             for event in tracer.events:
                 stream.write(json.dumps(event, sort_keys=True) + "\n")
-    print("cl.exe exit %d; %d call sites -> %s (cl output: %s)" % (returncode, len(sites), args.out, log_path))
+    extras = args.out.with_suffix(".extra.json")
+    params = [{k: e.get(k) for k in ("break", "function", "entry_name", "ecx", "edx", "ret") if k in e}
+              for e in tracer.events if e["break"] in LTCG_BREAKS]
+    with extras.open("w", encoding="utf-8") as stream:
+        json.dump({"consts": CAPTURED_CONSTS, "param_passes": params, "dropped": tracer.dropped}, stream,
+                  indent=1, sort_keys=True)
+    print("%s exit %d; %d call sites -> %s (output: %s; constants and parameter passes: %s)" % (
+        "link.exe" if args.link_rsp else "cl.exe", returncode, len(sites), args.out, log_path, extras))
     for line in format_sites(sites):
         print(line)
     return 0 if returncode == 0 else 3

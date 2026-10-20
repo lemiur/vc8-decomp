@@ -163,5 +163,33 @@ class Sites(unittest.TestCase):
         self.assertIn("inlined", lines[0])
 
 
+class LinkMode(unittest.TestCase):
+    def test_fastcall_decoder_names_an_entry_in_ecx(self):
+        mem = FakeMemory()
+        mem.put(0x70000 + it.ENTRY_NAME, 0x71000)
+        mem.raw[0x71000] = b"?f@@YAXH@Z\0"
+        info, _ = it.FastcallDecoder().entry(model(mem), {"ecx": 0x70000, "edx": 3}, [0] * 8)
+        self.assertEqual(info["entry_name"], "?f@@YAXH@Z")
+        self.assertEqual(info["edx"], "0x00000003")
+        info, _ = it.FastcallDecoder().entry(model(mem), {"ecx": 0x33, "edx": 0}, [0] * 8)
+        self.assertNotIn("entry_name", info)
+        self.assertEqual(it.FastcallDecoder().exit(model(mem), {"eax": 0xFFFFFFFF}, None), {"ret": -1})
+
+    def test_source_and_link_rsp_are_exclusive(self):
+        with self.assertRaises(SystemExit):
+            it.main(["--out", "x.jsonl"])
+        with self.assertRaises(SystemExit):
+            it.main(["--out", "x.jsonl", "--source", "a.cpp", "--link-rsp", "a.rsp"])
+
+    def test_ltcg_breaks_resolve_in_the_pinned_c2(self):
+        cache = Path(__file__).resolve().parents[1] / "build/c2-trace/c2-publics.json"
+        if not cache.is_file():
+            self.skipTest("no c2 symbol cache")
+        import json
+        table = ct.symbol_table(json.loads(cache.read_text(encoding="utf-8"))["rows"])
+        for name in it.LTCG_BREAKS:
+            self.assertTrue(ct.resolve_name(name, table)[1])
+
+
 if __name__ == "__main__":
     unittest.main()

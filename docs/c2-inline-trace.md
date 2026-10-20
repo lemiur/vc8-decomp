@@ -14,6 +14,28 @@ python tools/c2_inline_trace.py --source X.cpp --flags="/O2 /EHsc" [-I DIR ...] 
 (also to `INCLUDE`); `--raw` writes the routine events. A short table is printed. Exit 0, 1 (tracer error),
 3 (cl.exe failed). Run from PowerShell (Git Bash rewrites `/O2`).
 
+## /LTCG links (`--link-rsp`)
+
+```powershell
+python tools/c2_inline_trace.py --link-rsp build/x/link.rsp [--linker C:/vc8/VC/bin/link.exe] `
+    [--function NAME] --out build/inl/x.ltcg.jsonl [--raw ...] [--timeout 600]
+```
+
+The traced process is `link.exe @RSP` (the response file's folder is the working directory) instead of cl.exe.
+A `/LTCG` link of `/GL` objects runs the code generator in-process: link.exe loads the same pinned `c2.dll`,
+so the same breakpoints and probes see the whole-program inliner and the output has the same form. `--linker`
+names the link.exe (another install of the same version is fine as long as the `c2.dll` it loads is the pinned
+one; the tracer slides the breakpoints to wherever it loads). Exit 3 means link.exe failed.
+
+Under `/LTCG` c2 runs `InlInitLtcgSetting`, and the constants differ from a plain compile's: SpeedLimit **84**
+(74 plain), FoldCmpSpeedWeight 35 (30), OneCallSizeAdj1/4 45, FewCallSizeAdj 5; SizeLimit stays 9 (`_Ltcg` = 1).
+`_InlCurConsts` at the first `InlCallGraphDecision` is written with the call-graph counts to `<out>.extra.json`
+(`consts`), in both modes. With `--link-rsp` the same file has `param_passes`: every call of
+`MscAllowCallingConventionChange`, `MscSetDeadParamMap`, `MscRemoveDeadArguments`, `MscParamIsDead` and
+`CgiRemoveConstArg` while a `--function` match is compiled, with ECX, EDX, the return value and, when ECX is a
+c2 entry, its decorated name. Their arguments beyond that are not decoded yet: they say that the pass ran on
+the function and what it returned, not which parameter it removed.
+
 ## Output
 
 One JSON object per call site, in the order c2 examined them: `caller` (the function being compiled, decorated),
@@ -86,6 +108,7 @@ below), `budget`, `depth_limit`, `func_size`, and `numbers`:
 ## Limits
 
 - Layouts, probe offsets and constants hold for the pinned c2.dll only (read from its disassembly).
-- The rule text is derived from which probes fired; Pogo, LTCG (/GL), Wvm (/clr) and `InlineeIsTooBig` (no
-  call graph) paths are decoded only coarsely.
+- The rule text is derived from which probes fired; Pogo, Wvm (/clr) and `InlineeIsTooBig` (no call graph)
+  paths are decoded only coarsely. LTCG links are traced with `--link-rsp` (the same cost model with the
+  link's constants); the link-time parameter passes are logged raw.
 - `site_weight` is c2's static block-frequency estimate, not a profile.
