@@ -212,22 +212,40 @@ def trace_tool_runtime(toolchain, tool, args, output):
     return result
 
 
-def build_layout_witness(toolchain, output, headers, type_name, fields, binary=None, config_path=CONFIG):
+LAYOUT_TYPES = {
+    "SECURITY_ATTRIBUTES": {"header": "windows.h", "fields": ("nLength", "lpSecurityDescriptor", "bInheritHandle"),
+                            "symbol": "vc8_layout_SECURITY_ATTRIBUTES", "alignment": False},
+    "__timeb64": {"header": "sys/timeb.h", "fields": ("time", "millitm", "timezone", "dstflag"),
+                  "symbol": "vc8_layout___timeb64", "alignment": True},
+}
+
+
+def build_layout_witness(toolchain, output, headers=None, type_name=None, fields=None, binary=None, config_path=CONFIG):
     """Build an independently extractable aggregate layout witness of type_name.
 
     The exported DWORD array contains sizeof(type), then ordered offset/width
     pairs of fields. No expected numeric layout is injected into the source or
     bytes. Gate/audit must independently extract the array and approve its record.
+    A registered type supplies its header, fields, symbol and optional alignment
+    export; explicit headers/fields keep the general arbitrary-type interface.
     """
     import ltcg
     from matchlib import PEImage
     adapter = load_adapter(ROOT)
-    verify_toolchain(toolchain, adapter)
+    alignment = False
+    if headers is None and not fields:
+        specification = LAYOUT_TYPES.get(type_name)
+        if specification is None:
+            raise ValueError("unsupported layout witness type: " + str(type_name))
+        headers, fields = [specification["header"]], list(specification["fields"])
+        symbol, alignment = specification["symbol"], specification["alignment"]
+    else:
+        symbol = "vc8_layout_" + type_name
     if not re.fullmatch(r"[A-Za-z_]\w*", type_name) or not fields or len(set(fields)) != len(fields) or \
             not all(re.fullmatch(r"[A-Za-z_]\w*", field) for field in fields):
         raise ValueError("layout needs one identifier type and distinct identifier fields")
+    verify_toolchain(toolchain, adapter)
     binary = binary or adapter["binaries"][0]
-    symbol = "vc8_layout_" + type_name
     gl = adapter["gl"]
     output = Path(output).resolve()
     if output.exists() and any(output.iterdir()):
@@ -240,7 +258,9 @@ def build_layout_witness(toolchain, output, headers, type_name, fields, binary=N
                         "sizeof(((%s *)0)->%s)" % (type_name, field)]
     source.write_text(''.join('#include <%s>\n' % header for header in headers) + '#include <stddef.h>\n'
                       'extern "C" __declspec(dllexport) const unsigned long ' + symbol +
-                      '[] = {\n    ' + ',\n    '.join(expressions) + '\n};\n', encoding="ascii")
+                      '[] = {\n    ' + ',\n    '.join(expressions) + '\n};\n' +
+                      ('extern "C" __declspec(dllexport) const unsigned long ' + symbol +
+                       '_alignment = __alignof(' + type_name + ');\n' if alignment else ''), encoding="ascii")
     inputs = {str(source): sha256(source)}
     config_path = Path(config_path).resolve()
     inputs[str(config_path)] = sha256(config_path)
@@ -259,7 +279,8 @@ def build_layout_witness(toolchain, output, headers, type_name, fields, binary=N
             inputs[str(header)] = sha256(header)
     if len(inputs) <= 2:
         raise ValueError("layout compiler did not report included SDK headers")
-    image_path, map_path = ltcg.link(toolroot, [obj], ["_" + symbol], output, env, commands, ltcg=gl,
+    roots = ["_" + symbol] + (["_" + symbol + "_alignment"] if alignment else [])
+    image_path, map_path = ltcg.link(toolroot, [obj], roots, output, env, commands, ltcg=gl,
                                      base_flags=adapter["link_flags"], linker=adapter["linker"])
     image = PEImage(image_path)
     exports = [entry for entry in image.export_records() if symbol in entry.get("names", [])]
@@ -270,6 +291,12 @@ def build_layout_witness(toolchain, output, headers, type_name, fields, binary=N
     values = struct.unpack("<" + "I" * count, image.read_va(array_va, count * 4))
     observations = {"size": values[0], "members": {field: {"offset": values[1 + index * 2],
                        "size": values[2 + index * 2]} for index, field in enumerate(fields)}}
+    if alignment:
+        alignment_exports = [entry for entry in image.export_records()
+                             if symbol + "_alignment" in entry.get("names", [])]
+        if len(alignment_exports) != 1 or alignment_exports[0].get("va") is None:
+            raise ValueError("layout alignment export did not resolve to one image-backed DWORD")
+        observations["alignment"] = struct.unpack("<I", image.read_va(alignment_exports[0]["va"], 4))[0]
     for path, digest in inputs.items():
         if sha256(path) != digest:
             raise ValueError("layout input changed during build: " + path)
@@ -385,8 +412,8 @@ def main():
     parser.add_argument("--field", action="append", help="layout: member to measure, in order (repeatable)")
     parser.add_argument("--binary", help="layout: binary the witness serves (default: the adapter's first)")
     args = parser.parse_args()
-    if args.action == "layout" and not (args.type and args.field):
-        parser.error("layout requires --type and at least one --field")
+    if args.action == "layout" and not (args.type and (args.field or args.type in LAYOUT_TYPES)):
+        parser.error("layout requires --type and at least one --field, or a registered layout type")
     tc = load_toolchain(args.toolchain, args.config)
     if args.action == "inventory":
         data = json.loads(args.config.read_text(encoding="utf-8-sig"))
@@ -398,7 +425,7 @@ def main():
         print("Toolchain pins verified: " + args.toolchain)
     elif args.action == "layout":
         output = args.out or ROOT / "build/toolchain-layout" / args.toolchain / str(uuid.uuid4())
-        result, record = build_layout_witness(tc, output, args.header or ["windows.h"], args.type, args.field,
+        result, record = build_layout_witness(tc, output, args.header if args.field else None, args.type, args.field,
                                               args.binary, args.config)
         print("Compiled %s layout: %s; record: %s" % (result["type"], result["observations"], record))
     elif args.action == "trace":
