@@ -44,11 +44,18 @@ def fragment_files(root: Path) -> list[Path]:
 def merge_fragments(root: Path, paths: list[Path]) -> dict:
     """Validate lane fragments and merge their function records."""
     entries, positions, problems, fragments = {}, {}, [], []
+    layout_witnesses, entry_alias_proofs = [], []
     for path in paths:
         data = read_json(path)
         if data.get("schema_version") != 1 or data.get("binary", "cl") != "cl" or not isinstance(data.get("functions"), list):
             problems.append(str(path) + ": invalid lane review header")
             continue
+        for key, target in (("layout_witnesses", layout_witnesses), ("entry_alias_proofs", entry_alias_proofs)):
+            for record in data.get(key, []) or []:
+                if isinstance(record, dict) and "path" in record and "sha256" in record:
+                    target.append({"path": record["path"], "sha256": record["sha256"]})
+                else:
+                    problems.append(str(path) + ": malformed " + key + " record")
         fragments.append({"path": path.relative_to(root).as_posix(), "sha256": sha256(path.read_bytes())})
         for item in data["functions"]:
             if not isinstance(item, dict) or "va" not in item or "source_path" not in item:
@@ -72,7 +79,8 @@ def merge_fragments(root: Path, paths: list[Path]) -> dict:
             entries[("cl", int(key[1], 16))] = record
     if problems:
         raise ValueError("; ".join(problems))
-    return {"entries": entries, "fragments": fragments}
+    return {"entries": entries, "fragments": fragments,
+            "layout_witnesses": layout_witnesses, "entry_alias_proofs": entry_alias_proofs}
 
 
 def build_batch(root: Path, fragments: list[Path]) -> dict:
@@ -107,7 +115,8 @@ def build_batch(root: Path, fragments: list[Path]) -> dict:
             uncovered.append("%s 0x%x %s" % (fn["source_path"], int(fn["va"], 16), fn.get("name", "")))
     if uncovered:
         raise ValueError("admission candidates changed or new without a lane review: " + "; ".join(uncovered))
-    return {"scope": scope, "records": records, "borrowed": borrowed, "fragments": merged["fragments"]}
+    return {"scope": scope, "records": records, "borrowed": borrowed, "fragments": merged["fragments"],
+            "layout_witnesses": merged["layout_witnesses"], "entry_alias_proofs": merged["entry_alias_proofs"]}
 
 
 def write_policy(root: Path, fragments: list[Path]) -> dict:
@@ -116,6 +125,8 @@ def write_policy(root: Path, fragments: list[Path]) -> dict:
              "scope_sha256": build["scope"],
              "authority_limit": "Source-rule approval only; the fresh complete gate alone banks compiled functions/bytes.",
              "fragments": build["fragments"],
+             "layout_witnesses": build["layout_witnesses"],
+             "entry_alias_proofs": build["entry_alias_proofs"],
              "reviewed_functions": build["records"],
              "unchanged_prior_rounds": build["borrowed"]}
     batch = json.loads(json.dumps(batch))
