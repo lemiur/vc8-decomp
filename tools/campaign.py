@@ -8,8 +8,21 @@ from pathlib import Path
 import re
 
 import match
+import matchlib
 import report
 import rulecheck
+
+
+def resolve_roots(project, root):
+    """Source/build roots: explicit --source-root/--build-root, else the primary checkout.
+
+    ``primary_checkout`` is optional in config/project.json; when it is absent the
+    primary checkout is derived from git worktree metadata, exactly as matchlib
+    resolves the shared ignored inputs.
+    """
+    primary = project.get("primary_checkout")
+    primary = Path(primary) if primary else matchlib.primary_checkout(root)
+    return primary, primary / "build"
 
 
 def small_json(path, limit=200_000):
@@ -298,8 +311,9 @@ def main(argv=None):
         if not 0 <= args.limit <= 12:
             raise ValueError("open-work display limit must be between 0 and 12")
         project = small_json(args.project)
-        source = args.source_root or Path(project["primary_checkout"])
-        build = args.build_root or Path(project["primary_checkout"]) / "build"
+        primary, default_build = resolve_roots(project, root)
+        source = args.source_root or primary
+        build = args.build_root or default_build
         status = collect(project, source, build)
         output = render(status, args.limit)
         args.output_dir.mkdir(parents=True, exist_ok=True)

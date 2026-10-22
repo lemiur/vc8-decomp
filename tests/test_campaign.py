@@ -14,6 +14,20 @@ HASH = "a" * 64
 
 
 class CampaignTests(unittest.TestCase):
+    def test_roots_derive_from_the_checkout_when_not_configured(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            source, build = campaign.resolve_roots({}, root)
+            self.assertEqual(source, root)
+            self.assertEqual(build, root / "build")
+
+    def test_explicit_primary_checkout_wins(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            source, build = campaign.resolve_roots({"primary_checkout": str(root / "main")}, root)
+            self.assertEqual(source, root / "main")
+            self.assertEqual(build, root / "main" / "build")
+
     def export_fixture(self, directory, status="complete"):
         path = Path(directory)
         (path / "manifest.json").write_text(json.dumps({"status": status, "returncode": 0, "binary": "cl",
