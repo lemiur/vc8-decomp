@@ -96,4 +96,7 @@ private:
     HANDLE read_handle;
 };
 
+// Public global in mpcl.obj; used by the diagnostic serialization family.
+extern HANDLE g_hMutex;
+
 #endif

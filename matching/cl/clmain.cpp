@@ -78,3 +78,19 @@ void __cdecl release_ast_extra_heap()
 {
     VirtualFree(pPCHAstExtraBaseAddress, 0, MEM_RELEASE);
 }
+
+// FUNCTION: cl 0x004014d5
+// SYMBOL: ??0CConsoleLock@@QAE@XZ
+CConsoleLock::CConsoleLock()
+{
+    if (g_hMutex)
+    {
+        DWORD result = WaitForSingleObject(g_hMutex, INFINITE);
+        if (result == WAIT_OBJECT_0 || result == WAIT_ABANDONED)
+        {
+            locked = true;
+            return;
+        }
+    }
+    locked = false;
+}
