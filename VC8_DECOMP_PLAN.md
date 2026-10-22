@@ -218,10 +218,10 @@ individual decompilation failures and inferred function boundaries remain explic
 Phase 0 flag calibration is partial: measured per-unit profiles are provisional, and twenty discriminating
 leaf probes per binary have not yet been completed.
 
-Phase 1 is active. As of the latest all-binary gate run, `cl.exe` banks **89 functions / 5,422 source
+Phase 1 is active. As of the latest all-binary gate run, `cl.exe` banks **90 functions / 5,457 source
 bytes** (denominator 117,504 retail bytes; function denominator unknown); c2, c1, c1xx and link bank 0.
 The banked set is the mpcl channel/mutex/queue family (33), the clmain driver model (14), the util
-string/console/timing layer (11), loadui.obj (3), compile.obj (4), dos.obj (4), merr (1), and 19 plain
+string/console/timing layer (11), loadui.obj (3), compile.obj (5), dos.obj (4), merr (1), and 19 plain
 CRT/ATL support functions (pesect, atonexit, secchk, gs_support, fp8, initsect, unhandld, ATL ACP and
 related objects) recovered from the installed era sources with their hashes.
 
