@@ -93,6 +93,8 @@ def build_batch(root: Path, fragments: list[Path]) -> dict:
     registry = read_json(root / "config/cl-candidates.json")
     enabled = {(entry["unit"], int(entry["retail_va"], 16)) for entry in registry["candidates"]
                if entry.get("binary") == "cl" and entry.get("gate_enabled", True)}
+    registered = {(entry["unit"], int(entry["retail_va"], 16)) for entry in registry["candidates"]
+                  if entry.get("binary") == "cl"}
 
     records, borrowed, uncovered = [], [], []
     for key, fn in sorted(functions.items()):
@@ -101,8 +103,8 @@ def build_batch(root: Path, fragments: list[Path]) -> dict:
             if reviewed["source_path"] != fn["source_path"]:
                 raise ValueError("%s 0x%x: fragment source_path differs from scanned source" %
                                  (fn["source_path"], int(fn["va"], 16)))
-            if (reviewed["source_path"], int(reviewed["va"], 16)) not in enabled:
-                raise ValueError("%s 0x%x: reviewed function is not an enabled gate candidate" %
+            if (reviewed["source_path"], int(reviewed["va"], 16)) not in registered:
+                raise ValueError("%s 0x%x: reviewed function has no candidate registry entry" %
                                  (reviewed["source_path"], int(reviewed["va"], 16)))
             reviewed = dict(reviewed, source_sha256=fn["source_sha256"])
             records.append(reviewed)

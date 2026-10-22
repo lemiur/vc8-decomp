@@ -106,10 +106,26 @@ class ReviewBatchTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "without a lane review"):
                 review_batch.build_batch(root, [fragment])
 
+    def test_reviewed_but_gate_disabled_candidate_is_imported(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.fixture(temp, candidates=[
+                {"binary": "cl", "symbol": "?alpha@@YAHXZ", "retail_va": "0x1000",
+                 "unit": "matching/cl/unit.cpp", "gate_enabled": True},
+                {"binary": "cl", "symbol": "?beta@@YAHXZ", "retail_va": "0x1010",
+                 "unit": "matching/cl/unit.cpp", "gate_enabled": False}])
+            fragment = self.fragment(root)
+            data = json.loads(fragment.read_text(encoding="utf-8"))
+            data["functions"].append({"va": "0x1010", "symbol": "?beta@@YAHXZ",
+                                      "source_path": "matching/cl/unit.cpp",
+                                      "checks": {rule: "beta " + rule for rule in review_batch.MATCH_RULES}})
+            fragment.write_text(json.dumps(data), encoding="utf-8")
+            build = review_batch.build_batch(root, [fragment])
+            self.assertEqual(len(build["records"]), 2)
+
     def test_fragment_for_unregistered_function_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             root = self.fixture(temp, candidates=[])
-            with self.assertRaisesRegex(ValueError, "not an enabled gate candidate"):
+            with self.assertRaisesRegex(ValueError, "no candidate registry entry"):
                 review_batch.build_batch(root, [self.fragment(root)])
 
 
