@@ -20,7 +20,11 @@
 // mov eax,L"netmodule"; jne; mov eax,L"exe"; ret.
 // Probe measurement: 100.0, boundary=verified, referents=resolved. Blocker:
 // matching/cl/clmain.cpp must define ?DllFlg@@3HA (0x41913c) and
-// ?NoAssembly@@3HA (0x419648). Caveat for the integration owner: both retail
+// ?NoAssembly@@3HA (0x419648). Required referent bindings when enabling:
+// literal L"dll" 0x4152d4 (8 bytes), L"netmodule" 0x40d3a4 (20 bytes) and
+// L"exe" 0x40d39c (8 bytes), plus both globals; the lane removed those records
+// after measuring so the integration merge cannot conflict with the owning
+// lane's evidence. Caveat for the integration owner: both retail
 // globals are loader-zero, and scan_referents tries hash-keyed literal bindings
 // before MAP aliases, so the two-byte empty-literal binding can swallow a
 // zero-initialized four-byte global. The probe had to initialize them nonzero
@@ -47,7 +51,11 @@ unsigned short *__cdecl module_extension()
 // register. The clamp and separator logic are otherwise instruction-for-
 // instruction. Missing foreign definitions: ?MaxBatchId@@3HA (0x417838). The
 // compiler-generated __aulldiv call and the wcschr/GetDiskFreeSpaceExW imports
-// are already bound.
+// are already bound. Required referent bindings when enabling:
+// ?MaxBatchId@@3HA 0x417838, msvcr80.dll!wcschr 0x40d2e4,
+// kernel32.dll!GetDiskFreeSpaceExW 0x40d120 and __aulldiv 0x40bd80; the lane
+// removed those records after measuring so the integration merge cannot
+// conflict with the owning lane's evidence.
 void __cdecl limit_batch_files(context_s *context)
 {
     ULARGE_INTEGER free_bytes;
