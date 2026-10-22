@@ -10,7 +10,7 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 56,
+        "start": 54,
         "end": 59
       },
       "boundary": {
@@ -34,7 +34,7 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 63,
+        "start": 61,
         "end": 66
       },
       "boundary": {
@@ -58,7 +58,7 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 70,
+        "start": 68,
         "end": 73
       },
       "boundary": {
@@ -82,7 +82,7 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 77,
+        "start": 75,
         "end": 80
       },
       "boundary": {
@@ -106,7 +106,7 @@
       "size": 22,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 141,
+        "start": 139,
         "end": 144
       },
       "boundary": {
@@ -127,7 +127,7 @@
       "size": 23,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 176,
+        "start": 174,
         "end": 181
       },
       "boundary": {
@@ -148,8 +148,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 299,
-        "end": 302
+        "start": 304,
+        "end": 309
       },
       "boundary": {
         "status": "verified",
@@ -169,8 +169,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 306,
-        "end": 309
+        "start": 311,
+        "end": 316
       },
       "boundary": {
         "status": "verified",
@@ -939,8 +939,8 @@
       "size": 44,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 313,
-        "end": 325
+        "start": 318,
+        "end": 332
       },
       "boundary": {
         "status": "verified",
@@ -1819,7 +1819,7 @@
       "retail_va": "0x401501",
       "size": 167,
       "source_span": {
-        "start": 18,
+        "start": 16,
         "end": 52
       },
       "boundary": {
@@ -1839,7 +1839,7 @@
       "retail_va": "0x401886",
       "size": 22,
       "source_span": {
-        "start": 84,
+        "start": 82,
         "end": 92
       },
       "boundary": {
@@ -1859,7 +1859,7 @@
       "retail_va": "0x40189c",
       "size": 32,
       "source_span": {
-        "start": 96,
+        "start": 94,
         "end": 99
       },
       "boundary": {
@@ -1901,7 +1901,7 @@
       "retail_va": "0x402267",
       "size": 52,
       "source_span": {
-        "start": 148,
+        "start": 146,
         "end": 154
       },
       "boundary": {
@@ -2009,7 +2009,7 @@
       "retail_va": "0x402915",
       "size": 51,
       "source_span": {
-        "start": 220,
+        "start": 218,
         "end": 229
       },
       "boundary": {
@@ -3366,6 +3366,10 @@
       "?NoAssembly@@3HA": {
         "va": "0x419648",
         "evidence": "Actual S_PUB32 public int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero. The assembly switch option path consumes it."
+      },
+      "?Exefilename@@3PAGA": {
+        "va": "0x419164",
+        "evidence": "Actual S_PUB32 public pointer owned by clmain.obj; storage sits in .data past the 0x2000 file-backed bytes, i.e. loader-zero with no file initializer. The /Fe option-table row (name \"Fe\", tag 3, target 0x419164) stores the output name through the dispatcher, and compile.obj replaca/dopass/post_compile push the pointer value."
       }
     }
   }
