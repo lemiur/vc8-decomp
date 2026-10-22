@@ -10,8 +10,8 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 13,
-        "end": 16
+        "start": 54,
+        "end": 59
       },
       "boundary": {
         "status": "verified",
@@ -34,8 +34,8 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 20,
-        "end": 23
+        "start": 61,
+        "end": 66
       },
       "boundary": {
         "status": "verified",
@@ -58,8 +58,8 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 27,
-        "end": 30
+        "start": 68,
+        "end": 73
       },
       "boundary": {
         "status": "verified",
@@ -82,8 +82,8 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 34,
-        "end": 37
+        "start": 75,
+        "end": 80
       },
       "boundary": {
         "status": "verified",
@@ -106,8 +106,8 @@
       "size": 22,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 45,
-        "end": 48
+        "start": 139,
+        "end": 144
       },
       "boundary": {
         "status": "verified",
@@ -127,8 +127,8 @@
       "size": 23,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 52,
-        "end": 57
+        "start": 174,
+        "end": 181
       },
       "boundary": {
         "status": "verified",
@@ -148,8 +148,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 70,
-        "end": 73
+        "start": 287,
+        "end": 292
       },
       "boundary": {
         "status": "verified",
@@ -169,8 +169,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 77,
-        "end": 80
+        "start": 294,
+        "end": 299
       },
       "boundary": {
         "status": "verified",
@@ -939,8 +939,8 @@
       "size": 44,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 84,
-        "end": 96
+        "start": 301,
+        "end": 315
       },
       "boundary": {
         "status": "verified",
@@ -967,8 +967,8 @@
       "retail_va": "0x401886",
       "size": 22,
       "source_span": {
-        "start": 44,
-        "end": 50
+        "start": 82,
+        "end": 92
       },
       "boundary": {
         "status": "verified",
@@ -987,8 +987,8 @@
       "retail_va": "0x40189c",
       "size": 32,
       "source_span": {
-        "start": 54,
-        "end": 57
+        "start": 94,
+        "end": 99
       },
       "boundary": {
         "status": "verified",
@@ -1007,8 +1007,8 @@
       "retail_va": "0x4018bc",
       "size": 29,
       "source_span": {
-        "start": 61,
-        "end": 67
+        "start": 101,
+        "end": 109
       },
       "boundary": {
         "status": "verified",
@@ -1029,8 +1029,8 @@
       "retail_va": "0x402267",
       "size": 52,
       "source_span": {
-        "start": 82,
-        "end": 88
+        "start": 146,
+        "end": 154
       },
       "boundary": {
         "status": "verified",
@@ -1049,8 +1049,8 @@
       "retail_va": "0x40229b",
       "size": 78,
       "source_span": {
-        "start": 92,
-        "end": 106
+        "start": 156,
+        "end": 172
       },
       "boundary": {
         "status": "verified",
@@ -1071,8 +1071,8 @@
       "retail_va": "0x402549",
       "size": 41,
       "source_span": {
-        "start": 119,
-        "end": 125
+        "start": 183,
+        "end": 194
       },
       "boundary": {
         "status": "verified",
@@ -1082,7 +1082,7 @@
         "evidence": "Passinfo is the public clmain-owned table; stride 0x24 follows from the declared passinfo_s extent (10 evidenced slots). The loop-invariant flag selector load matches the retail schedule without an artificial local."
       },
       "gate_enabled": false,
-      "note": "Passinfo loop shape is proven, but the emitted body diverges before the call-free loop can be compared. Open lever: the selector/value load order and the Passinfo bound spelling. Not a match."
+      "note": "Body is instruction-identical to the complete 41-byte retail decode; only the Passinfo interior references remain unnormalized. Blocked on typed member bindings (passinfo_s::selector +8/2, ::options +0xC/4) backed by a passinfo_s layout witness produced in the integration checkout. gate_enabled false until then. Not a match."
     },
     {
       "binary": "cl",
@@ -1093,8 +1093,8 @@
       "retail_va": "0x402572",
       "size": 47,
       "source_span": {
-        "start": 129,
-        "end": 135
+        "start": 196,
+        "end": 204
       },
       "boundary": {
         "status": "verified",
@@ -1104,7 +1104,7 @@
         "evidence": "Real wcschr import and the public Passinfo table only; the state word is the evidenced int at passinfo_s +0xc, so the AND constant is the genuine ~1."
       },
       "gate_enabled": false,
-      "note": "Passinfo loop and wcschr import are proven, but the emitted body diverges. Open lever: the flag->value (+0x10) selector-string type and the loop induction shape. Not a match."
+      "note": "Body is instruction-identical to the complete 47-byte retail decode; only the Passinfo interior references remain unnormalized. Same passinfo_s member-binding/layout-witness dependency as activate_pass. Not a match."
     },
     {
       "binary": "cl",
@@ -1115,8 +1115,8 @@
       "retail_va": "0x4025a1",
       "size": 67,
       "source_span": {
-        "start": 139,
-        "end": 147
+        "start": 206,
+        "end": 216
       },
       "boundary": {
         "status": "verified",
@@ -1126,7 +1126,7 @@
         "evidence": "Real wcschr import plus the public Passinfo table; the loop-invariant dot test is written as a genuine local so its preheader materialization matches retail without steering."
       },
       "gate_enabled": false,
-      "note": "Passinfo loop, hoisted dot test and wcschr import are proven, but the emitted body diverges. Open lever: whether the original hoisted the dot comparison as a local and the exact selector-string field. Not a match."
+      "note": "Body is instruction-identical to the complete 67-byte retail decode; only the Passinfo interior references remain unnormalized. Same passinfo_s member-binding/layout-witness dependency as activate_pass. Not a match."
     },
     {
       "binary": "cl",
@@ -1137,8 +1137,8 @@
       "retail_va": "0x402915",
       "size": 51,
       "source_span": {
-        "start": 151,
-        "end": 160
+        "start": 218,
+        "end": 229
       },
       "boundary": {
         "status": "verified",
@@ -1146,6 +1146,26 @@
       },
       "compiler_context": {
         "evidence": "No callee or data referent; the genuine wide-character assignments and counter reuse reproduce the observed pointer increment schedule."
+      }
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?OpenClSqmLogFileForWriting@@YAPAU_iobuf@@PBG@Z",
+      "retail_va": "0x401501",
+      "size": 167,
+      "source_span": {
+        "start": 16,
+        "end": 52
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x401501..0x4015a8: the _wfsopen open, size gate, shared fread/fwrite setup, magic/version validation, fseek and the single fclose failure tail all reach the leave/ret epilogue; the next PDB public starts exactly at 0x4015a8."
+      },
+      "compiler_context": {
+        "evidence": "Real unit /GL + /LTCG context with the configured /O1 /Ob1. Only genuine CRT imports are called: no stub, literal or data referent is invented, and the 16-byte header is a real local aggregate whose magic/version literals are the observed image values."
       }
     }
   ],
@@ -1624,6 +1644,62 @@
       "?g_hCryptProv@@3KA": {
         "va": "0x419e80",
         "evidence": "Actual S_PUB32 unsigned-long storage owned by clmain.obj; create_crypto_context passes its address to CryptAcquireContextW and storage is in the zero-filled .data tail, loader-zero."
+      },
+      "msvcr80.dll!_wfsopen": {
+        "kind": "import",
+        "va": "0x40d2bc",
+        "dll": "MSVCR80.dll",
+        "name": "_wfsopen",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!_fileno": {
+        "kind": "import",
+        "va": "0x40d2c0",
+        "dll": "MSVCR80.dll",
+        "name": "_fileno",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!_filelength": {
+        "kind": "import",
+        "va": "0x40d2c4",
+        "dll": "MSVCR80.dll",
+        "name": "_filelength",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "literal:sha256:9b8444c4b5b34f134e3f6f452414e703e761c56ceee7054d61b3fe594a8a474f": {
+        "va": "0x41497c",
+        "kind": "literal",
+        "size": 8,
+        "bytes_sha256": "9b8444c4b5b34f134e3f6f452414e703e761c56ceee7054d61b3fe594a8a474f",
+        "evidence": "Retail wide mode literal L\"a+b\" (eight bytes including the terminator) at 0x41497c, the second argument of the _wfsopen call; the candidate literal pool must hash to the same bytes."
+      },
+      "msvcr80.dll!fwrite": {
+        "kind": "import",
+        "va": "0x40d2c8",
+        "dll": "MSVCR80.dll",
+        "name": "fwrite",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!fclose": {
+        "kind": "import",
+        "va": "0x40d2cc",
+        "dll": "MSVCR80.dll",
+        "name": "fclose",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!fread": {
+        "kind": "import",
+        "va": "0x40d2d0",
+        "dll": "MSVCR80.dll",
+        "name": "fread",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!fseek": {
+        "kind": "import",
+        "va": "0x40d2d4",
+        "dll": "MSVCR80.dll",
+        "name": "fseek",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
       }
     }
   }

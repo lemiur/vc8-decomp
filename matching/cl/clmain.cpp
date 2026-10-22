@@ -6,10 +6,50 @@
 #include <wchar.h>
 #include <io.h>
 #include <errno.h>
+#include <stdio.h>
+#include <share.h>
 
 // Source filename inferred from the PDB object owner clmain.obj; the original
 // extension and assert line mappings remain unresolved. Public names and stack
 // cleanup prove these cdecl callbacks; their flag_s argument is unused.
+
+// FUNCTION: cl 0x00401501
+// SYMBOL: ?OpenClSqmLogFileForWriting@@YAPAU_iobuf@@PBG@Z
+FILE* __cdecl OpenClSqmLogFileForWriting(const wchar_t* path)
+{
+    unsigned long header[4];
+    FILE* file;
+    unsigned long length;
+
+    file = _wfsopen(path, L"a+b", _SH_DENYRW);
+    if (!file)
+        return 0;
+    length = _filelength(_fileno(file));
+    if (length > 0x200000) {
+        fclose(file);
+        return 0;
+    }
+    if (length == 0) {
+        header[0] = 0x51534356;
+        header[1] = 1;
+        header[2] = header[3] = 0;
+        if (fwrite(header, sizeof(header), 1, file) != 1) {
+            fclose(file);
+            return 0;
+        }
+    } else {
+        if (fread(header, sizeof(header), 1, file) != 1 ||
+            header[0] != 0x51534356 || header[1] != 1) {
+            fclose(file);
+            return 0;
+        }
+        if (fseek(file, 0, SEEK_END) != 0) {
+            fclose(file);
+            return 0;
+        }
+    }
+    return file;
+}
 
 // FUNCTION: cl 0x004015a8
 // SYMBOL: ?error_report_prompt@@YAXPAUflag_s@@@Z
@@ -144,8 +184,11 @@ wchar_t* __cdecl fullccpath()
 // SYMBOL: ?activate_pass@@YAXPAUflag_s@@@Z
 void __cdecl activate_pass(flag_s* flag)
 {
-    for (passinfo_s* pass = Passinfo; pass < &Passinfo[10]; ++pass) {
-        if (pass->selector == flag->value[0] || flag->value[0] == L'.')
+    wchar_t selector = flag->value[0];
+
+    for (int i = 0; i < 10; ++i) {
+        passinfo_s* pass = &Passinfo[i];
+        if (selector == L'.' || pass->selector == selector)
             pass->options |= 1;
     }
 }
@@ -154,9 +197,9 @@ void __cdecl activate_pass(flag_s* flag)
 // SYMBOL: ?deactivate_passes_except@@YAXPAUflag_s@@@Z
 void __cdecl deactivate_passes_except(flag_s* flag)
 {
-    for (passinfo_s* pass = Passinfo; pass < &Passinfo[10]; ++pass) {
-        if (!wcschr(flag->value, pass->selector))
-            pass->options &= ~1;
+    for (int i = 0; i < 10; ++i) {
+        if (!wcschr(flag->value, Passinfo[i].selector))
+            Passinfo[i].options &= ~1;
     }
 }
 
@@ -166,9 +209,9 @@ void __cdecl deactivate_passes(flag_s* flag)
 {
     int all = flag->value[0] == L'.';
 
-    for (passinfo_s* pass = Passinfo; pass < &Passinfo[10]; ++pass) {
-        if (all || !wcschr(flag->value, pass->selector))
-            pass->options &= ~1;
+    for (int i = 0; i < 10; ++i) {
+        if (all || wcschr(flag->value, Passinfo[i].selector))
+            Passinfo[i].options &= ~1;
     }
 }
 

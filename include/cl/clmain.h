@@ -98,7 +98,7 @@ extern context_s *Context;
 extern const ilsuffix_s Il_suffix[];
 extern int EncDefaults[];
 extern int DefaultsMarked;
-extern passinfo_s Passinfo[10];
+extern passinfo_s Passinfo[];
 extern wchar_t *CluiPath;
 extern int Nologo;
 extern int Preprocess;
