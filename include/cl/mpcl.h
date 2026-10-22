@@ -17,6 +17,22 @@ struct worklist_s;
 struct source_s;
 class ProcessChannel;
 
+// source_s is a public PDB tag (?source_s in the newsource/read_source
+// symbols) with a proven 28-byte allocation. Field offsets below are decoded
+// from newsource, write_source and read_source; identifiers are reconstructed.
+// The 0x14 slot is enum source_type in the PDB (the mangled newsource parameter
+// is W4source_type); its enumerators are unresolved, so the storage is int.
+struct source_s {
+    int field_00;                 // +0x00 zeroed at creation
+    unsigned short *name;         // +0x04 wide name, duplicated by newsource
+    unsigned short *object;       // +0x08 same duplicated pointer at creation
+    unsigned short *sbr;          // +0x0C same duplicated pointer at creation
+    int field_10;                 // +0x10 zeroed at creation
+    int type;                     // +0x14 source_type; enumerators unresolved
+    short field_18;               // +0x18
+    short field_1a;               // +0x1A
+};
+
 // worklist_s is a public PDB tag (?worklist_s, seen in action_t's constructor
 // and in the worklist walkers). Only the prefix used by mpcl.obj is declared
 // here: the chain link at 0x00 and the source pointer at 0x04, both directly
@@ -102,6 +118,7 @@ public:
     int read_int_robust();
     void expect_int_robust(int);
     void write_string(const unsigned short *);
+    void write_source(source_s *);
 
 protected:
     HANDLE process_handle;
@@ -161,5 +178,6 @@ extern long current_batch_sources;
 
 action_t *__cdecl get_action_nonbatching();
 void __cdecl schedule_next_batch();
+void __cdecl free_batches();
 
 #endif

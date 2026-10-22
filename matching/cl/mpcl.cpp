@@ -523,3 +523,38 @@ void __cdecl schedule_next_batch()
         ++next_batch;
     }
 }
+
+// FUNCTION: cl 0x40A12D
+// SYMBOL: ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z
+// Complete 155-byte CFG: the serialized payload length excludes its own
+// four-byte prefix, then the three wide strings, the source type and the two
+// trailing shorts are written through the virtual write slot.
+void ProcessChannel::write_source(source_s *source)
+{
+    unsigned long size = 0;
+    size += wcslen(source->name) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += wcslen(source->object) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += wcslen(source->sbr) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += sizeof(unsigned long) + sizeof(unsigned short) + sizeof(unsigned short);
+    write(&size, sizeof size);
+    write_string(source->name);
+    write_string(source->object);
+    write_string(source->sbr);
+    write(&source->type, sizeof source->type);
+    write(&source->field_18, sizeof source->field_18);
+    write(&source->field_1a, sizeof source->field_1a);
+}
+
+// FUNCTION: cl 0x40AE65
+// SYMBOL: ?free_batches@@YAXXZ
+// Complete 59-byte CFG: clear every batch queue in the array, then release the
+// array through the compiler-generated vector deleting destructor.
+void __cdecl free_batches()
+{
+    for (unsigned int i = 0; i < num_batches; ++i)
+        batches[i].clean();
+    delete[] batches;
+}

@@ -1382,6 +1382,50 @@
       },
       "gate_enabled": false,
       "pending": "Diagnosed register/schedule residue: retail loads next_batch into EAX, uses it for the bounds test and the 0x3C batch index, then does inc dword [next_batch] after the call (0x40A673); the candidate keeps the value in callee-saved ESI across the call and stores it back. Levers compiled in the real unit: direct member access, named Queue reference, local index copy, and indexed pointer local, all identical ESI shape; volatile is ruled out by the public identity ?next_batch@@3IA versus the compiler's ?x@@3IC for volatile unsigned int. Never counted."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z",
+      "retail_va": "0x40a12d",
+      "size": 155,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 532,
+        "end": 549
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 155 bytes at 0x40A12D..0x40A1C7: three cached wcslen calls over the source_s wide fields, three lea accumulations with constants 6/6/14 (the fixed trailing field sizes folded into the last), one virtual write of the four-byte size, three real write_string calls, then virtual writes of the 4-byte type and the two trailing 2-byte shorts, ret 4. Complete CFG; every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z; member __thiscall, source_s pointer argument, ret 4.",
+      "compiler_context": {
+        "evidence": "One canonical mpcl.obj identity per object; real util.cpp/dos/clmain/Watson bodies are linked only because the unit's delete path resolves through the registered util dependency. Only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?free_batches@@YAXXZ",
+      "retail_va": "0x40ae65",
+      "size": 59,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 555,
+        "end": 560
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 59 bytes at 0x40AE65..0x40AE9F: unsigned loop over num_batches calling clean() on batches[i] with the proven 0x3C Queue stride, then the null-tested vector delete of the batches array through the compiler-generated ??_E deleting destructor, ret. Complete CFG; all ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?free_batches@@YAXXZ; cdecl, no arguments, void.",
+      "compiler_context": {
+        "evidence": "One canonical mpcl.obj identity per object; real util.cpp/dos/clmain/Watson bodies are linked only because the unit's delete path resolves through the registered util dependency. Only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      },
+      "gate_enabled": false,
+      "pending": "Real delete[] is tail-transformed in this LTCG context: the candidate emits a 56-byte body ending in jmp to a specialized vector deleting destructor (EAX-carried this) instead of retail's 59-byte push 3 / call ??_E / ret sequence, so the span overruns by 3 bytes and the partial PE relocation is rejected. The clean() loop matches instruction-for-instruction. Tested levers: direct delete[] and a named array-pointer local, both identical. Not counted."
     }
   ],
   "referents": {
@@ -1954,6 +1998,22 @@
         "dll": "KERNEL32.dll",
         "name": "DeleteCriticalSection",
         "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!DeleteCriticalSection; canonical windows.h declaration supplies the source interface."
+      },
+      "?write_string@ProcessChannel@@QAEXPBG@Z": {
+        "va": "0x40a0d1",
+        "evidence": "Actual public ProcessChannel::write_string body already registered and matched over 55 bytes; write_source calls this exact address three times."
+      },
+      "?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z": {
+        "va": "0x40a12d",
+        "evidence": "Actual public ProcessChannel::write_source body decoded over 155 bytes; send transfers the source through this exact member."
+      },
+      "?clean@?$Queue@Uaction_t@@@@QAEXXZ": {
+        "va": "0x40a9d5",
+        "evidence": "Actual public Queue<action_t>::clean body decoded over 84 bytes in this unit; free_batches calls this exact address per batch."
+      },
+      "??_E?$Queue@Uaction_t@@@@QAEPAXI@Z": {
+        "va": "0x40ae1c",
+        "evidence": "Actual public vector deleting destructor for Queue<action_t>, emitted by the real delete[] in free_batches and decoded over 73 bytes; the source expression is delete[] batches."
       }
     }
   }
