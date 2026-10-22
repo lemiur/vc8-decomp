@@ -1,0 +1,45 @@
+{
+  "candidate_alias_records": [
+    {
+      "is_function": false,
+      "name": "__alloca_probe",
+      "object_name": "msvcrt:chkstk.obj",
+      "va": 268441184
+    },
+    {
+      "is_function": true,
+      "name": "__chkstk",
+      "object_name": "msvcrt:chkstk.obj",
+      "va": 268441184
+    }
+  ],
+  "candidate_bytes_sha256": "f8675b4976f7b8efc0bd917aebab734d11ca90222d20bcd2a166ce9914ed2b6e",
+  "compared_cfg_extent": 43,
+  "evidence": "Retail 0x40bd30 is one closed 43-byte compiler stack-probe entry exported under two public PDB aliases, __alloca_probe and __chkstk, both owned by DBI module 20 build\\intel\\dll_obj\\chkstk.obj. The 43 bytes were decoded as one closed CFG with only internal branches and no calls, and the fresh candidate link pulls the same closed helper (msvcrt:chkstk.obj) with the same two aliases at one MAP address and byte-identical contents. Toolchain/fallback bytes are never counted as source.",
+  "kind": "compiler-stack-probe-shared-entry-identity",
+  "retail_bytes_sha256": "f8675b4976f7b8efc0bd917aebab734d11ca90222d20bcd2a166ce9914ed2b6e",
+  "retail_identity": {
+    "binary_sha256": "71c93ca5bddc9b2816d0e053cac2b952f926f6b9321fab6b1ab6e8603621324c",
+    "pdb_path": "E:\\vc8-decomp\\symbols\\cl.pdb\\720089F2F35A4A128093E654DACA52261\\cl.pdb",
+    "pdb_sha256": "3515daedc059a9843cba9927e51049818da7fcf6eff5a3e76ca95facb2fc7dd0"
+  },
+  "retail_public_alias_records": [
+    {
+      "group": "functions",
+      "module": "build\\intel\\dll_obj\\chkstk.obj",
+      "module_index": 20,
+      "name": "__chkstk",
+      "public_flags": 2,
+      "va": 4242736
+    },
+    {
+      "group": "data",
+      "module": "build\\intel\\dll_obj\\chkstk.obj",
+      "module_index": 20,
+      "name": "__alloca_probe",
+      "public_flags": 0,
+      "va": 4242736
+    }
+  ],
+  "schema_version": 1
+}
