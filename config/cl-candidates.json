@@ -957,6 +957,120 @@
       "compiler_context": {
         "evidence": "Canonical HANDLE g_hMutex has actual PDB public identity and unique mpcl.obj owner, with loader-zero storage. Its real data root preserves observed external mutability across the partial standalone source context. Real mpcl/Watson bodies are dependencies, setter root preserves previously proven standard ABI; no dummy code or exported controls."
       }
+    },
+    {
+      "binary": "cl",
+      "symbol": "__ValidateImageBase",
+      "retail_va": "0x40c4f0",
+      "size": 41,
+      "unit": "matching/cl/crt_pesect.c",
+      "source_span": {
+        "start": 16,
+        "end": 43
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40c4f0 through the ret at 0x40c518: 14 contiguous instructions, both local branches (je 0x40c4fe, jne 0x40c4fb) land inside the body, and no data or call referent exists. The seven 0xcc bytes 0x40c519..0x40c51f are inter-function padding before public __FindPESection at 0x40c520, so the function is exactly 41 bytes. Installed-era crt/src/pesect.c source owner compares every emitted byte under measured plain-CRT flags (gl:false, /O1)."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 __ValidateImageBase with unique DBI section contribution to build/intel/dll_obj/pesect.obj (module 34); decorated form of the installed source's BOOL __cdecl _ValidateImageBase(PBYTE pImageBase), whose single [esp+4] argument and caller cleanup are directly decoded. Source is the installed 8.0.50727.762 crt/src/pesect.c (SHA-256 recorded in the unit)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__FindPESection",
+      "retail_va": "0x40c520",
+      "size": 66,
+      "unit": "matching/cl/crt_pesect.c",
+      "source_span": {
+        "start": 47,
+        "end": 83
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40c520 through the ret at 0x40c561: 29 contiguous instructions, four local branches (jbe 0x40c55c, jb 0x40c552, jb 0x40c55e, jb 0x40c542) all land inside the body, the loop walks NumberOfSections and no external data or call referent exists. The fourteen 0xcc bytes 0x40c562..0x40c56f are padding before public __IsNonwritableInCurrentImage at 0x40c570, so the function is exactly 66 bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 __FindPESection with unique DBI section contribution to build/intel/dll_obj/pesect.obj (module 34); decorated form of the installed source's PIMAGE_SECTION_HEADER __cdecl _FindPESection(PBYTE, DWORD_PTR), whose two stack arguments and ret0 caller cleanup are directly decoded."
+    },
+    {
+      "binary": "cl",
+      "symbol": "_atexit",
+      "retail_va": "0x40bc69",
+      "size": 18,
+      "unit": "matching/cl/crt_atonexit.c",
+      "source_span": {
+        "start": 77,
+        "end": 82
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40bc69 through the ret at 0x40bc7a: 8 contiguous instructions (push, call __onexit, neg, sbb, neg, pop, dec, ret); the only branch is the rel32 call to __onexit at 0x40bbc4. The five 0xcc bytes 0x40bc7b..0x40bc7f are padding before the next public at 0x40bc80, so the function is exactly 18 bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 _atexit with the same unique build/intel/dll_obj/atonexit.obj (module 25) contribution as _onexit; decorated form of the installed source's int __cdecl atexit(_PVFV func), one [esp+4] argument, caller cleanup, and the decoded neg/sbb/neg/dec sequence is exactly the source's (result == NULL) ? -1 : 0."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__onexit",
+      "retail_va": "0x40bbc4",
+      "size": 165,
+      "unit": "matching/cl/crt_atonexit.c",
+      "source_span": {
+        "start": 28,
+        "end": 73
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40bbc4 through the ret at 0x40bc68 (the out-of-line __finally funclet at 0x40bc60 belongs to this function and is reached by the decoded call at 0x40bc52): 53 contiguous instructions, every branch decoded, no padding, and the next public _atexit starts immediately at 0x40bc69, so the span is exactly 165 bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 __onexit with unique DBI contribution build/intel/dll_obj/atonexit.obj (module 25); decorated form of the installed source's _onexit_t __cdecl _onexit(_onexit_t), whose [esp+4] argument, caller cleanup, SEH4 prolog/epilog and msvcr80.dll _decode_pointer/_onexit/_encode_pointer references are directly decoded. Source is the installed 8.0.50727.762 crt/src/atonexit.c.",
+      "gate_enabled": false,
+      "pending": "Complete body reproduced exactly by the installed-era source under measured /O1: all 53 instructions, every branch, and 16 of 17 ordered referents match after binding. The only unresolved referent is offset 3, the compiler-generated SEH4 scope-table address (retail 0x415d58): it has no candidate MAP symbol, and its contents embed the funclet address 0x40bc60, so a literal byte binding cannot match a fresh build. It needs a compiler-generated-payload referent kind in tools/gate.py (integration-owner tooling, not editable in this lane)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__IsNonwritableInCurrentImage",
+      "retail_va": "0x40c570",
+      "size": 187,
+      "unit": "matching/cl/crt_pesect.c",
+      "source_span": {
+        "start": 87,
+        "end": 136
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40c570 through the ret at 0x40c62a: 66 contiguous instructions covering the SEH4 body, its inlined __except filter/handler at 0x40c5f9 and the shared epilog; the decoded branches (call __ValidateImageBase 0x40c4f0, je 0x40c610 twice, call __FindPESection 0x40c520) all land inside the body. The single 0xcc byte 0x40c62b is padding before the next public at 0x40c62c, so the span is exactly 187 bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 __IsNonwritableInCurrentImage with unique DBI contribution build/intel/dll_obj/pesect.obj (module 34); decorated form of the installed source's BOOL __cdecl _IsNonwritableInCurrentImage(PBYTE), one [esp+4] argument, caller cleanup, and the source's __try/__except (GetExceptionCode() == STATUS_ACCESS_VIOLATION) structure is directly decoded as the SEH4 frame, filter and handler.",
+      "gate_enabled": false,
+      "pending": "Complete body reproduced exactly by the installed-era pesect.c under measured plain-CRT flags: all 66 instructions match. Not admitted: of the 14 ordered referents, the compiler-generated SEH4 scope table at 0x415df8 has no MAP identity and embeds the filter/handler addresses 0x40c5f9/0x40c60d; four fs:[0] operands (offsets 0x11, 0x2c, 0x7d, 0xaf) decode as absolute zero and three ___ImageBase immediates (offsets 0x3b, 0x4f, 0x55) decode as the linker-defined constant 0x400000, which ltcg.read_map drops as a section-0 symbol. The current referent model has no identity kind for segment-relative zero, the image-base constant or compiler payloads; it needs tooling support before this function can be admitted."
+    },
+    {
+      "binary": "cl",
+      "symbol": "@__security_check_cookie@4",
+      "retail_va": "0x40bba8",
+      "size": 15,
+      "unit": "matching/cl/crt_secchk.c",
+      "source_span": {
+        "start": 12,
+        "end": 28
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40bba8 through the noreturn tail jmp at 0x40bbb2: cmp ecx,[___security_cookie] (6), jne 0x40bbb2 (2), rep ret (2), jmp ___report_gsfailure 0x40c1b0 (5) = 15 bytes; the single 0xcc byte at 0x40bbb7 is padding before the next public at 0x40bbb8. No instruction can continue past the jmp and no alternate terminator exists."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 @__security_check_cookie@4 with unique DBI contribution build/intel/dll_obj/secchk.obj (module 47); fastcall decorated name, cookie in ECX, no stack argument and no caller cleanup, matching the installed source's __fastcall __declspec(naked) UINT_PTR argument.",
+      "gate_enabled": false,
+      "pending": "Byte-exact and fully referent-resolved (15 retail bytes; cmp ecx,___security_cookie; jne +2; rep ret; jmp ___report_gsfailure), but the installed-era source is a __declspec(naked) __asm body and rulecheck R18 blocks it as assembly. Byte evidence that no plain-C form can match: measured VC8 x86 C emits a plain 0xc3 ret and the opposite je/jmp block order for the same semantics, while retail contains f3 c3 (rep ret) between the inverted branch and the noreturn tail jmp. Needs an explicit R18 allow entry in config/rule-exceptions.json (integration owner) plus the // RULE-EXCEPTION marker already present in the unit."
     }
   ],
   "referents": {
@@ -1357,6 +1471,16 @@
         "size": 4,
         "va": "0x41aaf0",
         "evidence": "Actual public PDB ?g_hMutex@@3PAXA uniquely attributed to mpcl.obj; retail loader-zero tail contains the complete four-byte HANDLE slot. Canonical extern/definition in mpcl header/unit, actual constructor reads it and passes it to WaitForSingleObject. Source and retail MAP/public identities independently bound; data is not counted."
+      },
+      "__onexit": {
+        "kind": "symbol",
+        "va": "0x40bbc4",
+        "evidence": "Actual PDB S_PUB32 __onexit with unique DBI contribution build/intel/dll_obj/atonexit.obj (module 25); decorated form of the reconstructed source _onexit. atexit at 0x40bc69 calls it with a direct e8 rel32 to exactly 0x40bbc4, and the candidate links the reconstructed same-unit __onexit, so the candidate MAP identity and this retail target are the same canonical symbol."
+      },
+      "___report_gsfailure": {
+        "kind": "symbol",
+        "va": "0x40c1b0",
+        "evidence": "Actual PDB S_PUB32 ___report_gsfailure with unique DBI contribution build/intel/dll_obj/gs_report.obj (module 30); the retail secchk helper's noreturn tail jmp resolves exactly 0x40c1b0. The candidate link uses the installed 8.0.50727.762 msvcrt.lib gs_report.obj body, whose MAP public is the same decorated symbol; no stub or replacement body."
       }
     }
   }

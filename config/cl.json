@@ -56,6 +56,57 @@
         "/O1"
       ],
       "evidence": "Complete Filter23B, screen_length92B and redirect22B probes match; redirect additionally requires its evidence-backed real escaped data root, recorded per candidate."
+    },
+    "matching/cl/crt_pesect.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/GL",
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/GS",
+        "/D_CRTBLD",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain CRT object, not compiler-owned /GL code: config/cl.json crt_code requires a separate profile, so the unit is built with gl:false and an explicit /GL- (the common /GL is removed). Installed-era SP1 crt/src/pesect.c (SHA-256 recorded in the unit) is the source; its own pragma optimize(\"t\", on) makes these bodies speed-optimized. Measured: /O1 and /O2 both reproduce the complete non-referent bytes of all three retail bodies; /O1 is pinned, /O2 is not distinguished. /GS is measured required: a /GS- build of the same source changes __IsNonwritableInCurrentImage's SEH frame in 166 of 187 bytes, because retail's frame stores ___security_cookie (xor [ebp-8],eax) and calls __except_handler4. msvcrt.lib (installed 8.0.50727.762, SHA-256 recorded in the unit) supplies the real era __except_handler4 and ___security_cookie members; no stub bodies."
+    },
+    "matching/cl/crt_atonexit.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/GL",
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/GS",
+        "/D_CRTBLD",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain CRT object, not compiler-owned /GL code: built with gl:false and an explicit /GL- (the common /GL is removed). Installed-era SP1 crt/src/atonexit.c (SHA-256 recorded in the unit) is the source; its own client-side _DLL context is reproduced in the header. Measured: /O1 reproduces every non-referent byte of the retail 165-byte _onexit span and the 18-byte atexit span; /O2 differs at the _onexit SEH prolog (it adds a local frame), so /O1 is required. /GS is also measured required: /GS- changes the _onexit SEH prolog in 72 of 165 bytes and even the rel32 call inside atexit. msvcrt.lib (installed 8.0.50727.762) supplies the real era __SEH_prolog4/__SEH_epilog4/__except_handler4 bodies and the _lock/__unlock/__dllonexit client thunks; the msvcr80.dll import slots are the source's own _decode_pointer/_encode_pointer/_onexit references."
+    },
+    "matching/cl/crt_secchk.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/GL",
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/GS",
+        "/D_CRTBLD",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain CRT object, not compiler-owned /GL code: built with gl:false and an explicit /GL- (the common /GL is removed). Installed-era SP1 crt/src/intel/secchk.c (SHA-256 recorded in the unit) is the source; its naked __asm body is the only attributable form of the 15 retail bytes (cmp/jne/rep ret/jmp), because VC8 x86 C emits a plain c3 and the opposite branch/jmp order. /O1 and /O2 are not distinguished by this body. msvcrt.lib supplies the real era ___security_cookie (gs_cookie.obj) and ___report_gsfailure (gs_report.obj) bodies. The R18 exception is recorded as pending in config/cl-candidates.json until the integration owner admits it."
     }
   },
   "flags": {
