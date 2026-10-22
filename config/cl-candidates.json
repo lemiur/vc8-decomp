@@ -2021,6 +2021,194 @@
       "compiler_context": {
         "evidence": "No callee or data referent; the genuine wide-character assignments and counter reuse reproduce the observed pointer increment schedule."
       }
+    },
+    {
+      "binary": "cl",
+      "symbol": "___security_init_cookie",
+      "retail_va": "0x40c664",
+      "size": 148,
+      "unit": "matching/cl/crt_gs.c",
+      "source_span": {
+        "start": 59,
+        "end": 138
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 148 bytes 0x0040c664..0x0040c6f7: push ebp/mov ebp,esp/sub esp,10, the cookie early-out (cmp 0xBB40E64E, test 0xFFFF0000), the FT zero-init and GetSystemTimeAsFileTime, the four Process/Thread/Tick/Performance xors, the DEFAULT_SECURITY_COOKIE+1 and cookie<<16 fixups, the two cookie stores and the final leave/ret at 0x0040c6f6/0x0040c6f7. The next byte 0x0040c6f8 begins the __crt_debugger_hook import thunk, so the body has no padding and no shared tail. Every byte and ordered referent was compared under the unit's actual /O1 plain-object compile and the group's real link; non-relocation bytes are 112/112 equal and the five kernel32 IAT references plus the two .data cookies are the complete ordered referent list."
+      },
+      "dependencies": [
+        "matching/cl/crt_gs_cookie.c"
+      ],
+      "roots": [
+        "___security_init_cookie"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c664, module 31 build\\intel\\dll_obj\\gs_support.obj (DBI section contribution), size 148 from the next public start. Source is the installed-era crt/src/gs_support.c (SHA-256 AD03EE25A3A9DF28A4BD780A99E31C4462ABC036F8FF6D5792495650419FBEE8, file time 2006-12-01), whose release path compiles exactly to this body under /O1; the debug late-init check is absent from retail, proving _DEBUG was not defined. The cookie objects are PDB data publics owned by gs_cookie.obj (module 29)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__setdefaultprecision",
+      "retail_va": "0x40c638",
+      "size": 41,
+      "unit": "matching/cl/crt_fp8.c",
+      "source_span": {
+        "start": 26,
+        "end": 29
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 41 bytes 0x0040c638..0x0040c660: push esi; push _PC_53 (0x30000); push _MCW_PC (0x10000); push NULL; call the msvcr80.dll _controlfp_s import thunk; add esp,0xc; test eax,eax; the _invoke_watson path with five NULL pushes plus add esp,0x14; pop esi; ret. The next byte 0x0040c661 starts merr.obj's __matherr, so the body ends exactly at the ret. Every byte is 33/33 equal outside relocation operands; the ordered referents are the _controlfp_s and _invoke_watson thunks only."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c638, module 44 build\\intel\\dll_obj\\fp8.obj, 41 bytes to the next public start. Source is the installed-era crt/src/intel/fp8.c (SHA-256 FC1AF3276F8C97BAB88A78B3A8B16A408EFF214ACA73F132AA6F049BF8DB5D6B, file time 2005-09-22), compiled under the CRT's real _CRTBLD context with an empty _CRTIMP so the internal calls are non-dllimport and resolve to the msvcr80.dll import thunks exactly as retail does."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__RTC_Initialize",
+      "retail_va": "0x40c49c",
+      "size": 36,
+      "unit": "matching/cl/crt_initsect.c",
+      "source_span": {
+        "start": 37,
+        "end": 46
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 36 bytes 0x0040c49c..0x0040c4bf: push esi; push edi; mov eax,iaa+4; mov edi,izz; cmp eax,edi; mov esi,eax; jae exit; loop over [esi,edi) with mov eax,[esi]/test/je/call eax/add esi,4/cmp/jb; pop edi; pop esi; ret. The next public start 0x0040c4c0 is __RTC_Terminate, so no padding follows. Non-relocation bytes are 28/28 equal under /O1; the two ordered absolute references are iaa+4 and izz, which coincide at 0x00415c68 because the four 4-byte sentinels are laid out izz=iaa+4."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c49c, module 52 ..\\build\\intel\\dll_obj\\initsect.obj, 36 bytes to the next public start. The installed source tree does not ship initsect.c, so the body and the table markers are decoded from retail and from the PDB data publics ___rtc_iaa/___rtc_izz/___rtc_taa/___rtc_tzz in the same module. C decoration maps the source spellings _RTC_Initialize/_RTC_Terminate to the public decorations.",
+      "referent_note": "Referent precedence regression after merging master: the candidate's two absolute table references resolve to ___rtc_izz/___rtc_tzz in the candidate MAP, but ltcg.scan_referents consults literal bindings before MAP aliases, and master's 2-byte literal binding for L\"\" at 0x415a48 matches any two zero bytes, so the table bounds are reported as that literal and the ordered target check fails (score stays 77.78 = 28/36 with the two 4-byte operands unnormalized). Before the merge this candidate measured 100 with boundary=verified referents=resolved (build/cl/39425d2c..., 657a840a...). The unit source and bytes are unchanged; the fix belongs in the scanner (prefer an exact MAP symbol over a content-hash literal)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__RTC_Terminate",
+      "retail_va": "0x40c4c0",
+      "size": 36,
+      "unit": "matching/cl/crt_initsect.c",
+      "source_span": {
+        "start": 50,
+        "end": 59
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 36 bytes 0x0040c4c0..0x0040c4e3: identical runner shape over the term table, mov eax,taa+4; mov edi,tzz; the [esi,edi) loop; pop edi; pop esi; ret. The next public start is 0x0040c4e4, so the body has no padding. Non-relocation bytes are 28/28 equal under /O1; the ordered references are taa+4 and tzz, which coincide at 0x00415c70 for the same sentinel-layout reason."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c4c0, module 52 ..\\build\\intel\\dll_obj\\initsect.obj, 36 bytes to the next public start. Same provenance and declaration basis as __RTC_Initialize; both runners are decoded bodies with no installed-era source available.",
+      "referent_note": "Referent precedence regression after merging master: the candidate's two absolute table references resolve to ___rtc_izz/___rtc_tzz in the candidate MAP, but ltcg.scan_referents consults literal bindings before MAP aliases, and master's 2-byte literal binding for L\"\" at 0x415a48 matches any two zero bytes, so the table bounds are reported as that literal and the ordered target check fails (score stays 77.78 = 28/36 with the two 4-byte operands unnormalized). Before the merge this candidate measured 100 with boundary=verified referents=resolved (build/cl/39425d2c..., 657a840a...). The unit source and bytes are unchanged; the fix belongs in the scanner (prefer an exact MAP symbol over a content-hash literal)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?__CxxUnhandledExceptionFilter@@YGJPAU_EXCEPTION_POINTERS@@@Z",
+      "retail_va": "0x40c44b",
+      "size": 61,
+      "unit": "matching/cl/crt_unhandld.cpp",
+      "source_span": {
+        "start": 27,
+        "end": 44
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 61 bytes 0x0040c44b..0x0040c487: mov eax,[esp+4]; mov eax,[eax]; cmp dword [eax],0xE06D7363; jne return-0; cmp dword [eax+0x10],3; jne return-0; mov eax,[eax+0x14]; four compares against 0x19930520/0x19930521/0x19930522/0x01994000 each jumping to the terminate call; call terminate; xor eax,eax; ret 4. The next public start 0x0040c488 is __CxxSetUnhandledExceptionFilter, so there is no padding and no shared tail. All 57 non-relocation bytes are identical under the unit's /O1 build; the ordered referents are the terminate thunk and no data."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c44b, module 36 build\\intel\\dll_obj\\unhandld.obj, 61 bytes to the next public start. The installed tree does not ship unhandld.cpp, so the body is decoded from retail. C++ linkage is proven by the mangled spelling ?__CxxUnhandledExceptionFilter@@YGJ... (J = long return, PAU_EXCEPTION_POINTERS = struct pointer); the source must not be extern \"C\"."
+    },
+    {
+      "binary": "cl",
+      "symbol": "___CxxSetUnhandledExceptionFilter",
+      "retail_va": "0x40c488",
+      "size": 14,
+      "unit": "matching/cl/crt_unhandld.cpp",
+      "source_span": {
+        "start": 48,
+        "end": 52
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 14 bytes 0x0040c488..0x0040c495: push offset 0x0040c44b; call dword ptr [0x40d038] (SetUnhandledExceptionFilter); xor eax,eax; ret. The following six bytes 0x0040c496..0x0040c49b are the separate __amsg_exit import thunk (jmp dword ptr [0x40d1a8]) and 0x0040c49c is __RTC_Initialize, so the body ends exactly at the ret. All 6 non-relocation bytes are identical under /O1."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c488, module 36 build\\intel\\dll_obj\\unhandld.obj, 14 bytes. The three leading underscores are the C decoration of the source spelling __CxxSetUnhandledExceptionFilter (cdecl, no parameters). The decoded literal zero return (`xor eax,eax` after the call) proves a non-void LONG return of 0, not a void function."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?__ArrayUnwind@@YGXPAXIHP6EX0@Z@Z",
+      "retail_va": "0x40c38a",
+      "size": 94,
+      "gate_enabled": false,
+      "pending": "Byte-exact but not admissible: the 94-byte body reproduces retail exactly outside relocation operands (78/78 non-relocation bytes, every relative branch included; 82/94 bytes equal with no normalization). The blocking referent is the compiler-generated SEH scope table: the prolog's `push 0x00415db8` targets a table with no PDB public name and no candidate MAP symbol, so its identity cannot be independently resolved, and the table's own entries are absolute filter/handler addresses so a content-hash literal binding cannot match either. The remaining referents are resolvable (__SEH_prolog4, __SEH_epilog4, ?terminate@@YAXXZ). Re-enable only if the harness gains a compiler-generated-SEH-table identity rule.",
+      "unit": "matching/cl/crt_ehvecdtr.cpp",
+      "source_span": {
+        "start": 33,
+        "end": 47
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 94 bytes 0x0040c38a..0x0040c3e7: push 0x14; push sehtable 0x00415db8; call __SEH_prolog4; and [ebp-4],0; loop dec [ebp+0x10]/js with ptr-size store and indirect destructor call; the inlined except filter (ExceptionCode == 0xE06D7363 -> terminate, else return CONTINUE_SEARCH) emitted between the loop and the epilog at 0x0040c3ad..0x0040c3d6; shared epilog mov [ebp-4],-2; call __SEH_epilog4; ret 0x10 at 0x0040c3d9..0x0040c3e7. The next public start 0x0040c3e8 is ??_M, so the span is exactly this COMDAT. All 78 non-relocation bytes are identical under /O1; /O2 was tested and rejected."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c38a, module 28 build\\intel\\dll_obj\\ehvecdtr.obj, 94 bytes to the next public start. The mangled name proves void __stdcall __ArrayUnwind(void *, unsigned int, int, void (__thiscall *)(void *)); the callback convention is independently proven by the decoded call sites, which pass the element address in ECX and push nothing. The era object is prebuilt and its source is not installed, so the body is decoded from retail and matched against the installed libcmt.lib member copy (byte-identical outside relocations)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?_AtlGetThreadACPFake@ATL@@YGIXZ",
+      "retail_va": "0x40c716",
+      "size": 101,
+      "unit": "matching/cl/crt_atl.cpp",
+      "source_span": {
+        "start": 26,
+        "end": 50
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 101 bytes 0x0040c716..0x0040c77a: push ebp/mov ebp,esp/sub esp,0Ch, the /GS cookie load + xor ebp store at [ebp-4], push esi, xor esi,esi, GetThreadLocale, GetLocaleInfoA(thread, LOCALE_IDEFAULTANSICODEPAGE, char[7], 7), the digit parse loop (imul 10/add -'0'/movsx) and the GetACP fallback, then the cookie check and leave/ret at 0x0040c779/0x0040c77a. The next public start 0x0040c77b is _AtlGetThreadACPReal, so the body is contiguous with no padding. All 81 non-relocation bytes are identical under /O1."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c716, module 54 INTEL\\Release_1\\atltrace.obj; 101 bytes to the next public start. The body is the installed-era atlmfc/include/atlconv.h inline definition at lines 104-128 (SHA-256 recorded in include/cl/crt_atl.h), emitted out of line because _AtlGetThreadACPThunk takes its address."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?_AtlGetThreadACPReal@ATL@@YGIXZ",
+      "retail_va": "0x40c77b",
+      "size": 4,
+      "unit": "matching/cl/crt_atl.cpp",
+      "source_span": {
+        "start": 54,
+        "end": 57
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 4 bytes 0x0040c77b..0x0040c77e: push 3; pop eax; ret, the /O1 form of `return CP_THREAD_ACP;`. The next public start 0x0040c77f is _AtlGetThreadACPThunk, so nothing follows. All 4 bytes are identical."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c77b, module 54 atltrace.obj, 4 bytes. Body is atlconv.h lines 130-133; emitted out of line because the thunk takes its address."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?_AtlGetThreadACPThunk@ATL@@YGIXZ",
+      "retail_va": "0x40c77f",
+      "size": 100,
+      "unit": "matching/cl/crt_atl.cpp",
+      "source_span": {
+        "start": 61,
+        "end": 83
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 100 bytes 0x0040c77f..0x0040c7e2: push ebp/mov ebp,esp/sub esp,98h, /GS cookie, lea eax,[ebp-98h] + push with dwOSVersionInfoSize=94h, GetVersionExA, compare dwPlatformId==2 and dwMajorVersion>=5 with the Real/Fake address materialization (mov eax,0x40c77b / 0x40c716), then the InterlockedExchange store to g_pfnGetThreadACP and the indirect call through that pointer, probe, cookie check, leave, ret. The next byte 0x0040c7e3 is outside the module; the function ends at the ret. All 68 non-relocation bytes are identical under /O1."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c77f, module 54 atltrace.obj, 100 bytes (next public start absent; end verified by the complete decode). Body is atlconv.h lines 137-156, with ATL's own InterlockedExchangePointer inline (lines 90-93) reduced to its single ::InterlockedExchange call; the defining atltrace.cpp initializer sets g_pfnGetThreadACP to this function."
     }
   ],
   "referents": {
@@ -2960,6 +3148,177 @@
         "dll": "MSVCR80.dll",
         "name": "fseek",
         "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "___security_cookie_complement": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "UINT_PTR",
+        "size": 4,
+        "va": "0x417c48",
+        "evidence": "Actual PDB data public ___security_cookie_complement uniquely attributed to gs_cookie.obj (module 29) in .data; retail bytes are b1 19 bf 44 (== ~0xBB40E64E). ___security_init_cookie stores it on both the early-out and the full-initialization paths."
+      },
+      "kernel32.dll!GetSystemTimeAsFileTime": {
+        "kind": "import",
+        "va": "0x40d048",
+        "dll": "KERNEL32.dll",
+        "name": "GetSystemTimeAsFileTime",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d048]. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetCurrentProcessId": {
+        "kind": "import",
+        "va": "0x40d0b0",
+        "dll": "KERNEL32.dll",
+        "name": "GetCurrentProcessId",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d0b0]. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetCurrentThreadId": {
+        "kind": "import",
+        "va": "0x40d0b4",
+        "dll": "KERNEL32.dll",
+        "name": "GetCurrentThreadId",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d0b4]. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetTickCount": {
+        "kind": "import",
+        "va": "0x40d02c",
+        "dll": "KERNEL32.dll",
+        "name": "GetTickCount",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d02c]. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!QueryPerformanceCounter": {
+        "kind": "import",
+        "va": "0x40d030",
+        "dll": "KERNEL32.dll",
+        "name": "QueryPerformanceCounter",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d030] with the LARGE_INTEGER address. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "msvcr80.dll!_controlfp_s": {
+        "kind": "import",
+        "va": "0x40d1a0",
+        "dll": "MSVCR80.dll",
+        "name": "_controlfp_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; retail fp8.obj calls the linker-generated thunk at 0x0040c710, whose only instruction jumps through this slot. The unit's non-dllimport reference through the era import library reproduces the same thunk form. Canonical era crt/src/internal.h declaration supplies the source interface."
+      },
+      "msvcr80.dll!_invoke_watson": {
+        "kind": "import",
+        "va": "0x40d19c",
+        "dll": "MSVCR80.dll",
+        "name": "_invoke_watson",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; retail fp8.obj calls the linker-generated thunk at 0x0040c70a, whose only instruction jumps through this slot. Canonical era crt/src/internal.h declaration supplies the source interface."
+      },
+      "__controlfp_s": {
+        "kind": "symbol",
+        "entity_kind": "thunk",
+        "type": "errno_t (__cdecl *)(unsigned int, unsigned int, unsigned int *)",
+        "size": 6,
+        "va": "0x40c710",
+        "evidence": "PDB public __controlfp_s attributed to the MSVCR80.dll import module, whose complete six-byte body is jmp dword ptr [__imp___controlfp_s] at 0x40d1a0. It is the linker-generated import thunk that retail fp8.obj's call targets, and the candidate's own non-dllimport reference produces the same named thunk, so the identity is the same symbol in both images."
+      },
+      "__invoke_watson": {
+        "kind": "symbol",
+        "entity_kind": "thunk",
+        "type": "void (__cdecl *)(const wchar_t *, const wchar_t *, const wchar_t *, unsigned int, uintptr_t)",
+        "size": 6,
+        "va": "0x40c70a",
+        "evidence": "PDB public __invoke_watson attributed to the MSVCR80.dll import module; complete six-byte body jmp dword ptr [__imp___invoke_watson] at 0x40d19c. Retail fp8.obj's _ERRCHECK expansion calls this thunk, and the candidate produces the same named thunk through the era import library."
+      },
+      "___rtc_izz": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "_PVFV[1]",
+        "size": 4,
+        "va": "0x415c68",
+        "evidence": "Actual PDB data public ___rtc_izz uniquely attributed to initsect.obj (module 52) in .rdata; retail bytes are four zero bytes. It is the end of the .rtc$IAA init table, and because the four four-byte sentinels are laid out back to back it is also iaa+4, which is why the *both* bounds of the retail __RTC_Initialize runner resolve to this one symbol."
+      },
+      "___rtc_tzz": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "_PVFV[1]",
+        "size": 4,
+        "va": "0x415c70",
+        "evidence": "Actual PDB data public ___rtc_tzz uniquely attributed to initsect.obj (module 52) in .rdata; retail bytes are four zero bytes. It is the end of the .rtc$TAA term table and equals taa+4 in the retail sentinel layout, so both bounds of the retail __RTC_Terminate runner resolve to it."
+      },
+      "?terminate@@YAXXZ": {
+        "kind": "symbol",
+        "entity_kind": "thunk",
+        "type": "void (__cdecl *)(void)",
+        "size": 6,
+        "va": "0x40c6fe",
+        "evidence": "PDB public ?terminate@@YAXXZ attributed to the MSVCR80.dll import module; the complete six-byte body at 0x0040c6fe is jmp dword ptr [__imp_?terminate@@YAXXZ] at 0x40d194. Both retail unhandld.obj and fp8.obj call this thunk (E8 rel32), and the candidate's non-dllimport reference through the era import library produces the same named thunk, so the identity is one symbol in both images. Canonical era declaration: crt/src/eh.h:65."
+      },
+      "kernel32.dll!SetUnhandledExceptionFilter": {
+        "kind": "import",
+        "va": "0x40d038",
+        "dll": "KERNEL32.dll",
+        "name": "SetUnhandledExceptionFilter",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail ___CxxSetUnhandledExceptionFilter body pushes the filter address and calls dword ptr [0x40d038]. Canonical era SDK errhandlingapi declaration supplies the source interface."
+      },
+      "?__CxxUnhandledExceptionFilter@@YGJPAU_EXCEPTION_POINTERS@@@Z": {
+        "kind": "symbol",
+        "entity_kind": "function",
+        "type": "LONG (__stdcall *)(struct _EXCEPTION_POINTERS *)",
+        "size": 61,
+        "va": "0x40c44b",
+        "evidence": "The same PDB public function is itself registered as a candidate at 0x0040c44b. ___CxxSetUnhandledExceptionFilter takes its address (push offset 0x0040c44b) and passes it to SetUnhandledExceptionFilter, so the pointer referent identity is the function symbol in both images; no separate data entity is claimed."
+      },
+      "?_AtlGetThreadACPFake@ATL@@YGIXZ": {
+        "kind": "symbol",
+        "entity_kind": "function",
+        "type": "UINT (__stdcall *)(void)",
+        "size": 101,
+        "va": "0x40c716",
+        "evidence": "The same PDB public is registered as a candidate at 0x0040c716. _AtlGetThreadACPThunk materializes its address (mov eax,0x0040c716) as the fallback filter, so the pointer referent identity is the function symbol in both images."
+      },
+      "?_AtlGetThreadACPReal@ATL@@YGIXZ": {
+        "kind": "symbol",
+        "entity_kind": "function",
+        "type": "UINT (__stdcall *)(void)",
+        "size": 4,
+        "va": "0x40c77b",
+        "evidence": "The same PDB public is registered as a candidate at 0x0040c77b. _AtlGetThreadACPThunk materializes its address (mov eax,0x0040c77b) as the Win2K+ filter, so the pointer referent identity is the function symbol in both images."
+      },
+      "?g_pfnGetThreadACP@ATL@@3P6GIXZA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "ATLGETTHREADACP (4-byte function pointer)",
+        "size": 4,
+        "va": "0x417c80",
+        "evidence": "Actual PDB data public ?g_pfnGetThreadACP@ATL@@3P6GIXZA uniquely attributed to atltrace.obj (module 54) in .data. The decoded thunk stores the selected filter through InterlockedExchange at this exact slot and then calls through it; the unit defines it with the atltrace.cpp initializer (address of the thunk)."
+      },
+      "kernel32.dll!GetThreadLocale": {
+        "kind": "import",
+        "va": "0x40d160",
+        "dll": "KERNEL32.dll",
+        "name": "GetThreadLocale",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; _AtlGetThreadACPFake calls dword ptr [0x40d160]. Canonical era SDK winnls.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetLocaleInfoA": {
+        "kind": "import",
+        "va": "0x40d028",
+        "dll": "KERNEL32.dll",
+        "name": "GetLocaleInfoA",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; _AtlGetThreadACPFake calls dword ptr [0x40d028] with LOCALE_IDEFAULTANSICODEPAGE and a seven-byte buffer. Canonical era SDK winnls.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetACP": {
+        "kind": "import",
+        "va": "0x40d108",
+        "dll": "KERNEL32.dll",
+        "name": "GetACP",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; _AtlGetThreadACPFake calls dword ptr [0x40d108] on the nACP == 0 fallback. Canonical era SDK winnls.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetVersionExA": {
+        "kind": "import",
+        "va": "0x40d024",
+        "dll": "KERNEL32.dll",
+        "name": "GetVersionExA",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; _AtlGetThreadACPThunk calls dword ptr [0x40d024] with the 0x94-byte OSVERSIONINFO address. Canonical era SDK winbase.h declaration supplies the source interface."
+      },
+      "kernel32.dll!InterlockedExchange": {
+        "kind": "import",
+        "va": "0x40d054",
+        "dll": "KERNEL32.dll",
+        "name": "InterlockedExchange",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; ATL's own InterlockedExchangePointer inline (atlconv.h lines 90-93) reduces to this call in _AtlGetThreadACPThunk. Canonical era SDK winbase.h declaration supplies the source interface."
       }
     }
   }

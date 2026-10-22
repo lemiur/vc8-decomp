@@ -116,23 +116,31 @@ def scan_referents(image, va, size, symbols=(), bindings=None):
             if len(imported) == 1:
                 identity = next(iter(imported))
             elif not imported:
-                literals = []
-                for key, binding in (bindings or {}).items():
-                    if binding.get('kind') != 'literal':
-                        continue
-                    length = binding.get('size', 0)
-                    if not isinstance(length, int) or not 0 < length <= 65536:
-                        continue
-                    try:
-                        data = image.read_va(target, length)
-                    except ValueError:
-                        continue
-                    if hashlib.sha256(data).hexdigest() == binding.get('bytes_sha256'):
-                        literals.append(key)
-                if len(literals) == 1:
-                    identity = literals[0]
-                elif not literals and len(aliases) == 1:
+                if len(aliases) == 1 and not aliases[0].startswith("??_C@"):
+                    # One exact MAP symbol is a stronger identity than a
+                    # content-hash literal: a two-byte L"" binding must never
+                    # shadow a named zero-initialized object such as
+                    # ___rtc_izz/___rtc_tzz. String-literal MAP symbols
+                    # (??_C@...) keep the content-hash identity because the
+                    # registry records literals by exact payload, not by the
+                    # compiler's pooled symbol name.
                     identity = aliases[0]
+                else:
+                    literals = []
+                    for key, binding in (bindings or {}).items():
+                        if binding.get('kind') != 'literal':
+                            continue
+                        length = binding.get('size', 0)
+                        if not isinstance(length, int) or not 0 < length <= 65536:
+                            continue
+                        try:
+                            data = image.read_va(target, length)
+                        except ValueError:
+                            continue
+                        if hashlib.sha256(data).hexdigest() == binding.get('bytes_sha256'):
+                            literals.append(key)
+                    if len(literals) == 1:
+                        identity = literals[0]
         record = {'offset': offset, 'width': width, 'kind': kind,
                   'target': target, 'identity': identity, 'resolved': identity is not None}
         old = refs.get(offset)

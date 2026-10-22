@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "binary": "cl",
+  "lane": "crt-b",
+  "reviewer": "matching lane crt-b",
+  "review_date": "2026-10-22",
+  "method": "For each function: bounded direct retail disassembly of the exact public span (no decompiler output), independent read of the installed-era source where one exists, and a fresh /GL- object compile with the unit's measured /O1 flag set compared byte by byte. Sources and quoted headers are canonical project headers under include/cl. This is source-rule evidence; the byte gate remains the only admission authority.",
+  "functions": [
+    {
+      "va": "0x40c664",
+      "symbol": "___security_init_cookie",
+      "source_path": "matching/cl/crt_gs.c",
+      "source_span": {"start": 71, "end": 150},
+      "size": 148,
+      "checks": {
+        "R1": "All types and declarations are canonical: UINT_PTR/FILETIME/LARGE_INTEGER and the five Win32 prototypes come from the installed PlatformSDK windows.h, and __security_init_cookie/__security_cookie/__security_cookie_complement are declared exactly once, in include/cl/crt_gs.h. The FT union and DEFAULT_SECURITY_COOKIE define live in the era crt/src/gs_support.c text this body is quoted from (SHA-256 AD03EE25...FBEE8); no local retyped layout, no duplicate declaration.",
+        "R2": "The two globals touched are the real /GS cookie objects: PDB data publics ___security_cookie 0x00417c44 and ___security_cookie_complement 0x00417c48, owned by gs_cookie.obj (module 29), with retail initial bytes 0xBB40E64E and ~0xBB40E64E. They are declared extern in crt_gs.h and defined once with DATA annotations in the owning dependency unit matching/cl/crt_gs_cookie.c; they are registered referents with those exact VAs, and the body's first two ordered references read/write exactly those slots.",
+        "R4": "Real layouts only: FT is the era source's union of unsigned __int64 and FILETIME with initializer {0}, LARGE_INTEGER is the SDK type passed to QueryPerformanceCounter, and the low/high halves are read through the SDK's dwLowDateTime/dwHighDateTime and LowPart/HighPart members. There is no offset cast, no interior-address stand-in and no type punning outside the era source's own union.",
+        "R13": "No class, virtual function, vtable or RTTI model appears; none of the touched SDK types is polymorphic. No vtable evidence exists and none is needed.",
+        "R17": "The body is the era gs_support.c text, statement for statement: the DEFAULT_SECURITY_COOKIE/high-word early-out with complement store and return, the {0} FT initialization, GetSystemTimeAsFileTime, the dwLow/dwHigh xor, the process/thread/tick xors, QueryPerformanceCounter's LowPart/HighPart xors, the DEFAULT+1 and cookie<<16 fixups, and the two cookie stores. Every statement matches a decoded retail instruction group; there are no dummy locals, volatile carriers or steering statements, and the local cookie/systime/perfctr are the values the code actually consumes.",
+        "R18": "Ordinary MS C89 source (a .c unit with /EHsc removed). No inline assembly, no byte array, no binary include, no padding and no decompiler paste; the body is quoted era source with its file hash and file time recorded in crt_gs.h."
+      }
+    },
+    {
+      "va": "0x40c638",
+      "symbol": "__setdefaultprecision",
+      "source_path": "matching/cl/crt_fp8.c",
+      "source_span": {"start": 23, "end": 29},
+      "size": 41,
+      "checks": {
+        "R1": "One canonical declaration: _setdefaultprecision is declared in include/cl/crt_fp8.h from the era intel/fp8.c (SHA-256 FC1AF327...5D6B) and defined once in the unit. _controlfp_s, _invoke_watson and the _ERRCHECK/_INVOKE_WATSON_IF_ERROR inline come from the installed crt/src/internal.h; no local prototype, typedef or duplicate declaration exists.",
+        "R2": "The function touches no project global. Its only externals are the CRT internal _controlfp_s and _invoke_watson, reached exactly as retail reaches them (the msvcr80.dll import thunks) and registered as referents with their retail thunk VAs.",
+        "R4": "No structure or offset model: the body passes NULL, _PC_53 (0x30000) and _MCW_PC (0x10000) as the era fp8.c written, and the error path is the header's own inline watson call. No cast, no layout assumption.",
+        "R13": "No class, virtual function, vtable or RTTI appears.",
+        "R17": "The single statement `_ERRCHECK(_controlfp_s(NULL, _PC_53, _MCW_PC));` is the era body and expands to exactly the decoded instructions: push 0x30000, push 0x10000, push NULL, call the _controlfp_s thunk, add esp,0xC, test eax/eax, the five-NULL _invoke_watson path with add esp,0x14, pop esi, ret. The esi register carries the reused NULL constant, not a fake local.",
+        "R18": "Ordinary MS C89 source. No assembly, byte array, binary include or padding; the source is the installed-era file with hash and file time recorded in the header."
+      }
+    },
+    {
+      "va": "0x40c49c",
+      "symbol": "__RTC_Initialize",
+      "source_path": "matching/cl/crt_initsect.c",
+      "source_span": {"start": 37, "end": 46},
+      "size": 36,
+      "checks": {
+        "R1": "Canonical declarations only: _PVFV, the four table markers and the two runners are declared once in include/cl/crt_initsect.h and the markers defined once in the unit with their real .rtc$IAA/.rtc$IZZ section attributes. The runner's public decoration follows from the C spelling _RTC_Initialize; no duplicate or retyped declaration exists.",
+        "R2": "The four globals are the real PDB data publics of initsect.obj (module 52): ___rtc_iaa 0x00415c64, ___rtc_izz 0x00415c68, ___rtc_taa 0x00415c6c, ___rtc_tzz 0x00415c70, each four zero bytes in retail .rdata. They are defined here with DATA annotations and registered as referents; the two ordered references of this runner resolve to ___rtc_izz (iaa+4 equals izz in the retail sentinel layout, which is why both bounds name that one symbol).",
+        "R4": "Real objects only: the markers are genuine four-byte function-pointer objects laid out by their own section pragmas, and the runner walks them with typed _PVFV pointers. No offset cast, no scaled index model, no interior alias.",
+        "R13": "No class, virtual function, vtable or RTTI appears.",
+        "R17": "Decoded body and source agree exactly: push esi/push edi, the iaa+4 and izz bound loads, cmp/mov/jae, the [esi] load, null test, indirect call, add esi,4 and the cmp/jb loop, pop edi/pop esi/ret. The sentinel slot itself is not an entry, which is why the first bound is __rtc_iaa + 1; the loop bound and cursor are the real values the code uses, with no dummy locals.",
+        "R18": "Ordinary MS C89 source. No assembly, byte array, binary include or padding; the era initsect.c is not installed, so the body is decoded and its byte evidence is recorded in the header."
+      }
+    },
+    {
+      "va": "0x40c4c0",
+      "symbol": "__RTC_Terminate",
+      "source_path": "matching/cl/crt_initsect.c",
+      "source_span": {"start": 50, "end": 59},
+      "size": 36,
+      "checks": {
+        "R1": "Same canonical header as __RTC_Initialize: one declaration of _RTC_Terminate and of the four markers, one definition each. The public decoration follows from the C spelling _RTC_Terminate.",
+        "R2": "The term runner references the real PDB data publics ___rtc_tzz 0x00415c70 (both bounds, since taa+4 equals tzz) owned by initsect.obj, defined once with a DATA annotation and registered as a referent. No other global is touched.",
+        "R4": "Typed _PVFV traversal over the real term-table sentinels; no offset cast or interior-address model.",
+        "R13": "No class, virtual function, vtable or RTTI appears.",
+        "R17": "Decoded body and source agree exactly: the same 36-byte runner over [taa+4, tzz) with the [esi] load, null test, indirect call and the typed cursor increment; all locals are the real traversal values.",
+        "R18": "Ordinary MS C89 source; no assembly, byte array, binary include or padding. Decoded-body provenance is recorded in the header."
+      }
+    },
+    {
+      "va": "0x40c44b",
+      "symbol": "?__CxxUnhandledExceptionFilter@@YGJPAU_EXCEPTION_POINTERS@@@Z",
+      "source_path": "matching/cl/crt_unhandld.cpp",
+      "source_span": {"start": 27, "end": 44},
+      "size": 61,
+      "checks": {
+        "R1": "Canonical declarations: the filter and setter are declared once in include/cl/crt_unhandld.h, EXCEPTION_RECORD/EXCEPTION_POINTERS come from windows.h, terminate from the era crt/src/eh.h (line 65, included), and the EH record constants are defined once in the header with the decoded values. The mangled spelling proves C++ linkage and a LONG __stdcall return; the source matches it, with no extern \"C\" mismatch and no local retyped record.",
+        "R2": "No project global is touched. The only externals are the msvcr80.dll terminate thunk and (in the setter) kernel32's SetUnhandledExceptionFilter IAT slot, both registered referents; no global definition is introduced or duplicated.",
+        "R4": "The real Win32 exception record is used with its canonical members ExceptionCode, NumberParameters and ExceptionInformation[0]; the compiler's own offsets 0x00/0x10/0x14 are exactly those members. No offset cast, no fabricated layout.",
+        "R13": "No class, virtual function, vtable or RTTI appears.",
+        "R17": "Source and decode agree: the code test against 0xE06D7363, the NumberParameters == 3 test, the four magic-value alternatives (0x19930520/21/22 and 0x01994000) and terminate(), then `return EXCEPTION_CONTINUE_SEARCH` as the xor eax,eax; ret 4 tail. pRecord is the real loaded ExceptionRecord pointer, not a fake local.",
+        "R18": "Ordinary VC8 C++ source. No assembly, byte array, binary include or padding; the installed tree does not ship unhandld.cpp, so the body is decoded and its byte evidence is recorded in the header."
+      }
+    },
+    {
+      "va": "0x40c488",
+      "symbol": "___CxxSetUnhandledExceptionFilter",
+      "source_path": "matching/cl/crt_unhandld.cpp",
+      "source_span": {"start": 48, "end": 52},
+      "size": 14,
+      "checks": {
+        "R1": "One canonical declaration in include/cl/crt_unhandld.h (extern \"C\" LONG __cdecl, matching the three-underscore public spelling) and one definition. SetUnhandledExceptionFilter comes from windows.h with the SDK's own LPTOP_LEVEL_EXCEPTION_FILTER type, which the declared filter pointer satisfies without a cast.",
+        "R2": "No project global. The only externals are the local filter function (registered as a referent at its own public VA) and kernel32's SetUnhandledExceptionFilter IAT slot; nothing is defined twice.",
+        "R4": "No structure or offset model at all: the body takes the filter's address and returns 0. No cast and no layout assumption.",
+        "R13": "No class, virtual function, vtable or RTTI appears.",
+        "R17": "Source and decode agree: push offset filter, call SetUnhandledExceptionFilter, xor eax,eax, ret. The decoded literal zero fixes the LONG return of 0 rather than a void function, and no dummy local or steering statement exists.",
+        "R18": "Ordinary VC8 C++ source; no assembly, byte array, binary include or padding. Decoded-body provenance is recorded in the header."
+      }
+    },
+    {
+      "va": "0x40c716",
+      "symbol": "?_AtlGetThreadACPFake@ATL@@YGIXZ",
+      "source_path": "matching/cl/crt_atl.cpp",
+      "source_span": {"start": 26, "end": 50},
+      "size": 101,
+      "checks": {
+        "R1": "Canonical declarations: the three ATL helpers, ATLGETTHREADACP and g_pfnGetThreadACP are declared once in include/cl/crt_atl.h exactly as installed-era atlconv.h declares them (ATL namespace, UINT WINAPI __stdcall), while windows.h supplies LCID/GetLocaleInfoA/GetACP. The bodies are the era atlconv.h definitions quoted with file hash and line ranges; no duplicate or locally retyped declaration exists.",
+        "R2": "One global: the real PDB data public ?g_pfnGetThreadACP@ATL@@3P6GIXZA at 0x00417c80, owned by atltrace.obj (module 54), defined once with a DATA annotation and the atltrace.cpp initializer (address of the thunk) and registered as a referent. No other global is read or written here.",
+        "R4": "Real types and members only: LCID, the real char[7] ACP buffer, GetLocaleInfoA's LOCALE_IDEFAULTANSICODEPAGE string form parsed as characters, and the UINT return. No offset cast, no pseudo-layout, and the /GS cookie is the compiler's own frame from the real char buffer.",
+        "R13": "No class, virtual function, vtable or RTTI appears; the touched Win32 types are not polymorphic.",
+        "R17": "Source and decode agree statement for statement: nACP = 0, GetThreadLocale, GetLocaleInfoA with the seven-character buffer, the while(*pch) decimal accumulation with *pch++ - '0', the nACP == 0 GetACP fallback, return nACP, and the /GS cookie store/check. szACP/pch/nACP are the real values the code consumes.",
+        "R18": "Ordinary VC8 C++ source (ATL headers). No assembly, byte array, binary include or padding; the ATL lineage files and their hashes are recorded in the header."
+      }
+    },
+    {
+      "va": "0x40c77b",
+      "symbol": "?_AtlGetThreadACPReal@ATL@@YGIXZ",
+      "source_path": "matching/cl/crt_atl.cpp",
+      "source_span": {"start": 54, "end": 57},
+      "size": 4,
+      "checks": {
+        "R1": "Same canonical ATL header declaration as the other two helpers; this definition is the era atlconv.h inline body. No duplicate declaration or retyped constant.",
+        "R2": "No global is referenced.",
+        "R4": "No structure or offset model; the body returns the SDK constant CP_THREAD_ACP.",
+        "R13": "No class, virtual function, vtable or RTTI appears.",
+        "R17": "Source and decode agree exactly: `return( CP_THREAD_ACP );` compiles to push 3; pop eax; ret, with no dummy local.",
+        "R18": "Ordinary VC8 C++ source; no assembly, byte array or padding."
+      }
+    },
+    {
+      "va": "0x40c77f",
+      "symbol": "?_AtlGetThreadACPThunk@ATL@@YGIXZ",
+      "source_path": "matching/cl/crt_atl.cpp",
+      "source_span": {"start": 61, "end": 83},
+      "size": 100,
+      "checks": {
+        "R1": "Canonical ATL header declarations for the helper, ATLGETTHREADACP and g_pfnGetThreadACP; OSVERSIONINFO, GetVersionExA, InterlockedExchange come from windows.h. The body is the era atlconv.h definition (lines 137-156) with ATL's own InterlockedExchangePointer inline (lines 90-93) reduced to its single documented ::InterlockedExchange call; no duplicate or local re-declaration.",
+        "R2": "The single global is the real ?g_pfnGetThreadACP@ATL@@3P6GIXZA at 0x00417c80, defined once in this unit and registered as a referent; the thunk both stores through it and calls through it, exactly as the decoded mov [0x417c80], call [0x417c80] pair shows.",
+        "R4": "Real types and members only: OSVERSIONINFO with dwOSVersionInfoSize/dwPlatformId/dwMajorVersion, the VER_PLATFORM_WIN32_NT constant, and a typed ATLGETTHREADACP pointer. The InterlockedExchange call uses the era ATL casts to LONG*/LONG_PTR, not a project offset model; no fabricated layout.",
+        "R13": "No class, virtual function, vtable or RTTI appears.",
+        "R17": "Source and decode agree: sizeof(OSVERSIONINFO)=0x94 store, GetVersionExA, the platform/version select materializing the Real and Fake addresses, the InterlockedExchange store through g_pfnGetThreadACP, and `return( g_pfnGetThreadACP() );` as the indirect call through the same slot, plus the /GS cookie epilog. ver/pfnGetThreadACP are the real values consumed.",
+        "R18": "Ordinary VC8 C++ source; no assembly, byte array, binary include or padding. The ATL lineage file hashes are recorded in the header."
+      }
+    }
+  ]
+}
