@@ -1,5 +1,6 @@
 #include "../../include/cl/mpcl.h"
 #include <wchar.h>
+#include <string.h>
 #include "../../include/cl/util.h"
 
 // mpcl.obj attribution: PDB DBI section contribution contains the public start.
@@ -393,4 +394,188 @@ void ProcessChannel::expect_int_robust(int expected)
 {
     if (expected != read_int_robust())
         RaiseException(1, 0, 0, 0);
+}
+
+// FUNCTION: cl 0x409ED0
+// SYMBOL: ??0action_t@@QAE@HPAUworklist_s@@H@Z
+// Complete 45-byte CFG: fields 0x00..0x10 are written once; source is copied
+// from the worklist's proven source pointer at +0x04, or zero without one.
+action_t::action_t(int kind_, worklist_s *worklist_, int parameter)
+{
+    kind = kind_;
+    pass = 0;
+    worklist = worklist_;
+    parameter_10 = parameter;
+    if (worklist)
+        source = worklist->source;
+    else
+        source = 0;
+}
+
+// FUNCTION: cl 0x409EFD
+// SYMBOL: ??1action_t@@QAE@XZ
+// Complete 25-byte body: the source is freed only when no worklist owns it.
+action_t::~action_t()
+{
+    if (worklist == 0 || worklist->source != source)
+        xfree(source);
+}
+
+// FUNCTION: cl 0x40A364
+// SYMBOL: ??0?$Queue@Uaction_t@@@@QAE@H@Z
+// Complete 61-byte CFG: synchronized flag, zeroed sentinel fields from the
+// action_t(0,0,0) constructor, conditional critical-section initialization,
+// then the empty intrusive ring (tail and sentinel.next) and zero count.
+template<class T>
+Queue<T>::Queue(int synchronize) : synchronized(synchronize)
+{
+    if (synchronized)
+        InitializeCriticalSection(&lock);
+    tail = &sentinel;
+    sentinel.next = &sentinel;
+    count = 0;
+}
+
+// FUNCTION: cl 0x40A994
+// SYMBOL: ??1?$Queue@Uaction_t@@@@QAE@XZ
+// Complete 65-byte CFG: every queued node is destructed and freed, the lock is
+// deleted when initialized, and the embedded sentinel's destructor tail-runs.
+template<class T>
+Queue<T>::~Queue()
+{
+    T *item = sentinel.next;
+    while (item != &sentinel) {
+        T *next = item->next;
+        delete item;
+        item = next;
+    }
+    if (synchronized)
+        DeleteCriticalSection(&lock);
+}
+
+// FUNCTION: cl 0x40A9D5
+// SYMBOL: ?clean@?$Queue@Uaction_t@@@@QAEXXZ
+// Complete 84-byte CFG: locked node destruction followed by an empty-ring
+// rebuild (count 0, tail and sentinel.next back to the sentinel).
+template<class T>
+void Queue<T>::clean()
+{
+    if (synchronized)
+        EnterCriticalSection(&lock);
+    T *item = sentinel.next;
+    while (item != &sentinel) {
+        T *next = item->next;
+        delete item;
+        item = next;
+    }
+    count = 0;
+    tail = &sentinel;
+    sentinel.next = &sentinel;
+    if (synchronized)
+        LeaveCriticalSection(&lock);
+}
+
+template Queue<action_t>::Queue(int);
+template Queue<action_t>::~Queue();
+template void Queue<action_t>::clean();
+
+// DATA: cl 0x41A298
+// PDB ?current_batch_sources@@3JA; loader-zero-initialized batch accounting.
+long current_batch_sources;
+
+// DATA: cl 0x41A2C8
+// PDB ?next_batch@@3IA
+unsigned int next_batch;
+
+// DATA: cl 0x41A2CC
+// PDB ?num_batches@@3IA
+unsigned int num_batches;
+
+// DATA: cl 0x41A2D4
+// PDB ?batches@@3PAV?$Queue@Uaction_t@@@@A; pointer to the per-batch queues.
+Queue<action_t> *batches;
+
+// DATA: cl 0x41AB30
+// PDB ?work_queue@@3V?$Queue@Uaction_t@@@@A. The queue is used as a
+// synchronized instance: head() takes its critical section unconditionally, so
+// the constructor must have initialized it at startup.
+Queue<action_t> work_queue(1);
+
+// FUNCTION: cl 0x40A67A
+// SYMBOL: ?get_action_nonbatching@@YAPAUaction_t@@XZ
+// Complete ten-byte body: load the global work queue and tail-transfer to the
+// real Queue::head body at 0x40A3C7.
+action_t *__cdecl get_action_nonbatching()
+{
+    return work_queue.head();
+}
+
+// FUNCTION: cl 0x40A647
+// SYMBOL: ?schedule_next_batch@@YAXXZ
+// Complete 51-byte CFG: when another batch exists, seed the batch source count
+// from its queue, splice the queue into the work queue and advance the index.
+void __cdecl schedule_next_batch()
+{
+    if (next_batch < num_batches) {
+        Queue<action_t> *batch = &batches[next_batch];
+        current_batch_sources = batch->count;
+        work_queue.append_nosync(*batch);
+        ++next_batch;
+    }
+}
+
+// FUNCTION: cl 0x40A12D
+// SYMBOL: ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z
+// Complete 155-byte CFG: the serialized payload length excludes its own
+// four-byte prefix, then the three wide strings, the source type and the two
+// trailing shorts are written through the virtual write slot.
+void ProcessChannel::write_source(source_s *source)
+{
+    unsigned long size = 0;
+    size += wcslen(source->name) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += wcslen(source->object) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += wcslen(source->sbr) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += sizeof(unsigned long) + sizeof(unsigned short) + sizeof(unsigned short);
+    write(&size, sizeof size);
+    write_string(source->name);
+    write_string(source->object);
+    write_string(source->sbr);
+    write(&source->type, sizeof source->type);
+    write(&source->field_18, sizeof source->field_18);
+    write(&source->field_1a, sizeof source->field_1a);
+}
+
+// FUNCTION: cl 0x40AE65
+// SYMBOL: ?free_batches@@YAXXZ
+// Complete 59-byte CFG: clear every batch queue in the array, then release the
+// array through the compiler-generated vector deleting destructor.
+void __cdecl free_batches()
+{
+    for (unsigned int i = 0; i < num_batches; ++i)
+        batches[i].clean();
+    delete[] batches;
+}
+
+// FUNCTION: cl 0x40A774
+// SYMBOL: ?send@action_t@@QAEXPAVProcessChannel@@@Z
+// Complete 95-byte CFG: kind, a source-presence flag, the serialized source
+// when present, and the pass number are written through the virtual slot.
+void action_t::send(ProcessChannel *channel)
+{
+    int kind_value = kind;
+    channel->write(&kind_value, sizeof kind_value);
+    int flag;
+    if (source) {
+        flag = 1;
+        channel->write(&flag, sizeof flag);
+        channel->write_source(source);
+    } else {
+        flag = 0;
+        channel->write(&flag, sizeof flag);
+    }
+    flag = pass;
+    channel->write(&flag, sizeof flag);
 }

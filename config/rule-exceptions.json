@@ -66,7 +66,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4014d5"
@@ -136,7 +136,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4015a8"
@@ -206,7 +206,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4015b1"
@@ -276,7 +276,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4015ba"
@@ -346,7 +346,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4015c3"
@@ -416,7 +416,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x40218a"
@@ -486,7 +486,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4024a8"
@@ -556,7 +556,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x402c06"
@@ -626,7 +626,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x402c1a"
@@ -639,7 +639,7 @@
             {
               "description": "R1 review for ?basename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -649,7 +649,7 @@
             {
               "description": "R13 review for ?basename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -659,7 +659,7 @@
             {
               "description": "R17 review for ?basename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -669,7 +669,7 @@
             {
               "description": "R18 review for ?basename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -679,7 +679,7 @@
             {
               "description": "R2 review for ?basename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -689,14 +689,14 @@
             {
               "description": "R4 review for ?basename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane compile",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/compile.cpp",
       "source_sha256": "3a25b65a773184437df7eb106ac2f001a9a4cad07a9c34dca00d4a191415f0ba",
       "va": "0x4061f5"
@@ -709,7 +709,7 @@
             {
               "description": "R1 review for ?filename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -719,7 +719,7 @@
             {
               "description": "R13 review for ?filename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -729,7 +729,7 @@
             {
               "description": "R17 review for ?filename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -739,7 +739,7 @@
             {
               "description": "R18 review for ?filename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -749,7 +749,7 @@
             {
               "description": "R2 review for ?filename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -759,14 +759,14 @@
             {
               "description": "R4 review for ?filename@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane compile",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/compile.cpp",
       "source_sha256": "3a25b65a773184437df7eb106ac2f001a9a4cad07a9c34dca00d4a191415f0ba",
       "va": "0x406217"
@@ -779,7 +779,7 @@
             {
               "description": "R1 review for ?pathname@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -789,7 +789,7 @@
             {
               "description": "R13 review for ?pathname@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -799,7 +799,7 @@
             {
               "description": "R17 review for ?pathname@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -809,7 +809,7 @@
             {
               "description": "R18 review for ?pathname@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -819,7 +819,7 @@
             {
               "description": "R2 review for ?pathname@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -829,14 +829,14 @@
             {
               "description": "R4 review for ?pathname@@YAPAGPAGIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane compile",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/compile.cpp",
       "source_sha256": "3a25b65a773184437df7eb106ac2f001a9a4cad07a9c34dca00d4a191415f0ba",
       "va": "0x406284"
@@ -849,7 +849,7 @@
             {
               "description": "R1 review for ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -859,7 +859,7 @@
             {
               "description": "R13 review for ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -869,7 +869,7 @@
             {
               "description": "R17 review for ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -879,7 +879,7 @@
             {
               "description": "R18 review for ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -889,7 +889,7 @@
             {
               "description": "R2 review for ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -899,14 +899,14 @@
             {
               "description": "R4 review for ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane compile",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/compile.cpp",
       "source_sha256": "3a25b65a773184437df7eb106ac2f001a9a4cad07a9c34dca00d4a191415f0ba",
       "va": "0x4062f7"
@@ -919,7 +919,7 @@
             {
               "description": "R1 review for _atexit in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -929,7 +929,7 @@
             {
               "description": "R13 review for _atexit in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -939,7 +939,7 @@
             {
               "description": "R17 review for _atexit in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -949,7 +949,7 @@
             {
               "description": "R18 review for _atexit in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -959,7 +959,7 @@
             {
               "description": "R2 review for _atexit in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -969,14 +969,14 @@
             {
               "description": "R4 review for _atexit in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane crt-a",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/crt_atonexit.c",
       "source_sha256": "b20383c89970fe95a1121724c87769051148475c86a3a70a9913a8bab5d15176",
       "va": "0x40bc69"
@@ -989,7 +989,7 @@
             {
               "description": "R1 review for __ValidateImageBase in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -999,7 +999,7 @@
             {
               "description": "R13 review for __ValidateImageBase in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1009,7 +1009,7 @@
             {
               "description": "R17 review for __ValidateImageBase in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1019,7 +1019,7 @@
             {
               "description": "R18 review for __ValidateImageBase in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1029,7 +1029,7 @@
             {
               "description": "R2 review for __ValidateImageBase in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1039,14 +1039,14 @@
             {
               "description": "R4 review for __ValidateImageBase in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane crt-a",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/crt_pesect.c",
       "source_sha256": "7003600fece420325be85e287795b073224b5fa0192e2a0ac9f9631e2282d791",
       "va": "0x40c4f0"
@@ -1059,7 +1059,7 @@
             {
               "description": "R1 review for __FindPESection in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1069,7 +1069,7 @@
             {
               "description": "R13 review for __FindPESection in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1079,7 +1079,7 @@
             {
               "description": "R17 review for __FindPESection in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1089,7 +1089,7 @@
             {
               "description": "R18 review for __FindPESection in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1099,7 +1099,7 @@
             {
               "description": "R2 review for __FindPESection in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1109,14 +1109,14 @@
             {
               "description": "R4 review for __FindPESection in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane crt-a",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/crt_pesect.c",
       "source_sha256": "7003600fece420325be85e287795b073224b5fa0192e2a0ac9f9631e2282d791",
       "va": "0x40c520"
@@ -1129,7 +1129,7 @@
             {
               "description": "R1 review for ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1139,7 +1139,7 @@
             {
               "description": "R13 review for ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1149,7 +1149,7 @@
             {
               "description": "R17 review for ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1159,7 +1159,7 @@
             {
               "description": "R18 review for ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1169,7 +1169,7 @@
             {
               "description": "R2 review for ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1179,14 +1179,14 @@
             {
               "description": "R4 review for ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane dos",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3b068b52e9c17ebd5db7a2b76917fe88cc4fd345e5efc414105a48c63a23122b",
       "va": "0x408ee3"
@@ -1199,7 +1199,7 @@
             {
               "description": "R1 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1209,7 +1209,7 @@
             {
               "description": "R13 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1219,7 +1219,7 @@
             {
               "description": "R17 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1229,7 +1229,7 @@
             {
               "description": "R18 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1239,7 +1239,7 @@
             {
               "description": "R2 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1249,14 +1249,14 @@
             {
               "description": "R4 review for ?FallThroughFilter@@YAHKPAUpassinfo_s@@PAH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane dos",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3b068b52e9c17ebd5db7a2b76917fe88cc4fd345e5efc414105a48c63a23122b",
       "va": "0x408f04"
@@ -1269,7 +1269,7 @@
             {
               "description": "R1 review for ?redirect@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1279,7 +1279,7 @@
             {
               "description": "R13 review for ?redirect@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1289,7 +1289,7 @@
             {
               "description": "R17 review for ?redirect@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1299,7 +1299,7 @@
             {
               "description": "R18 review for ?redirect@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1309,7 +1309,7 @@
             {
               "description": "R2 review for ?redirect@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1319,14 +1319,14 @@
             {
               "description": "R4 review for ?redirect@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane dos",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3b068b52e9c17ebd5db7a2b76917fe88cc4fd345e5efc414105a48c63a23122b",
       "va": "0x4092be"
@@ -1339,7 +1339,7 @@
             {
               "description": "R1 review for ?screen_length@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1349,7 +1349,7 @@
             {
               "description": "R13 review for ?screen_length@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1359,7 +1359,7 @@
             {
               "description": "R17 review for ?screen_length@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1369,7 +1369,7 @@
             {
               "description": "R18 review for ?screen_length@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1379,7 +1379,7 @@
             {
               "description": "R2 review for ?screen_length@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1389,14 +1389,14 @@
             {
               "description": "R4 review for ?screen_length@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane dos",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3b068b52e9c17ebd5db7a2b76917fe88cc4fd345e5efc414105a48c63a23122b",
       "va": "0x4092d4"
@@ -1409,7 +1409,7 @@
             {
               "description": "R1 review for ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1419,7 +1419,7 @@
             {
               "description": "R13 review for ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1429,7 +1429,7 @@
             {
               "description": "R17 review for ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1439,7 +1439,7 @@
             {
               "description": "R18 review for ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1449,7 +1449,7 @@
             {
               "description": "R2 review for ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1459,14 +1459,14 @@
             {
               "description": "R4 review for ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane loadui",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/loadui.cpp",
       "source_sha256": "16c3d424816703ee42dc6e364c96f4879802066fd9a1e578b164a775a803a7a3",
       "va": "0x409330"
@@ -1479,7 +1479,7 @@
             {
               "description": "R1 review for ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1489,7 +1489,7 @@
             {
               "description": "R13 review for ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1499,7 +1499,7 @@
             {
               "description": "R17 review for ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1509,7 +1509,7 @@
             {
               "description": "R18 review for ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1519,7 +1519,7 @@
             {
               "description": "R2 review for ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1529,14 +1529,14 @@
             {
               "description": "R4 review for ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane loadui",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/loadui.cpp",
       "source_sha256": "16c3d424816703ee42dc6e364c96f4879802066fd9a1e578b164a775a803a7a3",
       "va": "0x409755"
@@ -1606,7 +1606,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/merr.c",
       "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
       "va": "0x40c661"
@@ -1617,9 +1617,149 @@
         "R1": {
           "evidence": [
             {
+              "description": "R1 review for ??0action_t@@QAE@HPAUworklist_s@@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R13": {
+          "evidence": [
+            {
+              "description": "R13 review for ??0action_t@@QAE@HPAUworklist_s@@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R17": {
+          "evidence": [
+            {
+              "description": "R17 review for ??0action_t@@QAE@HPAUworklist_s@@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R18": {
+          "evidence": [
+            {
+              "description": "R18 review for ??0action_t@@QAE@HPAUworklist_s@@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R2": {
+          "evidence": [
+            {
+              "description": "R2 review for ??0action_t@@QAE@HPAUworklist_s@@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R4": {
+          "evidence": [
+            {
+              "description": "R4 review for ??0action_t@@QAE@HPAUworklist_s@@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        }
+      },
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
+      "va": "0x409ed0"
+    },
+    {
+      "binary": "cl",
+      "checks": {
+        "R1": {
+          "evidence": [
+            {
+              "description": "R1 review for ??1action_t@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R13": {
+          "evidence": [
+            {
+              "description": "R13 review for ??1action_t@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R17": {
+          "evidence": [
+            {
+              "description": "R17 review for ??1action_t@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R18": {
+          "evidence": [
+            {
+              "description": "R18 review for ??1action_t@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R2": {
+          "evidence": [
+            {
+              "description": "R2 review for ??1action_t@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R4": {
+          "evidence": [
+            {
+              "description": "R4 review for ??1action_t@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        }
+      },
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
+      "va": "0x409efd"
+    },
+    {
+      "binary": "cl",
+      "checks": {
+        "R1": {
+          "evidence": [
+            {
               "description": "R1 review for ?close_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1629,7 +1769,7 @@
             {
               "description": "R13 review for ?close_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1639,7 +1779,7 @@
             {
               "description": "R17 review for ?close_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1649,7 +1789,7 @@
             {
               "description": "R18 review for ?close_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1659,7 +1799,7 @@
             {
               "description": "R2 review for ?close_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1669,16 +1809,16 @@
             {
               "description": "R4 review for ?close_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x409fae"
     },
     {
@@ -1689,7 +1829,7 @@
             {
               "description": "R1 review for ?MP_is_server@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1699,7 +1839,7 @@
             {
               "description": "R13 review for ?MP_is_server@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1709,7 +1849,7 @@
             {
               "description": "R17 review for ?MP_is_server@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1719,7 +1859,7 @@
             {
               "description": "R18 review for ?MP_is_server@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1729,7 +1869,7 @@
             {
               "description": "R2 review for ?MP_is_server@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1739,16 +1879,16 @@
             {
               "description": "R4 review for ?MP_is_server@@YAHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x409fbf"
     },
     {
@@ -1759,7 +1899,7 @@
             {
               "description": "R1 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1769,7 +1909,7 @@
             {
               "description": "R13 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1779,7 +1919,7 @@
             {
               "description": "R17 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1789,7 +1929,7 @@
             {
               "description": "R18 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1799,7 +1939,7 @@
             {
               "description": "R2 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1809,16 +1949,16 @@
             {
               "description": "R4 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a0a2"
     },
     {
@@ -1829,7 +1969,7 @@
             {
               "description": "R1 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1839,7 +1979,7 @@
             {
               "description": "R13 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1849,7 +1989,7 @@
             {
               "description": "R17 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1859,7 +1999,7 @@
             {
               "description": "R18 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1869,7 +2009,7 @@
             {
               "description": "R2 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1879,16 +2019,16 @@
             {
               "description": "R4 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a0b6"
     },
     {
@@ -1899,7 +2039,7 @@
             {
               "description": "R1 review for ?write_string@ProcessChannel@@QAEXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1909,7 +2049,7 @@
             {
               "description": "R13 review for ?write_string@ProcessChannel@@QAEXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1919,7 +2059,7 @@
             {
               "description": "R17 review for ?write_string@ProcessChannel@@QAEXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1929,7 +2069,7 @@
             {
               "description": "R18 review for ?write_string@ProcessChannel@@QAEXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1939,7 +2079,7 @@
             {
               "description": "R2 review for ?write_string@ProcessChannel@@QAEXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1949,17 +2089,87 @@
             {
               "description": "R4 review for ?write_string@ProcessChannel@@QAEXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a0d1"
+    },
+    {
+      "binary": "cl",
+      "checks": {
+        "R1": {
+          "evidence": [
+            {
+              "description": "R1 review for ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R13": {
+          "evidence": [
+            {
+              "description": "R13 review for ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R17": {
+          "evidence": [
+            {
+              "description": "R17 review for ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R18": {
+          "evidence": [
+            {
+              "description": "R18 review for ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R2": {
+          "evidence": [
+            {
+              "description": "R2 review for ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R4": {
+          "evidence": [
+            {
+              "description": "R4 review for ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        }
+      },
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
+      "va": "0x40a12d"
     },
     {
       "binary": "cl",
@@ -1969,7 +2179,7 @@
             {
               "description": "R1 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1979,7 +2189,7 @@
             {
               "description": "R13 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1989,7 +2199,7 @@
             {
               "description": "R17 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -1999,7 +2209,7 @@
             {
               "description": "R18 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2009,7 +2219,7 @@
             {
               "description": "R2 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2019,16 +2229,16 @@
             {
               "description": "R4 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a243"
     },
     {
@@ -2039,7 +2249,7 @@
             {
               "description": "R1 review for ??3@YAXPAX@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2049,7 +2259,7 @@
             {
               "description": "R13 review for ??3@YAXPAX@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2059,7 +2269,7 @@
             {
               "description": "R17 review for ??3@YAXPAX@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2069,7 +2279,7 @@
             {
               "description": "R18 review for ??3@YAXPAX@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2079,7 +2289,7 @@
             {
               "description": "R2 review for ??3@YAXPAX@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2089,16 +2299,16 @@
             {
               "description": "R4 review for ??3@YAXPAX@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a25a"
     },
     {
@@ -2109,7 +2319,7 @@
             {
               "description": "R1 review for ?thread_print@@YAXPBGZZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2119,7 +2329,7 @@
             {
               "description": "R13 review for ?thread_print@@YAXPBGZZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2129,7 +2339,7 @@
             {
               "description": "R17 review for ?thread_print@@YAXPBGZZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2139,7 +2349,7 @@
             {
               "description": "R18 review for ?thread_print@@YAXPBGZZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2149,7 +2359,7 @@
             {
               "description": "R2 review for ?thread_print@@YAXPBGZZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2159,16 +2369,16 @@
             {
               "description": "R4 review for ?thread_print@@YAXPBGZZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a25f"
     },
     {
@@ -2179,7 +2389,7 @@
             {
               "description": "R1 review for ?NT_err@@YAHH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2189,7 +2399,7 @@
             {
               "description": "R13 review for ?NT_err@@YAHH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2199,7 +2409,7 @@
             {
               "description": "R17 review for ?NT_err@@YAHH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2209,7 +2419,7 @@
             {
               "description": "R18 review for ?NT_err@@YAHH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2219,7 +2429,7 @@
             {
               "description": "R2 review for ?NT_err@@YAHH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2229,16 +2439,16 @@
             {
               "description": "R4 review for ?NT_err@@YAHH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a2c4"
     },
     {
@@ -2249,7 +2459,7 @@
             {
               "description": "R1 review for ?env_size@@YAIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2259,7 +2469,7 @@
             {
               "description": "R13 review for ?env_size@@YAIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2269,7 +2479,7 @@
             {
               "description": "R17 review for ?env_size@@YAIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2279,7 +2489,7 @@
             {
               "description": "R18 review for ?env_size@@YAIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2289,7 +2499,7 @@
             {
               "description": "R2 review for ?env_size@@YAIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2299,16 +2509,16 @@
             {
               "description": "R4 review for ?env_size@@YAIPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a2dc"
     },
     {
@@ -2319,7 +2529,7 @@
             {
               "description": "R1 review for ?decode_handle@@YAPAXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2329,7 +2539,7 @@
             {
               "description": "R13 review for ?decode_handle@@YAPAXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2339,7 +2549,7 @@
             {
               "description": "R17 review for ?decode_handle@@YAPAXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2349,7 +2559,7 @@
             {
               "description": "R18 review for ?decode_handle@@YAPAXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2359,7 +2569,7 @@
             {
               "description": "R2 review for ?decode_handle@@YAPAXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2369,17 +2579,87 @@
             {
               "description": "R4 review for ?decode_handle@@YAPAXPBG@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a346"
+    },
+    {
+      "binary": "cl",
+      "checks": {
+        "R1": {
+          "evidence": [
+            {
+              "description": "R1 review for ??0?$Queue@Uaction_t@@@@QAE@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R13": {
+          "evidence": [
+            {
+              "description": "R13 review for ??0?$Queue@Uaction_t@@@@QAE@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R17": {
+          "evidence": [
+            {
+              "description": "R17 review for ??0?$Queue@Uaction_t@@@@QAE@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R18": {
+          "evidence": [
+            {
+              "description": "R18 review for ??0?$Queue@Uaction_t@@@@QAE@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R2": {
+          "evidence": [
+            {
+              "description": "R2 review for ??0?$Queue@Uaction_t@@@@QAE@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R4": {
+          "evidence": [
+            {
+              "description": "R4 review for ??0?$Queue@Uaction_t@@@@QAE@H@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        }
+      },
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
+      "va": "0x40a364"
     },
     {
       "binary": "cl",
@@ -2389,7 +2669,7 @@
             {
               "description": "R1 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2399,7 +2679,7 @@
             {
               "description": "R13 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2409,7 +2689,7 @@
             {
               "description": "R17 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2419,7 +2699,7 @@
             {
               "description": "R18 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2429,7 +2709,7 @@
             {
               "description": "R2 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2439,16 +2719,16 @@
             {
               "description": "R4 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a3a1"
     },
     {
@@ -2459,7 +2739,7 @@
             {
               "description": "R1 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2469,7 +2749,7 @@
             {
               "description": "R13 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2479,7 +2759,7 @@
             {
               "description": "R17 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2489,7 +2769,7 @@
             {
               "description": "R18 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2499,7 +2779,7 @@
             {
               "description": "R2 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2509,16 +2789,16 @@
             {
               "description": "R4 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a3c7"
     },
     {
@@ -2529,7 +2809,7 @@
             {
               "description": "R1 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2539,7 +2819,7 @@
             {
               "description": "R13 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2549,7 +2829,7 @@
             {
               "description": "R17 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2559,7 +2839,7 @@
             {
               "description": "R18 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2569,7 +2849,7 @@
             {
               "description": "R2 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2579,16 +2859,16 @@
             {
               "description": "R4 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a458"
     },
     {
@@ -2599,7 +2879,7 @@
             {
               "description": "R1 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2609,7 +2889,7 @@
             {
               "description": "R13 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2619,7 +2899,7 @@
             {
               "description": "R17 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2629,7 +2909,7 @@
             {
               "description": "R18 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2639,7 +2919,7 @@
             {
               "description": "R2 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2649,16 +2929,16 @@
             {
               "description": "R4 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a475"
     },
     {
@@ -2669,7 +2949,7 @@
             {
               "description": "R1 review for ?get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2679,7 +2959,7 @@
             {
               "description": "R13 review for ?get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2689,7 +2969,7 @@
             {
               "description": "R17 review for ?get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2699,7 +2979,7 @@
             {
               "description": "R18 review for ?get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2709,7 +2989,7 @@
             {
               "description": "R2 review for ?get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2719,17 +2999,87 @@
             {
               "description": "R4 review for ?get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a496"
+    },
+    {
+      "binary": "cl",
+      "checks": {
+        "R1": {
+          "evidence": [
+            {
+              "description": "R1 review for ?get_action_nonbatching@@YAPAUaction_t@@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R13": {
+          "evidence": [
+            {
+              "description": "R13 review for ?get_action_nonbatching@@YAPAUaction_t@@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R17": {
+          "evidence": [
+            {
+              "description": "R17 review for ?get_action_nonbatching@@YAPAUaction_t@@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R18": {
+          "evidence": [
+            {
+              "description": "R18 review for ?get_action_nonbatching@@YAPAUaction_t@@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R2": {
+          "evidence": [
+            {
+              "description": "R2 review for ?get_action_nonbatching@@YAPAUaction_t@@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R4": {
+          "evidence": [
+            {
+              "description": "R4 review for ?get_action_nonbatching@@YAPAUaction_t@@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        }
+      },
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
+      "va": "0x40a67a"
     },
     {
       "binary": "cl",
@@ -2739,7 +3089,7 @@
             {
               "description": "R1 review for ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2749,7 +3099,7 @@
             {
               "description": "R13 review for ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2759,7 +3109,7 @@
             {
               "description": "R17 review for ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2769,7 +3119,7 @@
             {
               "description": "R18 review for ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2779,7 +3129,7 @@
             {
               "description": "R2 review for ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2789,16 +3139,16 @@
             {
               "description": "R4 review for ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a684"
     },
     {
@@ -2809,7 +3159,7 @@
             {
               "description": "R1 review for ?MP_get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2819,7 +3169,7 @@
             {
               "description": "R13 review for ?MP_get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2829,7 +3179,7 @@
             {
               "description": "R17 review for ?MP_get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2839,7 +3189,7 @@
             {
               "description": "R18 review for ?MP_get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2849,7 +3199,7 @@
             {
               "description": "R2 review for ?MP_get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2859,17 +3209,87 @@
             {
               "description": "R4 review for ?MP_get_mutex@@YAXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a6fa"
+    },
+    {
+      "binary": "cl",
+      "checks": {
+        "R1": {
+          "evidence": [
+            {
+              "description": "R1 review for ?send@action_t@@QAEXPAVProcessChannel@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R13": {
+          "evidence": [
+            {
+              "description": "R13 review for ?send@action_t@@QAEXPAVProcessChannel@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R17": {
+          "evidence": [
+            {
+              "description": "R17 review for ?send@action_t@@QAEXPAVProcessChannel@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R18": {
+          "evidence": [
+            {
+              "description": "R18 review for ?send@action_t@@QAEXPAVProcessChannel@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R2": {
+          "evidence": [
+            {
+              "description": "R2 review for ?send@action_t@@QAEXPAVProcessChannel@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R4": {
+          "evidence": [
+            {
+              "description": "R4 review for ?send@action_t@@QAEXPAVProcessChannel@@@Z in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        }
+      },
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
+      "va": "0x40a774"
     },
     {
       "binary": "cl",
@@ -2879,7 +3299,7 @@
             {
               "description": "R1 review for ?read_int_robust@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2889,7 +3309,7 @@
             {
               "description": "R13 review for ?read_int_robust@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2899,7 +3319,7 @@
             {
               "description": "R17 review for ?read_int_robust@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2909,7 +3329,7 @@
             {
               "description": "R18 review for ?read_int_robust@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2919,7 +3339,7 @@
             {
               "description": "R2 review for ?read_int_robust@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2929,16 +3349,16 @@
             {
               "description": "R4 review for ?read_int_robust@ProcessChannel@@QAEHXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a877"
     },
     {
@@ -2949,7 +3369,7 @@
             {
               "description": "R1 review for ?expect_int_robust@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2959,7 +3379,7 @@
             {
               "description": "R13 review for ?expect_int_robust@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2969,7 +3389,7 @@
             {
               "description": "R17 review for ?expect_int_robust@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2979,7 +3399,7 @@
             {
               "description": "R18 review for ?expect_int_robust@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2989,7 +3409,7 @@
             {
               "description": "R2 review for ?expect_int_robust@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -2999,16 +3419,16 @@
             {
               "description": "R4 review for ?expect_int_robust@ProcessChannel@@QAEXH@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
       "reviewer": "matching lane mpcl",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a88b"
     },
     {
@@ -3019,7 +3439,7 @@
             {
               "description": "R1 review for ?kill@ProcessChannel@@QAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3029,7 +3449,7 @@
             {
               "description": "R13 review for ?kill@ProcessChannel@@QAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3039,7 +3459,7 @@
             {
               "description": "R17 review for ?kill@ProcessChannel@@QAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3049,7 +3469,7 @@
             {
               "description": "R18 review for ?kill@ProcessChannel@@QAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3059,7 +3479,7 @@
             {
               "description": "R2 review for ?kill@ProcessChannel@@QAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3069,16 +3489,16 @@
             {
               "description": "R4 review for ?kill@ProcessChannel@@QAEXXZ in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a8a6"
     },
     {
@@ -3089,7 +3509,7 @@
             {
               "description": "R1 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3099,7 +3519,7 @@
             {
               "description": "R13 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3109,7 +3529,7 @@
             {
               "description": "R17 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3119,7 +3539,7 @@
             {
               "description": "R18 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3129,7 +3549,7 @@
             {
               "description": "R2 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3139,16 +3559,16 @@
             {
               "description": "R4 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a8e3"
     },
     {
@@ -3159,7 +3579,7 @@
             {
               "description": "R1 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3169,7 +3589,7 @@
             {
               "description": "R13 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3179,7 +3599,7 @@
             {
               "description": "R17 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3189,7 +3609,7 @@
             {
               "description": "R18 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3199,7 +3619,7 @@
             {
               "description": "R2 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3209,17 +3629,157 @@
             {
               "description": "R4 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40a906"
+    },
+    {
+      "binary": "cl",
+      "checks": {
+        "R1": {
+          "evidence": [
+            {
+              "description": "R1 review for ??1?$Queue@Uaction_t@@@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R13": {
+          "evidence": [
+            {
+              "description": "R13 review for ??1?$Queue@Uaction_t@@@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R17": {
+          "evidence": [
+            {
+              "description": "R17 review for ??1?$Queue@Uaction_t@@@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R18": {
+          "evidence": [
+            {
+              "description": "R18 review for ??1?$Queue@Uaction_t@@@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R2": {
+          "evidence": [
+            {
+              "description": "R2 review for ??1?$Queue@Uaction_t@@@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R4": {
+          "evidence": [
+            {
+              "description": "R4 review for ??1?$Queue@Uaction_t@@@@QAE@XZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        }
+      },
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
+      "va": "0x40a994"
+    },
+    {
+      "binary": "cl",
+      "checks": {
+        "R1": {
+          "evidence": [
+            {
+              "description": "R1 review for ?clean@?$Queue@Uaction_t@@@@QAEXXZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R13": {
+          "evidence": [
+            {
+              "description": "R13 review for ?clean@?$Queue@Uaction_t@@@@QAEXXZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R17": {
+          "evidence": [
+            {
+              "description": "R17 review for ?clean@?$Queue@Uaction_t@@@@QAEXXZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R18": {
+          "evidence": [
+            {
+              "description": "R18 review for ?clean@?$Queue@Uaction_t@@@@QAEXXZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R2": {
+          "evidence": [
+            {
+              "description": "R2 review for ?clean@?$Queue@Uaction_t@@@@QAEXXZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        },
+        "R4": {
+          "evidence": [
+            {
+              "description": "R4 review for ?clean@?$Queue@Uaction_t@@@@QAEXXZ in the frozen current source/header scope.",
+              "path": "config/reviews/cl-fifth-batch.json",
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
+            }
+          ],
+          "verdict": "pass"
+        }
+      },
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
+      "va": "0x40a9d5"
     },
     {
       "binary": "cl",
@@ -3229,7 +3789,7 @@
             {
               "description": "R1 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3239,7 +3799,7 @@
             {
               "description": "R13 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3249,7 +3809,7 @@
             {
               "description": "R17 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3259,7 +3819,7 @@
             {
               "description": "R18 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3269,7 +3829,7 @@
             {
               "description": "R2 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3279,16 +3839,16 @@
             {
               "description": "R4 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40aa29"
     },
     {
@@ -3299,7 +3859,7 @@
             {
               "description": "R1 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3309,7 +3869,7 @@
             {
               "description": "R13 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3319,7 +3879,7 @@
             {
               "description": "R17 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3329,7 +3889,7 @@
             {
               "description": "R18 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3339,7 +3899,7 @@
             {
               "description": "R2 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
@@ -3349,16 +3909,16 @@
             {
               "description": "R4 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen current source/header scope.",
               "path": "config/reviews/cl-fifth-batch.json",
-              "sha256": "d12bdb0ab75de46554dc0897c7c6ce8049bd0bb4f6cd06d71eab4c63bff6626d"
+              "sha256": "90876e7dee4e2601bbc6dc0650580780145b088df763b44098b10ffeda1fc3cb"
             }
           ],
           "verdict": "pass"
         }
       },
-      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "reviewer": "matching lane mpcl",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/mpcl.cpp",
-      "source_sha256": "9f33e07ebaa6954c003018da1053617b8f70ddc8cdd1e0fb2589e92ed77736c0",
+      "source_sha256": "3db03f225967e423a25e3cd099542c9bfc09807fa2b136e08b6363e39e536d87",
       "va": "0x40aa5e"
     },
     {
@@ -3426,7 +3986,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f08"
@@ -3496,7 +4056,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f69"
@@ -3566,7 +4126,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f99"
@@ -3636,7 +4196,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407fba"
@@ -3706,7 +4266,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407fe5"
@@ -3776,7 +4336,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408145"
@@ -3846,7 +4406,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408276"
@@ -3916,7 +4476,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408290"
@@ -3986,7 +4546,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x4082b9"
@@ -4056,7 +4616,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x4082dc"
@@ -4126,7 +4686,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409934"
@@ -4196,7 +4756,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x40993a"
@@ -4266,7 +4826,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409946"
@@ -4336,7 +4896,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409952"
@@ -4406,7 +4966,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x40995e"
@@ -4476,7 +5036,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409a58"
@@ -4546,7 +5106,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409aab"
@@ -4616,7 +5176,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "19619d503eaaa4a7b17116b8a75889da239fd6b56930d6e1cc1b464699c9fe23",
+      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409acb"

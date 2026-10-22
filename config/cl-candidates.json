@@ -286,8 +286,8 @@
       "size": 1,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 12,
-        "end": 14
+        "start": 13,
+        "end": 15
       },
       "boundary": {
         "status": "verified",
@@ -304,8 +304,8 @@
       "size": 45,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 21,
-        "end": 31
+        "start": 22,
+        "end": 32
       },
       "boundary": {
         "status": "verified",
@@ -322,8 +322,8 @@
       "size": 38,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 36,
-        "end": 49
+        "start": 37,
+        "end": 50
       },
       "boundary": {
         "status": "verified",
@@ -358,8 +358,8 @@
       "size": 33,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 74,
-        "end": 82
+        "start": 75,
+        "end": 83
       },
       "boundary": {
         "status": "verified",
@@ -375,8 +375,8 @@
       "size": 29,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 89,
-        "end": 96
+        "start": 90,
+        "end": 97
       },
       "boundary": {
         "status": "verified",
@@ -392,8 +392,8 @@
       "size": 53,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 102,
-        "end": 112
+        "start": 103,
+        "end": 113
       },
       "boundary": {
         "status": "verified",
@@ -409,8 +409,8 @@
       "size": 41,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 118,
-        "end": 125
+        "start": 119,
+        "end": 126
       },
       "boundary": {
         "status": "verified",
@@ -426,8 +426,8 @@
       "size": 84,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 131,
-        "end": 148
+        "start": 132,
+        "end": 149
       },
       "boundary": {
         "status": "verified",
@@ -443,8 +443,8 @@
       "size": 20,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 160,
-        "end": 165
+        "start": 161,
+        "end": 166
       },
       "boundary": {
         "status": "verified",
@@ -461,8 +461,8 @@
       "size": 23,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 169,
-        "end": 173
+        "start": 170,
+        "end": 174
       },
       "boundary": {
         "status": "verified",
@@ -478,8 +478,8 @@
       "size": 24,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 177,
-        "end": 182
+        "start": 178,
+        "end": 183
       },
       "boundary": {
         "status": "verified",
@@ -495,8 +495,8 @@
       "size": 35,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 186,
-        "end": 190
+        "start": 187,
+        "end": 191
       },
       "boundary": {
         "status": "verified",
@@ -512,8 +512,8 @@
       "size": 56,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 194,
-        "end": 202
+        "start": 195,
+        "end": 203
       },
       "boundary": {
         "status": "verified",
@@ -529,8 +529,8 @@
       "size": 27,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 206,
-        "end": 210
+        "start": 207,
+        "end": 211
       },
       "boundary": {
         "status": "verified",
@@ -546,8 +546,8 @@
       "size": 61,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 214,
-        "end": 221
+        "start": 215,
+        "end": 222
       },
       "boundary": {
         "status": "verified",
@@ -965,8 +965,8 @@
       "size": 17,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 235,
-        "end": 239
+        "start": 236,
+        "end": 240
       },
       "boundary": {
         "status": "verified",
@@ -986,8 +986,8 @@
       "size": 76,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 246,
-        "end": 255
+        "start": 247,
+        "end": 256
       },
       "boundary": {
         "status": "verified",
@@ -1030,8 +1030,8 @@
       "size": 55,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 278,
-        "end": 283
+        "start": 279,
+        "end": 284
       },
       "boundary": {
         "status": "verified",
@@ -1051,8 +1051,8 @@
       "size": 5,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 288,
-        "end": 291
+        "start": 289,
+        "end": 292
       },
       "boundary": {
         "status": "verified",
@@ -1077,8 +1077,8 @@
       "size": 30,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 297,
-        "end": 302
+        "start": 298,
+        "end": 303
       },
       "boundary": {
         "status": "verified",
@@ -1098,8 +1098,8 @@
       "size": 103,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 309,
-        "end": 317
+        "start": 310,
+        "end": 318
       },
       "boundary": {
         "status": "verified",
@@ -1119,8 +1119,8 @@
       "size": 118,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 323,
-        "end": 338
+        "start": 324,
+        "end": 339
       },
       "boundary": {
         "status": "verified",
@@ -1140,8 +1140,8 @@
       "size": 5,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 343,
-        "end": 346
+        "start": 344,
+        "end": 347
       },
       "boundary": {
         "status": "verified",
@@ -1184,8 +1184,8 @@
       "size": 20,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 381,
-        "end": 386
+        "start": 382,
+        "end": 387
       },
       "boundary": {
         "status": "verified",
@@ -1205,8 +1205,8 @@
       "size": 27,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 392,
-        "end": 396
+        "start": 393,
+        "end": 397
       },
       "boundary": {
         "status": "verified",
@@ -1582,6 +1582,235 @@
       "identity_evidence": "S_PUB32 ?OS_init@@YAXXZ, unique DBI contribution module 7 dos.obj; no arguments, caller-clean and void result. The pushed 0x409276 handler is a private dos.obj function, independently decoded over 58 bytes 0x409276..0x4092af.",
       "gate_enabled": false,
       "pending": "OS_init is byte-exact under the ignored development scaffold (14/14 bytes) once the private handler is present, but the handler must become real source in this unit and it calls ?done@@YAXH@Z (0x4085ce, util.obj), which has no reconstructed body yet. Enable after util lands done; then add the 58-byte private handler, its static/referent binding naming real retail address 0x409276, and the source span."
+    },
+    {
+      "binary": "cl",
+      "symbol": "??0action_t@@QAE@HPAUworklist_s@@H@Z",
+      "retail_va": "0x409ed0",
+      "size": 45,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 403,
+        "end": 413
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 45 bytes at 0x409ED0..0x409EFC: five field stores (kind 0x00, worklist 0x04, source 0x08, pass 0x0C zero, parameter 0x10) and the worklist->source load at +0x04 on the non-null path, ret 0xC. Complete local CFG with no other branches; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ??0action_t@@QAE@HPAUworklist_s@@H@Z; __thiscall with (int, worklist_s *, int), ret 0xC.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??1action_t@@QAE@XZ",
+      "retail_va": "0x409efd",
+      "size": 25,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 418,
+        "end": 422
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 25 bytes at 0x409EFD..0x409F15: load worklist, test, skip free only when it is non-null and worklist->source equals this->source, otherwise push this->source into real xfree, ret. Complete CFG; source owner compared every byte and the ordered xfree reference under actual /GL + /LTCG."
+      },
+      "dependencies": [
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [],
+      "identity_evidence": "PDB public ??1action_t@@QAE@XZ; __thiscall destructor, plain RET.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z",
+      "retail_va": "0x40a12d",
+      "size": 155,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 532,
+        "end": 549
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 155 bytes at 0x40A12D..0x40A1C7: three cached wcslen calls over the source_s wide fields, three lea accumulations with constants 6/6/14 (the fixed trailing field sizes folded into the last), one virtual write of the four-byte size, three real write_string calls, then virtual writes of the 4-byte type and the two trailing 2-byte shorts, ret 4. Complete CFG; every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z; member __thiscall, source_s pointer argument, ret 4.",
+      "compiler_context": {
+        "evidence": "One canonical mpcl.obj identity per object; real util.cpp/dos/clmain/Watson bodies are linked only because the unit's delete path resolves through the registered util dependency. Only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??0?$Queue@Uaction_t@@@@QAE@H@Z",
+      "retail_va": "0x40a364",
+      "size": 61,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 429,
+        "end": 437
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 61 bytes at 0x40A364..0x40A3A0: store synchronized, five zero stores over the sentinel fields 0x00..0x10 (inlined action_t(0,0,0)), conditional InitializeCriticalSection on [this], tail=&sentinel, sentinel.next=&sentinel, count=0, ret 4. Complete CFG; every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ??0?$Queue@Uaction_t@@@@QAE@H@Z; __thiscall constructor with one int, ret 4.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?schedule_next_batch@@YAXXZ",
+      "retail_va": "0x40a647",
+      "size": 51,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 517,
+        "end": 525
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 51 bytes at 0x40A647..0x40A679: load next_batch, compare against num_batches with jae exit, index the batches array by Queue stride 0x3C, load count at +0x38 into current_batch_sources, call real append_nosync with the indexed queue, increment next_batch, ret. Complete CFG; all six ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?schedule_next_batch@@YAXXZ; cdecl, no arguments, void.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      },
+      "gate_enabled": false,
+      "pending": "Diagnosed register/schedule residue: retail loads next_batch into EAX, uses it for the bounds test and the 0x3C batch index, then does inc dword [next_batch] after the call (0x40A673); the candidate keeps the value in callee-saved ESI across the call and stores it back. Levers compiled in the real unit: direct member access, named Queue reference, local index copy, and indexed pointer local, all identical ESI shape; volatile is ruled out by the public identity ?next_batch@@3IA versus the compiler's ?x@@3IC for volatile unsigned int. Never counted."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?get_action_nonbatching@@YAPAUaction_t@@XZ",
+      "retail_va": "0x40a67a",
+      "size": 10,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 508,
+        "end": 511
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 10 bytes at 0x40A67A..0x40A683: mov ecx,&work_queue then one E9 tail transfer to the real Queue::head body at 0x40A3C7. No local branch; source owner compared every byte and both ordered references under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?get_action_nonbatching@@YAPAUaction_t@@XZ; cdecl, no arguments, action_t* in EAX.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?send@action_t@@QAEXPAVProcessChannel@@@Z",
+      "retail_va": "0x40a774",
+      "size": 95,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 566,
+        "end": 581
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 95 bytes at 0x40A774..0x40A7D2: virtual write of the kind, branch on the source pointer writing a 1/0 presence flag through the same virtual slot, write_source on the non-null path, then virtual write of the pass, ret 4. Complete CFG with real write_source callee; every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?send@action_t@@QAEXPAVProcessChannel@@@Z; member __thiscall with one ProcessChannel pointer, ret 4.",
+      "compiler_context": {
+        "evidence": "Real ProcessChannel virtual write slot and the newly recovered write_source body; only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??1?$Queue@Uaction_t@@@@QAE@XZ",
+      "retail_va": "0x40a994",
+      "size": 65,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 443,
+        "end": 454
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 65 bytes at 0x40A994..0x40A9D4: walk from sentinel.next (0x30) to the sentinel (0x1C), save each next link, call real ~action_t and xfree, conditional DeleteCriticalSection at lock 0x04, then tail-jump to ~action_t on the sentinel. Complete CFG; all ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [],
+      "identity_evidence": "PDB public ??1?$Queue@Uaction_t@@@@QAE@XZ; __thiscall destructor, plain RET tail call.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?clean@?$Queue@Uaction_t@@@@QAEXXZ",
+      "retail_va": "0x40a9d5",
+      "size": 84,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 460,
+        "end": 476
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 84 bytes at 0x40A9D5..0x40AA28: conditional EnterCriticalSection, the same destruct/free walk as the queue destructor, count=0, tail=&sentinel, sentinel.next=&sentinel, conditional LeaveCriticalSection, ret. Complete CFG; all ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [],
+      "identity_evidence": "PDB public ?clean@?$Queue@Uaction_t@@@@QAEXXZ; __thiscall with no arguments.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?free_batches@@YAXXZ",
+      "retail_va": "0x40ae65",
+      "size": 59,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 555,
+        "end": 560
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 59 bytes at 0x40AE65..0x40AE9F: unsigned loop over num_batches calling clean() on batches[i] with the proven 0x3C Queue stride, then the null-tested vector delete of the batches array through the compiler-generated ??_E deleting destructor, ret. Complete CFG; all ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?free_batches@@YAXXZ; cdecl, no arguments, void.",
+      "compiler_context": {
+        "evidence": "One canonical mpcl.obj identity per object; real util.cpp/dos/clmain/Watson bodies are linked only because the unit's delete path resolves through the registered util dependency. Only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      },
+      "gate_enabled": false,
+      "pending": "Real delete[] is tail-transformed in this LTCG context: the candidate emits a 56-byte body ending in jmp to a specialized vector deleting destructor (EAX-carried this) instead of retail's 59-byte push 3 / call ??_E / ret sequence, so the span overruns by 3 bytes and the partial PE relocation is rejected. The clean() loop matches instruction-for-instruction. Tested levers: direct delete[] and a named array-pointer local, both identical. Not counted."
     }
   ],
   "referents": {
@@ -2304,6 +2533,88 @@
         "dll": "KERNEL32.dll",
         "name": "FreeLibrary",
         "evidence": "Independently parsed retail PE import descriptor/IAT slot 0x40d134 and the actual candidate PE import must both bind this exact DLL and symbol; canonical era Windows SDK declaration FreeLibrary(HMODULE) supplies the source interface, and ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z calls it through this slot."
+      },
+      "?work_queue@@3V?$Queue@Uaction_t@@@@A": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "Queue<action_t>",
+        "size": 60,
+        "va": "0x41ab30",
+        "evidence": "Actual public PDB ?work_queue@@3V?$Queue@Uaction_t@@@@A uniquely attributed to mpcl.obj, loader-zero .data. Its real constructor body is recovered in this unit; get_action_nonbatching and schedule_next_batch address the object at exactly this address. One canonical definition, data bytes not counted."
+      },
+      "?batches@@3PAV?$Queue@Uaction_t@@@@A": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "Queue<action_t> *",
+        "size": 4,
+        "va": "0x41a2d4",
+        "evidence": "Actual public PDB ?batches@@3PAV?$Queue@Uaction_t@@@@A, mpcl.obj loader-zero pointer slot. schedule_next_batch loads it and applies the proven 0x3C Queue stride; one canonical definition in mpcl.cpp, data bytes not counted."
+      },
+      "?next_batch@@3IA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "unsigned int",
+        "size": 4,
+        "va": "0x41a2c8",
+        "evidence": "Actual public PDB ?next_batch@@3IA, mpcl.obj loader-zero unsigned int; schedule_next_batch compares, indexes with, and increments exactly this slot. Data bytes not counted."
+      },
+      "?num_batches@@3IA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "unsigned int",
+        "size": 4,
+        "va": "0x41a2cc",
+        "evidence": "Actual public PDB ?num_batches@@3IA, mpcl.obj loader-zero unsigned int; schedule_next_batch bounds next_batch against exactly this slot. Data bytes not counted."
+      },
+      "?current_batch_sources@@3JA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "long",
+        "size": 4,
+        "va": "0x41a298",
+        "evidence": "Actual public PDB ?current_batch_sources@@3JA, mpcl.obj loader-zero long; schedule_next_batch stores the indexed queue's count at exactly this slot. Data bytes not counted."
+      },
+      "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ": {
+        "va": "0x40a3c7",
+        "evidence": "Actual public Queue<action_t>::head body already decoded and matched over 84 bytes; get_action_nonbatching tail-transfers to this exact address."
+      },
+      "?append_nosync@?$Queue@Uaction_t@@@@QAEHAAV1@@Z": {
+        "va": "0x40a41b",
+        "evidence": "Actual public Queue<action_t>::append_nosync body already registered over 61 bytes; schedule_next_batch calls this exact address."
+      },
+      "??1action_t@@QAE@XZ": {
+        "va": "0x409efd",
+        "evidence": "Actual public action_t destructor body decoded over 25 bytes in this unit; Queue destructor/clean call this exact address per node."
+      },
+      "kernel32.dll!InitializeCriticalSection": {
+        "kind": "import",
+        "va": "0x40d090",
+        "dll": "KERNEL32.dll",
+        "name": "InitializeCriticalSection",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!InitializeCriticalSection; canonical windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!DeleteCriticalSection": {
+        "kind": "import",
+        "va": "0x40d06c",
+        "dll": "KERNEL32.dll",
+        "name": "DeleteCriticalSection",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!DeleteCriticalSection; canonical windows.h declaration supplies the source interface."
+      },
+      "?write_string@ProcessChannel@@QAEXPBG@Z": {
+        "va": "0x40a0d1",
+        "evidence": "Actual public ProcessChannel::write_string body already registered and matched over 55 bytes; write_source calls this exact address three times."
+      },
+      "?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z": {
+        "va": "0x40a12d",
+        "evidence": "Actual public ProcessChannel::write_source body decoded over 155 bytes; send transfers the source through this exact member."
+      },
+      "?clean@?$Queue@Uaction_t@@@@QAEXXZ": {
+        "va": "0x40a9d5",
+        "evidence": "Actual public Queue<action_t>::clean body decoded over 84 bytes in this unit; free_batches calls this exact address per batch."
+      },
+      "??_E?$Queue@Uaction_t@@@@QAEPAXI@Z": {
+        "va": "0x40ae1c",
+        "evidence": "Actual public vector deleting destructor for Queue<action_t>, emitted by the real delete[] in free_batches and decoded over 73 bytes; the source expression is delete[] batches."
       }
     }
   }

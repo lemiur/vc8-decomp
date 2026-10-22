@@ -186,8 +186,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("action", choices=("candidates", "reviews", "spans"))
     parser.add_argument("--base", type=Path, default=ROOT / "config/cl-candidates.json")
-    parser.add_argument("--lane", type=Path, action="append", required=True,
-                        help="lane worktree root or a JSON file (repeatable)")
+    parser.add_argument("--lane", type=Path, action="append",
+                        help="lane worktree root or a JSON file (repeatable; required for candidates/reviews)")
     parser.add_argument("--out", type=Path, help="candidates: destination (default: report only)")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "config/reviews",
                         help="reviews: destination directory (default: config/reviews)")
