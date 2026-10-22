@@ -631,6 +631,54 @@
       "va": "0x40ae65",
       "symbol": "?free_batches@@YAXXZ",
       "reason": "Real delete[] is tail-transformed in this LTCG context into a specialized vector deleting destructor (56-byte candidate versus retail's 59-byte push 3 / call ??_E / ret); the clean() loop matches instruction-for-instruction. Direct delete[] and a named array-pointer local were both compiled. Registered gate_enabled=false; not reviewed, not counted."
+    },
+    {
+      "va": "0x40A00B",
+      "symbol": "?is_last_pass@action_t@@QAEHXZ",
+      "size": 31,
+      "reason": "Probed with a disposable complete body: 31-byte span decodes to the exact retail instruction stream (raw score 90.3; only displacement bytes differ). Two blockers remain: (1) the public clmain.obj table ?Sourceinfo@@3QBUsourceinfo_s@@B/sourceinfo_s is still absent from clmain.h/clmain.cpp, so there is no provider to link; (2) even with a local definition the table field access compiles to [register + Sourceinfo+8], an interior address the harness cannot bind (typed-member normalization currently skips register-indexed accesses; same wall as clmain's parked activate_pass family). Not registered, not counted."
+    },
+    {
+      "va": "0x40A02A",
+      "symbol": "?is_active_pass@action_t@@QAEHXZ",
+      "size": 34,
+      "reason": "Probed with a disposable complete body: 34-byte span matches retail except the interior table displacements (raw 79.4). Same two blockers as is_last_pass: missing clmain Sourceinfo/sourceinfo_s provider and no normalization for the register-indexed Sourceinfo and Passinfo.options member accesses. Not registered, not counted."
+    },
+    {
+      "va": "0x40ABC3",
+      "symbol": "?schedule_next_pass@@YAXPAUaction_t@@@Z",
+      "size": 132,
+      "reason": "Blocked on is_last_pass (same Sourceinfo/harness wall) plus the register-indexed Sourceinfo+0xC reads; remaining_passes, InterlockedDecrement and refill_stack add_head are otherwise available. Not registered, not counted."
+    },
+    {
+      "va": "0x40A4FD",
+      "symbol": "?insert_mp_diag_mutex_switch@@YAXXZ",
+      "size": 112,
+      "reason": "Needs clmain provider ?newflag@@YAPAUflag_s@@PBG00H@Z (0x40182A), which master still does not define; Context, appendflag, MPSyncErrors, g_hMutex and the GetEnvironmentVariableW path are all available. Deliberately not stubbed. Not registered, not counted."
+    },
+    {
+      "va": "0x40A56D",
+      "symbol": "?progress_indication_batching@@YAXPAUaction_t@@@Z",
+      "size": 218,
+      "reason": "Blocked on is_last_pass (Sourceinfo/harness wall) and on util.obj providers get_message and format/_write_helper reached through sync_print; filename now exists in compile.cpp. Not registered, not counted."
+    },
+    {
+      "va": "0x40AA87",
+      "symbol": "?dispatch_compilation@@YAXPAVProcessChannel@@PAUaction_t@@@Z",
+      "size": 189,
+      "reason": "Tail decodes to the real read_string call (0x40A108), which needs util.obj xnew. thread_print, send, expect_int, expect_int_robust, read_size_t and xfree are available. Not registered, not counted."
+    },
+    {
+      "va": "0x409F16",
+      "symbol": "?init_mutex@@YAXXZ",
+      "size": 152,
+      "reason": "Both formatting calls target the non-public CRT swprintf front-end at 0x4014B8 (it builds the va_list and calls msvcr80.dll!_vswprintf_c_l). No public provider exists and the harness cannot identify that local CRT helper; CreateMutexW/GetCurrentProcessId/SetEnvironmentVariableW and g_hMutex are otherwise available. Not registered, not counted."
+    },
+    {
+      "va": "0x40AB44",
+      "symbol": "?get_action_batching@@YAPAUaction_t@@XZ",
+      "size": 127,
+      "reason": "Body needs EnterCriticalSection(&refill_stack.lock); the push immediate is refill_stack+4, an interior address with no MAP symbol, so the referent cannot be bound (same interior-address wall). All callees (try_head_nosync, size, append_nosync, schedule_next_batch) are available. Not registered, not counted."
     }
   ]
 }
