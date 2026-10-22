@@ -13,6 +13,11 @@ import match
 
 
 class MatchContracts(unittest.TestCase):
+    def test_gl_mode_states_one_switch_only(self):
+        self.assertEqual(match.gl_flags(['/nologo', '/GL', '/MD'], False), ['/nologo', '/MD'])
+        self.assertEqual(match.gl_flags(['/nologo', '/gl-', '/MD'], True), ['/nologo', '/MD'])
+        self.assertEqual(match.gl_flags(['/nologo', '/MD'], True), ['/nologo', '/MD'])
+
     def source(self, text):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)

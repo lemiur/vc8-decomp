@@ -96,6 +96,8 @@ def merge_candidates(base: dict, lanes: list[Path], prefer_base: bool = False) -
             target = referents.setdefault(binary, {})
             for identity, record in records.items():
                 if identity in target and target[identity] != record:
+                    if prefer_base:
+                        continue
                     raise ValueError("referent %s conflicts between lanes" % identity)
                 target[identity] = record
     extra.sort(key=lambda entry: (int(entry["retail_va"], 16), entry["symbol"]))

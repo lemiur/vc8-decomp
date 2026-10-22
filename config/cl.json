@@ -108,6 +108,17 @@
         "msvcrt.lib"
       ],
       "evidence": "Plain CRT object, not compiler-owned /GL code: built with gl:false and an explicit /GL- (the common /GL is removed). Installed-era SP1 crt/src/intel/secchk.c (SHA-256 recorded in the unit) is the source; its naked __asm body is the only attributable form of the 15 retail bytes (cmp/jne/rep ret/jmp), because VC8 x86 C emits a plain c3 and the opposite branch/jmp order. /O1 and /O2 are not distinguished by this body. msvcrt.lib supplies the real era ___security_cookie (gs_cookie.obj) and ___report_gsfailure (gs_report.obj) bodies. The R18 exception is recorded as pending in config/cl-candidates.json until the integration owner admits it."
+    },
+    "matching/cl/loadui.cpp": {
+      "gl": false,
+      "compile_flags": [
+        "/O1",
+        "/Zc:wchar_t-"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "PDB module 6 (loadui.obj) bodies, measured with the installed SP1 tools. /Zc:wchar_t- is required: all wide pointers, L\"\" literals and the CRT prototypes mangle as unsigned short (PAG, G) and the retail literal symbols use the typedef-wchar_t spelling. This unit is built with gl=false because the retail bodies are plain-c2 output: their prologues are the non-LTCG `lea ebp,[esp-frame]` layout (0x409331 lea ebp,[esp-0xa38], 0x409756 lea ebp,[esp-0x790], 0x40983c lea ebp,[esp-0xf8c]), while an actual /GL + /LTCG build of the same source emits an aligned esp-relative frame (mov ebp,esp; and esp,-8) and scores 5.66/6.96 instead of 100/100. gl=false is a measured per-unit fact, not a change to the project /GL default. /O1 is the measured optimization for these bodies. msvcrt.lib supplies the MSVCR80.dll import definitions for wcslen/wcscpy_s/wcsncpy_s/wcsncat_s/wcscmp/_itow_s/_wtoi/_wtol/_wdupenv_s/free/memset; the linker-generated __chkstk/__alloca_probe helper is byte-identical to retail. Default /GS supplies the observed ___security_cookie frame checks."
     }
   },
   "flags": {

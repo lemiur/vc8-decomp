@@ -6,12 +6,54 @@
       "sha256": "13b578dc97befdb0ee920a61369ab3b498948280ba6dfee55202995fdc696bed"
     },
     {
+      "path": "config/reviews/cl5-loadui.json",
+      "sha256": "1d15bfea00fbfa7b8fe7c5a833ee5ed34d7df41683fa0b415bec1f9ed7580128"
+    },
+    {
       "path": "config/reviews/cl5-mpcl.json",
       "sha256": "a105916affeb4b34d402d7ac6a60eed67a617949c63ef836d739816aeb444a1f"
     }
   ],
   "review_round": "fifth",
   "reviewed_functions": [
+    {
+      "checks": {
+        "R1": "One canonical declaration per function lives in the single guarded project header include/cl/loadui.h, which declares exactly the three module-6 entries with the types the decorated names prove (WCHAR=unsigned short pointers, DWORD=unsigned long, UINT=unsigned int, HINSTANCE__**, long return). No type is defined or copied in the .cpp: WCHAR, DWORD, UINT, HRESULT, LCID, LANGID and WIN32_FIND_DATAW come from the installed SDK headers, and there is exactly one view of each. No partial or invented struct is introduced.",
+        "R13": "No class, vtable, RTTI or virtual call occurs in this function or its unit. There is no polymorphic object to model, so no dummy virtual slot is invented.",
+        "R17": "Every local has a decoded role: WCHAR path[1024] with its genuine L\"\" zero-fill (first element store plus memset of the remaining 2046 bytes), DWORD selected_language=-1, HRESULT result=E_FAIL, int root_length from the real min(wcslen(path),1023) macro with its observed double wcslen evaluation, LCID candidates[3] built from GetUserDefaultUILanguage/MAKELCID/MAKELANGID, int index with the real duplicate-skip previous loop, WCHAR language_text[10] passed to _itow_s, UINT console_page from GetConsoleOutputCP, WCHAR page_text[12] for the two GetLocaleInfoW queries, int oem_page/ansi_page from the two _wtoi results, WIN32_FIND_DATAW data, HANDLE search and int pattern_length from the second real min macro. Statement order, break/goto/return structure and the FAILED(result) guards reproduce the decoded CFG; no dummy, volatile, padding or force-allocation local exists.",
+        "R18": "Ordinary VC8 C++ source: Windows/CRT API calls through the canonical installed headers, real string literals, loops and returns. No inline assembly, __emit, byte array, binary include, decompiler paste, uncounted helper stub, or padding. /GS cookie and stack-probe code is compiler-generated only. No rule exception is requested.",
+        "R2": "The unit defines no project global. The only data referents are genuine source string tokens L\"\" (zero-initializer, emitted as compiler zero-fill), L\"\\\", L\"*.*\", L\".\" and L\"..\" whose retail storage bytes and digests are registered as literal identity evidence, and the SDK/CRT imports plus ___security_cookie, which are external declarations owned by the installed headers/libraries. There is no alias, no interior-address model and no duplicate declaration.",
+        "R4": "The only modelled object is the real SDK WIN32_FIND_DATAW local, used directly through its documented members (dwFileAttributes, cFileName) with no field-offset arithmetic; its ebp-relative stack home at ebp-0x48 and cFileName at ebp-0x1c follow the SDK layout and match retail. No reinterpret_cast, no raw offset view, no invented storage. The only casts are (DWORD)-1 for the real \"no language\" sentinel and (LANGID) for the documented MAKELCID truncation; the decoded MAKELCID/MAKELANGID/PRIMARYLANGID/SORTIDFROMLCID bit operations prove those macros."
+      },
+      "reviewer": "matching lane loadui",
+      "size": 1061,
+      "source_path": "matching/cl/loadui.cpp",
+      "source_span": {
+        "end": 114,
+        "start": 13
+      },
+      "symbol": "?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z",
+      "va": "0x409330"
+    },
+    {
+      "checks": {
+        "R1": "The function is declared once in include/cl/loadui.h with the exact decorated shape (HINSTANCE__* __cdecl (unsigned short*, unsigned int)). Types WCHAR/UINT/HINSTANCE come from the installed SDK headers; no local typedef or partial type view is introduced.",
+        "R13": "No class, vtable, RTTI or virtual call in this unit. Nothing polymorphic is invented.",
+        "R17": "Locals are authentic: WCHAR* environment=NULL and HINSTANCE module=NULL initialized before the real _wdupenv_s call; WCHAR directory[1024]; cursor bound to environment; int length and the output cursor used by the character-copy loop; the loop-terminating *output=0. The decoded signed comparisons (jge against 0x400, twice) prove int length compared with the integer literal 1024, which is why the source spells 1024 rather than _countof; this was the closing structural finding. The outer PATH walk, the \" \"/\";\" skip, the empty-entry break and the module break reproduce the decoded CFG exactly; free() is called on the original environment pointer. No dummy or padding local.",
+        "R18": "Ordinary VC8 C++ source using the installed CRT/SDK declarations. No assembly, emitted bytes, byte arrays, stubs, padding or decompiler text; only compiler-generated GS code. No exception requested.",
+        "R2": "No project global is defined. Data referents are the genuine literal L\"PATH\" passed to _wdupenv_s and L\"clui.dll\" passed to LoadUILibrary, plus the CRT/SDK imports and the GS cookie; all are external or registered literal identities, with no alias and no interior-address model.",
+        "R4": "The only buffer is the real WCHAR directory[1024] local whose address is passed to LoadUILibrary; element stores use authentic pointer increment with no offset cast. environment/module/cursor are typed pointers. No layout is modelled and no reinterpret_cast occurs."
+      },
+      "reviewer": "matching lane loadui",
+      "size": 230,
+      "source_path": "matching/cl/loadui.cpp",
+      "source_span": {
+        "end": 152,
+        "start": 120
+      },
+      "symbol": "?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z",
+      "va": "0x409755"
+    },
     {
       "checks": {
         "R1": "One canonical declaration void __cdecl close_mutex() in include/cl/mpcl.h; PDB public ?close_mutex@@YAXXZ at 0x409FAE and the plain RET prove the no-argument cdecl ABI. No local prototype.",
@@ -502,7 +544,7 @@
   ],
   "reviewer": "independent audit lane /root/audit",
   "schema_version": 1,
-  "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
+  "scope_sha256": "bc58b12a797654bf696bf6f65adc45eb56bd0180ab235e896ea348336e6106cd",
   "unchanged_prior_rounds": [
     {
       "binary": "cl",
@@ -569,7 +611,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4014d5"
@@ -639,7 +681,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4015a8"
@@ -709,7 +751,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4015b1"
@@ -779,7 +821,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4015ba"
@@ -849,7 +891,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4015c3"
@@ -919,7 +961,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x40218a"
@@ -989,7 +1031,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x4024a8"
@@ -1059,7 +1101,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x402c06"
@@ -1129,7 +1171,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/clmain.cpp",
       "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
       "va": "0x402c1a"
@@ -1199,7 +1241,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f08"
@@ -1269,7 +1311,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f69"
@@ -1339,7 +1381,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f99"
@@ -1409,7 +1451,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407fba"
@@ -1479,7 +1521,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407fe5"
@@ -1549,7 +1591,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408145"
@@ -1619,7 +1661,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408276"
@@ -1689,7 +1731,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408290"
@@ -1759,7 +1801,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x4082b9"
@@ -1829,7 +1871,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x4082dc"
@@ -1899,7 +1941,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
       "va": "0x408f04"
@@ -1969,7 +2011,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
       "va": "0x4092be"
@@ -2039,7 +2081,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/dos.cpp",
       "source_sha256": "3103baa3de6966c8809d12d3fa674e76d645845ad0957128182884c07931acf1",
       "va": "0x4092d4"
@@ -2109,7 +2151,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409934"
@@ -2179,7 +2221,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x40993a"
@@ -2249,7 +2291,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409946"
@@ -2319,7 +2361,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409952"
@@ -2389,7 +2431,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x40995e"
@@ -2459,7 +2501,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409a58"
@@ -2529,7 +2571,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409aab"
@@ -2599,7 +2641,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409acb"
@@ -2669,7 +2711,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "6b4a22715265ff30cc0edeac64a1730a5af5de2522e446f0620917e63edabbe3",
+      "scope_sha256": "e080da7c098a7113141ee541f832c68cec34b4537d92fcd7c954087065986570",
       "source_path": "matching/cl/merr.c",
       "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
       "va": "0x40c661"

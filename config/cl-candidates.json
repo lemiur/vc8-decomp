@@ -1332,6 +1332,62 @@
       "identity_evidence": "PDB S_PUB32 __IsNonwritableInCurrentImage with unique DBI contribution build/intel/dll_obj/pesect.obj (module 34); decorated form of the installed source's BOOL __cdecl _IsNonwritableInCurrentImage(PBYTE), one [esp+4] argument, caller cleanup, and the source's __try/__except (GetExceptionCode() == STATUS_ACCESS_VIOLATION) structure is directly decoded as the SEH4 frame, filter and handler.",
       "gate_enabled": false,
       "pending": "Complete body reproduced exactly by the installed-era pesect.c under measured plain-CRT flags: all 66 instructions match. Not admitted: of the 14 ordered referents, the compiler-generated SEH4 scope table at 0x415df8 has no MAP identity and embeds the filter/handler addresses 0x40c5f9/0x40c60d; four fs:[0] operands (offsets 0x11, 0x2c, 0x7d, 0xaf) decode as absolute zero and three ___ImageBase immediates (offsets 0x3b, 0x4f, 0x55) decode as the linker-defined constant 0x400000, which ltcg.read_map drops as a section-0 symbol. The current referent model has no identity kind for segment-relative zero, the image-base constant or compiler payloads; it needs tooling support before this function can be admitted."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z",
+      "retail_va": "0x409330",
+      "size": 1061,
+      "unit": "matching/cl/loadui.cpp",
+      "source_span": {
+        "start": 13,
+        "end": 114
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 1061 bytes 0x409330..0x409754: complete reachable CFG with prologue 0x409330, all conditional and unconditional branches decoded in both directions, epilogue and ret at 0x409754, immediately followed by the next public start 0x409755. Ordered referents all resolved: __chkstk 0x40bd30, ___security_cookie 0x417c44, @__security_check_cookie@4 0x40bba8, _memset 0x40bbb8, the kernel32/msvcr80 imports, and literals L\"\\\", L\"*.*\", L\".\", L\"..\". Source owner re-decoded the complete body, every branch and every ordered referent before and after the measured build; the candidate object was compiled without /GL (retail prologue is the plain-c2 `lea ebp,[esp-frame]` layout, which the LTCG pass replaces with an aligned esp-relative frame) and matched every byte after independent ordered-referent relocation."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public start 0x409330 with DBI section contribution in module 6 (loadui.obj); decorated name ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z proves __cdecl HRESULT(long) (unsigned short*, unsigned short*, unsigned long, HINSTANCE__**, unsigned short*, unsigned int, unsigned long*)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z",
+      "retail_va": "0x409755",
+      "size": 230,
+      "unit": "matching/cl/loadui.cpp",
+      "source_span": {
+        "start": 120,
+        "end": 152
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 230 bytes 0x409755..0x40983a: complete reachable CFG, frame 0x810 established by the decoded sub esp, all branches decoded, ret at 0x40983a immediately followed by the next public start 0x40983b. Ordered referents resolved: _wdupenv_s 0x40d26c, free 0x40d28c, wcslen 0x40d290, LoadUILibrary 0x409330, literals L\"PATH\", L\"clui.dll\", plus the GS cookie pair. Source owner re-decoded the complete body, every branch and every ordered referent before and after the measured build; the candidate object was compiled without /GL (retail prologue is the plain-c2 `lea ebp,[esp-frame]` layout, which the LTCG pass replaces with an aligned esp-relative frame) and matched every byte after independent ordered-referent relocation."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public start 0x409755 with DBI section contribution in module 6 (loadui.obj); decorated name ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z proves __cdecl HINSTANCE__* (unsigned short*, unsigned int)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z",
+      "retail_va": "0x40983b",
+      "size": 249,
+      "unit": "matching/cl/loadui.cpp",
+      "source_span": {
+        "start": 157,
+        "end": 175
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 249 bytes 0x40983b..0x409933: complete reachable CFG, page-sized frame 0x100c probed through __chkstk, all branches decoded, ret at 0x409933 immediately followed by the next public start 0x409934. Ordered referents resolved: __chkstk 0x40bd30, GetModuleHandleW/GetModuleFileNameW 0x40d0fc/0x40d13c, wcslen 0x40d290, LoadUILibrary 0x409330, LoadSearchPath 0x409755, wcscpy_s 0x40d298, literal L\"clui.dll\", plus the GS cookie pair."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public start 0x40983b with DBI section contribution in module 6 (loadui.obj); decorated name ?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z proves __cdecl HINSTANCE__* (unsigned short*, unsigned int).",
+      "gate_enabled": false,
+      "pending": "Byte-complete and instruction-identical: all 249 decoded bytes agree with retail after independent ordered-fixup normalization (zero differing bytes outside the 9 ordered referent operands), and the compiler-generated 43-byte stack-probe helper called at offset 14 is byte-identical to retail (sha256 f8675b4976f7b8efc0bd917aebab734d11ca90222d20bcd2a166ce9914ed2b6e). It is disabled because tools/ltcg.py scan_referents cannot name a MAP entry that carries two public aliases: the candidate MAP lists __alloca_probe and __chkstk at the same address, so the rel32 at offset 14 gets identity None and the harness can never report referents=resolved for this candidate. tools/gate.py already models the case as kind=\"entry-alias\" with verify_entry_alias and a compiler-stack-probe-shared-entry-identity proof, but that path requires the manifest to advertise identity \"entry-alias:__alloca_probe|__chkstk\" with resolved=true, which scan_referents does not produce. No source lever remains: the call is generated solely by the 0x100c frame, matching the retail frame exactly, and every other referent resolves."
     }
   ],
   "referents": {
@@ -1848,6 +1904,182 @@
         "kind": "symbol",
         "va": "0x40c1b0",
         "evidence": "Actual PDB S_PUB32 ___report_gsfailure with unique DBI contribution build/intel/dll_obj/gs_report.obj (module 30); the retail secchk helper's noreturn tail jmp resolves exactly 0x40c1b0. The candidate link uses the installed 8.0.50727.762 msvcrt.lib gs_report.obj body, whose MAP public is the same decorated symbol; no stub or replacement body."
+      },
+      "kernel32.dll!GetFileAttributesW": {
+        "kind": "import",
+        "va": "0x40d0cc",
+        "dll": "KERNEL32.dll",
+        "name": "GetFileAttributesW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetUserDefaultUILanguage": {
+        "kind": "import",
+        "va": "0x40d0d0",
+        "dll": "KERNEL32.dll",
+        "name": "GetUserDefaultUILanguage",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetLocaleInfoW": {
+        "kind": "import",
+        "va": "0x40d0d4",
+        "dll": "KERNEL32.dll",
+        "name": "GetLocaleInfoW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!FindFirstFileW": {
+        "kind": "import",
+        "va": "0x40d0d8",
+        "dll": "KERNEL32.dll",
+        "name": "FindFirstFileW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!FindNextFileW": {
+        "kind": "import",
+        "va": "0x40d0dc",
+        "dll": "KERNEL32.dll",
+        "name": "FindNextFileW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!FindClose": {
+        "kind": "import",
+        "va": "0x40d0e0",
+        "dll": "KERNEL32.dll",
+        "name": "FindClose",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetModuleHandleW": {
+        "kind": "import",
+        "va": "0x40d0fc",
+        "dll": "KERNEL32.dll",
+        "name": "GetModuleHandleW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetConsoleOutputCP": {
+        "kind": "import",
+        "va": "0x40d110",
+        "dll": "KERNEL32.dll",
+        "name": "GetConsoleOutputCP",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetModuleFileNameW": {
+        "kind": "import",
+        "va": "0x40d13c",
+        "dll": "KERNEL32.dll",
+        "name": "GetModuleFileNameW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!LoadLibraryExW": {
+        "kind": "import",
+        "va": "0x40d144",
+        "dll": "KERNEL32.dll",
+        "name": "LoadLibraryExW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!wcsncat_s": {
+        "kind": "import",
+        "va": "0x40d1dc",
+        "dll": "MSVCR80.dll",
+        "name": "wcsncat_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!_itow_s": {
+        "kind": "import",
+        "va": "0x40d1e0",
+        "dll": "MSVCR80.dll",
+        "name": "_itow_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!_wtol": {
+        "kind": "import",
+        "va": "0x40d1e4",
+        "dll": "MSVCR80.dll",
+        "name": "_wtol",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!_wdupenv_s": {
+        "kind": "import",
+        "va": "0x40d26c",
+        "dll": "MSVCR80.dll",
+        "name": "_wdupenv_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!wcsncpy_s": {
+        "kind": "import",
+        "va": "0x40d2a4",
+        "dll": "MSVCR80.dll",
+        "name": "wcsncpy_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "_memset": {
+        "kind": "import-thunk",
+        "va": "0x40bbb8",
+        "dll": "msvcr80.dll",
+        "name": "memset",
+        "evidence": "Retail LoadUILibrary calls the direct linker thunk 0x40bbb8, whose public PDB identity is _memset (DBI module 53 MSVCR80.dll); the thunk jumps through the PE IAT slot that resolves MSVCR80.dll!memset. The compiler-generated zero-fill of the WCHAR[1024] path buffer is the only source of this ordered referent; thunk bytes are library/fallback and never counted."
+      },
+      "literal:sha256:4c2ce59295120259bf8182bf95801b6303a56ddf270184efdec7cccd568f5eef": {
+        "kind": "literal",
+        "va": "0x415610",
+        "encoding": "utf-16le",
+        "size": 18,
+        "bytes_sha256": "4c2ce59295120259bf8182bf95801b6303a56ddf270184efdec7cccd568f5eef",
+        "source_literal": "L\"clui.dll\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"clui.dll\"; the digest above is computed from exactly 18 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:7eb0dde9c1a479596fe2eae9c96bbda9ced05a57d1350e4ad952e3684ed53304": {
+        "kind": "literal",
+        "va": "0x4149f4",
+        "encoding": "utf-16le",
+        "size": 10,
+        "bytes_sha256": "7eb0dde9c1a479596fe2eae9c96bbda9ced05a57d1350e4ad952e3684ed53304",
+        "source_literal": "L\"PATH\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"PATH\"; the digest above is computed from exactly 10 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:b7fc02907b1fe26a09f41a20cbcb2899ecd2b028a973d1997530873bcd349966": {
+        "kind": "literal",
+        "va": "0x415a4c",
+        "encoding": "utf-16le",
+        "size": 4,
+        "bytes_sha256": "b7fc02907b1fe26a09f41a20cbcb2899ecd2b028a973d1997530873bcd349966",
+        "source_literal": "L\"\\\\\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"\\\\\"; the digest above is computed from exactly 4 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:955300dd21e1918444ea5d7dfe3524eb30fe147f6f3b811dd887bf1e2f0d7647": {
+        "kind": "literal",
+        "va": "0x415608",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "955300dd21e1918444ea5d7dfe3524eb30fe147f6f3b811dd887bf1e2f0d7647",
+        "source_literal": "L\"*.*\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"*.*\"; the digest above is computed from exactly 8 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:c245aff91259378234ae88c46d0e6a690a75034a5fc42bd61f2e3d03c9158b33": {
+        "kind": "literal",
+        "va": "0x414b54",
+        "encoding": "utf-16le",
+        "size": 4,
+        "bytes_sha256": "c245aff91259378234ae88c46d0e6a690a75034a5fc42bd61f2e3d03c9158b33",
+        "source_literal": "L\".\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\".\"; the digest above is computed from exactly 4 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:77eca80e282a795166d31533c55cfba9eac4c92d165ece95443a22d740341101": {
+        "kind": "literal",
+        "va": "0x415600",
+        "encoding": "utf-16le",
+        "size": 6,
+        "bytes_sha256": "77eca80e282a795166d31533c55cfba9eac4c92d165ece95443a22d740341101",
+        "source_literal": "L\"..\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"..\"; the digest above is computed from exactly 6 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z": {
+        "kind": "symbol",
+        "va": "0x409330",
+        "evidence": "Exact public start 0x409330 in DBI module 6 (loadui.obj); both decode-time callers in LoadSearchPath (0x4097fc rel32 target 0x409330) and LoadCLUI (0x4098de rel32 target 0x409330) branch to this exact entry, and the decorated name proves the same seven-parameter __cdecl ABI. The source call is the canonical same-unit function, not a thunk."
+      },
+      "?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z": {
+        "kind": "symbol",
+        "va": "0x409755",
+        "evidence": "Exact public start 0x409755 in DBI module 6 (loadui.obj); the decode-time caller in LoadCLUI (0x4098f2 rel32 target 0x409755) branches to this exact entry, and the decorated name proves the same two-parameter __cdecl ABI. The source call is the canonical same-unit function, not a thunk."
       }
     }
   }
