@@ -1,6 +1,8 @@
 #ifndef VC8_DECOMP_CL_COMPILE_H
 #define VC8_DECOMP_CL_COMPILE_H
 
+#include "clmain.h"
+
 // Reconstruction unit for the PDB DBI section-contribution owner compile.obj
 // (module 9). The original source filename, extension, declaration spellings
 // and line layout are unresolved and are not claimed here.
@@ -9,27 +11,13 @@
 // PAG/PBG in the mangled names encode unsigned short*, never native wchar_t
 // (_W), so this unit is built in typedef-wchar mode (/Zc:wchar_t-).
 
-struct context_s;
 struct worklist_s;
 enum pass_type;
 
-// Compile-driver context. Only the public PDB type tag is proved; the complete
-// layout belongs to the clmain.obj reconstruction. This is the canonical
-// partial model: +0x20 is the only member this module's decoded bodies read as
-// a value (the wide source path passed to wcschr, GetDiskFreeSpaceExW and
-// strqlen at 0x4060a6, 0x406113 and 0x4069b9). Offsets 0x00..0x1c are reserved
-// placeholder storage with no established semantics here; extend, do not copy.
-struct context_s {
-    int reserved_00;
-    int reserved_04;
-    int reserved_08;
-    int reserved_0c;
-    int reserved_10;
-    int reserved_14;
-    int reserved_18;
-    int reserved_1c;
-    unsigned short *source_path; // +0x20
-};
+// context_s is owned by clmain.obj (?Context@@3PAUcontext_s@@A -> ?CX at
+// 0x418900, extent 0x28). Its one canonical definition lives in clmain.h:
+// +0x20 is the wide base name this module's decoded consumers read
+// (0x4060a6, 0x406113, 0x4069b9). Never redeclare the type here.
 
 // Public PDB data identities owned by clmain.obj; declared once here for the
 // compile.obj bodies that consume them (see the per-function evidence).

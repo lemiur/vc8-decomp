@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "reviewer": "clmain lane worker /codex/lane-clmain",
+  "review_date": "2026-10-22",
+  "scope_sha256": "8f1f3ebda882fc92de98587a86a07e59447a2ae760b76e9b35e6d6968b721739",
+  "covered_unit": "matching/cl/clmain.cpp",
+  "covered_unit_sha256": "ba3f43a27369eb98a43cb3f3eeea94fa886c330105957c357fe5e352d178eb10",
+  "approved_function_count": 14,
+  "enabled_source_bytes_expected": 489,
+  "authority_limit": "Source-rule approval only; the fresh complete gate alone banks compiled functions/bytes.",
+  "binding_note": "Rulecheck binds a review to the whole clmain.cpp unit hash, so this fragment re-attests every enabled candidate in that unit: the nine previously banked functions (body text unchanged, delta is the new shared declarations/definitions) and the five functions recovered in this lane.",
+  "new_declarations": [
+    "include/cl/clmain.h: canonical flag_s, passinfo_s, context_s, ilsuffix_s and context_node definitions; externs for CX, Context, Il_suffix, Passinfo, EncDefaults, DefaultsMarked, CluiPath, Nologo, Preprocess, Verbose, Keepfiles, Cmd_Prefast, g_hCryptProv and EncEventName.",
+    "matching/cl/clmain.cpp: DATA definitions for the clmain.obj public objects with retail storage/initializer evidence (CX/Context, Passinfo, Il_suffix real .rdata rows, loader-zero scalars/pointers)."
+  ],
+  "functions": [
+    {
+      "va": "0x401501",
+      "symbol": "?OpenClSqmLogFileForWriting@@YAPAU_iobuf@@PBG@Z",
+      "size": 167,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 16,
+        "end": 52
+      },
+      "checks": {
+        "R1": "Signature and identity are the public PDB spelling ?OpenClSqmLogFileForWriting@@YAPAU_iobuf@@PBG@Z; the FILE return and const wchar_t* name come from the real installed stdio.h/io.h. No local type or prototype copy: flag_s/passinfo_s/context_s are the single canonical header definitions.",
+        "R2": "Only genuine msvcr80 imports are referenced (_wfsopen, _fileno, _filelength, fwrite, fread, fclose, fseek) plus the real wide literal L\"a+b\". No invented global, field global or interior address; the 16-byte header is an ordinary local aggregate.",
+        "R4": "No offset casts or raw structures. The header is a real unsigned long[4] local whose magic/version constants are the observed image values, and all API arguments are typed by the installed headers.",
+        "R13": "Free scalar function with direct CRT calls only; no class, vtable or virtual slot involved.",
+        "R17": "Independently decoded the complete 167-byte 0x401501..0x4015a8 CFG: open, >2 MiB rejection, shared fread/fwrite argument setup, magic/version validation, SEEK_END seek and the single fclose failure tail. Every local is used, there is no padding, probe, inline directive or source steering, and the fwrite/fread argument order is the authentic retry-free pair.",
+        "R18": "Ordinary VC8 C++ using only installed CRT headers and APIs; no assembly, emitted bytes, byte arrays or binary inclusion."
+      }
+    },
+    {
+      "va": "0x4014d5",
+      "symbol": "??0CConsoleLock@@QAE@XZ",
+      "size": 44,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 301,
+        "end": 315
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. One canonical CConsoleLock definition in clmain.h with private bool locked, reconstructed field name explicitly documented. Constructor public identity plus observed ECX this/EAX return corroborates thiscall ABI. Header includes canonical mpcl.h for shared HANDLE g_hMutex rather than redeclaring or redefining the global.",
+        "R2": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. Real public ?g_hMutex@@3PAXA at41aaf0 is loader-zero storage owned by mpcl.obj/module4, with sole DATA definition in mpcl.cpp and canonical HANDLE extern. Constructor accesses that same object; no duplicate static/global, fake field global or interior-address entity.",
+        "R4": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. Actual constructor writes only BYTE[this+0]. Independent pinned cmderr frame bytes show PUSH EBP;MOV EBP,ESP and LEA ECX,[EBP-1] before the constructor, plus byte guard at[EBP-1]. This places the complete object below saved frame and establishes one-byte extent together with the actual byte member. No raw casts, padding or fabricated fields.",
+        "R13": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. CConsoleLock has no virtual calls or vptr evidence; source defines none. Real cmderr lifetime cleanup tests the same byte then calls ReleaseMutex(g_hMutex) before done. Header inline destructor models that actual cleanup; it has no separate public body or matched count.",
+        "R17": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. Independently reopened and decoded all44B4014d5..401500 through RET: test real mutex, WaitForSingleObject(INFINITE), success for WAIT_OBJECT_0 or WAIT_ABANDONED, then store true/false and return this. Source uses actual SDK constants and genuine early-success return shape; no artificial helper, fake local, noinline, volatile carrier or padding.",
+        "R18": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. Ordinary VC8 constructor/destructor with canonical Windows declarations and shared data owner. No assembly, byte emission, binary include or rule exception."
+      }
+    },
+    {
+      "va": "0x4015a8",
+      "symbol": "?error_report_prompt@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 54,
+        "end": 59
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      }
+    },
+    {
+      "va": "0x4015b1",
+      "symbol": "?error_report_queue@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 61,
+        "end": 66
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      }
+    },
+    {
+      "va": "0x4015ba",
+      "symbol": "?error_report_send@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 68,
+        "end": 73
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      }
+    },
+    {
+      "va": "0x4015c3",
+      "symbol": "?error_report_none@@YAXPAUflag_s@@@Z",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 75,
+        "end": 80
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      }
+    },
+    {
+      "va": "0x401886",
+      "symbol": "?appendflag@@YAPAUflag_s@@PAPAU1@PAU1@@Z",
+      "size": 22,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 82,
+        "end": 92
+      },
+      "checks": {
+        "R1": "Public ?appendflag@@YAPAUflag_s@@PAPAU1@PAU1@@Z proves the flag_s*/flag_s** signature; flag_s is the single canonical clmain.h declaration.",
+        "R2": "No global or import is referenced: the function only walks the caller list through the canonical flag_s::next member. No invented storage.",
+        "R4": "Uses the typed flag_s::next member; the address-of-next walk is the real list-tail search, no offsets or casts.",
+        "R13": "Free scalar function; no class layout or vtable.",
+        "R17": "Complete 22-byte 0x401886..0x40189c retail decode: one loop walking next, a final store of the appended node and the returned parameter. The loop variable is the genuine list cursor; no dummy local or steering.",
+        "R18": "Ordinary VC8 C++; no assembly or emitted bytes."
+      }
+    },
+    {
+      "va": "0x40189c",
+      "symbol": "?flag_this_pass@@YAHPAUflag_s@@PAUpassinfo_s@@@Z",
+      "size": 32,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 94,
+        "end": 99
+      },
+      "checks": {
+        "R1": "Public ?flag_this_pass@@YAHPAUflag_s@@PAUpassinfo_s@@@Z proves the two struct-pointer parameters; both types are canonical clmain.h declarations, and the int return is the PDB spelling.",
+        "R2": "References the real wcschr import and the canonical flag_s selector string. No invented data or interior address.",
+        "R4": "Reads the typed flag_s::passes and passinfo_s::selector members; no offsets or casts.",
+        "R13": "Free scalar function; no class or vtable.",
+        "R17": "Complete 32-byte 0x40189c..0x4018bc decode: one wcschr call, the branchless 0/1 comparison result and RET. No fake locals.",
+        "R18": "Ordinary VC8 C++; no assembly or emitted bytes."
+      }
+    },
+    {
+      "va": "0x40218a",
+      "symbol": "?IsRunningUnderIDE@@YAHXZ",
+      "size": 22,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 139,
+        "end": 144
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      }
+    },
+    {
+      "va": "0x402267",
+      "symbol": "?file_exists@@YAHPBGPAG0@Z",
+      "size": 52,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 146,
+        "end": 154
+      },
+      "checks": {
+        "R1": "Public ?file_exists@@YAHPBGPAG0@Z proves int(const wchar_t*, wchar_t*, const wchar_t*); the types come from the real installed headers and errno.h EACCES.",
+        "R2": "References only the real _waccess_s import and the caller buffers. No invented global or interior address.",
+        "R4": "Plain typed pointer parameters; no offset model or cast.",
+        "R13": "Free scalar function; no class or vtable.",
+        "R17": "Complete 52-byte 0x402267..0x40229b decode: two destination character copies, one _waccess_s call, the EACCES compare and the two shared 0/1 return tails. No fake code.",
+        "R18": "Ordinary VC8 C++; no assembly or emitted bytes."
+      }
+    },
+    {
+      "va": "0x4024a8",
+      "symbol": "?fullccpath@@YAPAGXZ",
+      "size": 23,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 174,
+        "end": 181
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      }
+    },
+    {
+      "va": "0x402915",
+      "symbol": "?double_percent@@YAXPAGPBGI@Z",
+      "size": 51,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 218,
+        "end": 229
+      },
+      "checks": {
+        "R1": "Public ?double_percent@@YAXPAGPBGI@Z proves void(wchar_t*, const wchar_t*, unsigned int); no local prototype copy.",
+        "R2": "No callee, global or literal is referenced; only the caller buffers.",
+        "R4": "Pure typed pointer arithmetic; no offsets or casts.",
+        "R13": "Free scalar function; no class or vtable.",
+        "R17": "Complete 51-byte 0x402915..0x402948 decode: the counted loop, the doubled percent store and RET. The counter is the genuine loop index and the observed pointer increments follow from it.",
+        "R18": "Ordinary VC8 C++; no assembly or emitted bytes."
+      }
+    },
+    {
+      "va": "0x402c06",
+      "symbol": "?release_filelife_heap@@YAXXZ",
+      "size": 20,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 287,
+        "end": 292
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      }
+    },
+    {
+      "va": "0x402c1a",
+      "symbol": "?release_ast_extra_heap@@YAXXZ",
+      "size": 20,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 294,
+        "end": 299
+      },
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      }
+    }
+  ],
+  "pending": [
+    "flag_these_pass_ids: registered with gate_enabled false; the null path returns the EAX zero already present in retail while every tested source spelling materializes xor ax, ax.",
+    "mark_defaults: registered with gate_enabled false; LTCG in the reduced standalone link constant-folds the statically initialized Context pointer to &CX, so the retail indirect load is not reproduced.",
+    "activate_pass, deactivate_passes_except, deactivate_passes: bodies are instruction-identical to retail, but their Passinfo interior references need typed member bindings (passinfo_s::selector at +8/2 and ::options at +0xC/4) backed by a layout witness produced in the integration checkout; gate_enabled false until then.",
+    "isEdevSku is a public function (0x4046cb), not data; no body has been recovered and it is not stubbed."
+  ]
+}

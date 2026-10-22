@@ -2,6 +2,10 @@
   "authority_limit": "Source-rule approval only; the fresh complete gate alone banks compiled functions/bytes.",
   "fragments": [
     {
+      "path": "config/reviews/cl5-clmain.json",
+      "sha256": "931b0dac5b15dbb1673d04b514a30d4bf4bee78b6c60447a3442b9820863a18f"
+    },
+    {
       "path": "config/reviews/cl5-compile.json",
       "sha256": "56c3e3b999c33a2cfd11a70802c0dd89ddc18f30ab0248c1da8036af40d2840a"
     },
@@ -24,6 +28,272 @@
   ],
   "review_round": "fifth",
   "reviewed_functions": [
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. One canonical CConsoleLock definition in clmain.h with private bool locked, reconstructed field name explicitly documented. Constructor public identity plus observed ECX this/EAX return corroborates thiscall ABI. Header includes canonical mpcl.h for shared HANDLE g_hMutex rather than redeclaring or redefining the global.",
+        "R13": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. CConsoleLock has no virtual calls or vptr evidence; source defines none. Real cmderr lifetime cleanup tests the same byte then calls ReleaseMutex(g_hMutex) before done. Header inline destructor models that actual cleanup; it has no separate public body or matched count.",
+        "R17": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. Independently reopened and decoded all44B4014d5..401500 through RET: test real mutex, WaitForSingleObject(INFINITE), success for WAIT_OBJECT_0 or WAIT_ABANDONED, then store true/false and return this. Source uses actual SDK constants and genuine early-success return shape; no artificial helper, fake local, noinline, volatile carrier or padding.",
+        "R18": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. Ordinary VC8 constructor/destructor with canonical Windows declarations and shared data owner. No assembly, byte emission, binary include or rule exception.",
+        "R2": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. Real public ?g_hMutex@@3PAXA at41aaf0 is loader-zero storage owned by mpcl.obj/module4, with sole DATA definition in mpcl.cpp and canonical HANDLE extern. Constructor accesses that same object; no duplicate static/global, fake field global or interior-address entity.",
+        "R4": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. Actual constructor writes only BYTE[this+0]. Independent pinned cmderr frame bytes show PUSH EBP;MOV EBP,ESP and LEA ECX,[EBP-1] before the constructor, plus byte guard at[EBP-1]. This places the complete object below saved frame and establishes one-byte extent together with the actual byte member. No raw casts, padding or fabricated fields."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 44,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 315,
+        "start": 301
+      },
+      "symbol": "??0CConsoleLock@@QAE@XZ",
+      "va": "0x4014d5"
+    },
+    {
+      "checks": {
+        "R1": "Signature and identity are the public PDB spelling ?OpenClSqmLogFileForWriting@@YAPAU_iobuf@@PBG@Z; the FILE return and const wchar_t* name come from the real installed stdio.h/io.h. No local type or prototype copy: flag_s/passinfo_s/context_s are the single canonical header definitions.",
+        "R13": "Free scalar function with direct CRT calls only; no class, vtable or virtual slot involved.",
+        "R17": "Independently decoded the complete 167-byte 0x401501..0x4015a8 CFG: open, >2 MiB rejection, shared fread/fwrite argument setup, magic/version validation, SEEK_END seek and the single fclose failure tail. Every local is used, there is no padding, probe, inline directive or source steering, and the fwrite/fread argument order is the authentic retry-free pair.",
+        "R18": "Ordinary VC8 C++ using only installed CRT headers and APIs; no assembly, emitted bytes, byte arrays or binary inclusion.",
+        "R2": "Only genuine msvcr80 imports are referenced (_wfsopen, _fileno, _filelength, fwrite, fread, fclose, fseek) plus the real wide literal L\"a+b\". No invented global, field global or interior address; the 16-byte header is an ordinary local aggregate.",
+        "R4": "No offset casts or raw structures. The header is a real unsigned long[4] local whose magic/version constants are the observed image values, and all API arguments are typed by the installed headers."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 167,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 52,
+        "start": 16
+      },
+      "symbol": "?OpenClSqmLogFileForWriting@@YAPAU_iobuf@@PBG@Z",
+      "va": "0x401501"
+    },
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 59,
+        "start": 54
+      },
+      "symbol": "?error_report_prompt@@YAXPAUflag_s@@@Z",
+      "va": "0x4015a8"
+    },
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 66,
+        "start": 61
+      },
+      "symbol": "?error_report_queue@@YAXPAUflag_s@@@Z",
+      "va": "0x4015b1"
+    },
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 73,
+        "start": 68
+      },
+      "symbol": "?error_report_send@@YAXPAUflag_s@@@Z",
+      "va": "0x4015ba"
+    },
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-second-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 9,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 80,
+        "start": 75
+      },
+      "symbol": "?error_report_none@@YAXPAUflag_s@@@Z",
+      "va": "0x4015c3"
+    },
+    {
+      "checks": {
+        "R1": "Public ?appendflag@@YAPAUflag_s@@PAPAU1@PAU1@@Z proves the flag_s*/flag_s** signature; flag_s is the single canonical clmain.h declaration.",
+        "R13": "Free scalar function; no class layout or vtable.",
+        "R17": "Complete 22-byte 0x401886..0x40189c retail decode: one loop walking next, a final store of the appended node and the returned parameter. The loop variable is the genuine list cursor; no dummy local or steering.",
+        "R18": "Ordinary VC8 C++; no assembly or emitted bytes.",
+        "R2": "No global or import is referenced: the function only walks the caller list through the canonical flag_s::next member. No invented storage.",
+        "R4": "Uses the typed flag_s::next member; the address-of-next walk is the real list-tail search, no offsets or casts."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 22,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 92,
+        "start": 82
+      },
+      "symbol": "?appendflag@@YAPAUflag_s@@PAPAU1@PAU1@@Z",
+      "va": "0x401886"
+    },
+    {
+      "checks": {
+        "R1": "Public ?flag_this_pass@@YAHPAUflag_s@@PAUpassinfo_s@@@Z proves the two struct-pointer parameters; both types are canonical clmain.h declarations, and the int return is the PDB spelling.",
+        "R13": "Free scalar function; no class or vtable.",
+        "R17": "Complete 32-byte 0x40189c..0x4018bc decode: one wcschr call, the branchless 0/1 comparison result and RET. No fake locals.",
+        "R18": "Ordinary VC8 C++; no assembly or emitted bytes.",
+        "R2": "References the real wcschr import and the canonical flag_s selector string. No invented data or interior address.",
+        "R4": "Reads the typed flag_s::passes and passinfo_s::selector members; no offsets or casts."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 32,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 99,
+        "start": 94
+      },
+      "symbol": "?flag_this_pass@@YAHPAUflag_s@@PAUpassinfo_s@@@Z",
+      "va": "0x40189c"
+    },
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 22,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 144,
+        "start": 139
+      },
+      "symbol": "?IsRunningUnderIDE@@YAHXZ",
+      "va": "0x40218a"
+    },
+    {
+      "checks": {
+        "R1": "Public ?file_exists@@YAHPBGPAG0@Z proves int(const wchar_t*, wchar_t*, const wchar_t*); the types come from the real installed headers and errno.h EACCES.",
+        "R13": "Free scalar function; no class or vtable.",
+        "R17": "Complete 52-byte 0x402267..0x40229b decode: two destination character copies, one _waccess_s call, the EACCES compare and the two shared 0/1 return tails. No fake code.",
+        "R18": "Ordinary VC8 C++; no assembly or emitted bytes.",
+        "R2": "References only the real _waccess_s import and the caller buffers. No invented global or interior address.",
+        "R4": "Plain typed pointer parameters; no offset model or cast."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 52,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 154,
+        "start": 146
+      },
+      "symbol": "?file_exists@@YAHPBGPAG0@Z",
+      "va": "0x402267"
+    },
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 23,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 181,
+        "start": 174
+      },
+      "symbol": "?fullccpath@@YAPAGXZ",
+      "va": "0x4024a8"
+    },
+    {
+      "checks": {
+        "R1": "Public ?double_percent@@YAXPAGPBGI@Z proves void(wchar_t*, const wchar_t*, unsigned int); no local prototype copy.",
+        "R13": "Free scalar function; no class or vtable.",
+        "R17": "Complete 51-byte 0x402915..0x402948 decode: the counted loop, the doubled percent store and RET. The counter is the genuine loop index and the observed pointer increments follow from it.",
+        "R18": "Ordinary VC8 C++; no assembly or emitted bytes.",
+        "R2": "No callee, global or literal is referenced; only the caller buffers.",
+        "R4": "Pure typed pointer arithmetic; no offsets or casts."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 51,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 229,
+        "start": 218
+      },
+      "symbol": "?double_percent@@YAXPAGPBGI@Z",
+      "va": "0x402915"
+    },
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 20,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 292,
+        "start": 287
+      },
+      "symbol": "?release_filelife_heap@@YAXXZ",
+      "va": "0x402c06"
+    },
+    {
+      "checks": {
+        "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R13 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R17 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R18 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R2 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R4 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "clmain lane worker /codex/lane-clmain",
+      "size": 20,
+      "source_path": "matching/cl/clmain.cpp",
+      "source_span": {
+        "end": 299,
+        "start": 294
+      },
+      "symbol": "?release_ast_extra_heap@@YAXXZ",
+      "va": "0x402c1a"
+    },
     {
       "checks": {
         "R1": "One canonical declaration: unsigned short *__cdecl basename(unsigned short *, unsigned int, const unsigned short *) appears once in include/cl/compile.h and once as the definition. The mangling ?basename@@YAPAGPAGIPBG@Z proves __cdecl returning unsigned short* with (unsigned short*, unsigned int, const unsigned short*); the four independent call sites (0x4065ed, 0x406725, 0x40676b, 0x406978) pass three stack arguments and clean 12 bytes. The CRT interface comes from the installed-era <stdlib.h> _wsplitpath_s declaration, not a local copy.",
@@ -109,7 +379,7 @@
         "R2": "The body references no project global; the only external identity is the real kernel32!FreeLibrary import through IAT 0x40d134, registered as a referent with its exact retail slot. The passinfo_s pointer is the authentic first argument (PAUpassinfo_s in the public mangling) and is not aliased to other storage.",
         "R4": "All accesses are typed members of the canonical passinfo_s at the decoded offsets: +0x10 HMODULE load/store for FreeLibrary, +0x14 invoke callable, +0x18 abort callable. No offset casts, raw views or byte-array fields."
       },
-      "reviewer": "matching lane dos",
+      "reviewer": "dos lane worker / codex/lane-dos",
       "size": 33,
       "source_path": "matching/cl/dos.cpp",
       "source_span": {
@@ -128,7 +398,7 @@
         "R2": "The body references no global and owns no data. Prior ownership verdict stands; adding the passinfo_s definition in dos.h does not alter this function's compiled bytes (still exactly the 23 retail bytes under /O1 + /Zc:wchar_t-).",
         "R4": "No project object layout is accessed. The only indirect access is the real int* status output argument, written with a typed store; there is no offset cast or raw layout view."
       },
-      "reviewer": "matching lane dos",
+      "reviewer": "dos lane worker / codex/lane-dos",
       "size": 23,
       "source_path": "matching/cl/dos.cpp",
       "source_span": {
@@ -147,7 +417,7 @@
         "R2": "RedirStderr is the real public int 0x417034 owned by clmain.obj (S_PUB32 ?RedirStderr@@3HA, initial value 1) and is registered as an escaped data referent with an actual form-table alias at 0x412578; the body owns no other data.",
         "R4": "No object layout is touched; RedirStderr is a real integer conditional and the only other access is the real _dup2 import call. No offset casts or invented storage."
       },
-      "reviewer": "matching lane dos",
+      "reviewer": "dos lane worker / codex/lane-dos",
       "size": 22,
       "source_path": "matching/cl/dos.cpp",
       "source_span": {
@@ -166,7 +436,7 @@
         "R2": "The function references no project global; the console handle is a real local and CreateFileW/GetConsoleScreenBufferInfo/CloseHandle are real SDK imports. Ownership is unchanged by the reviewed delta.",
         "R4": "The body uses actual SDK members srWindow.Top and srWindow.Bottom (SHORT) of the canonical CONSOLE_SCREEN_BUFFER_INFO; height = Bottom - Top + 1 is typed arithmetic with no offset casts or invented layout."
       },
-      "reviewer": "matching lane dos",
+      "reviewer": "dos lane worker / codex/lane-dos",
       "size": 92,
       "source_path": "matching/cl/dos.cpp",
       "source_span": {
@@ -185,7 +455,7 @@
         "R2": "The unit defines no project global. The only data referents are genuine source string tokens L\"\" (zero-initializer, emitted as compiler zero-fill), L\"\\\", L\"*.*\", L\".\" and L\"..\" whose retail storage bytes and digests are registered as literal identity evidence, and the SDK/CRT imports plus ___security_cookie, which are external declarations owned by the installed headers/libraries. There is no alias, no interior-address model and no duplicate declaration.",
         "R4": "The only modelled object is the real SDK WIN32_FIND_DATAW local, used directly through its documented members (dwFileAttributes, cFileName) with no field-offset arithmetic; its ebp-relative stack home at ebp-0x48 and cFileName at ebp-0x1c follow the SDK layout and match retail. No reinterpret_cast, no raw offset view, no invented storage. The only casts are (DWORD)-1 for the real \"no language\" sentinel and (LANGID) for the documented MAKELCID truncation; the decoded MAKELCID/MAKELANGID/PRIMARYLANGID/SORTIDFROMLCID bit operations prove those macros."
       },
-      "reviewer": "matching lane loadui",
+      "reviewer": "loadui matching worker, branch codex/lane-loadui",
       "size": 1061,
       "source_path": "matching/cl/loadui.cpp",
       "source_span": {
@@ -204,7 +474,7 @@
         "R2": "No project global is defined. Data referents are the genuine literal L\"PATH\" passed to _wdupenv_s and L\"clui.dll\" passed to LoadUILibrary, plus the CRT/SDK imports and the GS cookie; all are external or registered literal identities, with no alias and no interior-address model.",
         "R4": "The only buffer is the real WCHAR directory[1024] local whose address is passed to LoadUILibrary; element stores use authentic pointer increment with no offset cast. environment/module/cursor are typed pointers. No layout is modelled and no reinterpret_cast occurs."
       },
-      "reviewer": "matching lane loadui",
+      "reviewer": "loadui matching worker, branch codex/lane-loadui",
       "size": 230,
       "source_path": "matching/cl/loadui.cpp",
       "source_span": {
@@ -223,7 +493,7 @@
         "R2": "Reads the one canonical worklist->source member (offset 0x04, evidenced by the worklist walkers and the source_s field consumers); no invented data object, interior address or duplicate global.",
         "R4": "Uses the recovered action_t layout: kind 0x00, worklist 0x04, source 0x08, pass 0x0C, parameter_10 0x10; no offset casts and no fake padding."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 45,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -242,7 +512,7 @@
         "R2": "Uses the canonical worklist->source member and the real util.obj xfree body linked through the registered util dependency; no stub or invented data.",
         "R4": "Only the recovered action_t fields at +0x04 (worklist) and +0x08 (source) are accessed; no offset cast."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 25,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -261,7 +531,7 @@
         "R2": "Uses the one canonical HANDLE g_hMutex global (PDB ?g_hMutex@@3PAXA, declared extern in the header, defined once in mpcl.cpp at its DATA annotation) and the genuine windows.h CloseHandle import; no invented data or interior address.",
         "R4": "No reconstructed structure or offset model: the body only tests one HANDLE scalar and passes it to CloseHandle."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 17,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -280,7 +550,7 @@
         "R2": "The wide environment name and marker are real source literals L\"MPCL_SERVER_373011\" and L\"bananana\"; GetEnvironmentVariableW/wcscmp are genuine SDK/CRT imports; is_server_run is the actual PDB data ?is_server_run@@3HA, declared extern once in the header and defined once at its DATA annotation, with no aliasing.",
         "R4": "No offset model. The genuine wchar_t value[10] buffer (20 bytes) plus the /GS cookie explain the decoded 0x18-byte frame; the only accesses are the buffer base and the compiler's cookie slot."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 76,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -299,7 +569,7 @@
         "R2": "R2 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 20,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -318,7 +588,7 @@
         "R2": "R2 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 27,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -337,7 +607,7 @@
         "R2": "References the genuine MSVCR80 wcslen import and the class's own proven virtual write slot; no invented helper, data object or duplicate global.",
         "R4": "The ProcessChannel layout is the already reviewed one: a three-slot vtable then process_handle. The body uses only the vtable pointer at offset 0 and no raw offset cast."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 55,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -356,7 +626,7 @@
         "R2": "Walks the recovered source_s wide-string members and calls the already-reviewed write_string member and virtual write slot; no invented helper, data object or duplicate global.",
         "R4": "Uses the proven 28-byte source_s layout (strings at 0x04/0x08/0x0C, type 0x14, shorts 0x18/0x1A) and the reviewed ProcessChannel vtable; no offset casts."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 155,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -375,7 +645,7 @@
         "R2": "R2 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 23,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -394,7 +664,7 @@
         "R2": "The body calls the real util.obj deallocator ?xfree@@YAXPAX@Z, whose genuine source body is the registered util.cpp candidate; the candidate declares matching/cl/util.cpp (with its own dos/clmain/Watson dependencies) as a real dependency, so no stub is linked.",
         "R4": "No structure or offset model; one pointer argument."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 5,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -413,7 +683,7 @@
         "R2": "R2 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 1,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -432,7 +702,7 @@
         "R2": "R2 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 24,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -451,7 +721,7 @@
         "R2": "R2 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 45,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -470,7 +740,7 @@
         "R2": "Uses the genuine MSVCR80 swscanf_s import and the real source literal L\"%p\"; no invented CRT prototype or data alias.",
         "R4": "HANDLE is one pointer-width scalar at EBP-4; the decoded lea/store/load sequence is a genuine local, not an offset model."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 30,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -489,7 +759,7 @@
         "R2": "Writes the recovered Queue members and the canonical global layout; the sentinel is the real action_t member, and InitializeCriticalSection is the genuine kernel32 import.",
         "R4": "Uses the reviewed 60-byte Queue layout: synchronized 0x00, CRITICAL_SECTION lock 0x04, sentinel action_t 0x1C, tail 0x34, count 0x38; no offset casts."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 61,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -508,7 +778,7 @@
         "R2": "R2 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 38,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -527,7 +797,7 @@
         "R2": "R2 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 84,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -546,7 +816,7 @@
         "R2": "R2 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 29,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -565,7 +835,7 @@
         "R2": "R2 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 33,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -584,7 +854,7 @@
         "R2": "The single canonical HANDLE g_hMutex global (PDB ?g_hMutex@@3PAXA) is read, passed to the real NT_err body already reviewed in this unit, and written from swscanf_s; no invented storage or alias. The environment name and L\"%p\" are genuine source literals.",
         "R4": "No offset model. The genuine wchar_t value[20] buffer (40 bytes) and the /GS cookie explain the 0x2C-byte frame; only the buffer base and cookie slot are addressed."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 103,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -603,7 +873,7 @@
         "R2": "Addresses the one canonical work_queue global (PDB ?work_queue@@3V?$Queue@Uaction_t@@@@A at 0x41AB30) and calls its already-reviewed head body; no invented data.",
         "R4": "No structure or offset model; the body only forms the global Queue address."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 10,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -622,7 +892,7 @@
         "R2": "Uses only the genuine kernel32 imports CreatePipe, GetLastError, Sleep and RaiseException; no invented helper, data object or interior address.",
         "R4": "No reconstructed structure or offset model; SECURITY_ATTRIBUTES is passed through as an opaque SDK pointer."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 118,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -641,7 +911,7 @@
         "R2": "Calls the real ?get_mutex@@YAXXZ body recovered in this unit; no stub, invented data or duplicate global.",
         "R4": "No structure or offset model; no arguments."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 5,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -660,7 +930,7 @@
         "R2": "Writes the recovered action_t kind/source/pass members and calls the real ProcessChannel virtual write slot and the newly recovered write_source member; no invented helper or data object.",
         "R4": "Uses the proven action_t layout (kind 0x00, source 0x08, pass 0x0C) and the reviewed ProcessChannel vtable; the separate int temporaries are genuine locals, not offset models."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 95,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -679,7 +949,7 @@
         "R2": "Calls the real read_robust member recovered in this unit with the address of its own int local; no invented helper or data object.",
         "R4": "The int result is one genuine 4-byte local at EBP-4; the ProcessChannel layout is the reviewed one and no offset cast is used."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 20,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -698,7 +968,7 @@
         "R2": "Calls the real read_int_robust member recovered above and the genuine kernel32 RaiseException import; no invented helper or data.",
         "R4": "No structure or offset model; the only argument slot is the decoded [ESP+4] after the call."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 27,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -717,7 +987,7 @@
         "R2": "R2 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 61,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -736,7 +1006,7 @@
         "R2": "R2 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 35,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -755,7 +1025,7 @@
         "R2": "R2 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 56,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -774,7 +1044,7 @@
         "R2": "Walks the real intrusive ring and calls the canonical ~action_t and util.obj xfree bodies; DeleteCriticalSection is the genuine kernel32 import; no invented helper.",
         "R4": "Uses the reviewed Queue layout (sentinel 0x1C, tail 0x34, count 0x38) and the reviewed action_t next link at 0x14; no offset casts."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 65,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -793,7 +1063,7 @@
         "R2": "Uses the canonical sentinel links, xfree and the real Enter/LeaveCriticalSection imports; the count/tail fields are the recovered Queue members.",
         "R4": "Uses the reviewed Queue layout and action_t next link only; no offset casts."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 84,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -812,7 +1082,7 @@
         "R2": "R2 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 53,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -831,7 +1101,7 @@
         "R2": "R2 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
         "R4": "R4 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
       },
-      "reviewer": "matching lane mpcl",
+      "reviewer": "mpcl lane worker",
       "size": 41,
       "source_path": "matching/cl/mpcl.cpp",
       "source_span": {
@@ -901,638 +1171,8 @@
   ],
   "reviewer": "independent audit lane /root/audit",
   "schema_version": 1,
-  "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+  "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
   "unchanged_prior_rounds": [
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "One canonical CConsoleLock definition in clmain.h with private bool locked, reconstructed field name explicitly documented. Constructor public identity plus observed ECX this/EAX return corroborates thiscall ABI. Header includes canonical mpcl.h for shared HANDLE g_hMutex rather than redeclaring or redefining the global.",
-              "path": "config/reviews/cl-fourth-batch.json",
-              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "CConsoleLock has no virtual calls or vptr evidence; source defines none. Real cmderr lifetime cleanup tests the same byte then calls ReleaseMutex(g_hMutex) before done. Header inline destructor models that actual cleanup; it has no separate public body or matched count.",
-              "path": "config/reviews/cl-fourth-batch.json",
-              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "Independently reopened and decoded all44B4014d5..401500 through RET: test real mutex, WaitForSingleObject(INFINITE), success for WAIT_OBJECT_0 or WAIT_ABANDONED, then store true/false and return this. Source uses actual SDK constants and genuine early-success return shape; no artificial helper, fake local, noinline, volatile carrier or padding.",
-              "path": "config/reviews/cl-fourth-batch.json",
-              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "Ordinary VC8 constructor/destructor with canonical Windows declarations and shared data owner. No assembly, byte emission, binary include or rule exception.",
-              "path": "config/reviews/cl-fourth-batch.json",
-              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "Real public ?g_hMutex@@3PAXA at41aaf0 is loader-zero storage owned by mpcl.obj/module4, with sole DATA definition in mpcl.cpp and canonical HANDLE extern. Constructor accesses that same object; no duplicate static/global, fake field global or interior-address entity.",
-              "path": "config/reviews/cl-fourth-batch.json",
-              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "Actual constructor writes only BYTE[this+0]. Independent pinned cmderr frame bytes show PUSH EBP;MOV EBP,ESP and LEA ECX,[EBP-1] before the constructor, plus byte guard at[EBP-1]. This places the complete object below saved frame and establishes one-byte extent together with the actual byte member. No raw casts, padding or fabricated fields.",
-              "path": "config/reviews/cl-fourth-batch.json",
-              "sha256": "079660c9d9c10a9a0008ae52583920bdf04e19648ee15a4dbd0bf66f5bca7122"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x4014d5"
-    },
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "R1 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "R13 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "R17 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "R18 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "R2 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "R4 review for ?error_report_prompt@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x4015a8"
-    },
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "R1 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "R13 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "R17 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "R18 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "R2 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "R4 review for ?error_report_queue@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x4015b1"
-    },
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "R1 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "R13 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "R17 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "R18 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "R2 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "R4 review for ?error_report_send@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x4015ba"
-    },
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "R1 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "R13 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "R17 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "R18 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "R2 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "R4 review for ?error_report_none@@YAXPAUflag_s@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x4015c3"
-    },
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "R1 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "R13 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "R17 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "R18 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "R2 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "R4 review for ?IsRunningUnderIDE@@YAHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x40218a"
-    },
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "R1 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "R13 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "R17 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "R18 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "R2 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "R4 review for ?fullccpath@@YAPAGXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x4024a8"
-    },
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "R1 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "R13 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "R17 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "R18 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "R2 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "R4 review for ?release_filelife_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x402c06"
-    },
-    {
-      "binary": "cl",
-      "checks": {
-        "R1": {
-          "evidence": [
-            {
-              "description": "R1 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R13": {
-          "evidence": [
-            {
-              "description": "R13 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R17": {
-          "evidence": [
-            {
-              "description": "R17 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R18": {
-          "evidence": [
-            {
-              "description": "R18 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R2": {
-          "evidence": [
-            {
-              "description": "R2 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        },
-        "R4": {
-          "evidence": [
-            {
-              "description": "R4 review for ?release_ast_extra_heap@@YAXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
-              "path": "config/reviews/cl-third-batch.json",
-              "sha256": "3536288bfb0942a15d0390160e98fcfa5f78545b5209f20f0e289d074e563056"
-            }
-          ],
-          "verdict": "pass"
-        }
-      },
-      "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
-      "source_path": "matching/cl/clmain.cpp",
-      "source_sha256": "bf7cd63913d7359c38e029ddeec6fc9542d5d0d670e7f251d74a979ce88dbf1d",
-      "va": "0x402c1a"
-    },
     {
       "binary": "cl",
       "checks": {
@@ -1598,7 +1238,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f08"
@@ -1668,7 +1308,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f69"
@@ -1738,7 +1378,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f99"
@@ -1808,7 +1448,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407fba"
@@ -1878,7 +1518,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407fe5"
@@ -1948,7 +1588,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408145"
@@ -2018,7 +1658,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408276"
@@ -2088,7 +1728,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408290"
@@ -2158,7 +1798,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x4082b9"
@@ -2228,7 +1868,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x4082dc"
@@ -2298,7 +1938,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409934"
@@ -2368,7 +2008,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x40993a"
@@ -2438,7 +2078,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409946"
@@ -2508,7 +2148,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409952"
@@ -2578,7 +2218,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x40995e"
@@ -2648,7 +2288,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409a58"
@@ -2718,7 +2358,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409aab"
@@ -2788,7 +2428,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409acb"
@@ -2858,7 +2498,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "cbef9f56b51fd87705e678e12e91cc91e9f3bfc0ad3cb719f09d3b95acf8647e",
+      "scope_sha256": "95eaab04959b4814dacad4f4f38d1c06acaf891aecbf7e23f72f6be1986fbee6",
       "source_path": "matching/cl/merr.c",
       "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
       "va": "0x40c661"

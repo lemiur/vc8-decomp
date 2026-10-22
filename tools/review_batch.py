@@ -46,7 +46,7 @@ def merge_fragments(root: Path, paths: list[Path]) -> dict:
     entries, positions, problems, fragments = {}, {}, [], []
     for path in paths:
         data = read_json(path)
-        if data.get("schema_version") != 1 or data.get("binary") != "cl" or not isinstance(data.get("functions"), list):
+        if data.get("schema_version") != 1 or data.get("binary", "cl") != "cl" or not isinstance(data.get("functions"), list):
             problems.append(str(path) + ": invalid lane review header")
             continue
         fragments.append({"path": path.relative_to(root).as_posix(), "sha256": sha256(path.read_bytes())})
@@ -66,7 +66,8 @@ def merge_fragments(root: Path, paths: list[Path]) -> dict:
                 continue
             record = {"va": key[1], "symbol": item.get("symbol", ""), "source_path": item["source_path"],
                       "source_span": item.get("source_span", {}), "size": item.get("size"),
-                      "reviewer": item.get("reviewer") or ("matching lane " + str(data.get("lane", "unknown"))),
+                      "reviewer": item.get("reviewer") or data.get("reviewer")
+                      or ("matching lane " + str(data.get("lane", "unknown"))),
                       "checks": {rule: checks[rule] for rule in MATCH_RULES}}
             entries[("cl", int(key[1], 16))] = record
     if problems:
