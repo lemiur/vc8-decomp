@@ -957,6 +957,86 @@
       "compiler_context": {
         "evidence": "Canonical HANDLE g_hMutex has actual PDB public identity and unique mpcl.obj owner, with loader-zero storage. Its real data root preserves observed external mutability across the partial standalone source context. Real mpcl/Watson bodies are dependencies, setter root preserves previously proven standard ABI; no dummy code or exported controls."
       }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z",
+      "retail_va": "0x4062f7",
+      "size": 14,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 8,
+        "end": 12
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 21239 (VA 0x4062f7) has size 14, exactly the next contribution start (21253/0x406305); direct retail decoding over exactly 14 bytes is mov eax,[esp+4]; test eax,eax; je 0x406302; mov eax,[eax]; ret; xor eax,eax; ret, with both branches terminating and no referents. Public next-public gap is 14 as well."
+      },
+      "dependencies": [],
+      "roots": [
+        "??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x4062f7 in DBI section contribution module 9 compile.obj; mangled template instantiation ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z proves one SRCTARG* argument and SRCTARG* result with __cdecl. Argument read at [esp+4] and plain ret corroborate."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?basename@@YAPAGPAGIPBG@Z",
+      "retail_va": "0x4061f5",
+      "size": 34,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 20,
+        "end": 25
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 20981 (VA 0x4061f5) has size 34, exactly the next contribution start (21015/0x406217). Bounded direct retail decoding over exactly 34 bytes: xor eax,eax; two zero pushes; push [esp+0x10]=capacity; push [esp+0x10]=output; four zero pushes; push [esp+0x2c]=source; call __imp___wsplitpath_s; mov eax,[esp+0x28] (the buried first argument); add esp,0x24; ret. No internal branch; sole referent is the resolved MSVCR80 _wsplitpath_s IAT slot."
+      },
+      "dependencies": [],
+      "roots": [
+        "?basename@@YAPAGPAGIPBG@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x4061f5 in DBI section contribution module 9 compile.obj; mangled ?basename@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). Four independent call sites (0x4065ed, 0x406725, 0x40676b, 0x406978) pass three stack arguments and clean 12 bytes, corroborating the cdecl ABI."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?filename@@YAPAGPAGIPBG@Z",
+      "retail_va": "0x406217",
+      "size": 109,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 29,
+        "end": 38
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 21015 (VA 0x406217) has size 109, exactly the next contribution start (21124/0x406284). Bounded direct retail decoding over exactly 109 bytes: /GS frame (sub esp,0x404 with cookie at [ebp-4]); 256-WCHAR arrays at [ebp-0x404] and [ebp-0x204]; _wsplitpath_s(source,0,0,0,0,name,256,extension,256); _wmakepath_s(output,capacity,L\"\",L\"\",name,extension); mov eax,esi (output); add esp,0x3c; call __security_check_cookie; leave; ret. All referents resolve: two MSVCR80 IAT slots and the two-byte empty wide literal."
+      },
+      "dependencies": [],
+      "roots": [
+        "?filename@@YAPAGPAGIPBG@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x406217 in DBI section contribution module 9 compile.obj; mangled ?filename@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). Callers in other modules (0x407cb4, 0x40a623, 0x40b5e5) and in this module (0x407ea6) pass the same three-argument shape and clean 12 bytes."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?pathname@@YAPAGPAGIPBG@Z",
+      "retail_va": "0x406284",
+      "size": 115,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 42,
+        "end": 52
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 21124 (VA 0x406284) has size 115, exactly the next contribution start (21239/0x4062f7). Bounded direct retail decoding over exactly 115 bytes: /GS frame (sub esp,0x40c, cookie at [ebp-4]); drive at [ebp-0xc] with proved _MAX_DRIVE=3, directory at [ebp-0x40c] and name at [ebp-0x20c] with proved 256-WCHAR limits; _wsplitpath_s(source,drive,3,directory,256,name,256,0,0); _wmakepath_s(output,capacity,drive,directory,name,L\"\"); mov eax,esi; add esp,0x3c; call __security_check_cookie; leave; ret. All referents resolve: two MSVCR80 IAT slots and the empty wide literal."
+      },
+      "dependencies": [],
+      "roots": [
+        "?pathname@@YAPAGPAGIPBG@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x406284 in DBI section contribution module 9 compile.obj; mangled ?pathname@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). Both direct callers (0x4067b4, 0x4069b2) pass three stack arguments and clean 12 bytes."
     }
   ],
   "referents": {
@@ -1357,6 +1437,29 @@
         "size": 4,
         "va": "0x41aaf0",
         "evidence": "Actual public PDB ?g_hMutex@@3PAXA uniquely attributed to mpcl.obj; retail loader-zero tail contains the complete four-byte HANDLE slot. Canonical extern/definition in mpcl header/unit, actual constructor reads it and passes it to WaitForSingleObject. Source and retail MAP/public identities independently bound; data is not counted."
+      },
+      "msvcr80.dll!_wsplitpath_s": {
+        "kind": "import",
+        "va": "0x40d2b4",
+        "dll": "MSVCR80.dll",
+        "name": "_wsplitpath_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot at 0x40d2b4 binds MSVCR80.dll!_wsplitpath_s; the candidate's own PE must bind the same DLL/symbol. Canonical interface is the installed-era <stdlib.h> wide split-path declaration, which also declares the _MAX_* destination limits the retail call sites use."
+      },
+      "msvcr80.dll!_wmakepath_s": {
+        "kind": "import",
+        "va": "0x40d234",
+        "dll": "MSVCR80.dll",
+        "name": "_wmakepath_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot at 0x40d234 binds MSVCR80.dll!_wmakepath_s; the candidate's own PE must bind the same DLL/symbol. Canonical interface is the installed-era <stdlib.h> wide make-path declaration."
+      },
+      "literal:sha256:96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7": {
+        "kind": "literal",
+        "va": "0x415a48",
+        "encoding": "utf-16le",
+        "size": 2,
+        "bytes_sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+        "source_literal": "L\"\"",
+        "evidence": "Full bounded retail literal contents are the single two-byte UTF-16 NUL at 0x415a48 (DBI contribution size 2, module vssqm.obj). basename is called by filename/pathname with the same empty wide literal used for the absent path components; the bytes hash independently binds the candidate's pooled empty literal."
       }
     }
   }

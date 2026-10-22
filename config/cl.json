@@ -56,6 +56,13 @@
         "/O1"
       ],
       "evidence": "Complete Filter23B, screen_length92B and redirect22B probes match; redirect additionally requires its evidence-backed real escaped data root, recorded per candidate."
+    },
+    "matching/cl/compile.cpp": {
+      "compile_flags": [
+        "/O1",
+        "/Zc:wchar_t-"
+      ],
+      "evidence": "Experimental control for the compile.obj unit. /O1 is required: the default /Od emits a frame-pointer prologue for the 14-byte PstNext template instantiation, while the retail body is the bare compare/indirect-load/return sequence. /Zc:wchar_t- is required for the PAG/PBG unsigned-short manglings shared by basename, filename, pathname and replaca_strlen; the default native wchar_t (_W) does not decorate. No /GL or /LTCG change is made."
     }
   },
   "flags": {
