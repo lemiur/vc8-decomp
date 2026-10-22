@@ -558,3 +558,24 @@ void __cdecl free_batches()
         batches[i].clean();
     delete[] batches;
 }
+
+// FUNCTION: cl 0x40A774
+// SYMBOL: ?send@action_t@@QAEXPAVProcessChannel@@@Z
+// Complete 95-byte CFG: kind, a source-presence flag, the serialized source
+// when present, and the pass number are written through the virtual slot.
+void action_t::send(ProcessChannel *channel)
+{
+    int kind_value = kind;
+    channel->write(&kind_value, sizeof kind_value);
+    int flag;
+    if (source) {
+        flag = 1;
+        channel->write(&flag, sizeof flag);
+        channel->write_source(source);
+    } else {
+        flag = 0;
+        channel->write(&flag, sizeof flag);
+    }
+    flag = pass;
+    channel->write(&flag, sizeof flag);
+}

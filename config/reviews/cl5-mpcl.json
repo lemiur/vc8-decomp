@@ -4,7 +4,7 @@
   "lane": "mpcl",
   "reviewer": "mpcl lane worker",
   "review_date": "2026-10-22",
-  "authority_limit": "Source-rule review for this lane only; the fresh complete gate alone banks compiled functions and bytes. The review binds the whole matching/cl/mpcl.cpp unit hash, so every enabled candidate of the unit is recorded here: the 15 already-banked functions (body text unchanged; delta is the new includes/declarations in mpcl.h) and the 17 newly reconstructed functions.",
+  "authority_limit": "Source-rule review for this lane only; the fresh complete gate alone banks compiled functions and bytes. The review binds the whole matching/cl/mpcl.cpp unit hash, so every enabled candidate of the unit is recorded here: the 15 already-banked functions (body text unchanged; delta is the new includes/declarations in mpcl.h) and the 18 newly reconstructed functions.",
   "unit": "matching/cl/mpcl.cpp",
   "unit_flags": [
     "/O1",
@@ -423,6 +423,24 @@
         "R13": "Free function; no virtual call.",
         "R17": "Decoded 5-byte body at 0x40A6FA..0x40A6FE is one E9 JMP to 0x40A496 (get_mutex): the authentic /O1 tail transfer of get_mutex(); no locals or fake statements.",
         "R18": "Ordinary VC8 C++; no assembly, byte arrays or padding."
+      }
+    },
+    {
+      "va": "0x40a774",
+      "symbol": "?send@action_t@@QAEXPAVProcessChannel@@@Z",
+      "size": 95,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 566,
+        "end": 581
+      },
+      "checks": {
+        "R1": "One canonical send(ProcessChannel *) member declaration already reviewed in the header; PDB public ?send@action_t@@QAEXPAVProcessChannel@@@Z, this in ECX, one pointer argument and RET 4 prove the ABI.",
+        "R2": "Writes the recovered action_t kind/source/pass members and calls the real ProcessChannel virtual write slot and the newly recovered write_source member; no invented helper or data object.",
+        "R4": "Uses the proven action_t layout (kind 0x00, source 0x08, pass 0x0C) and the reviewed ProcessChannel vtable; the separate int temporaries are genuine locals, not offset models.",
+        "R13": "Both writes are through ProcessChannel's real three-slot vtable (write at slot 0), already proven by the reviewed bodies.",
+        "R17": "Decoded 95-byte body at 0x40A774..0x40A7D2: write(&kind,4); branch on source, storing a 1/0 presence flag and writing it, calling write_source on the non-null path; then write(&pass,4), ret 4. The candidate reuses the incoming argument slot for the later int temporaries exactly as retail does, so the sourced locals reproduce the decoded stack homes.",
+        "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays or padding."
       }
     },
     {

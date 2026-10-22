@@ -1426,6 +1426,27 @@
       },
       "gate_enabled": false,
       "pending": "Real delete[] is tail-transformed in this LTCG context: the candidate emits a 56-byte body ending in jmp to a specialized vector deleting destructor (EAX-carried this) instead of retail's 59-byte push 3 / call ??_E / ret sequence, so the span overruns by 3 bytes and the partial PE relocation is rejected. The clean() loop matches instruction-for-instruction. Tested levers: direct delete[] and a named array-pointer local, both identical. Not counted."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?send@action_t@@QAEXPAVProcessChannel@@@Z",
+      "retail_va": "0x40a774",
+      "size": 95,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 566,
+        "end": 581
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 95 bytes at 0x40A774..0x40A7D2: virtual write of the kind, branch on the source pointer writing a 1/0 presence flag through the same virtual slot, write_source on the non-null path, then virtual write of the pass, ret 4. Complete CFG with real write_source callee; every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?send@action_t@@QAEXPAVProcessChannel@@@Z; member __thiscall with one ProcessChannel pointer, ret 4.",
+      "compiler_context": {
+        "evidence": "Real ProcessChannel virtual write slot and the newly recovered write_source body; only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      }
     }
   ],
   "referents": {
