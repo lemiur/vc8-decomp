@@ -53,9 +53,10 @@
     },
     "matching/cl/dos.cpp": {
       "compile_flags": [
-        "/O1"
+        "/O1",
+        "/Zc:wchar_t-"
       ],
-      "evidence": "Complete Filter23B, screen_length92B and redirect22B probes match; redirect additionally requires its evidence-backed real escaped data root, recorded per candidate."
+      "evidence": "Complete Filter23B, screen_length92B and redirect22B probes match; redirect additionally requires its evidence-backed real escaped data root, recorded per candidate. ShutDownDLL's 33 retail bytes also match with /O1. The PBG spelling of ?ExecuteCleanupPass@@YAHPAUpassinfo_s@@PBG@Z and the other dos publics prove the original unit was compiled in typedef-wchar mode, so /Zc:wchar_t- is required for the reconstructed wchar_t declarations to mangle as unsigned-short pointers."
     }
   },
   "flags": {
