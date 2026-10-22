@@ -51,3 +51,12 @@ unsigned short *__cdecl pathname(unsigned short *output, unsigned int capacity,
     _wmakepath_s(output, capacity, drive, directory, name, L"");
     return output;
 }
+
+// FUNCTION: cl 0x4061d2
+// SYMBOL: ?module_extension@@YAPAGXZ
+unsigned short *__cdecl module_extension()
+{
+    if (DllFlg)
+        return L"dll";
+    return NoAssembly ? L"netmodule" : L"exe";
+}

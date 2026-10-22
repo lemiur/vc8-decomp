@@ -14,7 +14,7 @@
         "R2": "No globals or data of any kind: the ordered referent scan over the 14 retail bytes returns zero external references, and the only transfers are the local branches at 0x4062fd and the two terminal rets. No competing declaration exists.",
         "R4": "No layout model is invented: the single member SRCTARG::next is proved by the decoded body itself, 0x4062ff mov eax,dword ptr [eax] reads offset 0 of the argument, and the function contains no offset arithmetic, cast or member walk.",
         "R13": "No class, vtable or RTTI involvement: the body has no indirect memory access through a vtable slot and the ordered referent list is empty.",
-        "R17": "Authentic statement shape: the conditional expression PstNext returns node ? node->next : 0, which the decoded body reproduces exactly as test eax,eax; je; mov eax,[eax]; ret; xor eax,eax; ret at 0x4062fb-0x406304. No locals exist and none were invented.",
+        "R17": "Authentic statement shape: the conditional expression PstNext returns node ? node->next : 0, which the decoded body reproduces exactly as test eax,eax; je; mov eax,[eax]; ret; xor eax,eax; ret at 0x4062fb-0x406304. No locals exist and none were invented. Body unchanged from the prior batch; the reviewed delta is the new module_extension declaration and body added at the end of the unit.",
         "R18": "Ordinary VC8 C++ template source: no inline assembly, no byte arrays, no padding and no non-source constructs. The function body is exactly the 14 bytes of the DBI contribution at .text offset 21239, matching the next contribution start at 21253."
       }
     },
@@ -29,7 +29,7 @@
         "R2": "No globals are defined or read; the only ordered referent over the 34 bytes is the MSVCR80.dll!_wsplitpath_s IAT slot at 0x40d2b4, registered once with its PE import evidence and independently bound in the candidate. No second declaration or alias exists.",
         "R4": "No layout model and no casts: the body is a single real call whose nine arguments are written in source order (source, 0, 0, 0, 0, output, capacity, 0, 0). The decoded push sequence at 0x4061f7-0x406209 passes exactly those values, and 0x40620f mov eax,[esp+0x28] returns the spilled output parameter.",
         "R13": "No class, vtable or polymorphic access anywhere in the body; there is no vtable referent in the ordered referent list.",
-        "R17": "Authentic statements: the two statements _wsplitpath_s(source, 0, 0, 0, 0, output, capacity, 0, 0) and return output reproduce the decoded body instruction-for-instruction, including the compiler's zeroed EAX reuse for the six null arguments and the buried-argument reload for the return value. No fake locals or temporaries were added.",
+        "R17": "Authentic statements: the two statements _wsplitpath_s(source, 0, 0, 0, 0, output, capacity, 0, 0) and return output reproduce the decoded body instruction-for-instruction, including the compiler's zeroed EAX reuse for the six null arguments and the buried-argument reload for the return value. No fake locals or temporaries were added. Body unchanged from the prior batch; the reviewed delta is the new module_extension declaration and body added at the end of the unit.",
         "R18": "Ordinary VC8 source: no inline assembly, byte arrays, padding or forced constructs. The body is exactly the 34 bytes of the DBI contribution at .text offset 20981; the next contribution starts at 21015."
       }
     },
@@ -44,7 +44,7 @@
         "R2": "No module globals: the ordered referents are the MSVCR80.dll!_wsplitpath_s and _wmakepath_s IAT slots (0x40d2b4, 0x40d234) and the pooled empty wide literal (2 bytes at 0x415a48, registered as literal:sha256:96a2...), each bound once. The /GS cookie and its check call are compiler-generated CRT referents, not source globals.",
         "R4": "Real layouts, no casts: name and extension are ordinary 256-element unsigned short arrays; the decoded split-path arguments prove their addresses ([ebp-0x404] for name, [ebp-0x204] for extension) and the make-path call passes those same two arrays with the pooled empty drive/directory literal. Nothing is modelled by offset arithmetic.",
         "R13": "No class, vtable or RTTI content; the ordered referent list contains no vtable slot.",
-        "R17": "Authentic statements: two local arrays, one _wsplitpath_s call filling name and extension, one _wmakepath_s call building the result from an empty drive/directory, and return output. The decoded body matches that order and returns the output parameter through ESI; the /GS prologue is the compiler's response to the two arrays, not a fabricated frame.",
+        "R17": "Authentic statements: two local arrays, one _wsplitpath_s call filling name and extension, one _wmakepath_s call building the result from an empty drive/directory, and return output. The decoded body matches that order and returns the output parameter through ESI; the /GS prologue is the compiler's response to the two arrays, not a fabricated frame. Body unchanged from the prior batch; the reviewed delta is the new module_extension declaration and body added at the end of the unit.",
         "R18": "Ordinary VC8 source: no inline assembly, byte arrays, padding or non-source constructs. The body is exactly the 109 bytes of the DBI contribution at .text offset 21015; the next contribution starts at 21124."
       }
     },
@@ -59,8 +59,23 @@
         "R2": "No module globals: the ordered referents are the MSVCR80 _wsplitpath_s/_wmakepath_s IAT slots (0x40d2b4, 0x40d234) and the single empty wide literal at 0x415a48, each registered once. The compiler-generated /GS cookie is not a source global.",
         "R4": "Real layouts proved by the call arguments, not casts: drive is a 3-element unsigned short array (the split-path size argument is the literal 3 and [ebp-0xc] is the destination), directory and name are 256-element arrays at [ebp-0x40c] and [ebp-0x20c]. The make-path call reuses the same three arrays and the empty literal for the extension.",
         "R13": "No class, vtable or RTTI content; the ordered referent list contains no vtable slot.",
-        "R17": "Authentic statements: three local arrays, the _wsplitpath_s call (source, drive, _MAX_DRIVE, directory, _MAX_DIR, name, _MAX_FNAME, 0, 0), the _wmakepath_s call (output, capacity, drive, directory, name, L\"\") and return output. The decoded body reproduces that order exactly, returning the output parameter through ESI, with the /GS prologue driven by the three arrays.",
+        "R17": "Authentic statements: three local arrays, the _wsplitpath_s call (source, drive, _MAX_DRIVE, directory, _MAX_DIR, name, _MAX_FNAME, 0, 0), the _wmakepath_s call (output, capacity, drive, directory, name, L\"\") and return output. The decoded body reproduces that order exactly, returning the output parameter through ESI, with the /GS prologue driven by the three arrays. Body unchanged from the prior batch; the reviewed delta is the new module_extension declaration and body added at the end of the unit.",
         "R18": "Ordinary VC8 source: no inline assembly, byte arrays, padding or forced constructs. The body is exactly the 115 bytes of the DBI contribution at .text offset 21124; the next contribution starts at 21239."
+      }
+    },
+    {
+      "va": "0x4061d2",
+      "symbol": "?module_extension@@YAPAGXZ",
+      "source_path": "matching/cl/compile.cpp",
+      "source_span": {"start": 57, "end": 61},
+      "size": 35,
+      "checks": {
+        "R1": "One canonical declaration: unsigned short *__cdecl module_extension() in include/cl/compile.h and one definition. ?module_extension@@YAPAGXZ proves a no-argument __cdecl function returning unsigned short*; the sole direct caller 0x406707 calls it with no stack arguments and cleans none.",
+        "R2": "The two globals are actual S_PUB32 publics owned by clmain.obj: ?DllFlg@@3HA (0x41913c) and ?NoAssembly@@3HA (0x419648), each defined once in matching/cl/clmain.cpp and declared once in include/cl/clmain.h, with the canonical loader-zero referent bindings already held by the registry; compile.h declares neither. The three wide literals are content-addressed bindings: L\"dll\" 0x4152d4 (8 bytes, compile.obj .data contribution at section 3 offset 3060), L\"netmodule\" 0x40d3a4 (20 bytes) and L\"exe\" 0x40d39c (8 bytes), each pinned by full payload SHA-256.",
+        "R4": "No layout model and no casts: the body reads two int flags through their canonical symbols and returns the addresses of three wide literals; there is no offset arithmetic anywhere in the 35 bytes.",
+        "R13": "No class, vtable or RTTI content; the ordered referents are two data symbols and three literals only.",
+        "R17": "Authentic statements: if (DllFlg) return L\"dll\"; return NoAssembly ? L\"netmodule\" : L\"exe\"; The decoded body is cmp [DllFlg],0; je; mov eax,L\"dll\"; ret; cmp [NoAssembly],0; mov eax,L\"netmodule\"; jne; mov eax,L\"exe\"; ret, matching the source including the compiler's hoisted literal load before the final branch.",
+        "R18": "Ordinary VC8 source: no inline assembly, byte arrays, padding or non-source constructs. The body is exactly the 35 bytes of the DBI contribution at .text offset 20946, next contribution 20981."
       }
     }
   ]

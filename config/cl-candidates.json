@@ -1416,19 +1416,21 @@
       "symbol": "?module_extension@@YAPAGXZ",
       "retail_va": "0x4061d2",
       "size": 35,
-      "unit": "matching/cl/compile.pending.cpp",
-      "gate_enabled": false,
-      "pending": "Measured byte-exact (100.0, boundary=verified, referents=resolved) with a disposable lane-local probe, but not linkable in the unit: matching/cl/clmain.cpp does not yet define ?DllFlg@@3HA (0x41913c) or ?NoAssembly@@3HA (0x419648). Kept out of matching/cl/compile.cpp (and free of FUNCTION annotations) so the unit still builds. Enable only after the clmain owning unit defines both globals, and note that the two-byte empty-literal referent binding currently shadows zero-initialized dword globals in scan_referents.",
+      "unit": "matching/cl/compile.cpp",
       "source_span": {
-        "start": 33,
-        "end": 38
+        "start": 57,
+        "end": 62
       },
       "boundary": {
         "status": "verified",
-        "evidence": "DBI section contribution module 9 at .text offset 20946 (VA 0x4061d2) has size 35, exactly the next contribution start (20981/0x4061f5). Bounded direct retail decoding over exactly 35 bytes: cmp dword [0x41913c],0; je 0x4061e1; mov eax,L\".dll\"; ret; cmp dword [0x419648],0; mov eax,L\"netmodule\"; jne 0x4061f4; mov eax,L\"exe\"; ret. Two terminating branches, no other transfers; referents are two clmain.obj int flags and three wide literals."
+        "evidence": "DBI section contribution module 9 at .text offset 20946 (VA 0x4061d2) has size 35, exactly the next contribution start (20981/0x4061f5). Bounded direct retail decoding over exactly 35 bytes: cmp dword [0x41913c],0; je 0x4061e1; mov eax,L\"dll\"; ret; cmp dword [0x419648],0; mov eax,L\"netmodule\"; jne 0x4061f4; mov eax,L\"exe\"; ret. Two terminating branches, no other transfers; the ordered referents are the two clmain.obj int flags and the three wide literals, all independently bound. The source owner compared every byte and ordered reference under the actual /GL + /LTCG unit link."
       },
       "dependencies": [
-        "matching/cl/clmain.cpp"
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp",
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp"
       ],
       "roots": [
         "?module_extension@@YAPAGXZ"
@@ -3370,6 +3372,33 @@
       "?Exefilename@@3PAGA": {
         "va": "0x419164",
         "evidence": "Actual S_PUB32 public pointer owned by clmain.obj; storage sits in .data past the 0x2000 file-backed bytes, i.e. loader-zero with no file initializer. The /Fe option-table row (name \"Fe\", tag 3, target 0x419164) stores the output name through the dispatcher, and compile.obj replaca/dopass/post_compile push the pointer value."
+      },
+      "literal:sha256:4c802cf01894262a37a793c16c1b76c54ca99868c9b2c7228e153a32d24fbe52": {
+        "kind": "literal",
+        "va": "0x4152d4",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "4c802cf01894262a37a793c16c1b76c54ca99868c9b2c7228e153a32d24fbe52",
+        "source_literal": "L\"dll\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; compile.obj .data contribution (section 3 offset 3060, size 8); module_extension (0x4061d2) loads this exact address in its L\"dll\" arm, and the bytes hash independently binds the candidate literal."
+      },
+      "literal:sha256:3a15df958adccdad08247be73e208b540cf5e93e42a4924610c147b277f9317d": {
+        "kind": "literal",
+        "va": "0x40d3a4",
+        "encoding": "utf-16le",
+        "size": 20,
+        "bytes_sha256": "3a15df958adccdad08247be73e208b540cf5e93e42a4924610c147b277f9317d",
+        "source_literal": "L\"netmodule\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; clmain.obj .rdata contribution (0x40d3a4, size 20); module_extension (0x4061d2) loads this exact address in its L\"netmodule\" arm, and the bytes hash independently binds the candidate literal."
+      },
+      "literal:sha256:d5b988e0271d0a83b35e173301ebe36e8bdf42ff62fddba0c5ad8ae676e8f0f4": {
+        "kind": "literal",
+        "va": "0x40d39c",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "d5b988e0271d0a83b35e173301ebe36e8bdf42ff62fddba0c5ad8ae676e8f0f4",
+        "source_literal": "L\"exe\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; clmain.obj .rdata contribution (0x40d39c, size 8); module_extension (0x4061d2) loads this exact address in its L\"exe\" arm, and the bytes hash independently binds the candidate literal."
       }
     }
   }
