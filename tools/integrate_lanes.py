@@ -38,7 +38,8 @@ def lane_file(lane: Path, name: str) -> Path:
 def validate(entry, where):
     if not isinstance(entry, dict):
         raise ValueError(where + ": candidate is not an object")
-    missing = [field for field in FIELDS if field not in entry]
+    missing = [field for field in FIELDS if field not in entry and
+               not (field == "source_span" and not entry.get("gate_enabled", True))]
     if missing:
         raise ValueError(where + ": candidate lacks " + ",".join(missing))
     if not isinstance(entry["symbol"], str) or not entry["symbol"]:
@@ -49,9 +50,10 @@ def validate(entry, where):
         raise ValueError(where + ": retail_va is not hexadecimal: " + repr(entry["retail_va"]))
     if not isinstance(entry["size"], int) or entry["size"] <= 0:
         raise ValueError(where + ": size must be a positive integer")
-    span = entry["source_span"]
-    if not isinstance(span, dict) or not isinstance(span.get("start"), int) or not isinstance(span.get("end"), int) \
-            or span["start"] <= 0 or span["start"] > span["end"]:
+    span = entry.get("source_span")
+    if span is not None and (not isinstance(span, dict) or not isinstance(span.get("start"), int)
+                             or not isinstance(span.get("end"), int) or span["start"] <= 0
+                             or span["start"] > span["end"]):
         raise ValueError(where + ": source_span needs start<=end and positive start")
     boundary = entry["boundary"]
     if entry.get("gate_enabled", True):
@@ -153,9 +155,36 @@ def merge_reviews(lanes: list[Path]) -> dict[str, dict]:
     return fragments
 
 
+def fix_spans(root: Path, registry_path: Path, check: bool = False) -> list[str]:
+    """Reset every enabled candidate's source_span to its current annotation span."""
+    import match
+    import matchlib
+
+    adapter = matchlib.load_adapter(root)
+    registry = read_json(registry_path)
+    changed = []
+    for entry in registry["candidates"]:
+        if entry.get("binary") != "cl" or not entry.get("gate_enabled", True):
+            continue
+        source = root / entry["unit"]
+        if not source.is_file():
+            continue
+        annotations = [item for item in match.parse_annotations(source, adapter)
+                       if item.binary == "cl" and item.retail_va == int(entry["retail_va"], 16)]
+        if len(annotations) != 1:
+            continue
+        span = {"start": annotations[0].start, "end": annotations[0].end}
+        if entry.get("source_span") != span:
+            changed.append("%s %s -> %s" % (entry["symbol"], entry.get("source_span"), span))
+            entry["source_span"] = span
+    if changed and not check:
+        registry_path.write_text(json.dumps(registry, indent=2) + "\n", encoding="utf-8")
+    return changed
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("action", choices=("candidates", "reviews"))
+    parser.add_argument("action", choices=("candidates", "reviews", "spans"))
     parser.add_argument("--base", type=Path, default=ROOT / "config/cl-candidates.json")
     parser.add_argument("--lane", type=Path, action="append", required=True,
                         help="lane worktree root or a JSON file (repeatable)")
@@ -167,6 +196,12 @@ def main(argv=None):
                         help="candidates: keep the base entry when a lane's copy differs (span drift)")
     args = parser.parse_args(argv)
     try:
+        if args.action == "spans":
+            changed = fix_spans(ROOT, args.base, args.check)
+            for line in changed:
+                print("span " + line)
+            print("spans changed=%d" % len(changed))
+            return 0
         if args.action == "candidates":
             base = read_json(args.base)
             merged = merge_candidates(base, args.lane, prefer_base=args.prefer_base)

@@ -76,6 +76,15 @@ class IntegrateLanesTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "already is"):
                 integrate_lanes.merge_candidates(json.loads(base.read_text()), [lane])
 
+    def test_disabled_candidate_may_omit_source_span(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = self.base(temp, [])
+            draft = candidate("?a", "0x1000", enabled=False)
+            draft.pop("source_span")
+            lane = self.lane(temp, "lane", [draft])
+            merged = integrate_lanes.merge_candidates(json.loads(base.read_text()), [lane])
+            self.assertNotIn("source_span", merged["candidates"][0])
+
     def test_enabled_candidate_requires_verified_boundary(self):
         with tempfile.TemporaryDirectory() as temp:
             base = self.base(temp, [])

@@ -1516,6 +1516,72 @@
         "??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z"
       ],
       "identity_evidence": "PDB S_PUB32 public start 0x4062f7 in DBI section contribution module 9 compile.obj; mangled template instantiation ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z proves one SRCTARG* argument and SRCTARG* result with __cdecl. Argument read at [esp+4] and plain ret corroborate."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ShutDownDLL@@YAXPAUpassinfo_s@@@Z",
+      "retail_va": "0x408ee3",
+      "size": 33,
+      "unit": "matching/cl/dos.cpp",
+      "source_span": {
+        "start": 48,
+        "end": 56
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 33 bytes 0x408ee3..0x408f03: push esi; load passinfo_s* argument; conditional HMODULE load at +0x10; FreeLibrary import call through IAT 0x40d134; three zero stores at +0x10/+0x14/+0x18; pop esi; ret. Every branch is local and the next public symbol starts at 0x408f04, independently bounding the body. The source owner compared every byte and the ordered FreeLibrary referent under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z, unique DBI contribution module 7 dos.obj, public_flags 2. PAUpassinfo_s argument with caller cleanup and a single stack argument prove the __cdecl ABI. The +0x10/+0x14/+0x18 member offsets are direct retail accesses; member names are reconstructed."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ExecuteCleanupPass@@YAHPAUpassinfo_s@@PBG@Z",
+      "retail_va": "0x408f1b",
+      "size": 61,
+      "unit": "matching/cl/dos.cpp",
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 61 bytes 0x408f1b..0x408f57: push command; GetModuleHandleW import call; NULL test; GetProcAddress(module, ascii \"_CloseTypeServerPDB@0\" at 0x41554c); NULL branch to noreturn cmderr(8039, L\"_CloseTypeServerPDB@0\", command) using the UTF-16 literal at 0x415520; store the callable at passinfo_s+0x1c and call it; xor eax,eax; ret. The next public symbol starts at 0x408f58, independently bounding the body."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?ExecuteCleanupPass@@YAHPAUpassinfo_s@@PBG@Z, unique DBI contribution module 7 dos.obj. PAUpassinfo_s plus const unsigned-short pointer arguments with caller cleanup prove __cdecl. The _CloseTypeServerPDB@0 export name is read directly from the two retail literals.",
+      "gate_enabled": false,
+      "pending": "Source is byte-exact under an ignored development scaffold (build/dos-lane/draft_dos.cpp): 61/61 bytes, every ordered referent resolved. It cannot be committed yet because the real ?cmderr@@YAXIZZ (0x408a6c, util.obj) body does not exist in the tree, so the unit link fails with LNK2001 unresolved external symbol ?cmderr@@YAXIZZ. Enable after the util owner lands the real cmderr definition and util.h declaration; add the source span then."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?execute@@YAHW4driver_phases@@PAUpassinfo_s@@PBG2PAPAG@Z",
+      "retail_va": "0x408f58",
+      "size": 798,
+      "unit": "matching/cl/dos.cpp",
+      "boundary": {
+        "status": "verified",
+        "evidence": "Direct bounded retail decode covers 0x408f58..0x409275 inclusive (798 bytes): __SEH_prolog4 frame; driver_phases switch (0 environment construction, 1-3 pass execution, default cmderr(0)); _flushall/_errno reset; private control globals 0x41a008/0x41a00c/0x41a010; U/V pass selector branch to ExecuteCleanupPass; LoadLibraryW plus _InvokeCompilerPassW@16/_AbortCompilerPass@4 GetProcAddress loading; argc scan; __try invoke call with FallThroughFilter(GetExceptionCode(), pass, &status) filter at 0x409168 and spawn handler at 0x409180; status post-processing with done(4)/done(6), OpenEventW/SetEvent/CloseHandle, cmderr(8027/8030) and final _wputenv_s(L\"\"). 0x409276 is a separate private handler."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?execute@@YAHW4driver_phases@@PAUpassinfo_s@@PBG2PAPAG@Z, unique DBI contribution module 7 dos.obj; W4driver_phases enum, PAUpassinfo_s, two PBG strings and PAPAG out-pointer with five stack arguments and caller cleanup prove the __cdecl ABI.",
+      "gate_enabled": false,
+      "pending": "Complete 798-byte body decoded and drafted (build/dos-lane/draft_dos.cpp), but the draft compiles to 816 bytes and scores about 7-8%: retail keeps pass/env in ESI/EDI and the flag length in EBX while the draft allocates pass/args to EDI/EBX, spills the length and gives the loop index a register, so the whole block layout shifts. Open levers already tested: switch vs if/else phase dispatch (switch matches the dispatch skeleton), function-scope vs inner-scope locals, declaration order, local proc variables vs early struct stores. Also needs the real util.obj/clmain.obj bodies ?cmderr@@YAXIZZ, ?done@@YAXH@Z, ?xnew@@YAPAXI@Z, ?hUIModule@@3PAUHINSTANCE__@@A and ?EncEventName@@3PAGA, which do not exist yet."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?OS_init@@YAXXZ",
+      "retail_va": "0x4092b0",
+      "size": 14,
+      "unit": "matching/cl/dos.cpp",
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 14 bytes 0x4092b0..0x4092bd: push 1; push the private console-control handler at 0x409276; call SetConsoleCtrlHandler through IAT 0x40d0ec; ret. The next public symbol starts at 0x4092be."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?OS_init@@YAXXZ, unique DBI contribution module 7 dos.obj; no arguments, caller-clean and void result. The pushed 0x409276 handler is a private dos.obj function, independently decoded over 58 bytes 0x409276..0x4092af.",
+      "gate_enabled": false,
+      "pending": "OS_init is byte-exact under the ignored development scaffold (14/14 bytes) once the private handler is present, but the handler must become real source in this unit and it calls ?done@@YAXH@Z (0x4085ce, util.obj), which has no reconstructed body yet. Enable after util lands done; then add the 58-byte private handler, its static/referent binding naming real retail address 0x409276, and the source span."
     }
   ],
   "referents": {
@@ -2231,6 +2297,13 @@
         "bytes_sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
         "source_literal": "L\"\"",
         "evidence": "Full bounded retail literal contents are the single two-byte UTF-16 NUL at 0x415a48 (DBI contribution size 2, module vssqm.obj). basename is called by filename/pathname with the same empty wide literal used for the absent path components; the bytes hash independently binds the candidate's pooled empty literal."
+      },
+      "kernel32.dll!FreeLibrary": {
+        "kind": "import",
+        "va": "0x40d134",
+        "dll": "KERNEL32.dll",
+        "name": "FreeLibrary",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot 0x40d134 and the actual candidate PE import must both bind this exact DLL and symbol; canonical era Windows SDK declaration FreeLibrary(HMODULE) supplies the source interface, and ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z calls it through this slot."
       }
     }
   }
