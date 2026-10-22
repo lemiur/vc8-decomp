@@ -7,7 +7,7 @@
       "va": "0x4062f7",
       "symbol": "??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z",
       "source_path": "matching/cl/compile.cpp",
-      "source_span": {"start": 11, "end": 14},
+      "source_span": {"start": 11, "end": 15},
       "size": 14,
       "checks": {
         "R1": "One canonical declaration only: template<class T> T *PstNext(T *) and struct SRCTARG are declared once in include/cl/compile.h; matching/cl/compile.cpp contains the single definition plus the explicit template instantiation template SRCTARG *PstNext<SRCTARG>(SRCTARG *). The decorated name itself proves the instantiation: ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z is exactly SRCTARG *__cdecl PstNext<SRCTARG>(SRCTARG *), and the decoded argument read at 0x4062f9 is [esp+4] with a plain ret, corroborating the one 4-byte pointer argument.",
