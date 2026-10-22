@@ -148,8 +148,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 289,
-        "end": 292
+        "start": 299,
+        "end": 302
       },
       "boundary": {
         "status": "verified",
@@ -169,8 +169,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 296,
-        "end": 299
+        "start": 306,
+        "end": 309
       },
       "boundary": {
         "status": "verified",
@@ -939,8 +939,8 @@
       "size": 44,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 303,
-        "end": 315
+        "start": 313,
+        "end": 325
       },
       "boundary": {
         "status": "verified",
@@ -3332,6 +3332,40 @@
           "sha256": "0deceb2e8a8d908ced3a4d14823dd3673a482b2533a5df6df87ec90c7f3e0c74"
         },
         "evidence": "Retail 0x40bd30 is one closed 43-byte compiler stack-probe entry whose two public PDB aliases __alloca_probe/__chkstk share DBI module 20 (chkstk.obj); the fresh candidate MAP independently binds the same two aliases at one address to msvcrt:chkstk.obj and the 43 helper bytes are identical to retail. The pinned proof reopens the retail PDB and the candidate MAP. Toolchain bytes are fallback and never counted as source."
+      },
+      "member:?Passinfo@@3PAUpassinfo_s@@A.selector": {
+        "kind": "member",
+        "base_identity": "?Passinfo@@3PAUpassinfo_s@@A",
+        "member": "selector",
+        "offset": 8,
+        "size": 2,
+        "va": "0x417958",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/passinfo-sp1-v1/layout-witness.json",
+          "sha256": "034d68cbd343ae37a1e6505bd11f50e28399ffb39ed7d263adef037e7b8cc367"
+        },
+        "evidence": "One canonical clmain.obj Passinfo table and its named selector field. The compiler-produced offsetof/sizeof witness reports size 36 with selector at offset 8, width 2, and the pass loops load exactly that word relative to the table row; source and retail base plus field offset must agree. No independent field storage or referent masking."
+      },
+      "member:?Passinfo@@3PAUpassinfo_s@@A.options": {
+        "kind": "member",
+        "base_identity": "?Passinfo@@3PAUpassinfo_s@@A",
+        "member": "options",
+        "offset": 12,
+        "size": 4,
+        "va": "0x41795c",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/passinfo-sp1-v1/layout-witness.json",
+          "sha256": "034d68cbd343ae37a1e6505bd11f50e28399ffb39ed7d263adef037e7b8cc367"
+        },
+        "evidence": "One canonical clmain.obj Passinfo table and its named options field. The compiler-produced offsetof/sizeof witness reports size 36 with options at offset 12, width 4, and the pass loops OR 1 into / AND ~1 out of exactly that dword relative to the table row; source and retail base plus field offset must agree. No independent field storage or referent masking."
+      },
+      "?DllFlg@@3HA": {
+        "va": "0x41913c",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj; storage sits in .data past the 0x2000 file-backed bytes, i.e. loader-zero with no observable initializer. Written by the DLL option path and read by compile.obj module_extension."
+      },
+      "?NoAssembly@@3HA": {
+        "va": "0x419648",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero. The assembly switch option path consumes it."
       }
     }
   }

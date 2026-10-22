@@ -19,10 +19,9 @@ enum pass_type;
 // +0x20 is the wide base name this module's decoded consumers read
 // (0x4060a6, 0x406113, 0x4069b9). Never redeclare the type here.
 
-// Public PDB data identities owned by clmain.obj; declared once here for the
-// compile.obj bodies that consume them (see the per-function evidence).
-extern int DllFlg;
-extern int NoAssembly;
+// Public PDB data identities owned by clmain.obj; DllFlg and NoAssembly are
+// declared once in clmain.h (included above). MaxBatchId is consumed by the
+// limit_batch_files draft and has no reconstructed definition yet.
 extern int MaxBatchId;
 
 // Public template tag from ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z.

@@ -266,6 +266,16 @@ int Verbose;
 // Public ?g_hCryptProv@@3KA proven unsigned long storage; loader-zero tail.
 unsigned long g_hCryptProv;
 
+// DATA: cl 0x0041913c
+// Public ?DllFlg@@3HA; clmain.obj int in .data past the 0x2000 file-backed
+// bytes, so the initial value is loader zero. Read/written by the DLL option
+// path and by compile.obj's module_extension.
+int DllFlg;
+
+// DATA: cl 0x00419648
+// Public ?NoAssembly@@3HA; clmain.obj int in the same zero-filled .data tail.
+int NoAssembly;
+
 // DATA: cl 0x00419e6c
 // Public ?DefaultsMarked@@3HA; loader-zeroed one-shot state word.
 int DefaultsMarked;
