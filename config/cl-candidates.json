@@ -10,7 +10,7 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 56,
+        "start": 54,
         "end": 59
       },
       "boundary": {
@@ -34,7 +34,7 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 63,
+        "start": 61,
         "end": 66
       },
       "boundary": {
@@ -58,7 +58,7 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 70,
+        "start": 68,
         "end": 73
       },
       "boundary": {
@@ -82,7 +82,7 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 77,
+        "start": 75,
         "end": 80
       },
       "boundary": {
@@ -106,7 +106,7 @@
       "size": 22,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 141,
+        "start": 139,
         "end": 144
       },
       "boundary": {
@@ -127,7 +127,7 @@
       "size": 23,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 176,
+        "start": 174,
         "end": 181
       },
       "boundary": {
@@ -148,8 +148,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 289,
-        "end": 292
+        "start": 297,
+        "end": 302
       },
       "boundary": {
         "status": "verified",
@@ -169,8 +169,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 296,
-        "end": 299
+        "start": 304,
+        "end": 309
       },
       "boundary": {
         "status": "verified",
@@ -939,8 +939,8 @@
       "size": 44,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 303,
-        "end": 315
+        "start": 311,
+        "end": 325
       },
       "boundary": {
         "status": "verified",
@@ -1821,7 +1821,7 @@
       "retail_va": "0x401501",
       "size": 167,
       "source_span": {
-        "start": 18,
+        "start": 16,
         "end": 52
       },
       "boundary": {
@@ -1841,7 +1841,7 @@
       "retail_va": "0x401886",
       "size": 22,
       "source_span": {
-        "start": 84,
+        "start": 82,
         "end": 92
       },
       "boundary": {
@@ -1861,7 +1861,7 @@
       "retail_va": "0x40189c",
       "size": 32,
       "source_span": {
-        "start": 96,
+        "start": 94,
         "end": 99
       },
       "boundary": {
@@ -1903,7 +1903,7 @@
       "retail_va": "0x402267",
       "size": 52,
       "source_span": {
-        "start": 148,
+        "start": 146,
         "end": 154
       },
       "boundary": {
@@ -1955,8 +1955,8 @@
       "compiler_context": {
         "evidence": "Passinfo is the public clmain-owned table; stride 0x24 follows from the declared passinfo_s extent (10 evidenced slots). The loop-invariant flag selector load matches the retail schedule without an artificial local."
       },
-      "gate_enabled": false,
-      "note": "Body is instruction-identical to the complete 41-byte retail decode; only the Passinfo interior references remain unnormalized. Blocked on typed member bindings (passinfo_s::selector +8/2, ::options +0xC/4) backed by a passinfo_s layout witness produced in the integration checkout. gate_enabled false until then. Not a match."
+      "note": "Body is instruction-identical to the complete 41-byte retail decode; only the Passinfo interior references remain unnormalized. Blocked on typed member bindings (passinfo_s::selector +8/2, ::options +0xC/4) backed by a passinfo_s layout witness produced in the integration checkout. gate_enabled false until then. Not a match.",
+      "gate_enabled": false
     },
     {
       "binary": "cl",
@@ -1977,8 +1977,8 @@
       "compiler_context": {
         "evidence": "Real wcschr import and the public Passinfo table only; the state word is the evidenced int at passinfo_s +0xc, so the AND constant is the genuine ~1."
       },
-      "gate_enabled": false,
-      "note": "Body is instruction-identical to the complete 47-byte retail decode; only the Passinfo interior references remain unnormalized. Same passinfo_s member-binding/layout-witness dependency as activate_pass. Not a match."
+      "note": "Body is instruction-identical to the complete 47-byte retail decode; only the Passinfo interior references remain unnormalized. Same passinfo_s member-binding/layout-witness dependency as activate_pass. Not a match.",
+      "gate_enabled": false
     },
     {
       "binary": "cl",
@@ -1999,8 +1999,8 @@
       "compiler_context": {
         "evidence": "Real wcschr import plus the public Passinfo table; the loop-invariant dot test is written as a genuine local so its preheader materialization matches retail without steering."
       },
-      "gate_enabled": false,
-      "note": "Body is instruction-identical to the complete 67-byte retail decode; only the Passinfo interior references remain unnormalized. Same passinfo_s member-binding/layout-witness dependency as activate_pass. Not a match."
+      "note": "Body is instruction-identical to the complete 67-byte retail decode; only the Passinfo interior references remain unnormalized. Same passinfo_s member-binding/layout-witness dependency as activate_pass. Not a match.",
+      "gate_enabled": false
     },
     {
       "binary": "cl",
@@ -2011,7 +2011,7 @@
       "retail_va": "0x402915",
       "size": 51,
       "source_span": {
-        "start": 220,
+        "start": 218,
         "end": 229
       },
       "boundary": {
@@ -2840,7 +2840,14 @@
       },
       "?Passinfo@@3PAUpassinfo_s@@A": {
         "va": "0x417950",
-        "evidence": "Actual S_PUB32 public passinfo_s array owned by clmain.obj in .data; the pass loops take the table address directly, use a 0x24 stride and bound the final row against the adjacent distinct public ?Link_passes at 0x417ab8. Ten rows of the evidenced 36-byte layout."
+        "evidence": "Actual S_PUB32 public passinfo_s array owned by clmain.obj in .data; the pass loops take the table address directly, use a 0x24 stride and bound the final row against the adjacent distinct public ?Link_passes at 0x417ab8. Ten rows of the evidenced 36-byte layout. Retained as the canonical aggregate base for the typed member bindings below; the compiler layout witness pins sizeof(passinfo_s) = 36.",
+        "type": "passinfo_s",
+        "size": 36,
+        "entity_kind": "data",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/passinfo-sp1-v1/layout-witness.json",
+          "sha256": "034d68cbd343ae37a1e6505bd11f50e28399ffb39ed7d263adef037e7b8cc367"
+        }
       },
       "msvcr80.dll!wcschr": {
         "kind": "import",
@@ -2960,6 +2967,40 @@
         "dll": "MSVCR80.dll",
         "name": "fseek",
         "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "member:?Passinfo@@3PAUpassinfo_s@@A.selector": {
+        "kind": "member",
+        "base_identity": "?Passinfo@@3PAUpassinfo_s@@A",
+        "member": "selector",
+        "offset": 8,
+        "size": 2,
+        "va": "0x417958",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/passinfo-sp1-v1/layout-witness.json",
+          "sha256": "034d68cbd343ae37a1e6505bd11f50e28399ffb39ed7d263adef037e7b8cc367"
+        },
+        "evidence": "One canonical clmain.obj Passinfo table and its named selector field. The compiler-produced offsetof/sizeof witness reports size 36 with selector at offset 8, width 2, and the pass loops load exactly that word relative to the table row; source and retail base plus field offset must agree. No independent field storage or referent masking."
+      },
+      "member:?Passinfo@@3PAUpassinfo_s@@A.options": {
+        "kind": "member",
+        "base_identity": "?Passinfo@@3PAUpassinfo_s@@A",
+        "member": "options",
+        "offset": 12,
+        "size": 4,
+        "va": "0x41795c",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/passinfo-sp1-v1/layout-witness.json",
+          "sha256": "034d68cbd343ae37a1e6505bd11f50e28399ffb39ed7d263adef037e7b8cc367"
+        },
+        "evidence": "One canonical clmain.obj Passinfo table and its named options field. The compiler-produced offsetof/sizeof witness reports size 36 with options at offset 12, width 4, and the pass loops OR 1 into / AND ~1 out of exactly that dword relative to the table row; source and retail base plus field offset must agree. No independent field storage or referent masking."
+      },
+      "?DllFlg@@3HA": {
+        "va": "0x41913c",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj; storage sits in .data past the 0x2000 file-backed bytes, i.e. loader-zero with no observable initializer. Written by the DLL option path and read by compile.obj module_extension."
+      },
+      "?NoAssembly@@3HA": {
+        "va": "0x419648",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero. The assembly switch option path consumes it."
       }
     }
   }
