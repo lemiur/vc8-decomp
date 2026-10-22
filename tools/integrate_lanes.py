@@ -60,7 +60,7 @@ def validate(entry, where):
             raise ValueError(where + ": enabled candidate needs a verified boundary with evidence")
 
 
-def merge_candidates(base: dict, lanes: list[Path]) -> dict:
+def merge_candidates(base: dict, lanes: list[Path], prefer_base: bool = False) -> dict:
     if not isinstance(base.get("candidates"), list):
         raise ValueError("base registry lacks candidates array")
     merged = [dict(entry) for entry in base["candidates"]]
@@ -79,6 +79,8 @@ def merge_candidates(base: dict, lanes: list[Path]) -> dict:
             known = by_symbol.get(symbol)
             if known is not None:
                 if known != entry:
+                    if prefer_base:
+                        continue
                     raise ValueError("%s: lane %s conflicts with an existing entry for %s" %
                                      (symbol, lane, origins.get(symbol, "the base registry")))
                 continue
@@ -159,11 +161,13 @@ def main(argv=None):
     parser.add_argument("--out-dir", type=Path, default=ROOT / "config/reviews",
                         help="reviews: destination directory (default: config/reviews)")
     parser.add_argument("--check", action="store_true", help="validate and report without writing")
+    parser.add_argument("--prefer-base", action="store_true",
+                        help="candidates: keep the base entry when a lane's copy differs (span drift)")
     args = parser.parse_args(argv)
     try:
         if args.action == "candidates":
             base = read_json(args.base)
-            merged = merge_candidates(base, args.lane)
+            merged = merge_candidates(base, args.lane, prefer_base=args.prefer_base)
             for line in candidate_diff(base, merged):
                 print(line)
             print("candidates=%d added=%d" % (len(merged["candidates"]),

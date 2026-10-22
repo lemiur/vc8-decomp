@@ -58,6 +58,17 @@ class IntegrateLanesTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "conflicts with an existing entry"):
                 integrate_lanes.merge_candidates(json.loads(base.read_text()), [lane])
 
+    def test_prefer_base_keeps_shifted_span(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = self.base(temp, [candidate("?a", "0x1000")])
+            shifted = candidate("?a", "0x1000")
+            shifted["source_span"] = {"start": 2, "end": 4}
+            lane = self.lane(temp, "lane", [shifted])
+            with self.assertRaises(ValueError):
+                integrate_lanes.merge_candidates(json.loads(base.read_text()), [lane])
+            merged = integrate_lanes.merge_candidates(json.loads(base.read_text()), [lane], prefer_base=True)
+            self.assertEqual(merged["candidates"][0]["source_span"], {"start": 1, "end": 3})
+
     def test_two_symbols_at_one_address_aborts(self):
         with tempfile.TemporaryDirectory() as temp:
             base = self.base(temp, [candidate("?a", "0x1000")])
