@@ -1,6 +1,11 @@
 {
   "authority_limit": "Source-rule approval only; the fresh complete gate alone banks compiled functions/bytes.",
-  "entry_alias_proofs": [],
+  "entry_alias_proofs": [
+    {
+      "path": "config/reviews/evidence/chkstk-entry-alias.json",
+      "sha256": "0deceb2e8a8d908ced3a4d14823dd3673a482b2533a5df6df87ec90c7f3e0c74"
+    }
+  ],
   "fragments": [
     {
       "path": "config/reviews/cl5-clmain.json",
@@ -24,7 +29,7 @@
     },
     {
       "path": "config/reviews/cl5-loadui.json",
-      "sha256": "1d15bfea00fbfa7b8fe7c5a833ee5ed34d7df41683fa0b415bec1f9ed7580128"
+      "sha256": "ab2ad04dfba152261cffba28c9c30b3fea7cdfaaac206a53a4d9e087da0b2731"
     },
     {
       "path": "config/reviews/cl5-mpcl.json",
@@ -489,6 +494,25 @@
       },
       "symbol": "?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z",
       "va": "0x409755"
+    },
+    {
+      "checks": {
+        "R1": "Declared once in the guarded canonical header include/cl/loadui.h with exactly the decorated shape HINSTANCE__* __cdecl (unsigned short*, unsigned int). WCHAR, UINT and HINSTANCE are the installed SDK types; the unit defines no local type, no partial view and no duplicate declaration.",
+        "R13": "No class, vtable, RTTI or virtual call occurs in this unit. Nothing polymorphic is modelled, so no dummy virtual slot exists.",
+        "R17": "Locals are authentic and all observed: WCHAR executable[1024], WCHAR loaded_path[1024], HINSTANCE module, WCHAR* end computed as executable + min(wcslen(executable),1023) - 1 with the real double wcslen evaluation, the backslash scan `while (*end != L\"\\\\\" && end != executable) --end`, the terminating *end=0, the seven-argument LoadUILibrary call, the LoadSearchPath fallback when module is null, and the guarded wcscpy_s copy. Statements, scopes and guards reproduce the decoded CFG; no dummy, padding, volatile or force-allocation local exists.",
+        "R18": "Ordinary VC8 C++ source using the canonical installed SDK/CRT declarations. No inline assembly, __emit, byte arrays, binary includes, decompiler text, stubs or padding; the GS cookie and the stack probe are compiler-generated, and the probe bytes are library/fallback code that contributes no source bytes. No rule exception is requested.",
+        "R2": "No project global is defined. Data referents are the genuine literal L\"clui.dll\" (registered with its exact retail bytes and digest), the kernel32/msvcr80 imports, ___security_cookie, and the shared compiler stack-probe entry 0x40bd30 whose two public aliases are resolved only through the pinned entry-alias proof (config/reviews/evidence/chkstk-entry-alias.json), which reopens the retail PDB and the fresh MAP; no alias, interior-address model or guessed owner is introduced.",
+        "R4": "The function uses only the real stack buffers WCHAR executable[1024] and WCHAR loaded_path[1024], written by GetModuleFileNameW and the UI loader, plus typed WCHAR pointers; no struct layout is modelled and no offset cast appears. The decode shows the buffers at ebp+0x788 and ebp-0x78 and the truncation scan walking typed WCHAR elements, matching the real source."
+      },
+      "reviewer": "loadui matching worker, branch codex/lane-loadui",
+      "size": 249,
+      "source_path": "matching/cl/loadui.cpp",
+      "source_span": {
+        "end": 175,
+        "start": 157
+      },
+      "symbol": "?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z",
+      "va": "0x40983b"
     },
     {
       "checks": {

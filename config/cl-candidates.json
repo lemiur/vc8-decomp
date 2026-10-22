@@ -1381,13 +1381,11 @@
       },
       "boundary": {
         "status": "verified",
-        "evidence": "Bounded direct retail decoding over exactly 249 bytes 0x40983b..0x409933: complete reachable CFG, page-sized frame 0x100c probed through __chkstk, all branches decoded, ret at 0x409933 immediately followed by the next public start 0x409934. Ordered referents resolved: __chkstk 0x40bd30, GetModuleHandleW/GetModuleFileNameW 0x40d0fc/0x40d13c, wcslen 0x40d290, LoadUILibrary 0x409330, LoadSearchPath 0x409755, wcscpy_s 0x40d298, literal L\"clui.dll\", plus the GS cookie pair."
+        "evidence": "Bounded direct retail decoding over exactly 249 bytes 0x40983b..0x409933: complete reachable CFG, page-sized frame 0x100c probed through the shared __chkstk/__alloca_probe entry, all branches decoded, ret at 0x409933 immediately followed by the next public start 0x409934. Ordered referents resolved: the entry-alias shared stack probe at 0x40bd30, GetModuleHandleW/GetModuleFileNameW 0x40d0fc/0x40d13c, wcslen 0x40d290, LoadUILibrary 0x409330, LoadSearchPath 0x409755, wcscpy_s 0x40d298, literal L\"clui.dll\" and the GS cookie pair. The candidate object is compiled without /GL (retail prologue is the plain-c2 `lea ebp,[esp-frame]` layout) and matched every byte after independent ordered-referent relocation, including the byte-identical 43-byte stack-probe helper."
       },
       "dependencies": [],
       "roots": [],
-      "identity_evidence": "PDB public start 0x40983b with DBI section contribution in module 6 (loadui.obj); decorated name ?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z proves __cdecl HINSTANCE__* (unsigned short*, unsigned int).",
-      "gate_enabled": false,
-      "pending": "Byte-complete and instruction-identical: all 249 decoded bytes agree with retail after independent ordered-fixup normalization (zero differing bytes outside the 9 ordered referent operands), and the compiler-generated 43-byte stack-probe helper called at offset 14 is byte-identical to retail (sha256 f8675b4976f7b8efc0bd917aebab734d11ca90222d20bcd2a166ce9914ed2b6e). It is disabled because tools/ltcg.py scan_referents cannot name a MAP entry that carries two public aliases: the candidate MAP lists __alloca_probe and __chkstk at the same address, so the rel32 at offset 14 gets identity None and the harness can never report referents=resolved for this candidate. tools/gate.py already models the case as kind=\"entry-alias\" with verify_entry_alias and a compiler-stack-probe-shared-entry-identity proof, but that path requires the manifest to advertise identity \"entry-alias:__alloca_probe|__chkstk\" with resolved=true, which scan_referents does not produce. No source lever remains: the call is generated solely by the 0x100c frame, matching the retail frame exactly, and every other referent resolves."
+      "identity_evidence": "PDB public start 0x40983b with DBI section contribution in module 6 (loadui.obj); decorated name ?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z proves __cdecl HINSTANCE__* (unsigned short*, unsigned int)."
     },
     {
       "binary": "cl",
@@ -3319,6 +3317,21 @@
         "dll": "KERNEL32.dll",
         "name": "InterlockedExchange",
         "evidence": "Independently parsed retail PE import descriptor/IAT slot; ATL's own InterlockedExchangePointer inline (atlconv.h lines 90-93) reduces to this call in _AtlGetThreadACPThunk. Canonical era SDK winbase.h declaration supplies the source interface."
+      },
+      "entry-alias:__alloca_probe|__chkstk": {
+        "kind": "entry-alias",
+        "va": "0x40bd30",
+        "size": 43,
+        "bytes_sha256": "f8675b4976f7b8efc0bd917aebab734d11ca90222d20bcd2a166ce9914ed2b6e",
+        "aliases": [
+          "__alloca_probe",
+          "__chkstk"
+        ],
+        "proof": {
+          "path": "config/reviews/evidence/chkstk-entry-alias.json",
+          "sha256": "0deceb2e8a8d908ced3a4d14823dd3673a482b2533a5df6df87ec90c7f3e0c74"
+        },
+        "evidence": "Retail 0x40bd30 is one closed 43-byte compiler stack-probe entry whose two public PDB aliases __alloca_probe/__chkstk share DBI module 20 (chkstk.obj); the fresh candidate MAP independently binds the same two aliases at one address to msvcrt:chkstk.obj and the 43 helper bytes are identical to retail. The pinned proof reopens the retail PDB and the candidate MAP. Toolchain bytes are fallback and never counted as source."
       }
     }
   }
