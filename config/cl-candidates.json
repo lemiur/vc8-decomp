@@ -1016,7 +1016,7 @@
       "roots": [
         "?filename@@YAPAGPAGIPBG@Z"
       ],
-      "identity_evidence": "PDB S_PUB32 public start 0x406217 in DBI section contribution module 9 compile.obj; mangled ?filename@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). Callers in other modules (0x407cb4, 0x40a623, 0x40b5e5) and in this module (0x407ea6) pass the same three-argument shape and clean 12 bytes."
+      "identity_evidence": "PDB S_PUB32 public start 0x406217 in DBI section contribution module 9 compile.obj; mangled ?filename@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). All four call sites pass the same three-argument shape and clean 12 bytes: 0x407cb4 and 0x407ea6 lie in this module's private helper 0x407b49, and 0x40a623/0x40b5e5 lie in mpcl.obj, so the declaration is shared across units."
     },
     {
       "binary": "cl",
