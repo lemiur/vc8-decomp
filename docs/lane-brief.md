@@ -85,6 +85,17 @@ declaration, the initializer, the caller). The integration owner re-computes
 the scope hash and imports these checks; do not edit
 `config/rule-exceptions.json` yourself.
 
+The review is bound to the **whole unit file hash** (`source_sha256` is the file
+hash, not the function body hash). Adding functions to a unit therefore
+invalidates every prior review in that same file. Include in
+`config/reviews/cl5-<lane>.json` a record for **every enabled candidate of your
+unit**, including the already-matched ones: copy their prior check text from
+`config/rule-exceptions.json` when the body is textually unchanged, and say so
+explicitly ("body unchanged from the prior batch; the reviewed delta is the new
+declarations X, Y"). If you changed an existing function's body, its record must
+be a real new review of the new body. A function that is not enabled (a parked
+or unlinkable draft) needs no record; leave it registered disabled.
+
 ## Verification before you report
 
 - `python tools/match.py match --binary cl --unit <unit>` is 100 for every
