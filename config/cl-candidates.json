@@ -286,8 +286,8 @@
       "size": 1,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 10,
-        "end": 12
+        "start": 12,
+        "end": 14
       },
       "boundary": {
         "status": "verified",
@@ -304,8 +304,8 @@
       "size": 45,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 19,
-        "end": 29
+        "start": 21,
+        "end": 31
       },
       "boundary": {
         "status": "verified",
@@ -322,8 +322,8 @@
       "size": 38,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 34,
-        "end": 47
+        "start": 36,
+        "end": 49
       },
       "boundary": {
         "status": "verified",
@@ -339,8 +339,8 @@
       "size": 61,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 52,
-        "end": 67
+        "start": 54,
+        "end": 69
       },
       "boundary": {
         "status": "verified",
@@ -358,8 +358,8 @@
       "size": 33,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 72,
-        "end": 80
+        "start": 74,
+        "end": 82
       },
       "boundary": {
         "status": "verified",
@@ -375,8 +375,8 @@
       "size": 29,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 87,
-        "end": 94
+        "start": 89,
+        "end": 96
       },
       "boundary": {
         "status": "verified",
@@ -392,8 +392,8 @@
       "size": 53,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 100,
-        "end": 110
+        "start": 102,
+        "end": 112
       },
       "boundary": {
         "status": "verified",
@@ -409,8 +409,8 @@
       "size": 41,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 116,
-        "end": 123
+        "start": 118,
+        "end": 125
       },
       "boundary": {
         "status": "verified",
@@ -426,8 +426,8 @@
       "size": 84,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 129,
-        "end": 146
+        "start": 131,
+        "end": 148
       },
       "boundary": {
         "status": "verified",
@@ -443,8 +443,8 @@
       "size": 20,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 158,
-        "end": 163
+        "start": 160,
+        "end": 165
       },
       "boundary": {
         "status": "verified",
@@ -461,8 +461,8 @@
       "size": 23,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 167,
-        "end": 171
+        "start": 169,
+        "end": 173
       },
       "boundary": {
         "status": "verified",
@@ -478,8 +478,8 @@
       "size": 24,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 175,
-        "end": 180
+        "start": 177,
+        "end": 182
       },
       "boundary": {
         "status": "verified",
@@ -495,8 +495,8 @@
       "size": 35,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 184,
-        "end": 188
+        "start": 186,
+        "end": 190
       },
       "boundary": {
         "status": "verified",
@@ -512,8 +512,8 @@
       "size": 56,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 192,
-        "end": 200
+        "start": 194,
+        "end": 202
       },
       "boundary": {
         "status": "verified",
@@ -529,8 +529,8 @@
       "size": 27,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 204,
-        "end": 208
+        "start": 206,
+        "end": 210
       },
       "boundary": {
         "status": "verified",
@@ -546,8 +546,8 @@
       "size": 61,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 212,
-        "end": 219
+        "start": 214,
+        "end": 221
       },
       "boundary": {
         "status": "verified",
@@ -957,6 +957,267 @@
       "compiler_context": {
         "evidence": "Canonical HANDLE g_hMutex has actual PDB public identity and unique mpcl.obj owner, with loader-zero storage. Its real data root preserves observed external mutability across the partial standalone source context. Real mpcl/Watson bodies are dependencies, setter root preserves previously proven standard ABI; no dummy code or exported controls."
       }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?close_mutex@@YAXXZ",
+      "retail_va": "0x409fae",
+      "size": 17,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 235,
+        "end": 239
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 17 bytes at 0x409FAE..0x409FBE: load of canonical ?g_hMutex@@3PAXA, test, conditional push of that HANDLE into __imp__CloseHandle@4, ret. Complete local CFG with no other referents; source owner compared every byte and both ordered references under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?close_mutex@@YAXXZ, mpcl.obj contribution at 0x409FAE; plain cdecl with no arguments.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?MP_is_server@@YAHXZ",
+      "retail_va": "0x409fbf",
+      "size": 76,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 246,
+        "end": 255
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 76 bytes at 0x409FBF..0x40A00A: real GS-cookie prolog, GetEnvironmentVariableW(...,10) into a 10-element wide buffer, wcscmp against L\"bananana\", neg/sbb/inc equality, store to ?is_server_run@@3HA, __security_check_cookie, leave, ret. Every branch and all five ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?MP_is_server@@YAHXZ, mpcl.obj contribution at 0x409FBF; int return in EAX, no arguments.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ProcessChannel_read_thread@@YGKPAX@Z",
+      "retail_va": "0x40a04c",
+      "size": 86,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 262,
+        "end": 272
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 86 bytes at 0x40A04C..0x40A0A1: __SEH_prolog4, context loads, virtual read through vslot+4, success store, __except filter comparing GetExceptionCode() to 1 at 0x40A075, handler clearing success at 0x40A087, __SEH_epilog4, ret 4. All branches, the filter/handler funclets and every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "gate_enabled": false,
+      "pending": "Complete instruction stream is identical to retail modulo the compiler-generated SEH scope-table immediate (push 0x415CB8) and the CRT __SEH_prolog4/__SEH_epilog4 call displacements: the harness resolves no identity for the scope-table address (no PDB/MAP symbol, so no binding can be applied) and therefore reports referents=unresolved and a raw-byte score of 90.7. Disabled until the central harness can attribute compiler-generated SEH payloads; never counted.",
+      "identity_evidence": "PDB public ?ProcessChannel_read_thread@@YGKPAX@Z; stdcall PGK ABI matches CreateThread's LPTHREAD_START_ROUTINE use at 0x40A809.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?write_string@ProcessChannel@@QAEXPBG@Z",
+      "retail_va": "0x40a0d1",
+      "size": 55,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 278,
+        "end": 283
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 55 bytes at 0x40A0D1..0x40A107: __imp__wcslen on the PBG argument, doubled byte size stored to a local, virtual write of four size bytes, second virtual write of size+2 bytes, ret 4. Complete local CFG; both ordered references and the two vtable calls decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?write_string@ProcessChannel@@QAEXPBG@Z; member __thiscall with one const unsigned short pointer argument, evident from PBG and ret 4.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??3@YAXPAX@Z",
+      "retail_va": "0x40a25a",
+      "size": 5,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 288,
+        "end": 291
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 5 bytes at 0x40A25A..0x40A25E: one E9 rel32 tail transfer to real ?xfree@@YAXPAX@Z at 0x4082DC. No local branch; source owner compared every byte and the single ordered reference under actual /GL + /LTCG with util.cpp as the real defining dependency."
+      },
+      "dependencies": [
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [],
+      "identity_evidence": "PDB public ??3@YAXPAX@Z (global operator delete), mpcl.obj contribution at 0x40A25A; cdecl with one pointer argument.",
+      "compiler_context": {
+        "evidence": "Real util.cpp supplies the canonical xfree body; the published five public bytes are the complete tail-transfer wrapper, so no replacement body is invented. Only /O1 is measured for this unit."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?decode_handle@@YAPAXPBG@Z",
+      "retail_va": "0x40a346",
+      "size": 30,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 297,
+        "end": 302
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 30 bytes at 0x40A346..0x40A363: frame, lea of the pointer local, pushes of the local, the L\"%p\" literal and the wide argument into __imp__swscanf_s, load of the local, add esp,0xc, leave, ret. Complete CFG; all three ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?decode_handle@@YAPAXPBG@Z; cdecl, const unsigned short pointer in, pointer-sized handle out in EAX.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?get_mutex@@YAXXZ",
+      "retail_va": "0x40a496",
+      "size": 103,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 309,
+        "end": 317
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 103 bytes at 0x40A496..0x40A4FC: GS-cookie prolog, g_hMutex null test, 20-character GetEnvironmentVariableW, !=0 normalization pushed into real ?NT_err@@YAHH@Z, swscanf_s into ?g_hMutex@@3PAXA, failed-parse clear, __security_check_cookie. All branches and six ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?get_mutex@@YAXXZ; cdecl with no arguments, void.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z",
+      "retail_va": "0x40a684",
+      "size": 118,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 323,
+        "end": 338
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 118 bytes at 0x40A684..0x40A6F9: first CreatePipe attempt, GetLastError test against ERROR_PIPE_BUSY 0xE7, RaiseException(1,0,0,0) on any other failure, attempt increment to five with Sleep(250) between retries, raise and exit above five. All branches and ordered referents decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z; four cdecl arguments in retail push order (size, attributes, write, read).",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?MP_get_mutex@@YAXXZ",
+      "retail_va": "0x40a6fa",
+      "size": 5,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 343,
+        "end": 346
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 5 bytes at 0x40A6FA..0x40A6FE: one E9 rel32 tail transfer to the real ?get_mutex@@YAXXZ at 0x40A496. No local branch; source owner compared every byte and the single ordered reference under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?MP_get_mutex@@YAXXZ; cdecl with no arguments, void.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?read_robust@ProcessChannel@@QAEXPAXK@Z",
+      "retail_va": "0x40a7d3",
+      "size": 164,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 353,
+        "end": 376
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 164 bytes at 0x40A7D3..0x40A876: __SEH_prolog4, two handles initialized to INVALID_HANDLE_VALUE, four-field read context stores, CreateThread with ProcessChannel_read_thread, NT_err, process_handle as second wait target, WaitForMultipleObjects switch with success test, merged RaiseException paths, __finally funclet closing only the created thread handle at 0x40A867, __SEH_epilog4, ret 8. Every branch and ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "gate_enabled": false,
+      "pending": "Complete instruction stream is identical to retail modulo the compiler-generated SEH scope-table immediate (push 0x415CF8) and the CRT __SEH_prolog4/__SEH_epilog4 call displacements: the harness resolves no identity for the scope-table address (no PDB/MAP symbol, so no binding can be applied) and therefore reports referents=unresolved and a raw-byte score of 81.7. Disabled until the central harness can attribute compiler-generated SEH payloads; never counted.",
+      "identity_evidence": "PDB public ?read_robust@ProcessChannel@@QAEXPAXK@Z; member __thiscall, void pointer and unsigned long arguments, ret 8.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?read_int_robust@ProcessChannel@@QAEHXZ",
+      "retail_va": "0x40a877",
+      "size": 20,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 381,
+        "end": 386
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 20 bytes at 0x40A877..0x40A88A: frame, push 4 and the address of the int local into real ?read_robust@ProcessChannel@@QAEXPAXK@Z, load the local, leave, ret. Complete CFG; both ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?read_int_robust@ProcessChannel@@QAEHXZ; member __thiscall returning int.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?expect_int_robust@ProcessChannel@@QAEXH@Z",
+      "retail_va": "0x40a88b",
+      "size": 27,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 392,
+        "end": 396
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 27 bytes at 0x40A88B..0x40A8A5: call to real ?read_int_robust@ProcessChannel@@QAEHXZ, compare against [esp+4], local skip, RaiseException(1,0,0,0) on mismatch, ret 4. Complete CFG; both ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?expect_int_robust@ProcessChannel@@QAEXH@Z; member __thiscall with one int argument, ret 4.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
     }
   ],
   "referents": {
@@ -1357,6 +1618,112 @@
         "size": 4,
         "va": "0x41aaf0",
         "evidence": "Actual public PDB ?g_hMutex@@3PAXA uniquely attributed to mpcl.obj; retail loader-zero tail contains the complete four-byte HANDLE slot. Canonical extern/definition in mpcl header/unit, actual constructor reads it and passes it to WaitForSingleObject. Source and retail MAP/public identities independently bound; data is not counted."
+      },
+      "?is_server_run@@3HA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "int",
+        "size": 4,
+        "va": "0x41a2b4",
+        "evidence": "Actual public PDB ?is_server_run@@3HA in loader-zero .data; MP_is_server stores EAX to exactly this address and no other access contradicts one int entity. Canonical extern/definition lives in mpcl header/unit; data bytes are not counted."
+      },
+      "?get_mutex@@YAXXZ": {
+        "va": "0x40a496",
+        "evidence": "Actual public ?get_mutex@@YAXXZ body decoded over 103 bytes; MP_get_mutex tail-transfers to this exact address."
+      },
+      "?ProcessChannel_read_thread@@YGKPAX@Z": {
+        "va": "0x40a04c",
+        "evidence": "Actual public stdcall thread callback decoded over 86 bytes; CreateThread receives its address as the start routine."
+      },
+      "?read_robust@ProcessChannel@@QAEXPAXK@Z": {
+        "va": "0x40a7d3",
+        "evidence": "Actual public ProcessChannel member decoded over 164 bytes; read_int_robust passes its buffer and size to this exact address."
+      },
+      "?read_int_robust@ProcessChannel@@QAEHXZ": {
+        "va": "0x40a877",
+        "evidence": "Actual public ProcessChannel member decoded over 20 bytes; expect_int_robust compares the value returned from this exact address."
+      },
+      "?xfree@@YAXPAX@Z": {
+        "va": "0x4082dc",
+        "evidence": "Actual public util.obj deallocator; real source body exists in matching/cl/util.cpp and the global operator delete tail-transfers to this exact address."
+      },
+      "msvcr80.dll!wcscmp": {
+        "kind": "import",
+        "va": "0x40d2b0",
+        "dll": "MSVCR80.dll",
+        "name": "wcscmp",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds MSVCR80.dll!wcscmp; canonical era wide-string declaration supplies the source interface."
+      },
+      "msvcr80.dll!swscanf_s": {
+        "kind": "import",
+        "va": "0x40d240",
+        "dll": "MSVCR80.dll",
+        "name": "swscanf_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds MSVCR80.dll!swscanf_s; canonical era stdio wide-scan declaration supplies the source interface."
+      },
+      "kernel32.dll!CreateThread": {
+        "kind": "import",
+        "va": "0x40d078",
+        "dll": "KERNEL32.dll",
+        "name": "CreateThread",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!CreateThread; canonical windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!WaitForMultipleObjects": {
+        "kind": "import",
+        "va": "0x40d07c",
+        "dll": "KERNEL32.dll",
+        "name": "WaitForMultipleObjects",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!WaitForMultipleObjects; canonical windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!CreatePipe": {
+        "kind": "import",
+        "va": "0x40d080",
+        "dll": "KERNEL32.dll",
+        "name": "CreatePipe",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!CreatePipe; canonical windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetLastError": {
+        "kind": "import",
+        "va": "0x40d148",
+        "dll": "KERNEL32.dll",
+        "name": "GetLastError",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!GetLastError; canonical windows.h declaration supplies the source interface."
+      },
+      "literal:sha256:7fac38354d455438b8c86706a608a77d8d2477c48a78b2ac737fb36782dc057d": {
+        "kind": "literal",
+        "va": "0x4157b0",
+        "encoding": "utf-16le",
+        "size": 6,
+        "bytes_sha256": "7fac38354d455438b8c86706a608a77d8d2477c48a78b2ac737fb36782dc057d",
+        "source_literal": "L\"%p\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "literal:sha256:8dd455e5d8d8f6e296d3944f01bede99b3c456179fa00fea088bae3a28c17665": {
+        "kind": "literal",
+        "va": "0x415788",
+        "encoding": "utf-16le",
+        "size": 38,
+        "bytes_sha256": "8dd455e5d8d8f6e296d3944f01bede99b3c456179fa00fea088bae3a28c17665",
+        "source_literal": "L\"MPCL_SERVER_373011\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "literal:sha256:ce6721340017140e0a648021617054538a33eeb3ef5fef16d7221c6e1d0b666b": {
+        "kind": "literal",
+        "va": "0x415774",
+        "encoding": "utf-16le",
+        "size": 18,
+        "bytes_sha256": "ce6721340017140e0a648021617054538a33eeb3ef5fef16d7221c6e1d0b666b",
+        "source_literal": "L\"bananana\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "literal:sha256:0ab3e081862091413e821cdc2d77ee41a72d42384238a2ebfb80f860ac4a86b2": {
+        "kind": "literal",
+        "va": "0x415728",
+        "encoding": "utf-16le",
+        "size": 36,
+        "bytes_sha256": "0ab3e081862091413e821cdc2d77ee41a72d42384238a2ebfb80f860ac4a86b2",
+        "source_literal": "L\"MPCL_MUTEX_HANDLE\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
       }
     }
   }

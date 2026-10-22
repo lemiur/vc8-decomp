@@ -1,0 +1,427 @@
+{
+  "schema_version": 1,
+  "binary": "cl",
+  "lane": "mpcl",
+  "reviewer": "mpcl lane worker",
+  "review_date": "2026-10-22",
+  "authority_limit": "Source-rule review for this lane only; the fresh complete gate alone banks compiled functions and bytes. Integration owner re-computes scope hashes and imports these checks.",
+  "unit": "matching/cl/mpcl.cpp",
+  "unit_flags": [
+    "/O1",
+    "/Zc:wchar_t-"
+  ],
+  "functions": [
+    {
+      "va": "0x409fae",
+      "symbol": "?close_mutex@@YAXXZ",
+      "size": 17,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 235,
+        "end": 239
+      },
+      "checks": {
+        "R1": "One canonical declaration void __cdecl close_mutex() in include/cl/mpcl.h; PDB public ?close_mutex@@YAXXZ at 0x409FAE and the plain RET prove the no-argument cdecl ABI. No local prototype.",
+        "R2": "Uses the one canonical HANDLE g_hMutex global (PDB ?g_hMutex@@3PAXA, declared extern in the header, defined once in mpcl.cpp at its DATA annotation) and the genuine windows.h CloseHandle import; no invented data or interior address.",
+        "R4": "No reconstructed structure or offset model: the body only tests one HANDLE scalar and passes it to CloseHandle.",
+        "R13": "Free scalar function; no virtual call, class layout or vtable slot is involved.",
+        "R17": "Decoded 17-byte body at 0x409FAE..0x409FBE is mov eax,[g_hMutex]; test eax,eax; je end; push eax; call [__imp__CloseHandle@4]; ret, exactly if (g_hMutex) CloseHandle(g_hMutex). No fake locals, cached copies or extra branches.",
+        "R18": "Ordinary VC8 C++ with the real windows.h declaration; no assembly, byte arrays, binary inclusion or padding."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x409fbf",
+      "symbol": "?MP_is_server@@YAHXZ",
+      "size": 76,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 246,
+        "end": 255
+      },
+      "checks": {
+        "R1": "One canonical int __cdecl MP_is_server() declaration in the header; PDB public ?MP_is_server@@YAHXZ and the EAX result with plain RET prove the ABI. wchar_t is unsigned short in this unit: every PDB wide parameter is PBG, which is why the measured unit flag /Zc:wchar_t- is required and recorded in config/cl.json.",
+        "R2": "The wide environment name and marker are real source literals L\"MPCL_SERVER_373011\" and L\"bananana\"; GetEnvironmentVariableW/wcscmp are genuine SDK/CRT imports; is_server_run is the actual PDB data ?is_server_run@@3HA, declared extern once in the header and defined once at its DATA annotation, with no aliasing.",
+        "R4": "No offset model. The genuine wchar_t value[10] buffer (20 bytes) plus the /GS cookie explain the decoded 0x18-byte frame; the only accesses are the buffer base and the compiler's cookie slot.",
+        "R13": "Free scalar function; no class layout, virtual call or vtable.",
+        "R17": "Decoded 76-byte body at 0x409FBF..0x40A00A: GetEnvironmentVariableW(literal, buf, 10); if nonzero then wcscmp(buf, literal) with neg/sbb/inc equality, store to is_server_run, then __security_check_cookie and leave/ret. That is exactly the returned-source statement order; the 10-character count is the decoded immediate 0xA and the frame/LEA offsets match value[10].",
+        "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays, padding or generated retail bytes."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a0d1",
+      "symbol": "?write_string@ProcessChannel@@QAEXPBG@Z",
+      "size": 55,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 278,
+        "end": 283
+      },
+      "checks": {
+        "R1": "One canonical member declaration void write_string(const unsigned short *) added to the already reviewed ProcessChannel class; PDB ?write_string@ProcessChannel@@QAEXPBG@Z, the ECX this pointer and RET 4 prove the thiscall/PBG ABI. wcslen comes from the installed wchar.h under the measured /Zc:wchar_t- mode.",
+        "R2": "References the genuine MSVCR80 wcslen import and the class's own proven virtual write slot; no invented helper, data object or duplicate global.",
+        "R4": "The ProcessChannel layout is the already reviewed one: a three-slot vtable then process_handle. The body uses only the vtable pointer at offset 0 and no raw offset cast.",
+        "R13": "The two virtual calls are calls through ProcessChannel's real three-slot vtable (write at slot 0), already proven by the reviewed write/read/close bodies; no dummy virtual is added.",
+        "R17": "Decoded 55-byte body at 0x40A0D1..0x40A107: push the PBG argument, call wcslen, add eax,eax (sizeof unsigned short), store to the local size, virtual write(&size,4), then virtual write(value,size+2), pop esi, leave, ret 4. That is exactly the sourced statements; the two separate writes are retail's, not a cached or merged call.",
+        "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays or padding."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a25a",
+      "symbol": "??3@YAXPAX@Z",
+      "size": 5,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 288,
+        "end": 291
+      },
+      "checks": {
+        "R1": "One canonical global void operator delete(void *) definition; the PDB public ??3@YAXPAX@Z and the decoded one-argument cdecl tail transfer prove the ABI. xfree is declared once in include/cl/util.h.",
+        "R2": "The body calls the real util.obj deallocator ?xfree@@YAXPAX@Z, whose genuine source body is the registered util.cpp candidate; the candidate declares matching/cl/util.cpp (with its own dos/clmain/Watson dependencies) as a real dependency, so no stub is linked.",
+        "R4": "No structure or offset model; one pointer argument.",
+        "R13": "Free deallocator function; no class layout or virtual call.",
+        "R17": "Decoded 5-byte body at 0x40A25A..0x40A25E is one E9 JMP to 0x4082DC (xfree): the authentic /O1 tail transfer of xfree(allocation) with no locals. The source has exactly that call; the transfer is compiler output, not hand-written control flow.",
+        "R18": "Ordinary VC8 C++ operator delete; no assembly, byte arrays, padding or linker tricks."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a346",
+      "symbol": "?decode_handle@@YAPAXPBG@Z",
+      "size": 30,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 297,
+        "end": 302
+      },
+      "checks": {
+        "R1": "One canonical HANDLE __cdecl decode_handle(const unsigned short *) declaration in the header; PDB ?decode_handle@@YAPAXPBG@Z, the plain RET and EAX result prove the ABI, and swscanf_s comes from the installed wchar.h under /Zc:wchar_t-.",
+        "R2": "Uses the genuine MSVCR80 swscanf_s import and the real source literal L\"%p\"; no invented CRT prototype or data alias.",
+        "R4": "HANDLE is one pointer-width scalar at EBP-4; the decoded lea/store/load sequence is a genuine local, not an offset model.",
+        "R13": "Free scalar function; no virtual call or class layout.",
+        "R17": "Decoded 30-byte body at 0x40A346..0x40A363: frame, lea EAX,[EBP-4], push EAX, push literal 0x4157B0, push [EBP+8], call swscanf_s, load [EBP-4], add ESP,0xC, leave, ret. Exactly HANDLE result; swscanf_s(value, L\"%p\", &result); return result; with the compiler's chosen argument order.",
+        "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays or padding."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a496",
+      "symbol": "?get_mutex@@YAXXZ",
+      "size": 103,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 309,
+        "end": 317
+      },
+      "checks": {
+        "R1": "One canonical void __cdecl get_mutex() declaration in the header; PDB ?get_mutex@@YAXXZ and the plain RET prove the ABI. The real GetEnvironmentVariableW/swscanf_s declarations come from windows.h/wchar.h under /Zc:wchar_t-.",
+        "R2": "The single canonical HANDLE g_hMutex global (PDB ?g_hMutex@@3PAXA) is read, passed to the real NT_err body already reviewed in this unit, and written from swscanf_s; no invented storage or alias. The environment name and L\"%p\" are genuine source literals.",
+        "R4": "No offset model. The genuine wchar_t value[20] buffer (40 bytes) and the /GS cookie explain the 0x2C-byte frame; only the buffer base and cookie slot are addressed.",
+        "R13": "Free scalar function; no class layout or virtual call.",
+        "R17": "Decoded 103-byte body at 0x40A496..0x40A4FC: if (g_hMutex==0) { GetEnvironmentVariableW(L\"MPCL_MUTEX_HANDLE\",buf,0x14) normalized with neg/sbb/neg to 0/1 and pushed into NT_err; swscanf_s(buf,L\"%p\",&g_hMutex); if result != 1 then g_hMutex=0; } cookie check; leave; ret. Every local and the !=0 normalization match the sourced expression.",
+        "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays or padding."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a684",
+      "symbol": "?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z",
+      "size": 118,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 323,
+        "end": 338
+      },
+      "checks": {
+        "R1": "One canonical void __cdecl CreatePipe_robust(HANDLE *, HANDLE *, SECURITY_ATTRIBUTES *, unsigned long) in the header; PDB ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z and the four retail argument pushes in reverse order prove the cdecl ABI and parameter types, including the genuine SDK SECURITY_ATTRIBUTES.",
+        "R2": "Uses only the genuine kernel32 imports CreatePipe, GetLastError, Sleep and RaiseException; no invented helper, data object or interior address.",
+        "R4": "No reconstructed structure or offset model; SECURITY_ATTRIBUTES is passed through as an opaque SDK pointer.",
+        "R13": "Free function; no virtual call or class layout.",
+        "R17": "Decoded 118-byte body at 0x40A684..0x40A6F9: first CreatePipe, then GetLastError compared with 0xE7 ERROR_PIPE_BUSY; other errors RaiseException(1,0,0,0); on busy, increment attempts, compare >5, Sleep(0xFA) between retries, raise and exit above five. That is exactly the sourced while/if/else structure including the break exit at 0x40A6F5; attempts is a genuine local in EBP.",
+        "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays or padding."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a6fa",
+      "symbol": "?MP_get_mutex@@YAXXZ",
+      "size": 5,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 343,
+        "end": 346
+      },
+      "checks": {
+        "R1": "One canonical void __cdecl MP_get_mutex() declaration; PDB ?MP_get_mutex@@YAXXZ and the plain RET prove the ABI.",
+        "R2": "Calls the real ?get_mutex@@YAXXZ body recovered in this unit; no stub, invented data or duplicate global.",
+        "R4": "No structure or offset model; no arguments.",
+        "R13": "Free function; no virtual call.",
+        "R17": "Decoded 5-byte body at 0x40A6FA..0x40A6FE is one E9 JMP to 0x40A496 (get_mutex): the authentic /O1 tail transfer of get_mutex(); no locals or fake statements.",
+        "R18": "Ordinary VC8 C++; no assembly, byte arrays or padding."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a877",
+      "symbol": "?read_int_robust@ProcessChannel@@QAEHXZ",
+      "size": 20,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 381,
+        "end": 386
+      },
+      "checks": {
+        "R1": "One canonical member declaration int read_int_robust() added to the reviewed ProcessChannel class; PDB ?read_int_robust@ProcessChannel@@QAEHXZ the ECX this pointer and plain RET prove the thiscall ABI.",
+        "R2": "Calls the real read_robust member recovered in this unit with the address of its own int local; no invented helper or data object.",
+        "R4": "The int result is one genuine 4-byte local at EBP-4; the ProcessChannel layout is the reviewed one and no offset cast is used.",
+        "R13": "No virtual call in this body; the class vtable was already proven by the reviewed write/read/close bodies.",
+        "R17": "Decoded 20-byte body at 0x40A877..0x40A88A: frame, push 4, lea EAX,[EBP-4], push EAX, call read_robust, load [EBP-4], leave, ret; exactly int result; read_robust(&result,sizeof result); return result;.",
+        "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays or padding."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a88b",
+      "symbol": "?expect_int_robust@ProcessChannel@@QAEXH@Z",
+      "size": 27,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 392,
+        "end": 396
+      },
+      "checks": {
+        "R1": "One canonical member declaration void expect_int_robust(int) added to the reviewed ProcessChannel class; PDB ?expect_int_robust@ProcessChannel@@QAEXH@Z, the ECX this pointer and RET 4 prove the thiscall ABI.",
+        "R2": "Calls the real read_int_robust member recovered above and the genuine kernel32 RaiseException import; no invented helper or data.",
+        "R4": "No structure or offset model; the only argument slot is the decoded [ESP+4] after the call.",
+        "R13": "No virtual call in this body; class vtable already proven.",
+        "R17": "Decoded 27-byte body at 0x40A88B..0x40A8A5: call read_int_robust, cmp [ESP+4],EAX, je end, then push 0,0,0,1 and call RaiseException, ret 4; exactly if (expected != read_int_robust()) RaiseException(1,0,0,0); with the compiler's argument pushes.",
+        "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays or padding."
+      },
+      "reviewer": "matching lane mpcl"
+    },
+    {
+      "va": "0x40a25f",
+      "symbol": "?thread_print@@YAXPBGZZ",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a2dc",
+      "symbol": "?env_size@@YAIPBG@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a3a1",
+      "symbol": "?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a475",
+      "symbol": "?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a458",
+      "symbol": "?size@?$Queue@Uaction_t@@@@QBEHXZ",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40aa29",
+      "symbol": "?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40aa5e",
+      "symbol": "?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a3c7",
+      "symbol": "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a0a2",
+      "symbol": "?read_int@ProcessChannel@@QAEHXZ",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a243",
+      "symbol": "?close@PipeProcessChannel@@UAEXXZ",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a2c4",
+      "symbol": "?NT_err@@YAHH@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a8e3",
+      "symbol": "?write@PipeProcessChannel@@UAEXPBXK@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a906",
+      "symbol": "?read@PipeProcessChannel@@UAEXPAXK@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a0b6",
+      "symbol": "?expect_int@ProcessChannel@@QAEXH@Z",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    },
+    {
+      "va": "0x40a8a6",
+      "symbol": "?kill@ProcessChannel@@QAEXXZ",
+      "source_path": "matching/cl/mpcl.cpp",
+      "checks": {
+        "R1": "body text unchanged from the prior batch; R1 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R2": "body text unchanged from the prior batch; R2 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R4": "body text unchanged from the prior batch; R4 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R13": "body text unchanged from the prior batch; R13 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R17": "body text unchanged from the prior batch; R17 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance.",
+        "R18": "body text unchanged from the prior batch; R18 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance."
+      },
+      "reviewer": "integration owner carry-over (bodies unchanged; header/scope delta reviewed)"
+    }
+  ],
+  "pending": [
+    {
+      "va": "0x40a04c",
+      "symbol": "?ProcessChannel_read_thread@@YGKPAX@Z",
+      "reason": "Complete 86-byte body compiles instruction-identically to retail; the harness cannot resolve the compiler-generated SEH scope-table immediate (push 0x415CB8) to a binding, so referents=unresolved and raw score 90.7. Registered gate_enabled=false; not reviewed, not counted."
+    },
+    {
+      "va": "0x40a7d3",
+      "symbol": "?read_robust@ProcessChannel@@QAEXPAXK@Z",
+      "reason": "Complete 164-byte body compiles instruction-identically to retail; the same compiler-generated SEH scope-table immediate (push 0x415CF8) has no resolvable identity, so referents=unresolved and raw score 81.7. Registered gate_enabled=false; not reviewed, not counted."
+    }
+  ]
+}
