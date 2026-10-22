@@ -1,4 +1,6 @@
 #include "../../include/cl/mpcl.h"
+#include <wchar.h>
+#include "../../include/cl/util.h"
 
 // mpcl.obj attribution: PDB DBI section contribution contains the public start.
 // The original source filename, extension and line positions are unresolved.
@@ -221,3 +223,174 @@ void ProcessChannel::kill()
 // DATA: cl 0x41AAF0
 // PDB ?g_hMutex@@3PAXA; loader-zero-initialized .data virtual tail.
 HANDLE g_hMutex;
+
+// DATA: cl 0x41A2B4
+// PDB ?is_server_run@@3HA; loader-zero-initialized int in the .data tail.
+int is_server_run;
+
+// FUNCTION: cl 0x409FAE
+// SYMBOL: ?close_mutex@@YAXXZ
+// Complete 17-byte CFG: conditional CloseHandle of the canonical inherited
+// mutex handle, ret 0x409FBE.
+void __cdecl close_mutex()
+{
+    if (g_hMutex)
+        CloseHandle(g_hMutex);
+}
+
+// FUNCTION: cl 0x409FBF
+// SYMBOL: ?MP_is_server@@YAHXZ
+// Complete 76-byte CFG with the real GS cookie. A 10-character wide buffer is
+// filled by GetEnvironmentVariableW; only a successful read compares against
+// the marker and records the canonical is_server_run global.
+int __cdecl MP_is_server()
+{
+    wchar_t value[10];
+    int result = GetEnvironmentVariableW(L"MPCL_SERVER_373011", value, 10);
+    if (result) {
+        result = wcscmp(value, L"bananana") == 0;
+        is_server_run = result;
+    }
+    return result;
+}
+
+// FUNCTION: cl 0x40A04C
+// SYMBOL: ?ProcessChannel_read_thread@@YGKPAX@Z
+// Complete 86-byte stdcall body including the compiler's SEH prolog, the
+// __except filter at 0x40A075 and the handler at 0x40A087. The context is the
+// real four-field ProcessChannelReadContext described in the header.
+unsigned long __stdcall ProcessChannel_read_thread(void *parameter)
+{
+    ProcessChannelReadContext *context = static_cast<ProcessChannelReadContext *>(parameter);
+    __try {
+        context->channel->read(context->buffer, context->size);
+        context->success = 1;
+    } __except (GetExceptionCode() == 1) {
+        context->success = 0;
+    }
+    return 0;
+}
+
+// FUNCTION: cl 0x40A0D1
+// SYMBOL: ?write_string@ProcessChannel@@QAEXPBG@Z
+// Complete 55-byte CFG: wcslen on the wide value, then the size word and the
+// string including its terminator through the virtual write slot.
+void ProcessChannel::write_string(const unsigned short *value)
+{
+    unsigned long size = wcslen(value) * sizeof *value;
+    write(&size, sizeof size);
+    write(value, size + sizeof *value);
+}
+
+// FUNCTION: cl 0x40A25A
+// SYMBOL: ??3@YAXPAX@Z
+// Complete five-byte body: one tail transfer to the canonical util deallocator.
+void __cdecl operator delete(void *allocation)
+{
+    xfree(allocation);
+}
+
+// FUNCTION: cl 0x40A346
+// SYMBOL: ?decode_handle@@YAPAXPBG@Z
+// Complete 30-byte CFG: swscanf_s fills one pointer-width local from the wide
+// text; no other referent.
+HANDLE __cdecl decode_handle(const unsigned short *value)
+{
+    HANDLE result;
+    swscanf_s(value, L"%p", &result);
+    return result;
+}
+
+// FUNCTION: cl 0x40A496
+// SYMBOL: ?get_mutex@@YAXXZ
+// Complete 103-byte CFG with the real GS cookie. The inherited handle arrives
+// as a wide environment string; a missing or unparsable value clears the
+// canonical global through the real NT_err path.
+void __cdecl get_mutex()
+{
+    if (!g_hMutex) {
+        wchar_t value[20];
+        NT_err(GetEnvironmentVariableW(L"MPCL_MUTEX_HANDLE", value, 20) != 0);
+        if (swscanf_s(value, L"%p", &g_hMutex) != 1)
+            g_hMutex = 0;
+    }
+}
+
+// FUNCTION: cl 0x40A684
+// SYMBOL: ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z
+// Complete 118-byte CFG: retry ERROR_PIPE_BUSY at most five attempts with a
+// 250 ms Sleep between attempts; any other failure raises exception code 1.
+void __cdecl CreatePipe_robust(HANDLE *read_handle, HANDLE *write_handle,
+                               SECURITY_ATTRIBUTES *attributes, unsigned long size)
+{
+    int attempts = 1;
+    while (!CreatePipe(read_handle, write_handle, attributes, size)) {
+        if (GetLastError() != ERROR_PIPE_BUSY) {
+            RaiseException(1, 0, 0, 0);
+        } else {
+            if (++attempts > 5) {
+                RaiseException(1, 0, 0, 0);
+                break;
+            }
+            Sleep(250);
+        }
+    }
+}
+
+// FUNCTION: cl 0x40A6FA
+// SYMBOL: ?MP_get_mutex@@YAXXZ
+// Complete five-byte body: one tail transfer to the real loader above.
+void __cdecl MP_get_mutex()
+{
+    get_mutex();
+}
+
+// FUNCTION: cl 0x40A7D3
+// SYMBOL: ?read_robust@ProcessChannel@@QAEXPAXK@Z
+// Complete 164-byte body including the __finally funclet at 0x40A867. The
+// reader runs on a created thread while the process handle is the second wait
+// target; only the thread handle is owned and closed here.
+void ProcessChannel::read_robust(void *buffer, unsigned long size)
+{
+    HANDLE handles[2] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE };
+    __try {
+        ProcessChannelReadContext context = { this, buffer, size, 0 };
+        DWORD thread_id;
+        handles[0] = CreateThread(0, 0, ProcessChannel_read_thread, &context, 0, &thread_id);
+        NT_err(handles[0] != 0);
+        handles[1] = process_handle;
+        switch (WaitForMultipleObjects(2, handles, FALSE, INFINITE)) {
+        case WAIT_OBJECT_0:
+            if (context.success)
+                break;
+        case WAIT_OBJECT_0 + 1:
+            RaiseException(1, 0, 0, 0);
+            break;
+        default:
+            RaiseException(1, 0, 0, 0);
+        }
+    } __finally {
+        if (handles[0] != INVALID_HANDLE_VALUE)
+            CloseHandle(handles[0]);
+    }
+}
+
+// FUNCTION: cl 0x40A877
+// SYMBOL: ?read_int_robust@ProcessChannel@@QAEHXZ
+// Complete 20-byte CFG: robust read of one int into a local, ret 0x40A88A.
+int ProcessChannel::read_int_robust()
+{
+    int result;
+    read_robust(&result, sizeof result);
+    return result;
+}
+
+// FUNCTION: cl 0x40A88B
+// SYMBOL: ?expect_int_robust@ProcessChannel@@QAEXH@Z
+// Complete 27-byte CFG: compare through the robust reader, ret 4; a mismatch
+// raises exception code 1.
+void ProcessChannel::expect_int_robust(int expected)
+{
+    if (expected != read_int_robust())
+        RaiseException(1, 0, 0, 0);
+}

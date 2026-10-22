@@ -15,9 +15,10 @@
     },
     "matching/cl/mpcl.cpp": {
       "compile_flags": [
-        "/O1"
+        "/O1",
+        "/Zc:wchar_t-"
       ],
-      "evidence": "Actual SP1 /GL + /LTCG env_size compile emits all 45 retail bytes with /O1; /O2 differs at offset 13. The empty thread_print body is also exact but does not distinguish optimization flags."
+      "evidence": "Actual SP1 /GL + /LTCG env_size compile emits all 45 retail bytes with /O1; /O2 differs at offset 13. The empty thread_print body is also exact but does not distinguish optimization flags. /Zc:wchar_t- is required by the unit's public wide-string ABI evidence: every PDB parameter spelling is PBG/PAG (unsigned short) rather than PB_W/PB_W, and the real wide CRT calls (wcslen, swscanf_s) take the same const unsigned short pointers."
     },
     "matching/cl/util_watson.cpp": {
       "compile_flags": [

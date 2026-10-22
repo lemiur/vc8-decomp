@@ -80,6 +80,10 @@ public:
     unsigned int read_size_t();
     void expect_int(int);
     void kill();
+    void read_robust(void *, unsigned long);
+    int read_int_robust();
+    void expect_int_robust(int);
+    void write_string(const unsigned short *);
 
 protected:
     HANDLE process_handle;
@@ -96,7 +100,35 @@ private:
     HANDLE read_handle;
 };
 
+// Context type/field names are reconstructed, not PDB identities; all 16 bytes
+// are proven by the read_thread body's four stores and CreateThread's argument.
+struct ProcessChannelReadContext {
+    ProcessChannel *channel;
+    void *buffer;
+    unsigned long size;
+    int success;
+};
+
+// Public callback identity; actual CreateThread use proves this ABI.
+unsigned long __stdcall ProcessChannel_read_thread(void *);
+
 // Public global in mpcl.obj; used by the diagnostic serialization family.
 extern HANDLE g_hMutex;
+
+// Public PDB data ?is_server_run@@3HA; loader-zero-initialized int written by
+// MP_is_server and read by the server-only paths.
+extern int is_server_run;
+
+// Public PDB identities in mpcl.obj. get_mutex is the real inherited-mutex
+// loader; MP_get_mutex is its five-byte public wrapper.
+void __cdecl close_mutex();
+void __cdecl get_mutex();
+void __cdecl MP_get_mutex();
+int __cdecl MP_is_server();
+
+// Callers pass a wide environment string; the body decodes it with swscanf_s.
+HANDLE __cdecl decode_handle(const unsigned short *);
+
+void __cdecl CreatePipe_robust(HANDLE *, HANDLE *, SECURITY_ATTRIBUTES *, unsigned long);
 
 #endif
