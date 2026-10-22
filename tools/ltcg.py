@@ -111,6 +111,7 @@ def scan_referents(image, va, size, symbols=(), bindings=None):
     def add(offset, width, kind, target):
         identity = 'self+0x%x' % (target - va) if va <= target < va + size else None
         aliases = names.get(target, [])
+        alias_meta = None
         if identity is None:
             imported = imports.get(target, set())
             if len(imported) == 1:
@@ -133,8 +134,30 @@ def scan_referents(image, va, size, symbols=(), bindings=None):
                     identity = literals[0]
                 elif not literals and len(aliases) == 1:
                     identity = aliases[0]
+                elif not literals and len(aliases) > 1:
+                    # A MAP entry with several public names (the CRT stack probe
+                    # exports __alloca_probe/__chkstk at one address) is admitted
+                    # only through an exact reviewed entry-alias binding. Never
+                    # guess from one alias and never accept a partial alias set.
+                    shared = set(aliases)
+                    matched = [key for key, binding in (bindings or {}).items()
+                               if binding.get('kind') == 'entry-alias' and
+                               set(binding.get('aliases') or []) == shared]
+                    if len(matched) > 1:
+                        raise ValueError('ambiguous entry-alias binding at %#x' % target)
+                    if matched:
+                        binding = bindings[matched[0]]
+                        canonical = 'entry-alias:' + '|'.join(binding['aliases'])
+                        if matched[0] != canonical:
+                            raise ValueError('entry-alias binding key is not its canonical identity')
+                        identity = canonical
+                        alias_meta = {'aliases': list(binding['aliases']),
+                                      'size': binding.get('size'),
+                                      'bytes_sha256': binding.get('bytes_sha256')}
         record = {'offset': offset, 'width': width, 'kind': kind,
                   'target': target, 'identity': identity, 'resolved': identity is not None}
+        if alias_meta is not None:
+            record.update(alias_meta)
         old = refs.get(offset)
         if old is not None and old != record:
             raise ValueError('conflicting reference encodings at offset %#x' % offset)
