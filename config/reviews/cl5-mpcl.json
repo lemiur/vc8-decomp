@@ -4,16 +4,58 @@
   "lane": "mpcl",
   "reviewer": "mpcl lane worker",
   "review_date": "2026-10-22",
-  "authority_limit": "Source-rule review for this lane only; the fresh complete gate alone banks compiled functions and bytes. Integration owner re-computes scope hashes and imports these checks.",
+  "authority_limit": "Source-rule review for this lane only; the fresh complete gate alone banks compiled functions and bytes. The review binds the whole matching/cl/mpcl.cpp unit hash, so every enabled candidate of the unit is recorded here: the 15 already-banked functions (body text unchanged; delta is the new includes/declarations in mpcl.h) and the 16 newly reconstructed functions.",
   "unit": "matching/cl/mpcl.cpp",
-  "unit_flags": ["/O1", "/Zc:wchar_t-"],
+  "unit_flags": [
+    "/O1",
+    "/Zc:wchar_t-"
+  ],
   "functions": [
+    {
+      "va": "0x409ed0",
+      "symbol": "??0action_t@@QAE@HPAUworklist_s@@H@Z",
+      "size": 45,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 403,
+        "end": 413
+      },
+      "checks": {
+        "R1": "One canonical action_t(int, worklist_s *, int) constructor declaration already reviewed in the header; PDB public ??0action_t@@QAE@HPAUworklist_s@@H@Z, this in ECX and RET 0xC prove the ABI. worklist_s is the real PDB tag whose proven +0x04 source pointer is the only field read.",
+        "R2": "Reads the one canonical worklist->source member (offset 0x04, evidenced by the worklist walkers and the source_s field consumers); no invented data object, interior address or duplicate global.",
+        "R4": "Uses the recovered action_t layout: kind 0x00, worklist 0x04, source 0x08, pass 0x0C, parameter_10 0x10; no offset casts and no fake padding.",
+        "R13": "Plain constructor with no virtual call; class vtables are not involved.",
+        "R17": "Decoded 45-byte body at 0x409ED0..0x409EFC writes those five fields once: pass zeroed, kind/worklist/parameter stored from the arguments, then the non-null worklist path loads worklist->source at +0x04 and the else path zeroes source with AND [eax+8],0. The real if/else statement order reproduces that shape.",
+        "R18": "Ordinary VC8 C++; no assembly, byte arrays, padding or generated retail bytes."
+      }
+    },
+    {
+      "va": "0x409efd",
+      "symbol": "??1action_t@@QAE@XZ",
+      "size": 25,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 418,
+        "end": 422
+      },
+      "checks": {
+        "R1": "One canonical ~action_t() declaration already reviewed; PDB public ??1action_t@@QAE@XZ with this in ECX and plain RET proves the destructor ABI.",
+        "R2": "Uses the canonical worklist->source member and the real util.obj xfree body linked through the registered util dependency; no stub or invented data.",
+        "R4": "Only the recovered action_t fields at +0x04 (worklist) and +0x08 (source) are accessed; no offset cast.",
+        "R13": "Destructor has no virtual call; no dummy virtual.",
+        "R17": "Decoded 25-byte body at 0x409EFD..0x409F15: load worklist, test, skip xfree only when non-null and worklist->source equals this->source, otherwise push source and call xfree. The source is exactly that single conditional free, with the ownership test matching the constructor's aliasing rule.",
+        "R18": "Ordinary VC8 C++; no assembly, byte arrays or padding."
+      }
+    },
     {
       "va": "0x409fae",
       "symbol": "?close_mutex@@YAXXZ",
       "size": 17,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 235, "end": 239},
+      "source_span": {
+        "start": 236,
+        "end": 240
+      },
       "checks": {
         "R1": "One canonical declaration void __cdecl close_mutex() in include/cl/mpcl.h; PDB public ?close_mutex@@YAXXZ at 0x409FAE and the plain RET prove the no-argument cdecl ABI. No local prototype.",
         "R2": "Uses the one canonical HANDLE g_hMutex global (PDB ?g_hMutex@@3PAXA, declared extern in the header, defined once in mpcl.cpp at its DATA annotation) and the genuine windows.h CloseHandle import; no invented data or interior address.",
@@ -28,7 +70,10 @@
       "symbol": "?MP_is_server@@YAHXZ",
       "size": 76,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 246, "end": 255},
+      "source_span": {
+        "start": 247,
+        "end": 256
+      },
       "checks": {
         "R1": "One canonical int __cdecl MP_is_server() declaration in the header; PDB public ?MP_is_server@@YAHXZ and the EAX result with plain RET prove the ABI. wchar_t is unsigned short in this unit: every PDB wide parameter is PBG, which is why the measured unit flag /Zc:wchar_t- is required and recorded in config/cl.json.",
         "R2": "The wide environment name and marker are real source literals L\"MPCL_SERVER_373011\" and L\"bananana\"; GetEnvironmentVariableW/wcscmp are genuine SDK/CRT imports; is_server_run is the actual PDB data ?is_server_run@@3HA, declared extern once in the header and defined once at its DATA annotation, with no aliasing.",
@@ -39,11 +84,50 @@
       }
     },
     {
+      "va": "0x40a0a2",
+      "symbol": "?read_int@ProcessChannel@@QAEHXZ",
+      "size": 20,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 161,
+        "end": 166
+      },
+      "checks": {
+        "R1": "R1 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?read_int@ProcessChannel@@QAEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a0b6",
+      "symbol": "?expect_int@ProcessChannel@@QAEXH@Z",
+      "size": 27,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 207,
+        "end": 211
+      },
+      "checks": {
+        "R1": "R1 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?expect_int@ProcessChannel@@QAEXH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
       "va": "0x40a0d1",
       "symbol": "?write_string@ProcessChannel@@QAEXPBG@Z",
       "size": 55,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 278, "end": 283},
+      "source_span": {
+        "start": 279,
+        "end": 284
+      },
       "checks": {
         "R1": "One canonical member declaration void write_string(const unsigned short *) added to the already reviewed ProcessChannel class; PDB ?write_string@ProcessChannel@@QAEXPBG@Z, the ECX this pointer and RET 4 prove the thiscall/PBG ABI. wcslen comes from the installed wchar.h under the measured /Zc:wchar_t- mode.",
         "R2": "References the genuine MSVCR80 wcslen import and the class's own proven virtual write slot; no invented helper, data object or duplicate global.",
@@ -54,11 +138,32 @@
       }
     },
     {
+      "va": "0x40a243",
+      "symbol": "?close@PipeProcessChannel@@UAEXXZ",
+      "size": 23,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 170,
+        "end": 174
+      },
+      "checks": {
+        "R1": "R1 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?close@PipeProcessChannel@@UAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
       "va": "0x40a25a",
       "symbol": "??3@YAXPAX@Z",
       "size": 5,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 288, "end": 291},
+      "source_span": {
+        "start": 289,
+        "end": 292
+      },
       "checks": {
         "R1": "One canonical global void operator delete(void *) definition; the PDB public ??3@YAXPAX@Z and the decoded one-argument cdecl tail transfer prove the ABI. xfree is declared once in include/cl/util.h.",
         "R2": "The body calls the real util.obj deallocator ?xfree@@YAXPAX@Z, whose genuine source body is the registered util.cpp candidate; the candidate declares matching/cl/util.cpp (with its own dos/clmain/Watson dependencies) as a real dependency, so no stub is linked.",
@@ -69,11 +174,68 @@
       }
     },
     {
+      "va": "0x40a25f",
+      "symbol": "?thread_print@@YAXPBGZZ",
+      "size": 1,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 13,
+        "end": 15
+      },
+      "checks": {
+        "R1": "R1 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?thread_print@@YAXPBGZZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a2c4",
+      "symbol": "?NT_err@@YAHH@Z",
+      "size": 24,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 178,
+        "end": 183
+      },
+      "checks": {
+        "R1": "R1 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?NT_err@@YAHH@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a2dc",
+      "symbol": "?env_size@@YAIPBG@Z",
+      "size": 45,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 22,
+        "end": 32
+      },
+      "checks": {
+        "R1": "R1 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?env_size@@YAIPBG@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
       "va": "0x40a346",
       "symbol": "?decode_handle@@YAPAXPBG@Z",
       "size": 30,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 297, "end": 302},
+      "source_span": {
+        "start": 298,
+        "end": 303
+      },
       "checks": {
         "R1": "One canonical HANDLE __cdecl decode_handle(const unsigned short *) declaration in the header; PDB ?decode_handle@@YAPAXPBG@Z, the plain RET and EAX result prove the ABI, and swscanf_s comes from the installed wchar.h under /Zc:wchar_t-.",
         "R2": "Uses the genuine MSVCR80 swscanf_s import and the real source literal L\"%p\"; no invented CRT prototype or data alias.",
@@ -84,11 +246,104 @@
       }
     },
     {
+      "va": "0x40a364",
+      "symbol": "??0?$Queue@Uaction_t@@@@QAE@H@Z",
+      "size": 61,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 429,
+        "end": 437
+      },
+      "checks": {
+        "R1": "One canonical Queue(int) constructor declaration already reviewed; PDB public ??0?$Queue@Uaction_t@@@@QAE@H@Z with this in ECX and RET 4 proves the ABI.",
+        "R2": "Writes the recovered Queue members and the canonical global layout; the sentinel is the real action_t member, and InitializeCriticalSection is the genuine kernel32 import.",
+        "R4": "Uses the reviewed 60-byte Queue layout: synchronized 0x00, CRITICAL_SECTION lock 0x04, sentinel action_t 0x1C, tail 0x34, count 0x38; no offset casts.",
+        "R13": "No virtual call; the inlined sentinel zero stores are ordinary member initialization, not a vtable artifact.",
+        "R17": "Decoded 61-byte body at 0x40A364..0x40A3A0: store synchronized, five ascending zero stores over sentinel fields 0x00..0x10 (the reconstructed in-class action_t default constructor, inlined and leaving no out-of-line symbol), conditional InitializeCriticalSection, tail=&sentinel, sentinel.next=&sentinel, count=0, RET 4. Exactly the recovered member initializer and body order.",
+        "R18": "Ordinary VC8 C++ with the real kernel32 declaration; no assembly, byte arrays or padding."
+      }
+    },
+    {
+      "va": "0x40a3a1",
+      "symbol": "?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "size": 38,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 37,
+        "end": 50
+      },
+      "checks": {
+        "R1": "R1 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?try_head_nosync@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a3c7",
+      "symbol": "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ",
+      "size": 84,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 132,
+        "end": 149
+      },
+      "checks": {
+        "R1": "R1 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a458",
+      "symbol": "?size@?$Queue@Uaction_t@@@@QBEHXZ",
+      "size": 29,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 90,
+        "end": 97
+      },
+      "checks": {
+        "R1": "R1 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?size@?$Queue@Uaction_t@@@@QBEHXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a475",
+      "symbol": "?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 33,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 75,
+        "end": 83
+      },
+      "checks": {
+        "R1": "R1 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?add_head_nosync@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
       "va": "0x40a496",
       "symbol": "?get_mutex@@YAXXZ",
       "size": 103,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 309, "end": 317},
+      "source_span": {
+        "start": 310,
+        "end": 318
+      },
       "checks": {
         "R1": "One canonical void __cdecl get_mutex() declaration in the header; PDB ?get_mutex@@YAXXZ and the plain RET prove the ABI. The real GetEnvironmentVariableW/swscanf_s declarations come from windows.h/wchar.h under /Zc:wchar_t-.",
         "R2": "The single canonical HANDLE g_hMutex global (PDB ?g_hMutex@@3PAXA) is read, passed to the real NT_err body already reviewed in this unit, and written from swscanf_s; no invented storage or alias. The environment name and L\"%p\" are genuine source literals.",
@@ -99,11 +354,32 @@
       }
     },
     {
+      "va": "0x40a67a",
+      "symbol": "?get_action_nonbatching@@YAPAUaction_t@@XZ",
+      "size": 10,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 508,
+        "end": 511
+      },
+      "checks": {
+        "R1": "One canonical get_action_nonbatching() declaration added to the header; PDB public ?get_action_nonbatching@@YAPAUaction_t@@XZ, no arguments, action_t* in EAX and the tail transfer prove the cdecl ABI.",
+        "R2": "Addresses the one canonical work_queue global (PDB ?work_queue@@3V?$Queue@Uaction_t@@@@A at 0x41AB30) and calls its already-reviewed head body; no invented data.",
+        "R4": "No structure or offset model; the body only forms the global Queue address.",
+        "R13": "The called head body uses the reviewed intrusive list; no virtual call.",
+        "R17": "Decoded 10-byte body at 0x40A67A..0x40A683: mov ecx,&work_queue then one E9 tail transfer to Queue::head at 0x40A3C7, exactly return work_queue.head(); with no local.",
+        "R18": "Ordinary VC8 C++; no assembly, byte arrays or padding."
+      }
+    },
+    {
       "va": "0x40a684",
       "symbol": "?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z",
       "size": 118,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 323, "end": 338},
+      "source_span": {
+        "start": 324,
+        "end": 339
+      },
       "checks": {
         "R1": "One canonical void __cdecl CreatePipe_robust(HANDLE *, HANDLE *, SECURITY_ATTRIBUTES *, unsigned long) in the header; PDB ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z and the four retail argument pushes in reverse order prove the cdecl ABI and parameter types, including the genuine SDK SECURITY_ATTRIBUTES.",
         "R2": "Uses only the genuine kernel32 imports CreatePipe, GetLastError, Sleep and RaiseException; no invented helper, data object or interior address.",
@@ -118,7 +394,10 @@
       "symbol": "?MP_get_mutex@@YAXXZ",
       "size": 5,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 343, "end": 346},
+      "source_span": {
+        "start": 344,
+        "end": 347
+      },
       "checks": {
         "R1": "One canonical void __cdecl MP_get_mutex() declaration; PDB ?MP_get_mutex@@YAXXZ and the plain RET prove the ABI.",
         "R2": "Calls the real ?get_mutex@@YAXXZ body recovered in this unit; no stub, invented data or duplicate global.",
@@ -133,7 +412,10 @@
       "symbol": "?read_int_robust@ProcessChannel@@QAEHXZ",
       "size": 20,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 381, "end": 386},
+      "source_span": {
+        "start": 382,
+        "end": 387
+      },
       "checks": {
         "R1": "One canonical member declaration int read_int_robust() added to the reviewed ProcessChannel class; PDB ?read_int_robust@ProcessChannel@@QAEHXZ the ECX this pointer and plain RET prove the thiscall ABI.",
         "R2": "Calls the real read_robust member recovered in this unit with the address of its own int local; no invented helper or data object.",
@@ -148,7 +430,10 @@
       "symbol": "?expect_int_robust@ProcessChannel@@QAEXH@Z",
       "size": 27,
       "source_path": "matching/cl/mpcl.cpp",
-      "source_span": {"start": 392, "end": 396},
+      "source_span": {
+        "start": 393,
+        "end": 397
+      },
       "checks": {
         "R1": "One canonical member declaration void expect_int_robust(int) added to the reviewed ProcessChannel class; PDB ?expect_int_robust@ProcessChannel@@QAEXH@Z, the ECX this pointer and RET 4 prove the thiscall ABI.",
         "R2": "Calls the real read_int_robust member recovered above and the genuine kernel32 RaiseException import; no invented helper or data.",
@@ -157,18 +442,154 @@
         "R17": "Decoded 27-byte body at 0x40A88B..0x40A8A5: call read_int_robust, cmp [ESP+4],EAX, je end, then push 0,0,0,1 and call RaiseException, ret 4; exactly if (expected != read_int_robust()) RaiseException(1,0,0,0); with the compiler's argument pushes.",
         "R18": "Ordinary VC8 C++ with real headers; no assembly, byte arrays or padding."
       }
+    },
+    {
+      "va": "0x40a8a6",
+      "symbol": "?kill@ProcessChannel@@QAEXXZ",
+      "size": 61,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 215,
+        "end": 222
+      },
+      "checks": {
+        "R1": "R1 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?kill@ProcessChannel@@QAEXXZ in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a8e3",
+      "symbol": "?write@PipeProcessChannel@@UAEXPBXK@Z",
+      "size": 35,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 187,
+        "end": 191
+      },
+      "checks": {
+        "R1": "R1 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?write@PipeProcessChannel@@UAEXPBXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a906",
+      "symbol": "?read@PipeProcessChannel@@UAEXPAXK@Z",
+      "size": 56,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 195,
+        "end": 203
+      },
+      "checks": {
+        "R1": "R1 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?read@PipeProcessChannel@@UAEXPAXK@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40a994",
+      "symbol": "??1?$Queue@Uaction_t@@@@QAE@XZ",
+      "size": 65,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 443,
+        "end": 454
+      },
+      "checks": {
+        "R1": "One canonical ~Queue() declaration already reviewed; PDB public ??1?$Queue@Uaction_t@@@@QAE@XZ and the final tail transfer prove the destructor ABI.",
+        "R2": "Walks the real intrusive ring and calls the canonical ~action_t and util.obj xfree bodies; DeleteCriticalSection is the genuine kernel32 import; no invented helper.",
+        "R4": "Uses the reviewed Queue layout (sentinel 0x1C, tail 0x34, count 0x38) and the reviewed action_t next link at 0x14; no offset casts.",
+        "R13": "No virtual call; class vtable identities are untouched.",
+        "R17": "Decoded 65-byte body at 0x40A994..0x40A9D4: start at sentinel.next (0x30), loop while the node is not the sentinel (0x1C), save node->next, call ~action_t then xfree, advance, then conditional DeleteCriticalSection at lock 0x04, and finish with the compiler's tail transfer to ~action_t on the sentinel member. Exactly the recovered while loop plus member destruction.",
+        "R18": "Ordinary VC8 C++; no assembly, byte arrays or padding."
+      }
+    },
+    {
+      "va": "0x40a9d5",
+      "symbol": "?clean@?$Queue@Uaction_t@@@@QAEXXZ",
+      "size": 84,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 460,
+        "end": 476
+      },
+      "checks": {
+        "R1": "One canonical clean() declaration already reviewed; PDB public ?clean@?$Queue@Uaction_t@@@@QAEXXZ and the plain RET prove the member ABI.",
+        "R2": "Uses the canonical sentinel links, xfree and the real Enter/LeaveCriticalSection imports; the count/tail fields are the recovered Queue members.",
+        "R4": "Uses the reviewed Queue layout and action_t next link only; no offset casts.",
+        "R13": "No virtual call in this body.",
+        "R17": "Decoded 84-byte body at 0x40A9D5..0x40AA28: conditional EnterCriticalSection, the same destruct/free walk as the queue destructor, then count=0, tail=&sentinel, sentinel.next=&sentinel and conditional LeaveCriticalSection. The decoded order and all branches match the sourced statements.",
+        "R18": "Ordinary VC8 C++; no assembly, byte arrays or padding."
+      }
+    },
+    {
+      "va": "0x40aa29",
+      "symbol": "?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 53,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 103,
+        "end": 113
+      },
+      "checks": {
+        "R1": "R1 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?add_tail@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
+    },
+    {
+      "va": "0x40aa5e",
+      "symbol": "?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z",
+      "size": 41,
+      "source_path": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 119,
+        "end": 126
+      },
+      "checks": {
+        "R1": "R1 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R2": "R2 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R4": "R4 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R13": "R13 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R17": "R17 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags.",
+        "R18": "R18 review for ?add_head@?$Queue@Uaction_t@@@@QAEHPAUaction_t@@@Z in the frozen complete current source/header scope; per-function ABI/CFG, canonical layout/ownership and actual SDK/CRT provenance. Body text unchanged from the prior batch; the reviewed delta is the new includes/declarations in mpcl.h (plus the Queue data-member access label and the added canonical mpcl globals), verified by diff against the banked revision. The body bytes are unchanged and still score 100 with resolved referents under the current unit flags."
+      }
     }
   ],
   "pending": [
     {
+      "va": "0x40a41b",
+      "symbol": "?append_nosync@?$Queue@Uaction_t@@@@QAEHAAV1@@Z",
+      "reason": "Pre-existing disabled draft; register/lifetime residue unchanged, not reviewed or counted."
+    },
+    {
       "va": "0x40a04c",
       "symbol": "?ProcessChannel_read_thread@@YGKPAX@Z",
-      "reason": "Complete 86-byte body compiles instruction-identically to retail; the harness cannot resolve the compiler-generated SEH scope-table immediate (push 0x415CB8) to a binding, so referents=unresolved and raw score 90.7. Registered gate_enabled=false; not reviewed, not counted."
+      "reason": "Complete 86-byte body compiles instruction-identically to retail; the harness cannot resolve the compiler-generated SEH scope-table immediate (push 0x415CB8) to a binding, so referents stay unresolved and the raw score is 90.7. Registered gate_enabled=false; not reviewed, not counted."
     },
     {
       "va": "0x40a7d3",
       "symbol": "?read_robust@ProcessChannel@@QAEXPAXK@Z",
-      "reason": "Complete 164-byte body compiles instruction-identically to retail; the same compiler-generated SEH scope-table immediate (push 0x415CF8) has no resolvable identity, so referents=unresolved and raw score 81.7. Registered gate_enabled=false; not reviewed, not counted."
+      "reason": "Complete 164-byte body compiles instruction-identically to retail; the same compiler-generated SEH scope-table immediate (push 0x415CF8) has no resolvable identity, so referents stay unresolved and the raw score is 81.7. Registered gate_enabled=false; not reviewed, not counted."
+    },
+    {
+      "va": "0x40a647",
+      "symbol": "?schedule_next_batch@@YAXXZ",
+      "reason": "Diagnosed register/schedule residue: retail increments next_batch in memory after the call while the candidate keeps it in ESI. Direct member, named reference, local index and pointer local were all compiled; volatile is excluded by the public identity. Registered gate_enabled=false; not reviewed, not counted."
     }
   ]
 }
