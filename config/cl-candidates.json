@@ -957,6 +957,24 @@
       "compiler_context": {
         "evidence": "Canonical HANDLE g_hMutex has actual PDB public identity and unique mpcl.obj owner, with loader-zero storage. Its real data root preserves observed external mutability across the partial standalone source context. Real mpcl/Watson bodies are dependencies, setter root preserves previously proven standard ABI; no dummy code or exported controls."
       }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ShutDownDLL@@YAXPAUpassinfo_s@@@Z",
+      "retail_va": "0x408ee3",
+      "size": 33,
+      "unit": "matching/cl/dos.cpp",
+      "source_span": {
+        "start": 44,
+        "end": 56
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 33 bytes 0x408ee3..0x408f03: push esi; load passinfo_s* argument; conditional HMODULE load at +0x10; FreeLibrary import call through IAT 0x40d134; three zero stores at +0x10/+0x14/+0x18; pop esi; ret. Every branch is local and the next public symbol starts at 0x408f04, independently bounding the body. The source owner compared every byte and the ordered FreeLibrary referent under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z, unique DBI contribution module 7 dos.obj, public_flags 2. PAUpassinfo_s argument with caller cleanup and a single stack argument prove the __cdecl ABI. The +0x10/+0x14/+0x18 member offsets are direct retail accesses; member names are reconstructed."
     }
   ],
   "referents": {
@@ -1072,6 +1090,13 @@
         "dll": "KERNEL32.dll",
         "name": "CloseHandle",
         "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface."
+      },
+      "kernel32.dll!FreeLibrary": {
+        "kind": "import",
+        "va": "0x40d134",
+        "dll": "KERNEL32.dll",
+        "name": "FreeLibrary",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot 0x40d134 and the actual candidate PE import must both bind this exact DLL and symbol; canonical era Windows SDK declaration FreeLibrary(HMODULE) supplies the source interface, and ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z calls it through this slot."
       },
       "literal:sha256:b226c2467b9f3254602539485ef6828e3505b8f80ca4c168b46935aa27dff0f0": {
         "kind": "literal",
