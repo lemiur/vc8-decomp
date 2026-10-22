@@ -276,6 +276,13 @@ int DllFlg;
 // Public ?NoAssembly@@3HA; clmain.obj int in the same zero-filled .data tail.
 int NoAssembly;
 
+// DATA: cl 0x00419164
+// Public ?Exefilename@@3PAGA; clmain.obj pointer in .data past the 0x2000
+// file-backed bytes, so the initial value is loader zero. The /Fe option-table
+// row (row 1, tag 3, target 0x419164) stores the output name through the
+// dispatcher, and compile.obj's replaca/dopass/post_compile push the pointer.
+wchar_t* Exefilename;
+
 // DATA: cl 0x00419e6c
 // Public ?DefaultsMarked@@3HA; loader-zeroed one-shot state word.
 int DefaultsMarked;

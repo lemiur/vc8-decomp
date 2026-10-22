@@ -2,13 +2,13 @@
   "schema_version": 1,
   "reviewer": "clmain lane worker /codex/lane-clmain",
   "review_date": "2026-10-22",
-  "scope_sha256": "b6eace7270c2e89cdd0723ddb30a08d517adb749e55698c3e5409e4c1a5acb43",
+  "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
   "covered_unit": "matching/cl/clmain.cpp",
-  "covered_unit_sha256": "6d6a85590f8045a7c1c782b44a0292b6f003f33d4cfb5d6e0f12eab050cb4b05",
+  "covered_unit_sha256": "6af0c4cde28def5c363e0e9439ca498687b1f949fcc6222fc4b23c3cdb368701",
   "approved_function_count": 14,
   "enabled_source_bytes_expected": 489,
   "authority_limit": "Source-rule approval only; the fresh complete gate alone banks compiled functions/bytes.",
-  "binding_note": "Rulecheck binds a review to the whole clmain.cpp unit hash, so this fragment re-attests every enabled candidate in that unit: the nine previously banked functions (body text unchanged) and the five functions recovered in this lane. The new declarations/definitions in clmain.h/clmain.cpp are the canonical driver model plus the public data objects, including the two loader-zero ints DllFlg and NoAssembly added last; function bodies are unchanged.",
+  "binding_note": "Rulecheck binds a review to the whole clmain.cpp unit hash, so this fragment re-attests every enabled candidate in that unit: the nine previously banked functions (body text unchanged) and the five functions recovered in this lane. The new declarations/definitions in clmain.h/clmain.cpp are the canonical driver model plus the public data objects, including the loader-zero globals DllFlg, NoAssembly and the loader-zero pointer Exefilename added last; function bodies are unchanged.",
   "layout_witnesses": [
     {
       "path": "E:/vc8-decomp/build/toolchain-layout/passinfo-sp1-v1/layout-witness.json",
@@ -44,8 +44,8 @@
       "size": 44,
       "source_path": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 311,
-        "end": 325
+        "start": 318,
+        "end": 332
       },
       "checks": {
         "R1": "Body text unchanged from the prior batch review in cl-fourth-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ??0CConsoleLock@@QAE@XZ in the frozen current source/header scope.",
@@ -242,8 +242,8 @@
       "size": 20,
       "source_path": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 297,
-        "end": 302
+        "start": 304,
+        "end": 309
       },
       "checks": {
         "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?release_filelife_heap@@YAXXZ in the frozen current source/header scope.",
@@ -260,8 +260,8 @@
       "size": 20,
       "source_path": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 304,
-        "end": 309
+        "start": 311,
+        "end": 316
       },
       "checks": {
         "R1": "Body text unchanged from the prior batch review in cl-third-batch.json; the reviewed delta is the new declarations/definitions in clmain.h and clmain.cpp. R1 review for ?release_ast_extra_heap@@YAXXZ in the frozen current source/header scope.",

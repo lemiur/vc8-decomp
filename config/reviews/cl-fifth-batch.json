@@ -9,7 +9,7 @@
   "fragments": [
     {
       "path": "config/reviews/cl5-clmain.json",
-      "sha256": "203ff53edd40b4903cc7e74a8076e9b33bc73f96540c148b34a6cde8757473b3"
+      "sha256": "6bb420a9dc07a67c7eb46ce74d0b831af64749c0ae8e2bf7b5d68cbc45d89701"
     },
     {
       "path": "config/reviews/cl5-compile.json",
@@ -57,8 +57,8 @@
       "size": 44,
       "source_path": "matching/cl/clmain.cpp",
       "source_span": {
-        "end": 325,
-        "start": 311
+        "end": 332,
+        "start": 318
       },
       "symbol": "??0CConsoleLock@@QAE@XZ",
       "va": "0x4014d5"
@@ -285,8 +285,8 @@
       "size": 20,
       "source_path": "matching/cl/clmain.cpp",
       "source_span": {
-        "end": 302,
-        "start": 297
+        "end": 309,
+        "start": 304
       },
       "symbol": "?release_filelife_heap@@YAXXZ",
       "va": "0x402c06"
@@ -304,8 +304,8 @@
       "size": 20,
       "source_path": "matching/cl/clmain.cpp",
       "source_span": {
-        "end": 309,
-        "start": 304
+        "end": 316,
+        "start": 311
       },
       "symbol": "?release_ast_extra_heap@@YAXXZ",
       "va": "0x402c1a"
@@ -1377,7 +1377,7 @@
   ],
   "reviewer": "independent audit lane /root/audit",
   "schema_version": 1,
-  "scope_sha256": "6b2fb07cbaecd160ad7b1a21d97d18d799481558e8f9ba5354ec3cfb100f24b4",
+  "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
   "unchanged_prior_rounds": [
     {
       "binary": "cl",
@@ -1444,7 +1444,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f08"
@@ -1514,7 +1514,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f69"
@@ -1584,7 +1584,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407f99"
@@ -1654,7 +1654,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407fba"
@@ -1724,7 +1724,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x407fe5"
@@ -1794,7 +1794,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408145"
@@ -1864,7 +1864,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408276"
@@ -1934,7 +1934,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x408290"
@@ -2004,7 +2004,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x4082b9"
@@ -2074,7 +2074,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util.cpp",
       "source_sha256": "bdd3c3d4dd89ca21041fb2f1c67f7d31b1843836b72aa4548174065d1890e359",
       "va": "0x4082dc"
@@ -2144,7 +2144,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409934"
@@ -2214,7 +2214,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x40993a"
@@ -2284,7 +2284,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409946"
@@ -2354,7 +2354,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409952"
@@ -2424,7 +2424,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x40995e"
@@ -2494,7 +2494,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409a58"
@@ -2564,7 +2564,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409aab"
@@ -2634,7 +2634,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/util_watson.cpp",
       "source_sha256": "93b8418a1cfbd5b663ca4e6c4a0abcc88b8b03d1966ac55bdf927740cf942be9",
       "va": "0x409acb"
@@ -2704,7 +2704,7 @@
         }
       },
       "reviewer": "independent audit lane /root/audit",
-      "scope_sha256": "36e5188bc9cb2a7b794412878dd166f091f88184e84b89634c1f93551053d616",
+      "scope_sha256": "7308a05c3b6ddb79898ce850552de8ad58454c89a7eb9aadcb040e520d5c1774",
       "source_path": "matching/cl/merr.c",
       "source_sha256": "d7f5ec422bf74e376fc57f486546df7190212c7e15537376dd56fbc4cd453d44",
       "va": "0x40c661"

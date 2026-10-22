@@ -109,6 +109,7 @@ extern unsigned long g_hCryptProv;
 extern wchar_t *EncEventName;
 extern int DllFlg;
 extern int NoAssembly;
+extern wchar_t *Exefilename;
 
 // Public class identity comes from its constructor. The byte flag is observed
 // at this+0; cmderr constructs the object at EBP-1, proving its one-byte extent.

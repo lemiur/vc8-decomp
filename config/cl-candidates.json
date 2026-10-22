@@ -148,8 +148,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 299,
-        "end": 302
+        "start": 306,
+        "end": 309
       },
       "boundary": {
         "status": "verified",
@@ -169,8 +169,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 306,
-        "end": 309
+        "start": 313,
+        "end": 316
       },
       "boundary": {
         "status": "verified",
@@ -939,8 +939,8 @@
       "size": 44,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 313,
-        "end": 325
+        "start": 320,
+        "end": 332
       },
       "boundary": {
         "status": "verified",
@@ -3366,6 +3366,10 @@
       "?NoAssembly@@3HA": {
         "va": "0x419648",
         "evidence": "Actual S_PUB32 public int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero. The assembly switch option path consumes it."
+      },
+      "?Exefilename@@3PAGA": {
+        "va": "0x419164",
+        "evidence": "Actual S_PUB32 public pointer owned by clmain.obj; storage sits in .data past the 0x2000 file-backed bytes, i.e. loader-zero with no file initializer. The /Fe option-table row (name \"Fe\", tag 3, target 0x419164) stores the output name through the dispatcher, and compile.obj replaca/dopass/post_compile push the pointer value."
       }
     }
   }
