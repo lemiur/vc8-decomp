@@ -965,8 +965,8 @@
       "size": 14,
       "unit": "matching/cl/compile.cpp",
       "source_span": {
-        "start": 8,
-        "end": 12
+        "start": 11,
+        "end": 14
       },
       "boundary": {
         "status": "verified",
@@ -985,8 +985,8 @@
       "size": 34,
       "unit": "matching/cl/compile.cpp",
       "source_span": {
-        "start": 20,
-        "end": 25
+        "start": 21,
+        "end": 26
       },
       "boundary": {
         "status": "verified",
@@ -1005,8 +1005,8 @@
       "size": 109,
       "unit": "matching/cl/compile.cpp",
       "source_span": {
-        "start": 29,
-        "end": 38
+        "start": 30,
+        "end": 39
       },
       "boundary": {
         "status": "verified",
@@ -1025,8 +1025,8 @@
       "size": 115,
       "unit": "matching/cl/compile.cpp",
       "source_span": {
-        "start": 42,
-        "end": 52
+        "start": 43,
+        "end": 53
       },
       "boundary": {
         "status": "verified",
@@ -1037,6 +1037,54 @@
         "?pathname@@YAPAGPAGIPBG@Z"
       ],
       "identity_evidence": "PDB S_PUB32 public start 0x406284 in DBI section contribution module 9 compile.obj; mangled ?pathname@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). Both direct callers (0x4067b4, 0x4069b2) pass three stack arguments and clean 12 bytes."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?module_extension@@YAPAGXZ",
+      "retail_va": "0x4061d2",
+      "size": 35,
+      "unit": "matching/cl/compile.pending.cpp",
+      "gate_enabled": false,
+      "pending": "Measured byte-exact (100.0, boundary=verified, referents=resolved) with a disposable lane-local probe, but not linkable in the unit: matching/cl/clmain.cpp does not yet define ?DllFlg@@3HA (0x41913c) or ?NoAssembly@@3HA (0x419648). Kept out of matching/cl/compile.cpp (and free of FUNCTION annotations) so the unit still builds. Enable only after the clmain owning unit defines both globals, and note that the two-byte empty-literal referent binding currently shadows zero-initialized dword globals in scan_referents.",
+      "source_span": {
+        "start": 29,
+        "end": 34
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 20946 (VA 0x4061d2) has size 35, exactly the next contribution start (20981/0x4061f5). Bounded direct retail decoding over exactly 35 bytes: cmp dword [0x41913c],0; je 0x4061e1; mov eax,L\".dll\"; ret; cmp dword [0x419648],0; mov eax,L\"netmodule\"; jne 0x4061f4; mov eax,L\"exe\"; ret. Two terminating branches, no other transfers; referents are two clmain.obj int flags and three wide literals."
+      },
+      "dependencies": [
+        "matching/cl/clmain.cpp"
+      ],
+      "roots": [
+        "?module_extension@@YAPAGXZ"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x4061d2 in DBI section contribution module 9 compile.obj; mangled ?module_extension@@YAPAGXZ proves a no-argument __cdecl function returning unsigned short*. Sole direct caller 0x406707 calls it with no stack arguments and cleans none."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?limit_batch_files@@YAXPAUcontext_s@@@Z",
+      "retail_va": "0x406082",
+      "size": 221,
+      "unit": "matching/cl/compile.pending.cpp",
+      "gate_enabled": false,
+      "pending": "Complete structural candidate but NOT byte-exact (measured 18.1 percent raw bytes): candidate frame 0x1c versus retail 0x18 because the separator pointer is spilled instead of held in ESI, the MaxBatchId/199 compare operands are swapped, and the conditional limit assignment is scheduled differently. Blocked on ?MaxBatchId@@3HA (0x417838), owned by clmain.obj and not yet defined in matching/cl/clmain.cpp; the wcschr and GetDiskFreeSpaceExW imports and the compiler-generated __aulldiv call are already resolved. Needs a structural/register pass once the foreign definition lands.",
+      "source_span": {
+        "start": 51,
+        "end": 87
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 20610 (VA 0x406082) has size 221; the next contribution starts at 20831 (0x40615f), so the exact body ends at the ret on 0x40615e. Bounded direct retail decoding over exactly 221 bytes: /GS-free frame (sub esp,0x18); MaxBatchId read at 0x406088 and clamped against 199; wide-path form tests (drive-absolute p[1]==':' && p[2]=='\\\\', UNC p[0..1]=='\\\\\\\\' then two wcschr calls); temporary NUL at the separator; GetDiskFreeSpaceExW with two 64-bit outputs; unsigned 64-bit compare and __aulldiv; store back to MaxBatchId at 0x406152. Every local branch target is inside the body."
+      },
+      "dependencies": [
+        "matching/cl/clmain.cpp"
+      ],
+      "roots": [
+        "?limit_batch_files@@YAXPAUcontext_s@@@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x406082 in DBI section contribution module 9 compile.obj; mangled ?limit_batch_files@@YAXPAUcontext_s@@@Z proves one context_s* argument and void result with __cdecl. Two callers (0x407dbd, 0x40b6bd) pass one stack argument and clean 4 bytes."
     }
   ],
   "referents": {
@@ -1460,6 +1508,63 @@
         "bytes_sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
         "source_literal": "L\"\"",
         "evidence": "Full bounded retail literal contents are the single two-byte UTF-16 NUL at 0x415a48 (DBI contribution size 2, module vssqm.obj). basename is called by filename/pathname with the same empty wide literal used for the absent path components; the bytes hash independently binds the candidate's pooled empty literal."
+      },
+      "?DllFlg@@3HA": {
+        "va": "0x41913c",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj (DBI contribution 0x4180e8 size 7584). module_extension (0x4061d2) performs the first 4-byte read at 0x4061d4 and selects L\".dll\"; the address lies in the loader-zero .data tail, so the retail initial value is zero. No other write is claimed here."
+      },
+      "?NoAssembly@@3HA": {
+        "va": "0x419648",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj (DBI contribution 0x4180e8 size 7584). module_extension (0x4061d2) performs the only 4-byte read at 0x4061e3 and selects L\"netmodule\" versus L\"exe\"; the address lies in the loader-zero .data tail, so the retail initial value is zero."
+      },
+      "literal:sha256:4c802cf01894262a37a793c16c1b76c54ca99868c9b2c7228e153a32d24fbe52": {
+        "kind": "literal",
+        "va": "0x4152d4",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "4c802cf01894262a37a793c16c1b76c54ca99868c9b2c7228e153a32d24fbe52",
+        "source_literal": "L\".dll\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; DBI contribution compile.obj .rdata; module_extension (0x4061d2) loads this exact address in its L\".dll\" arm, and the bytes hash independently binds the candidate literal."
+      },
+      "literal:sha256:d5b988e0271d0a83b35e173301ebe36e8bdf42ff62fddba0c5ad8ae676e8f0f4": {
+        "kind": "literal",
+        "va": "0x40d39c",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "d5b988e0271d0a83b35e173301ebe36e8bdf42ff62fddba0c5ad8ae676e8f0f4",
+        "source_literal": "L\"exe\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; DBI contribution clmain.obj .rdata; module_extension (0x4061d2) loads this exact address in its L\"exe\" arm, and the bytes hash independently binds the candidate literal."
+      },
+      "literal:sha256:3a15df958adccdad08247be73e208b540cf5e93e42a4924610c147b277f9317d": {
+        "kind": "literal",
+        "va": "0x40d3a4",
+        "encoding": "utf-16le",
+        "size": 20,
+        "bytes_sha256": "3a15df958adccdad08247be73e208b540cf5e93e42a4924610c147b277f9317d",
+        "source_literal": "L\"netmodule\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; DBI contribution clmain.obj .rdata; module_extension (0x4061d2) loads this exact address in its L\"netmodule\" arm, and the bytes hash independently binds the candidate literal."
+      },
+      "?MaxBatchId@@3HA": {
+        "va": "0x417838",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj (DBI contribution 0x417000 size 2972). limit_batch_files reads it at 0x406088 and writes the recomputed limit back at 0x406152; the file-backed initial dword is 19 (0x13). compile() reads it as the per-source pass budget at 0x407e1c, corroborating int storage and ownership."
+      },
+      "msvcr80.dll!wcschr": {
+        "kind": "import",
+        "va": "0x40d2e4",
+        "dll": "MSVCR80.dll",
+        "name": "wcschr",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot at 0x40d2e4 binds MSVCR80.dll!wcschr; the candidate PE must bind the same DLL/symbol. limit_batch_files calls it twice (0x4060d8, 0x4060e8) with the wide backslash selector on the wide path; installed-era <wchar.h> declares the canonical interface."
+      },
+      "kernel32.dll!GetDiskFreeSpaceExW": {
+        "kind": "import",
+        "va": "0x40d120",
+        "dll": "KERNEL32.dll",
+        "name": "GetDiskFreeSpaceExW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot at 0x40d120 binds kernel32.dll!GetDiskFreeSpaceExW; the candidate PE must bind the same DLL/symbol. The 0x406116 call passes the wide directory, two ULARGE_INTEGER outputs and a null fourth argument, matching the installed-era <windows.h> declaration."
+      },
+      "__aulldiv": {
+        "va": "0x40bd80",
+        "evidence": "Actual S_PUB32 compiler runtime helper in the linked CRT (sibling of the secchk.obj helpers); limit_batch_files calls it at 0x406144 for the unsigned 64-bit free-space division. The call is compiler-generated from the source's unsigned __int64 division, and the candidate links the same installed CRT library, so the candidate symbol resolves to the same helper identity."
       }
     }
   }

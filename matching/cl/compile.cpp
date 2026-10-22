@@ -4,6 +4,7 @@
 
 // Reconstruction unit for the PDB DBI section-contribution owner compile.obj
 // (module 9). Original source filename, extension and line layout unresolved.
+// Every function here is byte-exact against its DBI contribution extent.
 
 // FUNCTION: cl 0x4062f7
 // SYMBOL: ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z
