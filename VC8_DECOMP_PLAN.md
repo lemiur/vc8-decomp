@@ -218,11 +218,44 @@ individual decompilation failures and inferred function boundaries remain explic
 Phase 0 flag calibration is partial: measured per-unit profiles are provisional, and twenty discriminating
 leaf probes per binary have not yet been completed.
 
-Phase 1 is active. Reconstructed driver source is banked only after actual VC8 `/GL` compilation, `/LTCG`
-linking, source-rule review, independently resolved ordered references and a complete-image splice hash
-check. Run `python tools/gate.py --binary all --clean`, then `python tools/report.py` to regenerate the
-local `build/reports/progress.md` census. That report gives the current admitted functions and source
-bytes; public-symbol and Ghidra counts are evidence inventories, not proven function denominators.
+Phase 1 is active. As of the latest all-binary gate run, `cl.exe` banks **89 functions / 5,422 source
+bytes** (denominator 117,504 retail bytes; function denominator unknown); c2, c1, c1xx and link bank 0.
+The banked set is the mpcl channel/mutex/queue family (33), the clmain driver model (14), the util
+string/console/timing layer (11), loadui.obj (3), compile.obj (4), dos.obj (4), merr (1), and 19 plain
+CRT/ATL support functions (pesect, atonexit, secchk, gs_support, fp8, initsect, unhandld, ATL ACP and
+related objects) recovered from the installed era sources with their hashes.
+
+Measured emitter facts now pinned in `config/cl.json`, all per unit and A/B-tested against retail:
+
+- `/O1` for every compiler unit; `/O2`, `/Oy-` and `/GS-` change the observed bodies.
+- `/Zc:wchar_t-` wherever the retail PDB manglings use `PAG/PBG` (mpcl, util, clmain, compile, loadui,
+  dos); native `wchar_t` mangles `PA_W` and cannot reproduce them.
+- loadui.obj and the plain CRT/ATL objects are **not** `/GL`: they are `gl:false` units whose retail
+  prologues are the plain-c2 `lea ebp,[esp-frame]` form. A `/GL` + `/LTCG` build of the same loadui
+  source scores 5.7/7.0 instead of 100/100, so the "all compiler code went through `/GL`" assumption in
+  section 1 is wrong for module 6. The remaining compiler units are `/GL` + `/LTCG`.
+- Every unit links the whole-program dependency closure, because `/OPT:NOREF` keeps every compiled body.
+
+Review admission is scope-bound: `tools/rulecheck.py` hashes the whole source/header scope plus each unit
+file, so any edit re-scopes all prior reviews. `tools/review_batch.py` imports lane review fragments into a
+frozen batch, re-scopes unchanged prior reviews, and refuses admission for a changed or new enabled
+candidate that no lane reviewed. `tools/integrate_lanes.py` unions lane registries with conflict
+detection, unions review fragments, and repairs line-span drift after a merge. The gate also models
+shared-entry aliases (`entry-alias`) and typed members with compiler layout witnesses.
+
+Known harness boundaries, each with a registered disabled candidate and its evidence:
+
+- **Compiler-generated SEH scope tables** (`read_thread`, `read_robust`, `__onexit` partly,
+  `__ArrayUnwind`): no MAP symbol names the table, so no referent identity exists; a content-hash literal
+  binding would be a false claim.
+- **Interior member addresses as immediates** (`activate_pass`, `deactivate_passes*`): member identities
+  apply only to static memory operands, not to 4-byte address immediates feeding dynamic `[eax]` accesses,
+  and `&Passinfo[10].options` is one past the aggregate, needing an aggregate-end binding kind.
+- **Compiler-internal special names** (`??_M`, `??_E`, `??_G`): not expressible as source.
+- **LTCG constant-specialized clones** (vssqm.obj StringCch workers): need a whole-TU `/GL`
+  reconstruction with all callers, not a leaf unit.
+- **LTCG folding a statically initialized pointer** (`mark_defaults`): the reduced standalone link folds
+  `Context` to `&CX`; no tested source spelling retains the observed two loads.
 
 No binary has met its full-source-relink milestone. Phase 2 through Phase 5 reconstruction has not been
 launched; bounded leaf probes in those binaries remain Phase 0 calibration. The pilot must satisfy its
