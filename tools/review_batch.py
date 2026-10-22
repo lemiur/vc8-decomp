@@ -66,6 +66,7 @@ def merge_fragments(root: Path, paths: list[Path]) -> dict:
                 continue
             record = {"va": key[1], "symbol": item.get("symbol", ""), "source_path": item["source_path"],
                       "source_span": item.get("source_span", {}), "size": item.get("size"),
+                      "reviewer": item.get("reviewer") or ("matching lane " + str(data.get("lane", "unknown"))),
                       "checks": {rule: checks[rule] for rule in MATCH_RULES}}
             entries[("cl", int(key[1], 16))] = record
     if problems:
@@ -128,7 +129,7 @@ def write_policy(root: Path, fragments: list[Path]) -> dict:
     for item in build["records"]:
         entries.append({"binary": "cl", "va": item["va"], "source_path": item["source_path"],
                         "source_sha256": item["source_sha256"], "scope_sha256": build["scope"],
-                        "reviewer": REVIEWER,
+                        "reviewer": item.get("reviewer") or REVIEWER,
                         "checks": {rule: {"verdict": "pass", "evidence": [{
                             "path": BATCH, "sha256": batch_sha,
                             "description": "%s review for %s in the frozen current source/header scope." %
