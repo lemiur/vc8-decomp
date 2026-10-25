@@ -181,6 +181,72 @@ class SymbolTableTests(unittest.TestCase):
         self.assertEqual(ct.ImmedHashDecoder().exit(self.model, {"eax": 2594 & 63}, None), {"bucket": 34})
 
 
+class StackPackingTests(unittest.TestCase):
+    def setUp(self):
+        mem = self.mem = FakeMemory()
+        g = {"_Colort": 0x10D0FA9C, "_numOfColors": 0x900, "_numOfStackElements": 0x904,
+             "_numOfParameters": 0x908, "_symNumToSym": 0x90C, "_bvLiveOnDef": 0x910, "_EbpAdj": 0x914,
+             "_Alloc_local": 0x918}
+        mem.put(g["_numOfColors"], 2)
+        mem.put(g["_numOfStackElements"], 2)
+        mem.put(g["_numOfParameters"], 0)
+        mem.put(g["_symNumToSym"], 0xA00)
+        mem.put(0xA00, 0x3000, 0x3100)
+        mem.put(g["_bvLiveOnDef"], 0xA10)
+        mem.put(0xA10, 0xB00, 0)
+        mem.put(0xB00, 0xB10)
+        mem.put(0xB10, 0, 0b11, 0, 0)                 # element 0 live with 0 and 1
+        mem.put(g["_Alloc_local"], -48)
+        # element 0: front-end automatic (kind 4) _rot, offset at descriptor+0x18
+        mem.put(0x3000, 0x5000)
+        mem.put(0x3004, 4 | 0x2000)
+        mem.put(0x3008, 0x3000)
+        mem.put(0x301C, 7)
+        mem.put(0x3020, 16)
+        mem.put(0x302C, 3)                            # log2(4) + 1
+        mem.put(0x3038, 5)
+        mem.put(0x5004, 0x5100)
+        mem.raw[0x5100] = b"_rot" + bytes(1)
+        mem.put(0x5018, -16)
+        mem.put(0x5028, 1234)
+        # element 1: c2 temp (kind 3), offset at sym+0x28
+        mem.put(0x3104, 3)
+        mem.put(0x3108, 0x3100)
+        mem.put(0x311C, 9)
+        mem.put(0x3120, 36)
+        mem.put(0x312C, 3)
+        mem.put(0x3138, 14)
+        mem.put(0x3128, -52)
+        colort = 0x7000
+        mem.put(g["_Colort"], colort)
+        mem.put(colort, 0xC00, 0, 16, 5, 0, 4, 0)       # colour 0: element 0
+        mem.put(colort + 0x1C, 0xC20, 0, 36, 14, 0, 4, 0)
+        mem.put(0xC00, 0xC10)
+        mem.put(0xC10, 0, 1, 0, 0)
+        mem.put(0xC20, 0xC30)
+        mem.put(0xC30, 0, 2, 0, 0)
+        self.model = ct.C2Model(mem.u32, mem.bytes, g.get)
+
+    def test_color_stack_elements_exit(self):
+        out = ct.ColorStackElementsDecoder().exit(self.model, {}, {})
+        e0, e1 = out["elements"]
+        self.assertEqual((e0["name"], e0["fe"], e0["size"], e0["align"], e0["refs"], e0["offset"], e0["color"]),
+                         ("_rot", 1234, 16, 4, 5, -16, 0))
+        self.assertTrue(e0["allocated"])
+        self.assertEqual(e0["live_on_def"], [0, 1])
+        self.assertEqual((e1["kind"], e1["offset"], e1["color"]), (3, -52, 1))
+        self.assertEqual([c["density"] for c in out["colors"]], [312, 388])
+        self.assertEqual(out["alloc_local"], -48)
+
+    def test_qsort_outer_call_snapshots(self):
+        info, state = ct.QSortColorsDecoder().entry(self.model, {"ecx": 0, "edx": 1}, [0, 0])
+        self.assertTrue(info["outer"])
+        self.assertEqual([c["members"] for c in info["before"]], [[0], [1]])
+        info, state = ct.QSortColorsDecoder().entry(self.model, {"ecx": 1, "edx": 1}, [0, 0])
+        self.assertFalse(info["outer"])
+        self.assertEqual(ct.QSortColorsDecoder().exit(self.model, {}, state), {})
+
+
 class ModuleBreakTests(unittest.TestCase):
     def test_selects_function_publics_of_matching_modules_once(self):
         rows = [{"name": "@A@4", "va": 0x20, "module": "lower.obj", "function": True},

@@ -51,6 +51,8 @@ PRESETS = {
                "doc": "spill reloads, local register assignment, LEA->ADD (tuples at each phase)"},
     "emit": {"breaks": "CgBottomUpOrder,ReadFunction,EmitFunction",
              "doc": "call-graph reordering and the compile/emit loop (unfiltered: omit --function)"},
+    "stack": {"breaks": "AddStackElement,ColorStackElements,QSortColors",
+              "doc": "stack packing: elements, colours (shared slots), the colour sort and frame offsets"},
 }
 
 
@@ -542,6 +544,154 @@ class OrderGlobregsDecoder(Decoder):
         return {"order": order}
 
 
+class StackModel:
+    """Stack packing state (stack.obj), read at the return of ColorStackElements,
+    where every frame offset is final (StackPacking frees _Colort after it).
+
+    Elements are c2 symbols: CollectStackElements walks the tuples' leaves and
+    AddStackElement keeps them in a list (_symStackElements, next +0x30, prev
+    +0x34) ordered by size (+0x20) ascending, then by reference count (+0x38,
+    one per leaf AddStackElement saw) descending; a new symbol goes in front of
+    its size group with count 1, a counted-up one moves forward past the ones
+    with a strictly lower count. EnumerateStackElements numbers the list
+    (+0x3C, _symNumToSym[i]). _Colort[c] (stride 0x1C): +0 member set, +4
+    interference set, +8 size, +0xC weight (sum of the members' counts), +0x10
+    a parameter colour's offset, +0x14 alignment, +0x18 /GS buffer level byte.
+    Offsets: kind 4 (front-end automatic) at descriptor+0x18, else sym+0x28."""
+
+    COLOR_SIZE = 0x1C
+    VA_COLORT = 0x10D0FA9C          # pinned c2.dll: slide = sym('_Colort') - this
+    VA_DIR_OBJECT = 0x10D0A1B0      # ColorStackElements: dir = (Function+0x64 == this)
+
+    def __init__(self, model):
+        self.m = model
+
+    def g(self, name):
+        return self.m.u32(self.m.sym(name))
+
+    def element(self, index):
+        m = self.m
+        sym = m.u32(self.g("_symNumToSym") + 4 * index)
+        info = m.symbol(sym)
+        info["index"] = index
+        info["size"] = _signed(m.u32(sym + 0x20))
+        log = m.u32(sym + 0x2C) & 0xFF
+        info["align"] = 1 << (log - 1) if log else 0
+        info["refs"] = _signed(m.u32(sym + 0x38))
+        flags = m.u32(sym + 4)
+        info["cant_pack"] = bool(flags >> 16 & 4)
+        info["addr_taken"] = bool(flags >> 16 & 0x40)
+        info["allocated"] = bool(flags >> 8 & 0x20)
+        desc = m.u32(sym)
+        if info["kind"] == 4 and desc:
+            info["offset"] = _signed(m.u32(desc + 0x18))
+        else:
+            info["offset"] = _signed(m.u32(sym + 0x28))
+        info["live_on_def"] = read_sparse_bv(m.u32, m.u32(self.g("_bvLiveOnDef") + 4 * index))
+        return info
+
+    def colors(self, elements=None):
+        m = self.m
+        base = self.g("_Colort")
+        out = []
+        for c in range(min(self.g("_numOfColors"), 4096)):
+            rec = base + self.COLOR_SIZE * c
+            size, weight = _signed(m.u32(rec + 8)), _signed(m.u32(rec + 0xC))
+            info = {"color": c, "members": read_sparse_bv(m.u32, m.u32(rec)),
+                    "interferes": read_sparse_bv(m.u32, m.u32(rec + 4)),
+                    "size": size, "weight": weight, "align": _signed(m.u32(rec + 0x14)),
+                    "gs": m.u32(rec + 0x18) & 0xFF,
+                    "density": int(weight * 1000 / size) if size else None}
+            if c < self.g("_numOfParameters"):
+                info["param_offset"] = _signed(m.u32(rec + 0x10))
+            out.append(info)
+        return out
+
+
+class ColorStackElementsDecoder(Decoder):
+    """ColorStackElements([esp+4]=Function, [esp+8]=frame estimate in); ret 8.
+    Colours the elements (parameters first, then colorElemental: the newest
+    colour that fits, size <= 2*colour+8, no interference), sorts the colours
+    with QSortColors when the estimate exceeds 0x80 or the function has a /GS
+    buffer, then allocates them from the highest index down (allotemp: the frame
+    grows downward, so colour 0 ends nearest ESP) and applies _EbpAdj."""
+
+    def entry(self, model, regs, stack):
+        return {}, {"function_ptr": stack[1]}
+
+    def exit(self, model, regs, state):
+        sm = StackModel(model)
+        count = min(sm.g("_numOfStackElements"), 4096)
+        elements = [sm.element(i) for i in range(count)]
+        colors = sm.colors()
+        for info in colors:
+            for i in info["members"]:
+                if i < len(elements):
+                    elements[i]["color"] = info["color"]
+        out = {"elements": elements, "colors": colors,
+               "num_parameters": sm.g("_numOfParameters"), "ebp_adj": _signed(sm.g("_EbpAdj")),
+               "alloc_local": _signed(sm.g("_Alloc_local"))}
+        func = state.get("function_ptr") if state else None
+        if func:
+            slide = model.sym("_Colort") - StackModel.VA_COLORT
+            out["max_align"] = model.u32(func + 0x48)
+            out["dir"] = int(model.u32(func + 0x64) == StackModel.VA_DIR_OBJECT + slide)
+        return out
+
+
+class AddStackElementDecoder(Decoder):
+    """AddStackElement(EDX=c2 symbol); CollectStackElements calls it once per
+    reference it counts (+1 to sym+0x38, the colour weight), with EBX = the
+    tuple. The return address says which reference it is (pinned c2.dll):
+    a symbol leaf (leaf+0x18), the base of an address/memory leaf (leaf+0x24),
+    a member of the points-at set of a may-alias leaf (tuple kind 0x16, opcode
+    0x2CE: every address-taken local the pointer may reach), or /GL PGO."""
+
+    SITES = {0x10BE8FC4: "leaf", 0x10BE8FF7: "address", 0x10BE9075: "points-at",
+             0x10BE911E: "pogo", 0x10BE9125: "pogo", 0x10BE9167: "pogo"}
+
+    def entry(self, model, regs, stack):
+        slide = model.sym("_Colort") - StackModel.VA_COLORT
+        info = model.symbol(regs["edx"])
+        out = {k: info[k] for k in ("symnum", "name", "fe", "kind") if k in info}
+        out["site"] = self.SITES.get(stack[0] - slide, "0x%08X" % (stack[0] - slide))
+        tup = regs["ebx"]
+        out["tuple"] = "0x%08X" % tup
+        try:
+            out["tuple_text"] = model.tuple_text(tup)
+        except Exception:
+            out["opcode"] = model.u32(tup + 4)
+        return out
+
+    def exit(self, model, regs, state):
+        return {}
+
+
+class QSortColorsDecoder(Decoder):
+    """QSortColors(ECX=lo, EDX=hi, [esp+4]=dir); ret 4; recursive quicksort of
+    _Colort[lo..hi] by StkColorCmp: /GS level (+0x18) ascending, then weight *
+    1000 / size descending (dir=0; dir=1 reverses both). Not stable. The
+    outermost call (lo=_numOfParameters, hi=_numOfColors-1) logs the colours
+    before and after."""
+
+    @staticmethod
+    def snapshot(model):
+        return [{k: c[k] for k in ("members", "size", "weight", "gs", "density")}
+                for c in StackModel(model).colors()]
+
+    def entry(self, model, regs, stack):
+        sm = StackModel(model)
+        lo, hi = _signed(regs["ecx"]), _signed(regs["edx"])
+        outer = lo == sm.g("_numOfParameters") and hi == sm.g("_numOfColors") - 1
+        info = {"lo": lo, "hi": hi, "dir": stack[1], "outer": outer}
+        if outer:
+            info["before"] = self.snapshot(model)
+        return info, {"outer": outer}
+
+    def exit(self, model, regs, state):
+        return {"after": self.snapshot(model)} if state and state.get("outer") else {}
+
+
 class ReturnDecoder(Decoder):
     """Predicate: log the stack arguments and the boolean/int return."""
     def exit(self, model, regs, state):
@@ -690,7 +840,9 @@ class EntryListDecoder(Decoder):
 DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobregsDecoder,
             "SymAlloc": SymAllocDecoder, "SymFree": SymFreeDecoder, "GrgImmedTupleHash": ImmedHashDecoder,
             "GrgNewGlobreg": NewGlobregDecoder, "Spill": SpillDecoder, "RegAssign": RegAssignDecoder,
-            "CgBuildCallGraph": EntryListDecoder, "CgBottomUpOrder": EntryListDecoder}
+            "CgBuildCallGraph": EntryListDecoder, "CgBottomUpOrder": EntryListDecoder,
+            "ColorStackElements": ColorStackElementsDecoder, "QSortColors": QSortColorsDecoder,
+            "AddStackElement": AddStackElementDecoder}
 # Inliner predicates: arguments not decoded (LTCG-private conventions), signed EAX logged.
 for _name in ("InlineeIsTooBig", "ShouldInlineCallTuple", "ShouldInlineInlinee", "InlBadCandidate",
               "InlCallTupleIsCandidate", "InlBenefit", "ConsiderCandidate", "InlCallGraphDecision"):
@@ -733,6 +885,17 @@ def format_event(event):
         return "%s  OrderGlobregs class=%s: %s" % (func, event.get("class"), " ".join(
             "g%s(sym%s,p%s,l%s)" % (g.get("globreg"), g.get("symnum"), g.get("priority"), g.get("lastref"))
             for g in event["order"]))
+    if name == "ColorStackElements" and "colors" in event:
+        return "%s  ColorStackElements: %d element(s), %d colour(s), params=%s ebp_adj=%s alloc_local=%s: %s" % (
+            func, len(event["elements"]), len(event["colors"]), event.get("num_parameters"), event.get("ebp_adj"),
+            event.get("alloc_local"), " ".join("%s@%s" % (e.get("name") or "s%s" % e.get("symnum"), e.get("offset"))
+                                               for e in event["elements"]))
+    if name == "AddStackElement" and "site" in event:
+        return "%s  AddStackElement %s$%s %s [%s]" % (func, event.get("name") or "s%s" % event.get("symnum"),
+                                                     event.get("fe"), event["site"], event.get("tuple_text"))
+    if name == "QSortColors" and "lo" in event:
+        return "%s  QSortColors lo=%s hi=%s dir=%s%s" % (func, event.get("lo"), event.get("hi"), event.get("dir"),
+                                                       " (outer)" if event.get("outer") else "")
     if name == "RegAssign" and "tmpreg" in event:
         return "%s  RegAssign %s [%s] pref=%s next=%s busy=%s conflicts=%s -> %s" % (
             func, event["tmpreg"], event.get("tuple"), event.get("pref_after") or event.get("pref"),

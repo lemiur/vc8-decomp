@@ -17,7 +17,8 @@ table) and `--tuples NAMES` (they carry the function's instruction tuples, `opco
 `--preset NAME` (repeatable) adds a named set of breaks and tuple points: `color` (OrderGlobregs,
 ChoosePhysReg), `immed` (the 64-cycle routines), `reload` (Spill, RegSimpleAssignBody, RegAssign, LoFinalLower,
 SsaPeepsMd, tuples at each), `emit` (CgBottomUpOrder, ReadFunction, EmitFunction; module-level, so without
-`--function`). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset is given.
+`--function`), `stack` (AddStackElement, ColorStackElements, QSortColors: stack packing, see "Stack
+packing"). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset is given.
 
 `python tools/c2_trace.py emit-order --source X.cpp [--flags ...] [--include DIR] --out R.json [--all-sections]
 [--no-trace]` compiles the unit with `/Bk` (the IL is kept in `R.work/il_*`), predicts the compile order and
@@ -359,6 +360,98 @@ global whose constructor calls a later definition, a function-local static with 
 (`compiler`, `lib`, `user`, `".CRT$XCT"`, and the default followed by `lib`, `".CRT$XCV"` or `"mysec"`)
 are predicted exactly at `/O2` and `/Od`, with and without `/Zi`; traced, `f1` and the default-then-`lib`
 probe at `/O2` and `f1` at `/Od` give the modelled `CgBottomUpOrder` and `ReadFunction` order.
+
+## Stack packing
+
+`--preset stack` breaks on `AddStackElement`, `ColorStackElements` and `QSortColors` (stack.obj) and decodes
+how c2 gives the locals and temporaries of an optimised function their frame offsets.
+
+**Gate.** `StkStackAlloc` calls `StackPacking` when `_Globopt_flag` is set and neither `_FNeedFreshStack`
+(`/RTCs`, EnC) nor `_FWvmSafe` is. Otherwise `StkAllocateLocals` gives each local its own slot at its first
+reference in tuple order, with no sharing. `StackPacking` returns early when every element is a parameter.
+
+**Elements.** `CollectStackElements` walks every instruction tuple's source (+0x28) and destination (+0x2C)
+leaves. It skips tuples with +9 bit 0 clear and opcode 0x2D9. It calls `AddStackElement(EDX=sym)` once for
+each counted reference whose base symbol (sym+8) has kind 3 (c2 temporary), 4 (front-end automatic) or
+5 (parameter). The decoder labels each call by its return address:
+
+- `leaf`: a symbol leaf, leaf+0x18.
+- `address`: the base of an address or memory leaf, leaf+0x24.
+- `points-at`: every member of the points-at set (`_PointsAtSets`, through `_PASMap`) of a may-alias leaf
+  of a kind-0x16, opcode-0x2CE tuple. In the avp3 trace these are the inline-assembly blocks, each counted
+  once for its source leaf and once for its destination leaf; every address-taken local the block may
+  touch gets those references.
+- `pogo`: PGO only.
+
+`AddStackElement` keeps the symbols in a list (`_symStackElements`, next sym+0x30, prev +0x34). The list is
+ordered by size (sym+0x20) ascending, then by reference count (sym+0x38) descending:
+
+- A new symbol goes to the front of its size group with count 1.
+- A symbol whose count goes up moves forward past the symbols of its size with a strictly lower count.
+- `_CanonLocal` is skipped.
+- A symbol with sym+6 bit 0x40 gets bit 4 ("can't pack": its `_bvLiveOnDef` set becomes all elements).
+
+`EnumerateStackElements` numbers the list: sym+0x3C = index, `_symNumToSym[index]` = sym. The per-element
+interference set `_bvLiveOnDef[index]` (sparse bit vector) comes from `ComputeLocalLiveness` and
+`ComputeLiveOnDef`.
+
+**Colours.** `ColorStackElements([esp+4]=Function, ...)`, ret 8:
+
+1. Each parameter gets its own colour.
+2. A local may then join a parameter colour: size <= colour + 8, and no interference.
+3. `colorElemental` scans the other colours from the newest down and takes the first that fits: size <=
+   2 x colour + 8, the element not in the colour's interference set (+4), and no common bit between the
+   element's set and the members (+0). Otherwise it opens a new colour.
+
+A merge adds the member's count to the weight (+0xC) and raises the size (+8) and alignment (+0x14) to the
+member's. `_Colort` has a stride of 0x1C:
+
+| offset | field |
+|---|---|
+| +0 | members |
+| +4 | interference set |
+| +8 | size |
+| +0xC | weight |
+| +0x10 | the offset of a parameter colour |
+| +0x14 | alignment |
+| +0x18 | /GS buffer level byte (`StkGSBufferLevel`) |
+
+`_numOfColors` holds the count.
+
+**Sort.** `QSortColors(ECX=lo, EDX=hi, [esp+4]=dir)`, ret 4, sorts `_Colort[_numOfParameters .. _numOfColors-1]`
+with `StkColorCmp`. It runs only when the frame estimate exceeds 0x80 or the function has a /GS buffer
+(`_Module+0x44C & 0x20000` with `Function+0x5C`, or `Function+0xAC & 1`). Otherwise the colours keep their
+creation order. The sort is a recursive quicksort and is not stable. With dir 0 (dir = `Function+0x64` ==
+0x10D0A1B0), lower indices get:
+
+1. a lower /GS level;
+2. within a level, a higher density, `weight * 1000 / size` (signed integer division).
+
+**Offsets.** The colours are allocated from the last index down with `allotemp(size, align)`
+(`_Alloc_local = -alignup(size - _Alloc_local, align)`), so the frame grows downward. The last colour (the
+highest /GS level and lowest density) sits at the top of the frame, and colour 0 sits nearest ESP. Each
+member gets the colour's offset:
+
+- kind 4: in descriptor+0x18, with descriptor+0x20 |= 0x800;
+- otherwise: in sym+0x28.
+
+All members get sym+5 |= 0x20. A non-zero `_EbpAdj` is then added by `FixOffsetsForEbpAdj`.
+
+**Decoders.**
+
+- `ColorStackElements` reads everything at return, before `StackPacking` frees `_Colort`. It returns
+  `elements` and `colors`:
+  - each element: `index` (list position), `symnum`, `kind`, `name`, `fe`, `size`, `align`
+    (1 << (sym+0x2C - 1)), `refs` (sym+0x38), `offset`, `color`, `live_on_def` and the
+    `cant_pack`/`addr_taken`/`allocated` flags;
+  - each colour: `members`, `interferes`, `size`, `weight`, `align`, `gs`, `density` and `param_offset`.
+
+  It also returns `num_parameters`, `ebp_adj`, `alloc_local`, `max_align` (Function+0x48) and `dir`.
+- `QSortColors` logs `lo`, `hi`, `dir` and `outer`. The outermost call (lo = `_numOfParameters`,
+  hi = `_numOfColors - 1`) also carries the colours `before` and `after`.
+- `AddStackElement` logs `symnum`, `name`, `fe`, `site` and `tuple_text`.
+
+The addresses of the return sites and of the `dir` object are those of the pinned c2.dll.
 
 ## Limits
 
