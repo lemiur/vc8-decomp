@@ -20,7 +20,9 @@ SsaPeepsMd, tuples at each), `emit` (CgBottomUpOrder, ReadFunction, EmitFunction
 `--function`), `stack` (AddStackElement, ColorStackElements, QSortColors: stack packing, see "Stack
 packing"), `globreg` (Spillcosts, SpillcostsFold, OrderGlobregs, ChoosePhysReg: the colouring priority's
 terms, see "Spillcosts"). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset
-is given. A break name may also be an internal point (`INTERNAL_POINTS`: a public plus an offset, its
+is given. `--link-rsp LINK.rsp [--linker link.exe]` instead of `--source` traces link.exe on a /LTCG link's
+response file: its link-time code generation loads the same c2.dll, so every break and preset applies to the
+functions the link compiles (`--function` as for cl.exe). A break name may also be an internal point (`INTERNAL_POINTS`: a public plus an offset, its
 instruction bytes checked against `c2.dll` before the run); internal points are entry-only.
 
 `python tools/c2_trace.py emit-order --source X.cpp [--flags ...] [--include DIR] --out R.json [--all-sections]
@@ -110,7 +112,11 @@ block+0x190), else `1 << byte [block+0x17E]`, 2^(loop depth) (0x10B10659..0x10B1
 only: `n` = EDI, N_b (the globregs referenced in the block plus the bv of already ordered ones), `w` = EBP,
 `block` (position from `[[_Function]+8]`), `depth` (byte +0x17E), `loop` (+0x16C), `pgo`, `dead` (ECX: the
 globregs whose last use is in the block) and `live` (EBX: those live through it), both linked by +0x14, each
-`globreg`, `c` (+0x18) and `assigned`, `live` also `referenced` (+6 bit 0x10). The code that follows adds
+`globreg`, `c` (+0x18) and `assigned`, `live` also `referenced` (+6 bit 0x10); and the block's own tuples
+(from its head +0x1C to its end +0x20, linked by +0): `tuples` (instructions), `enter` and `exit` (those with
+opcode 0x295, 0x296) and `syms` (the front-end symbols their leaves name, effective addresses opened, as
+`name$fe` in first-use order: an inlined body's locals keep their callee's descriptors, which tells inlined
+code from the function's own). The code that follows adds
 c x N_b x w_b to +0xC of each dead unassigned entry and each referenced live entry, and subtracts N_b x w_b
 (w_b under PGO) from each live unreferenced one, so at `/O2`:
 

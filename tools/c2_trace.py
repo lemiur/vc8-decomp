@@ -4,6 +4,7 @@ Usage:
   python tools/c2_trace.py --source X.cpp --flags "/O2 /Oy" --out trace.jsonl
          [--break ChoosePhysReg[,InlBenefit]] [--function NAME] [--dump EXPR:COUNT]
          [--include DIR] [--summary-only]
+  python tools/c2_trace.py --link-rsp LINK.rsp [--linker link.exe] --out trace.jsonl [--preset ...]
 
 cl.exe runs under the Windows debug API (it loads c1xx.dll and c2.dll in its
 own process). Public c2.pdb symbols name the breakpoints; an int3 is written at
@@ -14,7 +15,10 @@ short summary is printed. Decoders for ChoosePhysReg and OrderGlobregs read
 c2's own data structures; the inliner predicates log a signed EAX; any other
 public function gets a generic register/stack record. Layouts the decoders
 read were established from c2.dll disassembly (docs/c2-trace.md); they are not
-public API and only hold for the pinned 14.00.50727.762 c2.dll.
+public API and only hold for the pinned 14.00.50727.762 c2.dll. With
+--link-rsp the traced process is link.exe on that response file: a /LTCG link
+loads the same c2.dll for its link-time code generation, so every break and
+preset works on the functions the link compiles.
 """
 from __future__ import annotations
 
@@ -516,6 +520,53 @@ class C2Model:
             index += 1
         return None
 
+    def block_symbols(self, block, limit=4000):
+        """(instruction count, named symbols, enter copies, exit copies) of one flow-graph block: the tuples from the block's head
+        (+0x1C) to its end (+0x20), linked by +0; each instruction's source and destination leaves
+        (effective addresses opened) that name a front-end symbol, as 'name$fe', in first-use order.
+        An inlined body's locals and parameters keep their callee's front-end descriptors, so the
+        names tell the unit's own code from code the inliner copied in."""
+        node, end = self.u32(block + 0x1C), self.u32(block + 0x20)
+        names, count, seen, copies = [], 0, 0, {"enter": 0, "exit": 0}
+
+        def name(leaf, depth=0):
+            kind = self.u32(leaf + 8) & 0xFF
+            if kind == 7:
+                return
+            if kind == 5:
+                if depth < 3:
+                    for part in (self.u32(leaf + 0x2C), self.u32(leaf + 0x30)):
+                        if part:
+                            name(part, depth + 1)
+                return
+            sym = self.u32(leaf + 0x18)
+            if sym and self.physreg_of(sym) is None:
+                info = self.symbol(sym)
+                if "name" in info:
+                    text = "%s$%d" % (info["name"], info["fe"])
+                    if text not in names:
+                        names.append(text)
+
+        def visit(head):
+            hops = 0
+            while head and hops < 8:
+                name(head)
+                head = self.u32(head)
+                hops += 1
+        while node and seen < limit:
+            if self.u32(node + 8) & 0x100:
+                count += 1
+                opcode = self.u32(node + 4)
+                if opcode in (0x295, 0x296):   # Spillcosts: 0x295 enter copy, 0x296 exit copy
+                    copies["enter" if opcode == 0x295 else "exit"] += 1
+                visit(self.u32(node + 0x28))
+                visit(self.u32(node + 0x2C))
+            if node == end:
+                break
+            node = self.u32(node)
+            seen += 1
+        return count, names, copies["enter"], copies["exit"]
+
     def class_globregs(self, reg_class):
         """Globreg pointers of one register class, in _GlobregHash order (1024 buckets, chains by +0x30),
         the class read as OrderGlobregs does: _RegClass[word [sym+0x10] >> 12]."""
@@ -659,7 +710,8 @@ class SpillcostsFoldDecoder(Decoder):
                 "depth": model.bytes(block + model.BLOCK_DEPTH, 1)[0],
                 "loop": bool(model.u32(block + model.BLOCK_LOOP)),
                 "pgo": model.u32(model.sym("_PogoFlag")) == 2,
-                "dead": self.entries(model, regs["ecx"], False), "live": self.entries(model, regs["ebx"], True)}
+                "dead": self.entries(model, regs["ecx"], False), "live": self.entries(model, regs["ebx"], True),
+                **dict(zip(("tuples", "syms", "enter", "exit"), model.block_symbols(block)))}
 
 
 class StackModel:
@@ -2170,7 +2222,11 @@ def main(argv=None):
     if argv[:1] == ["emit-order"]:
         return emit_order_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--source", required=True, type=Path)
+    parser.add_argument("--source", type=Path)
+    parser.add_argument("--link-rsp", type=Path, help="trace link.exe @RSP (a /LTCG link: link-time code "
+                        "generation runs c2.dll) instead of cl.exe on --source")
+    parser.add_argument("--linker", type=Path, help="the link.exe to run with --link-rsp (default: the "
+                        "toolchain's)")
     parser.add_argument("--flags", default="/O2", help="cl options (one string)")
     parser.add_argument("--include", action="append", default=[], type=Path)
     parser.add_argument("--break", dest="breaks", default=None,
@@ -2195,6 +2251,8 @@ def main(argv=None):
     parser.add_argument("--tuples", default="", help="comma-separated break names whose entry events carry "
                         "the function's instruction tuples (opcode, destinations, sources)")
     args = parser.parse_args(argv)
+    if (args.source is None) == (args.link_rsp is None):
+        parser.error("give one of --source and --link-rsp")
     breaks_text, tuples_text = preset_breaks(args.breaks, args.tuples, args.preset)
     if os.name != "nt":
         print("c2_trace: requires Windows", file=sys.stderr)
@@ -2223,10 +2281,15 @@ def main(argv=None):
         tracer = Tracer(table, data["image_base"], breaks, args.function, args.dump, args.max_events,
                         entry_only=args.entry_only, symtab_at=symtab_at,
                         tuples_at=[plain_name(n) for n in tuples_text.split(",") if n])
-        command = compile_command(toolchain, args.source, args.flags.split(), args.include, work)
         env = probe_toolchain.toolchain_environment(toolchain)
-        if args.include:
-            env["INCLUDE"] = os.pathsep.join([*map(str, args.include), env["INCLUDE"]])
+        if args.link_rsp:
+            linker = args.linker or Path(toolchain["bin"]) / "link.exe"
+            rsp = args.link_rsp.resolve()
+            command, work = [str(linker), "@" + str(rsp)], rsp.parent
+        else:
+            command = compile_command(toolchain, args.source, args.flags.split(), args.include, work)
+            if args.include:
+                env["INCLUDE"] = os.pathsep.join([*map(str, args.include), env["INCLUDE"]])
         returncode, log_path = tracer.run(command, work, env)
     except (TraceError, OSError, ValueError, KeyError) as error:
         print("c2_trace: " + str(error), file=sys.stderr)
@@ -2235,8 +2298,8 @@ def main(argv=None):
     with args.out.open("w", encoding="utf-8") as stream:
         for event in tracer.events:
             stream.write(json.dumps(event, sort_keys=True) + "\n")
-    print("cl.exe exit %d; %d events -> %s (cl output: %s)%s" % (
-        returncode, len(tracer.events), args.out, log_path,
+    print("%s exit %d; %d events -> %s (output: %s)%s" % (
+        "link.exe" if args.link_rsp else "cl.exe", returncode, len(tracer.events), args.out, log_path,
         "; %d dropped over --max-events" % tracer.dropped if tracer.dropped else ""))
     for line in summarize(tracer.events, args.summary_lines):
         print(line)
