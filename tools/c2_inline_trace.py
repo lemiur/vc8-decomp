@@ -86,8 +86,12 @@ BREAKS = ("InlCallTupleIsCandidate", "InlMightInlineEntry", "ConsiderCandidate",
 LTCG_BREAKS = ("MscAllowCallingConventionChange", "MscRemoveDeadArguments", "MscParamIsDead")
 # The routines whose results are decoded into per-function conventions (every function, never filtered or
 # capped): MdmAllowFlexParams (the custom-convention gate), MscSetDeadParamMap (the dead-parameter map),
-# WpaGenConstParamInfoUse (constant parameters) and MdmFlexParams (the register assignment).
-CONV_BREAKS = ("MdmAllowFlexParams", "MscSetDeadParamMap", "WpaGenConstParamInfoUse", "MdmFlexParams")
+# WpaGenConstParamInfoUse (constant parameters), MdmFlexParams (the register assignment) and its
+# MdmAllocateFlexParam / MdmAllocateXmmFlexParam (one per parameter given a register: c2_trace FlexParamModel).
+# MdmWillUseEbxConservative: whether MdmFlexParams reserves EBX (c2_trace EbxConservativeDecoder).
+FLEX_ALLOC_BREAKS = ("MdmAllocateFlexParam", "MdmAllocateXmmFlexParam", "MdmWillUseEbxConservative")
+CONV_BREAKS = ("MdmAllowFlexParams", "MscSetDeadParamMap", "WpaGenConstParamInfoUse",
+               "MdmFlexParams") + FLEX_ALLOC_BREAKS
 # The register-use summary (c2_trace RegUseModel) with --link-rsp: MscRecordInterProcRegInfo for every function
 # (never filtered or capped), LoAddCallScratchRegs per call (under --function: the calls compiled in a matching
 # function or to a matching callee).
@@ -387,12 +391,14 @@ class ConstParamDecoder(c2_trace.Decoder):
         return {"after": const_records(model, state["entry"])}
 
 
-class FlexDecoder(c2_trace.Decoder):
+class FlexDecoder(c2_trace.FlexParamsDecoder):
     """MdmFlexParams([esp+4] = context); ret 4. Runs after register allocation (dop2_CodegenUpdate) when
-    entry+0xB4 bit 0 is set: each formal whose symbol was given a register keeps it, entry+0xB4/+0xB8
+    entry+0xB4 bit 0 is set: a parameter whose only use is a load in the function's straight-line entry
+    takes the register that load was given (c2_trace FlexParamModel; MdmAllocateFlexParam), entry+0xB4/+0xB8
     record the register per parameter number (MdmParamNum: the position in the remaining formal list), and
     MscProcessParams recomputes entry+0x44 for the parameters left on the stack. Callers compiled later
-    pass the arguments by that record. The exit logs the record and the formals it numbers."""
+    pass the arguments by that record. The exit logs the record, the formals it numbers and the parameter
+    loads left (c2_trace.FlexParamsDecoder)."""
 
     def entry(self, model, regs, stack):
         ctx = stack[1]
@@ -403,13 +409,15 @@ class FlexDecoder(c2_trace.Decoder):
         entry = model.u32(ctx)
         table = model.sym("_MdmFlexParamMap")
         flex_map = [model.u32(table + 4 * i) for i in range(8)] if table is not None else list(FLEX_REGS_FALLBACK)
-        return {"flex": model.u32(entry + ENTRY_FLEX), "flex_xmm": model.u32(entry + ENTRY_FLEX_XMM),
+        out = super().exit(model, regs, state)
+        out.update({"flex": model.u32(entry + ENTRY_FLEX), "flex_xmm": model.u32(entry + ENTRY_FLEX_XMM),
                 "conv": model.u32(entry + ENTRY_CONV) & 0x1C, "stack_bytes": model.u32(entry + ENTRY_STACK_BYTES),
                 "flags20": model.u32(entry + ENTRY_FLAGS20), "flags50": model.u32(entry + ENTRY_FLAGS50),
                 "hidden": bool(model.u32(ctx + 4)),
                 "flex_map": [model.reg_name(r) if r else None for r in flex_map],
                 "xmm_names": [model.reg_name(0x53 + i) for i in range(16)],
-                "formals": [formal_info(model, leaf) for leaf in formal_leaves(model, ctx)]}
+                "formals": [formal_info(model, leaf) for leaf in formal_leaves(model, ctx)]})
+        return out
 
 
 class RawConvGateDecoder(c2_trace.Decoder):
@@ -497,6 +505,9 @@ def convention(name, evs, counts):
     dead_ev = evs.get("MscSetDeadParamMap", [{}])[-1]
     allow = evs.get("MdmAllowFlexParams", [None])[-1]
     consts = evs.get("WpaGenConstParamInfoUse", [{}])[-1]
+    allocs = evs.get("MdmAllocateFlexParam", []) + evs.get("MdmAllocateXmmFlexParam", [])
+    alloc_by_number = {a.get("param_number"): a for a in allocs if a.get("param_number") is not None}
+    ebx = [e for e in evs.get("MdmWillUseEbxConservative", []) if e.get("from_flex")]
     hidden = bool(dead_ev.get("hidden", flex.get("hidden")))
     base = 2 if hidden else 1   # the parameter number of the first formal
     formals = dead_ev.get("formals") or flex.get("formals") or []
@@ -532,6 +543,9 @@ def convention(name, evs, counts):
             n = remaining[key]
             field = (flex_word >> (3 * n + 1)) & 7 if allowed and 3 * n + 1 < 32 else 0
             xmm = (xmm_word >> (4 * n)) & 0xF if allowed and 4 * n < 32 else 0
+            if n in alloc_by_number:
+                a = alloc_by_number[n]
+                p["assigned"] = {k: a[k] for k in ("opcode", "dst", "moved") if k in a}
             if field:
                 p["location"] = (flex_map[field] or "?").upper() if field < len(flex_map) else "map%d" % field
             elif xmm:
@@ -550,6 +564,10 @@ def convention(name, evs, counts):
            "flex": None if flex_word is None else "0x%08X" % flex_word}
     if xmm_word:
         rec["flex_xmm"] = "0x%08X" % xmm_word
+    if flex.get("param_loads"):
+        rec["stack_loads"] = flex["param_loads"]
+    if ebx:
+        rec["ebx_reserved"] = bool(ebx[-1].get("ret") or ebx[-1].get("must_align"))
     if allow is not None and allow.get("ret") == 0:
         rec["refused"] = refusal_reason(allow)
     elif not allowed and allow is None:
@@ -574,6 +592,41 @@ def function_status(name, conventions, sites):
     if not any(c["function"] == name for c in conventions):
         return "not compiled by the link: no convention"
     return "out of line (%d of %d traced call sites inlined)" % (inlined, len(calls))
+
+
+def format_flex(conventions, names):
+    """For --function: how each matching function's custom convention placed its parameters (the callee's
+    own entry loads decide; docs/c2-inline-trace.md "Parameter registers")."""
+    lines = []
+    for c in conventions:
+        if c["function"] not in names or not c["custom"]:
+            continue
+        parts = []
+        for p in c["params"]:
+            text = "%s=%s" % (p.get("name") or "#%d" % p["index"], p["location"] or "?")
+            a = p.get("assigned")
+            if a:
+                text += " (%s)" % ("moved: its entry load went to %s" % a.get("dst") if a.get("moved")
+                                   else "entry load %s -> %s" % (a.get("opcode"), a.get("dst")))
+            parts.append(text)
+        lines.append("flex parameters of %s: %s" % (c["function"], "; ".join(parts) or "none"))
+        loads = c.get("stack_loads", [])
+        for param in sorted({load.get("param") for load in loads}, key=str)[:12]:
+            mine = [load for load in loads if load.get("param") == param]
+            first = mine[0]
+            if len(mine) > 1:
+                why = "read %d times" % len(mine)
+            elif not first.get("entry"):
+                why = "read outside the straight-line entry"
+            elif int(first.get("opcode", "0"), 16) not in c2_trace.FlexParamModel.LOADS or "dst" not in first:
+                why = "used in place, not loaded into a register"
+            elif first["dst"].upper() == "EBX" and c.get("ebx_reserved"):
+                why = "EBX is reserved (MdmWillUseEbxConservative or an 8-aligned frame)"
+            else:
+                why = "its load's register was already written before it (or 4 parameters were placed)"
+            lines.append("  left on the stack: %s (%s -> %s: %s)" % (param, first.get("opcode"),
+                                                                      first.get("dst", "memory"), why))
+    return lines
 
 
 def format_conventions(conventions, limit=40):
@@ -987,6 +1040,8 @@ def main(argv=None):
             print(line)
         for name, status in extra.get("function_status", {}).items():
             print("%s: %s" % (name, status))
+        for line in format_flex(conventions, set(extra.get("function_status", {}))):
+            print(line)
         for line in format_reg_use(extra["reg_use"]):
             print(line)
     return 0 if returncode == 0 else 3

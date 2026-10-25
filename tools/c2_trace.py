@@ -60,6 +60,10 @@ PRESETS = {
     "reguse": {"breaks": "MscRecordInterProcRegInfo,LoAddCallScratchRegs",
                "doc": "interprocedural register use: each function's summary (node+0x60) and, per call, "
                       "whether the caller's kill set used the callee's"},
+    "flexparams": {"breaks": "MdmFlexParams,MdmAllocateFlexParam,MdmAllocateXmmFlexParam,"
+                             "MdmWillUseEbxConservative",
+                   "doc": "custom-convention parameter registers: each assignment (the callee's entry load "
+                          "and its register) and the parameter loads left on the stack"},
     "stack": {"breaks": "AddStackElement,ColorStackElements,QSortColors",
               "doc": "stack packing: elements, colours (shared slots), the colour sort and frame offsets"},
 }
@@ -1146,6 +1150,200 @@ class RecordRegInfoDecoder(Decoder):
         return out
 
 
+class FlexParamModel:
+    """The register a custom (flex) convention gives each parameter (mdmisc.obj).
+
+    MdmFlexParams (dop2_CodegenUpdate, after the callee's own register allocation, when entry+0xB4 bit 0
+    is set) scans the callee's straight-line entry: the tuples after the formals tuple (kind 0x18) up to
+    the first referenced label (kind 0x1B with byte +0x1C set), kind 0x19 or the end (0x10), at most 4
+    assignments. A load (opcode 0x01, 0x38, 0xC2-0xC5, 0xD0) from a parameter's stack slot (source leaf
+    kind 2 whose symbol has kind 5 at +4, is its own base and has +0x35 clear: no other reference in
+    the function, and among the first 10 formals) into a register (destination leaf kind 1) makes that
+    register the parameter's: the register the callee's own allocator gave the load. It is refused when
+    the register was already written in the scanned prefix (EBP always counts as written; EBX too under
+    MdmWillUseEbxConservative or an 8-aligned frame; EAX under a stack probe), and deferred when the
+    register is callee-saved (_RegAttrib bit 1: EBX EBP ESI EDI) and written more than once in the
+    function or killed by a call, or is EAX/ECX/EDX/EBX once 3 of those (2 with EBX reserved) are
+    taken. MdmAllocateFlexParam records it at entry+0xB4 (3 bits per parameter number at 3n+1, an
+    index into _MdmFlexParamMap) and deletes the load (a plain mov) or turns its source into the
+    register. A deferred parameter then takes the first of EAX ECX EDX (_RegAttrib & 0xB == 0) not
+    written before its load, and the load becomes a copy from it (`moved`). XMM: a movss/movsd-class
+    load (0x125, 0x268, 0x189, 0x269) of a float of at most 8 bytes into an XMM register not written
+    before it: MdmAllocateXmmFlexParam records register - 0x53 at entry+0xB8 (4 bits per number).
+    No caller takes part: callers compiled later read the record (MdmAlloRegParams from LoLowerCall
+    and LoLowerArgplace; MscProcessParams in the callee)."""
+
+    ENTRY_NAME, ENTRY_FLEX, ENTRY_FLEX_XMM = 0x04, 0xB4, 0xB8
+    LOADS = (0x01, 0x38, 0xC2, 0xC3, 0xC4, 0xC5, 0xD0)
+    XMM_LOADS = (0x125, 0x268, 0x189, 0x269)
+    XMM_BASE = 0x53
+
+    def __init__(self, model):
+        self.m = model
+
+    def u8(self, address):
+        return self.m.bytes(address, 1)[0]
+
+    def name(self, entry):
+        return self.m.cstr(self.m.u32(entry + self.ENTRY_NAME), 512) if entry else None
+
+    def leaf_reg(self, leaf):
+        """The register number of a register leaf (kind 1): leaf+0x1C -> +8 (base) -> +0x1C."""
+        if not leaf or self.u8(leaf + 8) != 1:
+            return None
+        return self.m.u32(self.m.u32(self.m.u32(leaf + 0x1C) + 8) + 0x1C)
+
+    def param_sym(self, leaf):
+        """The parameter symbol a memory leaf (kind 2) reads, or 0: leaf+0x18 with kind 5 at +4."""
+        if not leaf or self.u8(leaf + 8) != 2:
+            return 0
+        sym = self.m.u32(leaf + 0x18)
+        return sym if sym and self.u8(sym + 4) == 5 else 0
+
+    def sym_name(self, sym):
+        base = self.m.u32(sym + 8) or sym
+        desc = self.m.u32(base)
+        return self.m.cstr(self.m.u32(desc + 4), 128) if desc else None
+
+    def load(self, tup):
+        """One tuple as MdmFlexParams' scan reads it: opcode, the parameter it reads, its destination."""
+        opcode = self.m.u32(tup + 4)
+        src, dst = self.m.u32(tup + 0x28), self.m.u32(tup + 0x2C)
+        sym = self.param_sym(src)
+        out = {"opcode": "0x%X" % opcode, "param": self.sym_name(sym) if sym else None}
+        reg = self.leaf_reg(dst)
+        if reg is not None:
+            out["dst"] = self.m.reg_name(reg)
+        if sym:
+            base = self.m.u32(sym + 8) or sym
+            out["other_refs"] = bool(self.u8(base + 0x35))
+        return out
+
+    def tuples(self, ctx, limit=100000):
+        tup = self.m.u32(self.m.u32(self.m.u32(self.m.u32(ctx + 8)) + 0x1C))
+        while tup and limit:
+            yield tup
+            tup = self.m.u32(tup)
+            limit -= 1
+
+    def param_loads(self, ctx, limit=32):
+        """Every instruction tuple still reading a parameter slot after MdmFlexParams (the assigned loads
+        are gone or read a register): `entry` when it lies in the scanned straight-line entry."""
+        out, started, entry = [], False, True
+        for tup in self.tuples(ctx):
+            kind = self.u8(tup + 8)
+            if not started:
+                started = kind == 0x18
+                continue
+            if kind == 0x10:
+                break
+            if kind == 0x19 or (kind == 0x1B and self.u8(tup + 0x1C)):
+                entry = False
+            if not self.u8(tup + 9) & 1:
+                continue
+            leaf = self.m.u32(tup + 0x28)
+            while leaf:
+                sym = self.param_sym(leaf)
+                if sym:
+                    item = self.load(tup)
+                    item["param"] = self.sym_name(sym)
+                    item["other_refs"] = bool(self.u8((self.m.u32(sym + 8) or sym) + 0x35))
+                    item["entry"] = entry
+                    out.append(item)
+                    break
+                leaf = self.m.u32(leaf)
+            if len(out) >= limit:
+                break
+        return out
+
+    @staticmethod
+    def new_slot(before, after, width, shift):
+        """The parameter number whose field of WIDTH bits (at width*n + shift) the call set."""
+        new = after & ~before
+        if not new:
+            return None
+        low = (new & -new).bit_length() - 1
+        return (low - shift) // width
+
+
+class FlexAllocateDecoder(Decoder):
+    """MdmAllocateFlexParam([esp+4] = context, [esp+8] = formals tuple, [esp+0xC] = the load tuple,
+    [esp+0x10] = register, [esp+0x14] = its sized register symbol, [esp+0x18] = moved); ret 0x18.
+    Entry: the load (opcode, parameter, its own destination) and the register; exit: the parameter
+    number whose entry+0xB4 field it set."""
+
+    def entry(self, model, regs, stack):
+        fp = FlexParamModel(model)
+        ctx, tup, reg, moved = stack[1], stack[3], stack[4], stack[6]
+        entry = model.u32(ctx)
+        info = {"entry_name": fp.name(entry), "register": model.reg_name(reg), "moved": bool(moved),
+                "how": ("deferred: the load's register was not free, the parameter arrives in %s and is "
+                        "copied" % model.reg_name(reg)) if moved else "the entry load's register"}
+        info.update(fp.load(tup) if tup else {})
+        info["flex_before"] = "0x%08X" % model.u32(entry + fp.ENTRY_FLEX)
+        return info, {"entry": entry, "before": model.u32(entry + fp.ENTRY_FLEX)}
+
+    def exit(self, model, regs, state):
+        after = model.u32(state["entry"] + FlexParamModel.ENTRY_FLEX)
+        return {"flex_after": "0x%08X" % after,
+                "param_number": FlexParamModel.new_slot(state["before"], after, 3, 1)}
+
+
+class FlexAllocateXmmDecoder(Decoder):
+    """MdmAllocateXmmFlexParam(ECX = the load tuple, EAX = XMM register, [esp+4] = context,
+    [esp+8] = formals tuple); ret 8. Records register - 0x53 at entry+0xB8 (4 bits per number)."""
+
+    def entry(self, model, regs, stack):
+        fp = FlexParamModel(model)
+        ctx, tup, reg = stack[1], regs["ecx"], regs["eax"]
+        entry = model.u32(ctx)
+        info = {"entry_name": fp.name(entry), "register": model.reg_name(reg), "moved": False,
+                "how": "the entry load's register"}
+        info.update(fp.load(tup) if tup else {})
+        return info, {"entry": entry, "before": model.u32(entry + fp.ENTRY_FLEX_XMM)}
+
+    def exit(self, model, regs, state):
+        after = model.u32(state["entry"] + FlexParamModel.ENTRY_FLEX_XMM)
+        return {"flex_xmm_after": "0x%08X" % after,
+                "param_number": FlexParamModel.new_slot(state["before"], after, 4, 0)}
+
+
+class EbxConservativeDecoder(Decoder):
+    """MdmWillUseEbxConservative(EDX = context): 1 when the function keeps EBX for its frame (context +0x52
+    bit 0, from +0xAC bit 0x20000000 or +0xB0 bits 0x180, unless FPO is legal). Called by MdmFlexParams
+    (return address MdmFlexParams+0x36E), a 1 or _FHasMustAlign (an 8-aligned frame) reserves EBX: no
+    parameter gets EBX, and only 2 of EAX ECX EDX EBX are given."""
+    FLEX_RETURN = 0x36E
+
+    def entry(self, model, regs, stack):
+        flex = model.sym("MdmFlexParams")
+        out = {"from_flex": flex is not None and stack[0] == flex + self.FLEX_RETURN}
+        if out["from_flex"]:
+            out["entry_name"] = FlexParamModel(model).name(model.u32(regs["edx"]))
+            va = model.sym("_FHasMustAlign")
+            out["must_align"] = model.u32(va) if va is not None else None
+        return out
+
+    def exit(self, model, regs, state):
+        return {"ret": regs["eax"]}
+
+
+class FlexParamsDecoder(Decoder):
+    """MdmFlexParams([esp+4] = context); ret 4. Exit: entry+0xB4/+0xB8 and the loads still reading a
+    parameter slot (why a parameter stayed on the stack: a load outside the entry, one whose register
+    was taken, other references). c2_inline_trace's FlexDecoder extends it."""
+
+    def entry(self, model, regs, stack):
+        ctx = stack[1]
+        return {"entry_name": FlexParamModel(model).name(model.u32(ctx))}, {"ctx": ctx}
+
+    def exit(self, model, regs, state):
+        fp = FlexParamModel(model)
+        entry = model.u32(state["ctx"])
+        return {"flex": model.u32(entry + fp.ENTRY_FLEX), "flex_xmm": model.u32(entry + fp.ENTRY_FLEX_XMM),
+                "param_loads": fp.param_loads(state["ctx"])}
+
+
 DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobregsDecoder,
             "LoAddCallScratchRegs": CallScratchRegsDecoder, "MscRecordInterProcRegInfo": RecordRegInfoDecoder,
             "SymAlloc": SymAllocDecoder, "SymFree": SymFreeDecoder, "GrgImmedTupleHash": ImmedHashDecoder,
@@ -1153,7 +1351,9 @@ DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobreg
             "Spillcosts": SpillcostsDecoder, "SpillcostsFold": SpillcostsFoldDecoder,
             "CgBuildCallGraph": EntryListDecoder, "CgBottomUpOrder": EntryListDecoder,
             "ColorStackElements": ColorStackElementsDecoder, "QSortColors": QSortColorsDecoder,
-            "AddStackElement": AddStackElementDecoder}
+            "AddStackElement": AddStackElementDecoder, "MdmFlexParams": FlexParamsDecoder,
+            "MdmAllocateFlexParam": FlexAllocateDecoder, "MdmAllocateXmmFlexParam": FlexAllocateXmmDecoder,
+            "MdmWillUseEbxConservative": EbxConservativeDecoder}
 # Inliner predicates: arguments not decoded (LTCG-private conventions), signed EAX logged.
 for _name in ("InlineeIsTooBig", "ShouldInlineCallTuple", "ShouldInlineInlinee", "InlBadCandidate",
               "InlCallTupleIsCandidate", "InlBenefit", "ConsiderCandidate", "InlCallGraphDecision"):

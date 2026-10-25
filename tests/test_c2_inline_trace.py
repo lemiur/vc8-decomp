@@ -344,6 +344,103 @@ class RegUse(unittest.TestCase):
         self.assertIn("  summary of ?tan@@YAMM@Z (compiled #1): ST0", lines)
 
 
+class FlexParams(unittest.TestCase):
+    """The custom convention's parameter registers: MdmFlexParams' entry scan and its
+    MdmAllocateFlexParam / MdmAllocateXmmFlexParam records (c2_trace FlexParamModel)."""
+    SYMS = {"_RegName": 0x9100}
+
+    def _function(self, mem):
+        """LinkMode's function (formals _this, _n), its tuples after the formals tuple: a load of _this
+        into ESI, a referenced label, a load of _n into ECX, the end."""
+        LinkMode._function(self, mem)
+        for number, text in ((2, b"ECX"), (7, b"ESI"), (0x54, b"XMM1")):
+            mem.put(0x9100 + 4 * number, 0xA000 + 0x10 * number)
+            mem.raw[0xA000 + 0x10 * number] = text + b"\0"
+        mem.put(0x64000, 0x67000)
+        for tup, nxt, sym, reg in ((0x67000, 0x68000, 0x82000, 7), (0x69000, 0x6A000, 0x83000, 2)):
+            mem.put(tup, nxt)
+            mem.raw[tup + 8] = b"\x05"
+            mem.raw[tup + 9] = b"\x01"
+            mem.put(tup + 4, 0x1)                           # mov
+            mem.put(tup + 0x28, tup + 0x100, tup + 0x200)   # source, destination leaves
+            mem.raw[tup + 0x108] = b"\x02"                  # memory leaf -> the parameter symbol
+            mem.put(tup + 0x118, sym)
+            mem.raw[sym + 4] = b"\x05"
+            mem.raw[tup + 0x208] = b"\x01"                  # register leaf -> +0x1C -> +8 -> +0x1C
+            mem.put(tup + 0x21C, tup + 0x300)
+            mem.put(tup + 0x308, tup + 0x400)
+            mem.put(tup + 0x41C, reg)
+        mem.put(0x68000, 0x69000)
+        mem.raw[0x68008] = b"\x1b"                          # a label with a branch to it
+        mem.raw[0x6801C] = b"\x01"
+        mem.raw[0x6A008] = b"\x10"
+
+    def test_param_loads_mark_the_straight_line_entry(self):
+        mem = FakeMemory()
+        self._function(mem)
+        fp = ct.FlexParamModel(model(mem, self.SYMS))
+        loads = fp.param_loads(0x60000)
+        self.assertEqual([(l["param"], l["dst"], l["entry"]) for l in loads],
+                         [("_this", "ESI", True), ("_n", "ECX", False)])
+        self.assertEqual(ct.FlexParamModel.new_slot(1, 1 | 3 << 4, 3, 1), 1)
+        self.assertIsNone(ct.FlexParamModel.new_slot(5, 5, 3, 1))
+
+    def test_allocate_decoders(self):
+        mem = FakeMemory()
+        self._function(mem)
+        mem.put(0x70000 + 0xB4, 1)
+        dec = ct.FlexAllocateDecoder()
+        info, state = dec.entry(model(mem, self.SYMS), {}, [0, 0x60000, 0x64000, 0x67000, 7, 0, 0])
+        self.assertEqual((info["entry_name"], info["register"], info["param"], info["dst"]),
+                         ("?f@C@@QAEXH@Z", "ESI", "_this", "ESI"))
+        self.assertFalse(info["moved"])
+        mem.put(0x70000 + 0xB4, 1 | 4 << 1)
+        self.assertEqual(dec.exit(model(mem, self.SYMS), {}, state)["param_number"], 0)
+        dec = ct.FlexAllocateXmmDecoder()
+        info, state = dec.entry(model(mem, self.SYMS), {"eax": 0x54, "ecx": 0x69000}, [0, 0x60000, 0x64000])
+        self.assertEqual((info["register"], info["param"]), ("XMM1", "_n"))
+        mem.put(0x70000 + 0xB8, 1 << 4)
+        self.assertEqual(dec.exit(model(mem, self.SYMS), {}, state)["param_number"], 1)
+        _, state = it.FlexDecoder().entry(model(mem, self.SYMS), {}, [0, 0x60000])
+        out = it.FlexDecoder().exit(model(mem, self.SYMS), {}, state)
+        self.assertEqual(len(out["param_loads"]), 2)
+        flex_va = 0x5000
+        syms = dict(self.SYMS, MdmFlexParams=flex_va, _FHasMustAlign=0x9800)
+        mem.put(0x9800, 1)
+        info = ct.EbxConservativeDecoder().entry(model(mem, syms), {"edx": 0x60000}, [flex_va + 0x36E])
+        self.assertEqual((info["from_flex"], info["entry_name"], info["must_align"]), (True, "?f@C@@QAEXH@Z", 1))
+        self.assertFalse(ct.EbxConservativeDecoder().entry(model(mem, syms), {"edx": 0}, [0x1234])["from_flex"])
+        self.assertEqual([f["name"] for f in out["formals"]], ["_this", "_n"])
+
+    def test_conventions_name_how_each_register_was_given(self):
+        this = {"name": "_this", "type": "0x1004", "size": 4, "sym": 1, "base": 1}
+        k = {"name": "_k", "type": "0x2004", "size": 4, "sym": 3, "base": 3}
+        f = "?f@C@@QAEXH@Z"
+        events = [
+            {"break": "MdmAllowFlexParams", "entry_name": f, "ret": 1},
+            {"break": "MdmAllocateFlexParam", "entry_name": f, "param_number": 0, "opcode": "0x1", "dst": "ESI",
+             "moved": False, "register": "ESI"},
+            {"break": "MdmAllocateFlexParam", "entry_name": f, "param_number": 1, "opcode": "0x1", "dst": "ESI",
+             "moved": True, "register": "EDX"},
+            {"break": "MdmFlexParams", "entry_name": f, "flex": 1 | 4 << 1 | 3 << 4, "flex_xmm": 0, "conv": 0x14,
+             "stack_bytes": 4, "hidden": False, "formals": [this, k],
+             "flex_map": [None, "eax", "ecx", "edx", "esi", "edi", "ebp", "ebx"],
+             "param_loads": [{"param": "_q", "opcode": "0x1", "dst": "EAX", "entry": False},
+                             {"param": "_r", "opcode": "0x1", "dst": "ebx", "entry": True}]},
+            {"break": "MdmWillUseEbxConservative", "entry_name": f, "from_flex": True, "ret": 1, "must_align": 0},
+        ]
+        conv = it.build_conventions(events)
+        self.assertEqual([p["location"] for p in conv[0]["params"]], ["ESI", "EDX"])
+        self.assertEqual(conv[0]["params"][1]["assigned"], {"opcode": "0x1", "dst": "ESI", "moved": True})
+        lines = it.format_flex(conv, {f})
+        self.assertIn("_this=ESI (entry load 0x1 -> ESI)", lines[0])
+        self.assertIn("_k=EDX (moved: its entry load went to ESI)", lines[0])
+        self.assertEqual(lines[1], "  left on the stack: _q (0x1 -> EAX: read outside the straight-line entry)")
+        self.assertTrue(conv[0]["ebx_reserved"])
+        self.assertIn("EBX is reserved", lines[2])
+        for name in ct.PRESETS["flexparams"]["breaks"].split(","):
+            self.assertIn(name, ct.DECODERS)
+
 
 if __name__ == "__main__":
     unittest.main()

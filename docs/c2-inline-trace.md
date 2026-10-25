@@ -87,6 +87,33 @@ recursive); 62 parameters removed, 50 constant. Checked against the linked image
 `ret 4`), `Map<AnimationEntry>::Walk` (`this` = `g_animations`, callback constant: no arguments, the global
 read directly).
 
+### Parameter registers (`assigned`, `stack_loads`; `c2_trace.py --preset flexparams`)
+
+The register of each parameter of a custom convention is chosen by the **callee alone, from its own
+compiled code**, decoded by c2_trace's `FlexParamModel`:
+
+| routine (when) | what it does |
+|---|---|
+| `MdmFlexParams` ([esp+4] = context; `dop2_CodegenUpdate`, after the function's register allocation, when entry+0xB4 bit 0 is set) | marks every parameter symbol read more than once, or read other than by a register load, as ineligible (symbol +0x35); then scans the straight-line entry: the tuples after the formals tuple (kind 0x18) up to the first label a branch targets (kind 0x1B, byte +0x1C set), kind 0x19 or the end, at most 4 assignments. A load (opcode 0x01, 0x38, 0xC2-0xC5, 0xD0) from an eligible parameter's slot into a register gives the parameter **that register**, the one the callee's allocator gave the load. Refused when the register was already written in the scanned prefix (EBP always; EBX with `MdmWillUseEbxConservative` or an 8-aligned frame; EAX with a stack probe). Deferred when the register is callee-saved (`_RegAttrib` bit 1: EBX EBP ESI EDI) and written more than once or killed by a call in the function, or is EAX/ECX/EDX/EBX once 3 of those (2 with EBX reserved) are used; a deferred parameter then takes the first of EAX, ECX, EDX not written before its load, and the load becomes a copy from it. |
+| `MdmAllocateFlexParam` ([esp+4] context, [esp+0xC] the load, [esp+0x10] register, [esp+0x18] moved; ret 0x18) | records the register at entry+0xB4 (3 bits per parameter number at 3n+1, an index into `_MdmFlexParamMap`) and deletes the load (a plain mov) or turns its source into the register. |
+| `MdmAllocateXmmFlexParam` (ECX the load, EAX register, [esp+4] context; ret 8) | the same for a movss/movsd-class load (0x125, 0x268, 0x189, 0x269) of a float of at most 8 bytes into an XMM register not written before it: register - 0x53 at entry+0xB8. |
+| `MdmAlloRegParams` (from `LoLowerCall`, `LoLowerArgplace` of each caller; `MscProcessParams` of the callee) | reads the record: a custom callee's parameter number n goes in `_MdmFlexParamMap[(entry+0xB4 >> 3n+1) & 7]` or XMM (entry+0xB8); a declared __fastcall/__thiscall takes the standard ECX/EDX. |
+
+No caller takes part: callers are compiled after the callee (bottom-up) and only read the record. What a
+caller can change is the callee's code itself: arguments that are constant or unused at every compiled call
+remove the parameter (`const`, `dead`) and change the callee's register pressure. A parameter's register
+therefore follows its callee's own register allocation (`vc8_trace globreg` on the callee) and is
+`stack` when the callee reads it twice, after a branch target, in place (`cmp [param]`, `push [param]`), or
+into a register already written.
+
+In `conventions`, a register parameter carries `assigned` = `{opcode, dst, moved}` (the entry load and its
+destination; `moved`: the parameter arrives in the location and the load copies it to `dst`), and a
+custom function `stack_loads` = the loads still reading a parameter slot after `MdmFlexParams`
+(`{param, opcode, dst, entry, other_refs}`). Under `--function` the tool prints one `flex parameters of`
+line per matching custom function and a `left on the stack` line per remaining parameter with the reason.
+Check (avp3 group, dx9): `AVP_Brain_Actor_Marine::sub_422C50` gets `_this=EDI` from its entry load
+`mov edi, [this]` where the game's copy keeps `this` in ESI, its own allocation.
+
 ### Register use at calls (`extra.json` `reg_use`)
 
 Whether a caller may keep a value in a scratch register (EAX, ECX, EDX, XMM, x87) across a call depends on
