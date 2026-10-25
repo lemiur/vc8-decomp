@@ -236,3 +236,5 @@ below), `budget`, `depth_limit`, `func_size`, and `numbers`:
   that carry them, not from the code that sets them; a constant of kind 2 (float) is read as a double; the
   register record covers the first 10 parameters (c2's limit). Pogo (/LTCG:PGO) paths are not decoded.
 - `site_weight` is c2's static block-frequency estimate, not a profile.
+
+Synthetic probes of these decisions: [ltcg-probes.md](ltcg-probes.md).
