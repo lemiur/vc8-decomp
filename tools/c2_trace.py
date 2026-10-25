@@ -57,6 +57,9 @@ PRESETS = {
              "doc": "call-graph reordering and the compile/emit loop (unfiltered: omit --function)"},
     "globreg": {"breaks": "Spillcosts,SpillcostsFold,OrderGlobregs,ChoosePhysReg",
                 "doc": "globreg priorities: Spillcosts per-block terms, the coloring order and choices"},
+    "reguse": {"breaks": "MscRecordInterProcRegInfo,LoAddCallScratchRegs",
+               "doc": "interprocedural register use: each function's summary (node+0x60) and, per call, "
+                      "whether the caller's kill set used the callee's"},
     "stack": {"breaks": "AddStackElement,ColorStackElements,QSortColors",
               "doc": "stack packing: elements, colours (shared slots), the colour sort and frame offsets"},
 }
@@ -1007,7 +1010,142 @@ class EntryListDecoder(Decoder):
         return {"entries_after": model.entry_list()}
 
 
+class RegUseModel:
+    """The interprocedural register-use summary (misc.obj, lower.obj).
+
+    MscRecordInterProcRegInfo (dop2_EncodeAndRelated, after the function's code is final) collects
+    with MscCollectUsedRegs the registers the function's tuples write (register destinations and the
+    kill sets of its own calls: a set of register numbers, c2's sparse bv) and, when _BottomOpt is
+    set and the entry (+0x88) has a call-graph node whose +4 is this entry, stores it at node+0x60.
+    LoAddCallScratchRegs (Lower, per call tuple of a later function) builds the call's kill set:
+    with the callee's summary only the scratch registers in it, without it every scratch register
+    (EAX ECX EDX, the XMM and x87 registers). A value kept in a scratch register across the call is
+    therefore reloaded when the summary was not available."""
+
+    ENTRY_NAME, ENTRY_FLAGS20, ENTRY_KIND, ENTRY_FLAGS37 = 0x04, 0x20, 0x30, 0x37
+    ENTRY_CGNODE, ENTRY_AC = 0x88, 0xAC
+    NODE_ENTRY, NODE_REGS = 0x04, 0x60
+
+    def __init__(self, model):
+        self.m = model
+
+    def name(self, entry):
+        return self.m.cstr(self.m.u32(entry + self.ENTRY_NAME), 512) if entry else None
+
+    def regs(self, sbv):
+        return [self.m.reg_name(n) for n in read_sparse_bv(self.m.u32, sbv)]
+
+    def flag(self, name):
+        va = self.m.sym(name)
+        return self.m.u32(va) if va is not None else None
+
+    def node_owner(self, entry, node):
+        """True when node+4 is this entry, or (PGO) entry+0xAC is: the test both routines make."""
+        owner = self.m.u32(node + self.NODE_ENTRY)
+        return owner == entry or (self.flag("_PogoMasterFlag") == 1
+                                  and self.m.u32(entry + self.ENTRY_AC) == owner)
+
+    def callee_entry(self, tup):
+        """(entry, how) of a call tuple's callee as LoAddCallScratchRegs reads it: source leaf +0x28;
+        kind 4 holds the entry at +0x18; kinds 1-3 hold a symbol whose +8 -> +0 is the entry, used
+        only when that entry has +0x37 bit 0x400; anything else is an indirect call."""
+        leaf = self.m.u32(tup + 0x28) if tup else 0
+        if not leaf:
+            return 0, "no callee leaf"
+        kind = self.m.u32(leaf + 8) & 0xFF
+        if kind == 4:
+            return self.m.u32(leaf + 0x18), "direct"
+        if kind in (1, 2, 3):
+            sym = self.m.u32(leaf + 0x18)
+            entry = self.m.u32(self.m.u32(sym + 8)) if sym else 0
+            if entry and self.m.u32(entry + self.ENTRY_FLAGS37) & 0x400:
+                return entry, "through symbol"
+        return 0, "indirect (leaf kind %d)" % kind
+
+
+class CallScratchRegsDecoder(Decoder):
+    """LoAddCallScratchRegs([esp+4] = call tuple): the callee, every field its summary test reads,
+    and the verdict: `summary` (the call kills only the scratch registers in the callee's
+    node+0x60) or the first failed test (every scratch register is killed)."""
+
+    def entry(self, model, regs, stack):
+        ru = RegUseModel(model)
+        tup = stack[1]
+        entry, how = ru.callee_entry(tup)
+        out = {"callee": ru.name(entry), "callee_via": how}
+        if not entry:
+            out["verdict"] = how
+            return out
+        flags37 = model.u32(entry + ru.ENTRY_FLAGS37)
+        node = model.u32(entry + ru.ENTRY_CGNODE)
+        out.update({"callee_flags20": "0x%X" % model.u32(entry + ru.ENTRY_FLAGS20),
+                    "callee_flags37": "0x%X" % flags37, "callee_kind": model.bytes(entry + ru.ENTRY_KIND, 1)[0],
+                    "bottom_opt": ru.flag("_BottomOpt"), "cg_node": bool(node)})
+        summary = 0
+        if node:
+            out["node_is_entry"] = ru.node_owner(entry, node)
+            summary = model.u32(node + ru.NODE_REGS)
+            if summary:
+                out["summary"] = ru.regs(summary)
+        if out["callee_kind"] != 4:
+            out["verdict"] = "entry+0x30 kind %d, not 4" % out["callee_kind"]
+        elif not flags37 & 0x4000:
+            out["verdict"] = "entry+0x37 bit 0x4000 clear"
+        elif not out["bottom_opt"]:
+            out["verdict"] = "_BottomOpt 0"
+        elif not node:
+            out["verdict"] = "no call-graph node (entry+0x88)"
+        elif not out["node_is_entry"]:
+            out["verdict"] = "call-graph node+4 is another entry"
+        elif not summary:
+            out["verdict"] = "no summary at node+0x60 (callee not compiled yet, or not recorded)"
+        else:
+            out["verdict"] = "summary"
+        return out
+
+
+class RecordRegInfoDecoder(Decoder):
+    """MscRecordInterProcRegInfo(EAX = function context; [ctx] = entry). Entry: the tests that skip
+    the record (ctx+0xAC bit 0x100000; entry+0x20 bit 0x1000; entry+0x37 & 0x1E0 == 0xA0 with
+    entry+0x20 bit 0x20 and byte [entry+0xC]+0x5B == 2) and the store's (_BottomOpt, the
+    call-graph node owning the entry). Exit: node+0x60 (the summary callers will read) and
+    entry+0x20 bit 0x10000 (set when MscCollectUsedRegs found no call of unknown register use)."""
+
+    def entry(self, model, regs, stack):
+        ru = RegUseModel(model)
+        ctx = regs["eax"]
+        entry = model.u32(ctx)
+        flags20, flags37 = model.u32(entry + ru.ENTRY_FLAGS20), model.u32(entry + ru.ENTRY_FLAGS37)
+        node = model.u32(entry + ru.ENTRY_CGNODE)
+        skip = None
+        if model.u32(ctx + 0xAC) & 0x100000:
+            skip = "ctx+0xAC bit 0x100000"
+        elif flags20 & 0x1000:
+            skip = "entry+0x20 bit 0x1000"
+        elif (flags37 & 0x1E0) == 0xA0 and flags20 & 0x20 \
+                and model.bytes(model.u32(entry + 0xC) + 0x5B, 1)[0] == 2:
+            skip = "entry+0x37 class 0xA0, entry+0x20 bit 0x20, [entry+0xC]+0x5B == 2"
+        out = {"entry_name": ru.name(entry), "flags20": "0x%X" % flags20, "flags37": "0x%X" % flags37,
+               "bottom_opt": ru.flag("_BottomOpt"), "cg_node": bool(node)}
+        if node:
+            out["node_is_entry"] = ru.node_owner(entry, node)
+        if skip:
+            out["skip"] = skip
+        return out, {"entry": entry, "node": node}
+
+    def exit(self, model, regs, state):
+        ru = RegUseModel(model)
+        out = {"flags20_after": "0x%X" % model.u32(state["entry"] + ru.ENTRY_FLAGS20)}
+        if state["node"]:
+            summary = model.u32(state["node"] + ru.NODE_REGS)
+            out["stored"] = bool(summary)
+            if summary:
+                out["summary"] = ru.regs(summary)
+        return out
+
+
 DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobregsDecoder,
+            "LoAddCallScratchRegs": CallScratchRegsDecoder, "MscRecordInterProcRegInfo": RecordRegInfoDecoder,
             "SymAlloc": SymAllocDecoder, "SymFree": SymFreeDecoder, "GrgImmedTupleHash": ImmedHashDecoder,
             "GrgNewGlobreg": NewGlobregDecoder, "Spill": SpillDecoder, "RegAssign": RegAssignDecoder,
             "Spillcosts": SpillcostsDecoder, "SpillcostsFold": SpillcostsFoldDecoder,

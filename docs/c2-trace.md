@@ -19,7 +19,8 @@ ChoosePhysReg), `immed` (the 64-cycle routines), `reload` (Spill, RegSimpleAssig
 SsaPeepsMd, tuples at each), `emit` (CgBottomUpOrder, ReadFunction, EmitFunction; module-level, so without
 `--function`), `stack` (AddStackElement, ColorStackElements, QSortColors: stack packing, see "Stack
 packing"), `globreg` (Spillcosts, SpillcostsFold, OrderGlobregs, ChoosePhysReg: the colouring priority's
-terms, see "Spillcosts"). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset
+terms, see "Spillcosts"), `reguse` (MscRecordInterProcRegInfo, LoAddCallScratchRegs: the
+interprocedural register-use summary, see c2-inline-trace.md "Register use at calls"). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset
 is given. `--link-rsp LINK.rsp [--linker link.exe]` instead of `--source` traces link.exe on a /LTCG link's
 response file: its link-time code generation loads the same c2.dll, so every break and preset applies to the
 functions the link compiles (`--function` as for cl.exe). A break name may also be an internal point (`INTERNAL_POINTS`: a public plus an offset, its

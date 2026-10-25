@@ -259,8 +259,83 @@ class LinkMode(unittest.TestCase):
             self.skipTest("no c2 symbol cache")
         import json
         table = ct.symbol_table(json.loads(cache.read_text(encoding="utf-8"))["rows"])
-        for name in it.LTCG_BREAKS + it.CONV_BREAKS:
+        for name in it.LTCG_BREAKS + it.CONV_BREAKS + it.REGUSE_BREAKS:
             self.assertTrue(ct.resolve_name(name, table)[1])
+        for name in ct.PRESETS["reguse"]["breaks"].split(","):
+            self.assertIn(name, ct.DECODERS)
+
+
+class RegUse(unittest.TestCase):
+    """The register-use summary: MscRecordInterProcRegInfo stores it at node+0x60,
+    LoAddCallScratchRegs reads it for each call (c2_trace RegUseModel)."""
+    SYMS = {"_BottomOpt": 0x9000, "_PogoMasterFlag": 0x9004, "_RegName": 0x9100}
+
+    def _callee(self, mem, summary=True):
+        mem.put(0x9000, 1)                                  # _BottomOpt
+        for number, text in ((1, "EAX"), (31, "ST0"), (84, "XMM0")):
+            mem.put(0x9100 + 4 * number, 0xA000 + 0x10 * number)
+            mem.raw[0xA000 + 0x10 * number] = text.encode() + b"\0"
+        mem.put(0x1000 + 0x28, 0x2000)                      # call tuple -> leaf, kind 4 -> entry
+        mem.put(0x2000 + 8, 4)
+        mem.put(0x2000 + 0x18, 0x3000)
+        mem.put(0x3000 + 4, 0x6000)
+        mem.raw[0x6000] = b"?tan@@YAMM@Z\0"
+        mem.put(0x3000 + 0x30, 4)                           # a function entry
+        mem.put(0x3000 + 0x37, 0x4000)
+        mem.put(0x3000 + 0x88, 0x4000)                      # call-graph node, +4 = the entry
+        mem.put(0x4000 + 4, 0x3000)
+        if summary:
+            mem.put(0x4000 + 0x60, 0x5000)                  # sbv: one node, base 0, bits 1 and 31
+            mem.put(0x5000, 0x5100)
+            mem.put(0x5100, 0, 1 << 1 | 1 << 31, 0, 0)
+
+    def test_call_uses_the_callee_summary(self):
+        mem = FakeMemory()
+        self._callee(mem)
+        out = ct.CallScratchRegsDecoder().entry(model(mem, self.SYMS), {}, [0, 0x1000])
+        self.assertEqual(out["callee"], "?tan@@YAMM@Z")
+        self.assertEqual(out["verdict"], "summary")
+        self.assertEqual(out["summary"], ["EAX", "ST0"])
+
+    def test_call_without_summary_and_other_failures(self):
+        mem = FakeMemory()
+        self._callee(mem, summary=False)
+        decode = lambda: ct.CallScratchRegsDecoder().entry(model(mem, self.SYMS), {}, [0, 0x1000])["verdict"]
+        self.assertTrue(decode().startswith("no summary at node+0x60"))
+        mem.put(0x4000 + 4, 0x3100)
+        self.assertEqual(decode(), "call-graph node+4 is another entry")
+        mem.put(0x3000 + 0x37, 0)
+        self.assertEqual(decode(), "entry+0x37 bit 0x4000 clear")
+        mem.put(0x2000 + 8, 6)
+        self.assertEqual(decode(), "indirect (leaf kind 6)")
+
+    def test_record_skip_and_stored_summary(self):
+        mem = FakeMemory()
+        self._callee(mem)
+        mem.put(0x7000, 0x3000)                             # context -> entry
+        info, state = ct.RecordRegInfoDecoder().entry(model(mem, self.SYMS), {"eax": 0x7000}, [0])
+        self.assertEqual(info["entry_name"], "?tan@@YAMM@Z")
+        self.assertNotIn("skip", info)
+        self.assertTrue(info["node_is_entry"])
+        out = ct.RecordRegInfoDecoder().exit(model(mem, self.SYMS), {}, state)
+        self.assertEqual((out["stored"], out["summary"]), (True, ["EAX", "ST0"]))
+        mem.put(0x3000 + 0x20, 0x1000)
+        info, _ = ct.RecordRegInfoDecoder().entry(model(mem, self.SYMS), {"eax": 0x7000}, [0])
+        self.assertEqual(info["skip"], "entry+0x20 bit 0x1000")
+
+    def test_build_reg_use_keeps_the_callees_of_kept_calls(self):
+        events = [ev(1, it.REGUSE_RECORD, function="?tan@@YAMM@Z", entry_name="?tan@@YAMM@Z", stored=True,
+                     summary=["ST0"]),
+                  ev(2, it.REGUSE_RECORD, entry_name="?other@@YAXXZ", stored=True),
+                  ev(3, it.REGUSE_CALL, function="?vision@@YAXXZ", callee="?tan@@YAMM@Z", verdict="summary"),
+                  ev(4, it.REGUSE_CALL, function="?vision@@YAXXZ", callee="?tan@@YAMM@Z", verdict="summary")]
+        reg_use = it.build_reg_use(events, "vision")
+        self.assertEqual(list(reg_use["summaries"]), ["?tan@@YAMM@Z"])
+        self.assertEqual(reg_use["summaries"]["?tan@@YAMM@Z"]["order"], 1)
+        lines = it.format_reg_use(reg_use)
+        self.assertIn("  ?vision@@YAXXZ -> ?tan@@YAMM@Z x2: summary", lines)
+        self.assertIn("  summary of ?tan@@YAMM@Z (compiled #1): ST0", lines)
+
 
 
 if __name__ == "__main__":

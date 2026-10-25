@@ -88,6 +88,11 @@ LTCG_BREAKS = ("MscAllowCallingConventionChange", "MscRemoveDeadArguments", "Msc
 # capped): MdmAllowFlexParams (the custom-convention gate), MscSetDeadParamMap (the dead-parameter map),
 # WpaGenConstParamInfoUse (constant parameters) and MdmFlexParams (the register assignment).
 CONV_BREAKS = ("MdmAllowFlexParams", "MscSetDeadParamMap", "WpaGenConstParamInfoUse", "MdmFlexParams")
+# The register-use summary (c2_trace RegUseModel) with --link-rsp: MscRecordInterProcRegInfo for every function
+# (never filtered or capped), LoAddCallScratchRegs per call (under --function: the calls compiled in a matching
+# function or to a matching callee).
+REGUSE_RECORD, REGUSE_CALL = "MscRecordInterProcRegInfo", "LoAddCallScratchRegs"
+REGUSE_BREAKS = (REGUSE_RECORD, REGUSE_CALL)
 
 
 def flag_names(value, table=FLAGS50):
@@ -674,6 +679,7 @@ SITE_TUPLE = {
     "InlCallGraphDecision": lambda m, r, s: m.u32(s[2] + 4) if s[2] else 0,
     "InlBenefit": lambda m, r, s: r["ecx"], "InlBadCandidate": lambda m, r, s: r["eax"],
     "ShouldInlineInlinee": lambda m, r, s: r["edx"], "InlineInlinee": lambda m, r, s: r["ecx"],
+    REGUSE_CALL: lambda m, r, s: s[1],
 }
 
 
@@ -711,7 +717,7 @@ class InlineTracer(c2_trace.Tracer):
 
     def _on_entry(self, dbg, model, regs, tid, address, bp, bps, pending):
         name = c2_trace.plain_name(bp["entry"])
-        conv = name in CONV_BREAKS
+        conv = name in CONV_BREAKS or name == REGUSE_RECORD
         unfiltered = conv or self._wanted_by_callee(dbg, model, regs, tid, name)
         saved = self.entry_only, self.filter, self.max_events
         if name.startswith("probe:"):
@@ -927,7 +933,7 @@ def main(argv=None):
         breaks = [c2_trace.resolve_name(name, table) for name in BREAKS]
         breaks += probe_breaks(table)
         if args.link_rsp:
-            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS + CONV_BREAKS]
+            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS + CONV_BREAKS + REGUSE_BREAKS]
         tracer = InlineTracer(table, data["image_base"], breaks, args.function, (), args.max_events)
         env = probe_toolchain.toolchain_environment(toolchain)
         if args.link_rsp:
@@ -942,7 +948,7 @@ def main(argv=None):
     except (c2_trace.TraceError, OSError, ValueError, KeyError) as error:
         print("c2_inline_trace: " + str(error), file=sys.stderr)
         return 1
-    sites = build_sites([e for e in tracer.events if e["break"] not in LTCG_BREAKS + CONV_BREAKS])
+    sites = build_sites([e for e in tracer.events if e["break"] not in LTCG_BREAKS + CONV_BREAKS + REGUSE_BREAKS])
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", encoding="utf-8") as stream:
         for site in sites:
@@ -960,6 +966,7 @@ def main(argv=None):
     if args.link_rsp:
         conventions = build_conventions(tracer.events, sites)
         extra["conventions"] = conventions
+        extra["reg_use"] = build_reg_use(tracer.events, args.function)
         if args.function:
             extra["function_status"] = {name: function_status(name, conventions, sites)
                                         for name in matching_names(args.function, conventions, sites)}
@@ -980,7 +987,51 @@ def main(argv=None):
             print(line)
         for name, status in extra.get("function_status", {}).items():
             print("%s: %s" % (name, status))
+        for line in format_reg_use(extra["reg_use"]):
+            print(line)
     return 0 if returncode == 0 else 3
+
+
+REGUSE_CALL_KEYS = ("function", "callee", "verdict", "summary", "callee_flags20", "callee_flags37", "node_is_entry")
+REGUSE_RECORD_KEYS = ("skip", "flags20", "flags20_after", "cg_node", "node_is_entry", "stored", "summary")
+
+
+def build_reg_use(events, function_filter=None):
+    """extra.json `reg_use`: `summaries` (per function, in compile order: what MscRecordInterProcRegInfo
+    stored; with --function only the matching functions and the callees of the kept calls) and `calls`
+    (each LoAddCallScratchRegs: the caller, the callee and whether the callee's summary was used)."""
+    calls = [{k: e[k] for k in REGUSE_CALL_KEYS if k in e} for e in events if e["break"] == REGUSE_CALL]
+    wanted = {c.get("callee") for c in calls} | {c.get("function") for c in calls}
+    summaries, order = {}, 0
+    for e in events:
+        if e["break"] != REGUSE_RECORD:
+            continue
+        order += 1
+        name = e.get("entry_name")
+        if function_filter and name not in wanted and not (name and function_filter in name):
+            continue
+        record = {k: e[k] for k in REGUSE_RECORD_KEYS if k in e}
+        record["order"] = order
+        summaries[name] = record
+    return {"summaries": summaries, "calls": calls}
+
+
+def format_reg_use(reg_use, limit=40):
+    """One line per (caller, callee, verdict) with its count, then the callees' summaries."""
+    counts = {}
+    for call in reg_use["calls"]:
+        key = (call.get("function"), call.get("callee"), call.get("verdict"))
+        counts[key] = counts.get(key, 0) + 1
+    lines = ["register use at calls (LoAddCallScratchRegs): %d calls" % len(reg_use["calls"])] if counts else []
+    for (function, callee, verdict), count in list(counts.items())[:limit]:
+        lines.append("  %s -> %s x%d: %s" % (function, callee, count, verdict))
+    callees = {c.get("callee") for c in reg_use["calls"]}
+    for name, record in reg_use["summaries"].items():
+        if name in callees:
+            lines.append("  summary of %s (compiled #%d): %s%s" % (
+                name, record["order"], ", ".join(record.get("summary") or []) or "none stored",
+                " (skipped: %s)" % record["skip"] if record.get("skip") else ""))
+    return lines
 
 
 def matching_names(text, conventions, sites):
