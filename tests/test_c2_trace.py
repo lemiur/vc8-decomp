@@ -95,15 +95,44 @@ class StructureTests(unittest.TestCase):
         mem.put(0x400C, 51)
         mem.put(0x401C, 3)
         mem.put(0x4038, 0x7000)
+        mem.put(0x4024, 7)
         mem.put(0x4040, 14)
         mem.put(0x4044, 13)
         mem.put(0x601C, 2)
         mem.put(0x7000, 0, 0x8000, 1)
         mem.put(0x801C, 1)
         info = ct.C2Model(mem.u32, mem.bytes, {}.get).globreg(0x4000)
-        self.assertEqual((info["globreg"], info["symnum"], info["priority"], info["lastref"], info["refs"]),
-                         (3, 2, 51, 13, 14))
+        self.assertEqual((info["globreg"], info["symnum"], info["priority"], info["lastref"], info["refs"],
+                          info["cost"]), (3, 2, 51, 13, 7, 14))
         self.assertEqual(info["prefs"], [{"globreg": 1, "weight": 1}])
+
+    def test_spillcosts_fold_reads_block_terms(self):
+        mem = FakeMemory()
+        syms = {"_Function": 0x100, "_PogoFlag": 0x110}
+        mem.put(0x100, 0x200)                      # _Function -> function
+        mem.put(0x208, 0x300)                      # function+8 -> flow graph
+        mem.put(0x300, 0x1000)                     # first block
+        mem.put(0x1000, 0x2000)                    # block 0 -> block 1
+        mem.raw[0x2000 + 0x17E] = b""           # block 1: loop depth 1
+        mem.put(0x2000 + 0x16C, 0x5000)            # in a loop
+        mem.put(0x3000 + 0x14, 0)                  # dead: one entry
+        mem.put(0x3000 + 0x18, 4)
+        mem.put(0x3000 + 0x1C, 7)
+        mem.put(0x4000 + 0x04, 0x100000)           # live entry 1: referenced
+        mem.put(0x4000 + 0x14, 0x4100)
+        mem.put(0x4000 + 0x18, 2)
+        mem.put(0x4000 + 0x1C, 8)
+        mem.put(0x4100 + 0x1C, 9)                  # live entry 2: live through, unreferenced
+        model = ct.C2Model(mem.u32, mem.bytes, syms.get)
+        stack = [0] * 7 + [0x2000]
+        out = ct.SpillcostsFoldDecoder().entry(model, {"edi": 3, "ebp": 2, "ecx": 0x3000, "ebx": 0x4000}, stack)
+        self.assertEqual((out["n"], out["w"], out["block"], out["depth"], out["loop"]), (3, 2, 1, 1, True))
+        self.assertEqual(out["dead"], [{"globreg": 7, "c": 4, "assigned": False}])
+        self.assertEqual([(g["globreg"], g["c"], g["referenced"]) for g in out["live"]], [(8, 2, True), (9, 0, False)])
+
+    def test_internal_point_resolves_offset_from_public(self):
+        table = ct.symbol_table([{"name": "@Spillcosts@12", "va": 0x10B10420}])
+        self.assertEqual(ct.internal_point("SpillcostsFold", table), ("SpillcostsFold", 0x10B11484))
 
 
 class SummaryTests(unittest.TestCase):

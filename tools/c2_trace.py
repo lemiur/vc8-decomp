@@ -51,9 +51,33 @@ PRESETS = {
                "doc": "spill reloads, local register assignment, LEA->ADD (tuples at each phase)"},
     "emit": {"breaks": "CgBottomUpOrder,ReadFunction,EmitFunction",
              "doc": "call-graph reordering and the compile/emit loop (unfiltered: omit --function)"},
+    "globreg": {"breaks": "Spillcosts,SpillcostsFold,OrderGlobregs,ChoosePhysReg",
+                "doc": "globreg priorities: Spillcosts per-block terms, the coloring order and choices"},
     "stack": {"breaks": "AddStackElement,ColorStackElements,QSortColors",
               "doc": "stack packing: elements, colours (shared slots), the colour sort and frame offsets"},
 }
+
+
+# Break points inside a function (not public entries): name -> (public, offset, the instruction bytes
+# expected there in the pinned c2.dll). Entry-only: no return breakpoint is planted for them.
+INTERNAL_POINTS = {
+    # Spillcosts' per-block fold, at `imul edi, ebp` (S_b = N_b * w_b) before the globregs' +0xC updates.
+    "SpillcostsFold": ("Spillcosts", 0x1064, bytes.fromhex("0FAFFD")),
+}
+
+
+def internal_point(name, table, binary=None):
+    """(name, va) of an INTERNAL_POINTS entry, its bytes checked against c2.dll when binary is given."""
+    public, offset, expected = INTERNAL_POINTS[plain_name(name)]
+    va = resolve_name(public, table)[1] + offset
+    if binary is not None:
+        import pefile
+        pe = pefile.PE(str(binary), fast_load=True)
+        found = pe.get_data(va - pe.OPTIONAL_HEADER.ImageBase, len(expected))
+        if found != expected:
+            raise TraceError("%s: c2.dll has %s at 0x%08X, not %s (not the pinned c2.dll?)"
+                             % (name, found.hex(), va, expected.hex()))
+    return plain_name(name), va
 
 
 def preset_breaks(breaks, tuples, presets):
@@ -294,14 +318,23 @@ class C2Model:
     def globreg(self, ptr):
         """Globreg (GrgNewGlobreg): +0 sym, +0x1c number, +0x20 allowed-physreg
         sparse bv, +0x10 assigned _RegSym entry, +0x38 preference list
-        {next, Globreg*, weight}, +0x40 reference count."""
+        {next, Globreg*, weight}, +0x24 reference count, +0x40 weighted spill
+        cost (Spillcosts: each reference's cost times its block weight, less
+        the enter/exit copies), +0x44 last-reference ordinal. The symbol's
+        kind byte (+4), front-end name and number come from symbol()."""
         if not ptr:
             return None
         sym = self.u32(ptr)
         info = {"globreg": self.u32(ptr + 0x1C), "sym": "0x%08X" % sym}
         if sym:
             info["symnum"] = self.u32(sym + 0x1C)
-            info["name"] = self.cstr(self.u32(sym)) or self.cstr(self.u32(self.u32(sym)))
+            described = self.symbol(sym)
+            info["kind"] = described["kind"]
+            for key in ("name", "fe", "base", "offset"):
+                if key in described:
+                    info[key] = described[key]
+            if "name" not in info:
+                info["name"] = self.cstr(self.u32(sym)) or self.cstr(self.u32(self.u32(sym)))
         info["priority"] = _signed(self.u32(ptr + 0x0C))
         info["lastref"] = self.u32(ptr + 0x44)
         prefs = []
@@ -313,7 +346,8 @@ class C2Model:
             node = self.u32(node)
         if prefs:
             info["prefs"] = prefs
-        info["refs"] = ctypes.c_int32(self.u32(ptr + 0x40)).value
+        info["refs"] = _signed(self.u32(ptr + 0x24))
+        info["cost"] = _signed(self.u32(ptr + 0x40))
         return info
 
     SYM_SIZE = 0x60      # SymAllocPool: getmem(0xC0C) = 0xC header + 32 symbols of 0x60
@@ -468,6 +502,34 @@ class C2Model:
             entry = self.u32(entry + self.ENTRY_NEXT)
         return out
 
+    BLOCK_DEPTH = 0x17E  # Spillcosts: w = 1 << byte [block+0x17E] (loop nesting, LgFindExitBlocks1)
+    BLOCK_LOOP = 0x16C   # the innermost loop of the block (0: none)
+
+    def block_index(self, block, limit=20000):
+        """Position of a flow-graph block in its list ([[_Function]+8] -> first block, next +0)."""
+        node = self.u32(self.u32(self.u32(self.sym("_Function")) + 8))
+        index = 0
+        while node and index < limit:
+            if node == block:
+                return index
+            node = self.u32(node)
+            index += 1
+        return None
+
+    def class_globregs(self, reg_class):
+        """Globreg pointers of one register class, in _GlobregHash order (1024 buckets, chains by +0x30),
+        the class read as OrderGlobregs does: _RegClass[word [sym+0x10] >> 12]."""
+        base, reg_classes = self.sym("_GlobregHash"), self.sym("_RegClass")
+        out = []
+        for bucket in range(1024):
+            node = self.u32(base + 4 * bucket)
+            while node and len(out) < 4096:
+                sym = self.u32(node)
+                if sym and self.u32(reg_classes + 4 * ((self.u32(sym + 0x10) & 0xFFFF) >> 12)) == reg_class:
+                    out.append(node)
+                node = self.u32(node + 0x30)
+        return out
+
     def symtab(self, limit=4096):
         """Every allocated c2 symbol slot ([_BESymTab]+0 = next number)."""
         table = self.u32(self.sym("_BESymTab"))
@@ -496,7 +558,7 @@ class Decoder:
 class ChoosePhysRegDecoder(Decoder):
     """ChoosePhysReg(EAX=sparse bv of interfering globregs, [esp+4]=Globreg*,
     [esp+8]=register class); ret 8. It zeroes _ChoosePhysReg_weights, adds the
-    preference weights of interfering globregs and 100*refs of any whose
+    preference weights of interfering globregs and 100*cost (+0x40) of any whose
     allowed set is a single register, subtracts the globreg's own preference
     weights, then walks _RegOrders[class] keeping the first allowed register
     with the strictly lowest weight, and stores &_RegSym[reg] at Globreg+0x10."""
@@ -523,6 +585,9 @@ class ChoosePhysRegDecoder(Decoder):
         return out
 
 
+GLOBREG_KEYS = ("globreg", "symnum", "kind", "name", "fe", "base", "offset", "priority", "lastref", "refs", "cost")
+
+
 class OrderGlobregsDecoder(Decoder):
     """OrderGlobregs([esp+4]=register class, [esp+8]=bv); ret 8. Walks
     _GlobregHash (bucket = globreg & 0x3FF, chains newest first), and
@@ -538,10 +603,63 @@ class OrderGlobregsDecoder(Decoder):
         order = []
         while node and len(order) < 512:
             info = model.globreg(node)
-            order.append({k: info[k] for k in ("globreg", "symnum", "name", "priority", "lastref", "refs")
-                          if info.get(k) is not None})
+            order.append({k: info[k] for k in GLOBREG_KEYS if info.get(k) is not None})
             node = model.u32(node + 0x14)
         return {"order": order}
+
+
+class SpillcostsDecoder(Decoder):
+    """Spillcosts([esp+4]=function, [esp+8]=register class, [esp+0xC]=bv); ret 0xC. Accumulates, per
+    globreg of the class still to be ordered (+5 bit 0): +0x24 references, +0x40 weighted cost, and at
+    each block's end (SpillcostsFold) the priority +0xC. Entry and exit: every globreg of the class
+    (_GlobregHash), so exit minus entry is this call's share."""
+
+    def snapshot(self, model, reg_class):
+        out = []
+        for ptr in model.class_globregs(reg_class):
+            info = model.globreg(ptr)
+            row = {k: info[k] for k in GLOBREG_KEYS if info.get(k) is not None}
+            row["pending"] = bool(model.u32(ptr + 4) & 0x100)   # +5 bit 0: not yet in _SortedGlobregs
+            row["assigned"] = bool(model.u32(ptr + 0x10))
+            out.append(row)
+        return out
+
+    def entry(self, model, regs, stack):
+        reg_class = stack[2]
+        return {"class": reg_class, "before": self.snapshot(model, reg_class)}, {"class": reg_class}
+
+    def exit(self, model, regs, state):
+        return {"after": self.snapshot(model, state["class"])}
+
+
+class SpillcostsFoldDecoder(Decoder):
+    """Spillcosts at 0x10B11484 (`imul edi, ebp`), once per block: EDI = N_b (the globregs referenced
+    in the block, plus the bv of already-ordered ones), EBP = w_b (block weight: 1 << depth under /O2),
+    [esp+0x1C] = block, ECX = the list of globregs whose last use is in the block, EBX = the list of
+    globregs live through it (both linked by +0x14). Each entry's +0x18 is C_b, its summed reference
+    costs in the block. Next: dead entries with +0x10 == 0 and live entries with +6 bit 0x10
+    (referenced here) get +0xC += C_b * N_b * w_b; live unreferenced ones +0xC -= N_b * w_b (w_b with
+    PGO)."""
+
+    def entries(self, model, head, live):
+        out = []
+        node = head
+        while node and len(out) < 1024:
+            row = {"globreg": model.u32(node + 0x1C), "c": _signed(model.u32(node + 0x18)),
+                   "assigned": bool(model.u32(node + 0x10))}
+            if live:
+                row["referenced"] = bool(model.u32(node + 4) & 0x100000)   # byte +6 bit 0x10
+            out.append(row)
+            node = model.u32(node + 0x14)
+        return out
+
+    def entry(self, model, regs, stack):
+        block = stack[7]   # [esp+0x1C]
+        return {"n": regs["edi"], "w": regs["ebp"], "block": model.block_index(block),
+                "depth": model.bytes(block + model.BLOCK_DEPTH, 1)[0],
+                "loop": bool(model.u32(block + model.BLOCK_LOOP)),
+                "pgo": model.u32(model.sym("_PogoFlag")) == 2,
+                "dead": self.entries(model, regs["ecx"], False), "live": self.entries(model, regs["ebx"], True)}
 
 
 class StackModel:
@@ -764,7 +882,7 @@ class SpillDecoder(Decoder):
 
     def entry(self, model, regs, stack):
         info = model.globreg(regs["eax"]) or {}
-        out = {k: info[k] for k in ("globreg", "symnum", "name", "priority", "refs") if info.get(k) is not None}
+        out = {k: info[k] for k in ("globreg", "symnum", "name", "priority", "refs", "cost") if info.get(k) is not None}
         sym = model.u32(regs["eax"]) if regs["eax"] else 0
         if sym:
             out.update({k: v for k, v in model.symbol(sym).items() if k in ("base", "offset", "fe")})
@@ -840,6 +958,7 @@ class EntryListDecoder(Decoder):
 DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobregsDecoder,
             "SymAlloc": SymAllocDecoder, "SymFree": SymFreeDecoder, "GrgImmedTupleHash": ImmedHashDecoder,
             "GrgNewGlobreg": NewGlobregDecoder, "Spill": SpillDecoder, "RegAssign": RegAssignDecoder,
+            "Spillcosts": SpillcostsDecoder, "SpillcostsFold": SpillcostsFoldDecoder,
             "CgBuildCallGraph": EntryListDecoder, "CgBottomUpOrder": EntryListDecoder,
             "ColorStackElements": ColorStackElementsDecoder, "QSortColors": QSortColorsDecoder,
             "AddStackElement": AddStackElementDecoder}
@@ -878,13 +997,22 @@ def format_event(event):
         prefs = ""
         if event.get("prefs"):
             prefs = " prefs=" + ",".join("g%s:%d" % (p["globreg"], p["weight"]) for p in event["prefs"])
-        return "%s  g%s(sym%s) -> %s  [%s]%s prio=%s lastref=%s refs=%s%s" % (
+        return "%s  g%s(sym%s) -> %s  [%s]%s prio=%s lastref=%s refs=%s cost=%s%s" % (
             func, event.get("globreg"), event.get("symnum"), event["chosen"], cands, tie,
-            event.get("priority"), event.get("lastref"), event.get("refs"), prefs)
+            event.get("priority"), event.get("lastref"), event.get("refs"), event.get("cost"), prefs)
     if name == "OrderGlobregs" and "order" in event:
         return "%s  OrderGlobregs class=%s: %s" % (func, event.get("class"), " ".join(
             "g%s(sym%s,p%s,l%s)" % (g.get("globreg"), g.get("symnum"), g.get("priority"), g.get("lastref"))
             for g in event["order"]))
+    if name == "Spillcosts" and "before" in event:
+        return "%s  Spillcosts class=%s: %s" % (func, event.get("class"), " ".join(
+            "g%s(p%s,r%s,c%s)" % (g.get("globreg"), g.get("priority"), g.get("refs"), g.get("cost"))
+            for g in event.get("after", event["before"]) if g.get("pending", True)))
+    if name == "SpillcostsFold" and "n" in event:
+        return "%s  SpillcostsFold b%s depth=%s N=%s w=%s: %s" % (
+            func, event.get("block"), event.get("depth"), event.get("n"), event.get("w"), " ".join(
+                ["g%s:%s%s" % (g["globreg"], g["c"], "" if g.get("referenced", True) else "(live)")
+                 for g in event.get("dead", []) + event.get("live", []) if not g["assigned"]]))
     if name == "ColorStackElements" and "colors" in event:
         return "%s  ColorStackElements: %d element(s), %d colour(s), params=%s ebp_adj=%s alloc_local=%s: %s" % (
             func, len(event["elements"]), len(event["colors"]), event.get("num_parameters"), event.get("ebp_adj"),
@@ -2005,7 +2133,7 @@ class Tracer:
             self.events.append(event)
         elif wanted:
             self.dropped += 1
-        if event is None or self.entry_only:
+        if event is None or self.entry_only or plain_name(name) in INTERNAL_POINTS:
             return
         ret = stack[0]
         pending.append({"ret": ret, "esp": regs["esp"], "event": event, "decoder": decoder, "state": state})
@@ -2083,7 +2211,10 @@ def main(argv=None):
         for name in breaks_text.split(","):
             if name.strip() and plain_name(name.strip()) not in seen:
                 seen.add(plain_name(name.strip()))
-                breaks.append(resolve_name(name.strip(), table))
+                if plain_name(name.strip()) in INTERNAL_POINTS:
+                    breaks.append(internal_point(name.strip(), table, c2_inputs()[0]))
+                else:
+                    breaks.append(resolve_name(name.strip(), table))
         if args.break_module:
             have = {va for _, va in breaks}
             exclude = {plain_name(n) for n in args.exclude.split(",") if n}

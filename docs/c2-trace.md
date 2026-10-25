@@ -18,7 +18,10 @@ table) and `--tuples NAMES` (they carry the function's instruction tuples, `opco
 ChoosePhysReg), `immed` (the 64-cycle routines), `reload` (Spill, RegSimpleAssignBody, RegAssign, LoFinalLower,
 SsaPeepsMd, tuples at each), `emit` (CgBottomUpOrder, ReadFunction, EmitFunction; module-level, so without
 `--function`), `stack` (AddStackElement, ColorStackElements, QSortColors: stack packing, see "Stack
-packing"). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset is given.
+packing"), `globreg` (Spillcosts, SpillcostsFold, OrderGlobregs, ChoosePhysReg: the colouring priority's
+terms, see "Spillcosts"). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset
+is given. A break name may also be an internal point (`INTERNAL_POINTS`: a public plus an offset, its
+instruction bytes checked against `c2.dll` before the run); internal points are entry-only.
 
 `python tools/c2_trace.py emit-order --source X.cpp [--flags ...] [--include DIR] --out R.json [--all-sections]
 [--no-trace]` compiles the unit with `/Bk` (the IL is kept in `R.work/il_*`), predicts the compile order and
@@ -80,10 +83,42 @@ Called by `Color` for each globreg in that order. Entry: `class`, `globreg`, `sy
 `refs`, `prefs` (the globreg's preference list: other globreg and weight), `allowed` (physical register numbers),
 `interferes` (globreg numbers). Return: `chosen` (register name from `_RegName`), `candidates` (allowed
 registers in `_RegOrders[class]` order with their `_ChoosePhysReg_weights`), `tie` when several share the
-lowest weight. The routine adds interfering globregs' preference weights and 100 x refs of interfering
+lowest weight. The routine adds interfering globregs' preference weights and 100 x cost (+0x40) of interfering
 globregs restricted to one register, subtracts the globreg's own preference weights, and keeps the first
 register in `_RegOrders` order with the strictly lowest weight: on a tie the earlier register (esi before edi
 before ebx before ebp for class 0) wins, so the coloring order decides.
+
+### `Spillcosts` (color.obj): the priority
+
+`Spillcosts([esp+4]=function, [esp+8]=class, [esp+0xC]=bv)`, `ret 0xC`; `Color` calls it per class before
+`SpillObvious` and `OrderGlobregs` (0x10B0D155), and again in the split loop (0x10B0D2AB). Entry and exit:
+`before` / `after`, every globreg of the class (`_GlobregHash`, 1024 buckets, chain +0x30; class
+`_RegClass[word [sym+0x10] >> 12]`, as `OrderGlobregs`) with the `OrderGlobregs` fields, `pending` (+5 bit 0:
+not yet in `_SortedGlobregs`; only those accumulate) and `assigned` (+0x10).
+
+The block weight w is 1 without `_Speed`, `count x 10000 / _PogoMaxCount + 1` under PGO (`_PogoFlag` 2,
+block+0x190), else `1 << byte [block+0x17E]`, 2^(loop depth) (0x10B10659..0x10B106EC). Per reference (tuple
++9 bit 0, leaf kind 1, the class's globreg of kind 2, unassigned, +5 bit 0) the cost c is added to +0x18
+(the block's C), +0x24 (refs) is incremented and c x w added to +0x40 (cost):
+
+- a source leaf: `CmdCanDirectSubstitute` ? `CmdSubCost` : `CmdLoadCost` (0x10B10966); under `_Speed`
+  `CmdLoadCost` is 2 for a variable and 1 for an immediate (kind 0xD), `CmdSubCost` 2 for a variable;
+- a destination leaf: 2 under `_Speed` when not substitutable (0x10B10FA1);
+- opcode 0x296 (exit copy) and 0x295 (enter copy) subtract their cost x w from +0x40 only.
+
+`SpillcostsFold` (internal point Spillcosts+0x1064 = 0x10B11484, `imul edi, ebp`), once per block, entry
+only: `n` = EDI, N_b (the globregs referenced in the block plus the bv of already ordered ones), `w` = EBP,
+`block` (position from `[[_Function]+8]`), `depth` (byte +0x17E), `loop` (+0x16C), `pgo`, `dead` (ECX: the
+globregs whose last use is in the block) and `live` (EBX: those live through it), both linked by +0x14, each
+`globreg`, `c` (+0x18) and `assigned`, `live` also `referenced` (+6 bit 0x10). The code that follows adds
+c x N_b x w_b to +0xC of each dead unassigned entry and each referenced live entry, and subtracts N_b x w_b
+(w_b under PGO) from each live unreferenced one, so at `/O2`:
+
+    priority = sum over blocks b of N_b x 2^depth_b x (C_b, or -1 when live through b unreferenced)
+
+There is no division by span or degree and no callee-save cost. `BetterToDefer` can later set a globreg's
+priority to its components' minimum minus 1 and re-insert it, and `InsertByBenefit` places split globregs, so
+`ChoosePhysReg`'s order can differ from the `OrderGlobregs` snapshot.
 
 ### Symbols, immediates, globregs, tuples
 
@@ -111,8 +146,10 @@ before ebx before ebp for class 0) wins, so the coloring order decides.
 | `globreg` | Globreg+0x1C, `_NextGlobregNum` at creation (`GrgNewGlobreg`) |
 | `sym`, `symnum` | Globreg+0 (c2 symbol), symbol+0x1C: c2's own symbol number, not c1xx's `$N` listing number |
 | `priority` | Globreg+0x0C, the sort key (spill benefit) `InsertInList` compares first |
-| `lastref` | Globreg+0x44: `RewriteAsGlobregs` stores its running tuple ordinal at each rewritten reference, so the ordinal of the last one |
-| `refs` | Globreg+0x40 |
+| `lastref` | Globreg+0x44: `RewriteAsGlobregs` stores its running tuple ordinal at each rewritten def (0x10B5B099; one counter, blocks in list order, tuples backward within a block), so the earliest def in the last block that defines the value |
+| `refs` | Globreg+0x24: references counted by `Spillcosts` |
+| `cost` | Globreg+0x40: the weighted spill cost (`Spillcosts`: each reference's cost x block weight, less the enter/exit copies) |
+| `kind`, `name`, `fe` | the globreg's c2 symbol: kind byte +4 (3 temporary, 4 local, 5 parameter, 0xD immediate), front-end name and number |
 | `allowed` | sparse bit vector at Globreg+0x20 (header -> nodes `{base, lo32, hi32, next}`) |
 | `chosen` | Globreg+0x10 = `&_RegSym[reg]` (stride 0x60) |
 | symbol | `_BESymTab` slot: `[[_BESymTab]+4][n >> 5] + 0xC + (n & 31) * 0x60` (`SymKeyToSym`); +0 front-end descriptor, +4 kind, +8 base symbol, +0x1C number, +0x24 offset in the base |
