@@ -1106,8 +1106,9 @@ class CallScratchRegsDecoder(Decoder):
 
 class RecordRegInfoDecoder(Decoder):
     """MscRecordInterProcRegInfo(EAX = function context; [ctx] = entry). Entry: the tests that skip
-    the record (ctx+0xAC bit 0x100000; entry+0x20 bit 0x1000; entry+0x37 & 0x1E0 == 0xA0 with
-    entry+0x20 bit 0x20 and byte [entry+0xC]+0x5B == 2) and the store's (_BottomOpt, the
+    the record (ctx+0xAC bit 0x100000, set by OtlScanTuplist on OPEHTRY; entry+0x20 bit 0x1000;
+    entry+0x37 & 0x1E0 == 0xA0 with entry+0x20 bit 0x20 and the function's section ([entry+0xC]) of
+    COMDAT selection +0x5B == 2, IMAGE_COMDAT_SELECT_ANY: an inline function) and the store's (_BottomOpt, the
     call-graph node owning the entry). Exit: node+0x60 (the summary callers will read) and
     entry+0x20 bit 0x10000 (set when MscCollectUsedRegs found no call of unknown register use)."""
 
@@ -1117,16 +1118,17 @@ class RecordRegInfoDecoder(Decoder):
         entry = model.u32(ctx)
         flags20, flags37 = model.u32(entry + ru.ENTRY_FLAGS20), model.u32(entry + ru.ENTRY_FLAGS37)
         node = model.u32(entry + ru.ENTRY_CGNODE)
+        section = model.u32(entry + 0xC)
+        selection = model.bytes(section + 0x5B, 1)[0] if section else None
         skip = None
         if model.u32(ctx + 0xAC) & 0x100000:
-            skip = "ctx+0xAC bit 0x100000"
+            skip = "ctx+0xAC bit 0x100000 (the function has an OPEHTRY: SEH __try)"
         elif flags20 & 0x1000:
             skip = "entry+0x20 bit 0x1000"
-        elif (flags37 & 0x1E0) == 0xA0 and flags20 & 0x20 \
-                and model.bytes(model.u32(entry + 0xC) + 0x5B, 1)[0] == 2:
-            skip = "entry+0x37 class 0xA0, entry+0x20 bit 0x20, [entry+0xC]+0x5B == 2"
+        elif (flags37 & 0x1E0) == 0xA0 and flags20 & 0x20 and selection == 2:
+            skip = "COMDAT selection ANY (section [entry+0xC]+0x5B == 2: an inline function's copy may be replaced)"
         out = {"entry_name": ru.name(entry), "flags20": "0x%X" % flags20, "flags37": "0x%X" % flags37,
-               "bottom_opt": ru.flag("_BottomOpt"), "cg_node": bool(node)}
+               "comdat_selection": selection, "bottom_opt": ru.flag("_BottomOpt"), "cg_node": bool(node)}
         if node:
             out["node_is_entry"] = ru.node_owner(entry, node)
         if skip:

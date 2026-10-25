@@ -94,7 +94,7 @@ the callee's register-use summary, decoded by c2_trace's `RegUseModel` (also `c2
 
 | routine (when) | what it does |
 |---|---|
-| `MscRecordInterProcRegInfo` (EAX = context; `dop2_EncodeAndRelated`, once the function's code is final) | `MscCollectUsedRegs` collects the registers its tuples write (register destinations and the kill sets of its own calls); with `_BottomOpt` set and a call-graph node (entry+0x88) whose +4 is this entry (or, under PGO, entry+0xAC), stores the set at **node+0x60** (a sparse bv of register numbers). Skipped when ctx+0xAC bit 0x100000, entry+0x20 bit 0x1000, or entry+0x37 & 0x1E0 == 0xA0 with entry+0x20 bit 0x20 and [entry+0xC]+0x5B == 2. Sets entry+0x20 bit 0x10000 when no call of unknown register use was found. With `_PogoFlag` == 1 the XMM registers are added; with `_Module`+0x44C bit 0x8000000 and calls, the x87 stack. |
+| `MscRecordInterProcRegInfo` (EAX = context; `dop2_EncodeAndRelated`, once the function's code is final) | `MscCollectUsedRegs` collects the registers its tuples write (register destinations and the kill sets of its own calls); with `_BottomOpt` set and a call-graph node (entry+0x88) whose +4 is this entry (or, under PGO, entry+0xAC), stores the set at **node+0x60** (a sparse bv of register numbers). Skipped when ctx+0xAC bit 0x100000 (an `OPEHTRY`, SEH `__try`), entry+0x20 bit 0x1000, or entry+0x37 & 0x1E0 == 0xA0 with entry+0x20 bit 0x20 and the function's section (entry+0xC) of COMDAT selection (+0x5B) 2, `IMAGE_COMDAT_SELECT_ANY`: an `inline` function, whose copy the linker may take from another object (`comdat_selection` in the record). Not called at all under `#pragma optimize("g", off)` or `/Od`. Sets entry+0x20 bit 0x10000 when no call of unknown register use was found. With `_PogoFlag` == 1 the XMM registers are added; with `_Module`+0x44C bit 0x8000000 and calls, the x87 stack. |
 | `LoAddCallScratchRegs` ([esp+4] = call tuple; Lower of each caller) | builds the call's kill set. The callee's summary is used when the callee entry (source leaf +0x28, kind 4, or a symbol whose entry has +0x37 bit 0x400) has entry+0x30 == 4, **entry+0x37 bit 0x4000** (the function has IL in this compile or link), `_BottomOpt`, a call-graph node owning the entry, and a summary at node+0x60: then only the scratch registers in the summary are killed. Otherwise every scratch register is. |
 
 `reg_use` = `{"summaries": {function: {"order", "stored", "summary", "skip", "flags20", "flags20_after", ...}},
@@ -104,7 +104,8 @@ the callee's register-use summary, decoded by c2_trace's `RegUseModel` (also `c2
 calls compiled in a matching function or to a matching callee are kept, with the summaries of both ends; the
 tool prints one line per caller, callee and verdict. Probe check (`ltcg_probes.py` P7): `Math_Tan` compiled
 `/GL` stores `esp, ebp, GF0-GF7, ST(0), cc, fcc` and its caller's three calls use it (XMM0 kept across them);
-compiled without `/GL` (P7f) the calls read `entry+0x37 bit 0x4000 clear` and the caller reloads.
+compiled without `/GL` (P7f) the calls read `entry+0x37 bit 0x4000 clear` and the caller reloads. Defined `inline __declspec(noinline)` in a header (P13), the record is skipped (selection
+ANY): the callers reload g_k before each call while `Math_Tan` keeps the link's body.
 
 ## Output
 

@@ -322,6 +322,13 @@ class RegUse(unittest.TestCase):
         mem.put(0x3000 + 0x20, 0x1000)
         info, _ = ct.RecordRegInfoDecoder().entry(model(mem, self.SYMS), {"eax": 0x7000}, [0])
         self.assertEqual(info["skip"], "entry+0x20 bit 0x1000")
+        mem.put(0x3000 + 0x20, 0x20)                        # an inline function: selection ANY
+        mem.put(0x3000 + 0x37, 0x40A5)
+        mem.put(0x3000 + 0xC, 0x8000)
+        mem.raw[0x8000 + 0x5B] = bytes([2])
+        info, _ = ct.RecordRegInfoDecoder().entry(model(mem, self.SYMS), {"eax": 0x7000}, [0])
+        self.assertEqual(info["comdat_selection"], 2)
+        self.assertTrue(info["skip"].startswith("COMDAT selection ANY"))
 
     def test_build_reg_use_keeps_the_callees_of_kept_calls(self):
         events = [ev(1, it.REGUSE_RECORD, function="?tan@@YAMM@Z", entry_name="?tan@@YAMM@Z", stored=True,

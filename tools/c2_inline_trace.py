@@ -993,7 +993,8 @@ def main(argv=None):
 
 
 REGUSE_CALL_KEYS = ("function", "callee", "verdict", "summary", "callee_flags20", "callee_flags37", "node_is_entry")
-REGUSE_RECORD_KEYS = ("skip", "flags20", "flags20_after", "cg_node", "node_is_entry", "stored", "summary")
+REGUSE_RECORD_KEYS = ("skip", "flags20", "flags37", "comdat_selection", "flags20_after", "cg_node",
+                      "node_is_entry", "stored", "summary")
 
 
 def build_reg_use(events, function_filter=None):
