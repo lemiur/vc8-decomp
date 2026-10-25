@@ -27,8 +27,30 @@ so the same breakpoints and probes see the whole-program inliner and the output 
 names the link.exe (another install of the same version is fine as long as the `c2.dll` it loads is the pinned
 one; the tracer slides the breakpoints to wherever it loads). Exit 3 means link.exe failed.
 
-Under `/LTCG` c2 runs `InlInitLtcgSetting`, and the constants differ from a plain compile's: SpeedLimit **84**
-(74 plain), FoldCmpSpeedWeight 35 (30), OneCallSizeAdj1/4 45, FewCallSizeAdj 5; SizeLimit stays 9 (`_Ltcg` = 1).
+Under `/LTCG` (`_Ltcg` = 1) `InlInit` calls `LtcgInlClassify` and passes its result to `InlInitLtcgSetting`
+(`__stdcall`, one `unsigned __int64`, `ret 8`). **The link size** is the sum, over the `_Eentry_list` entries with
+a body (entry+0x50 bit 0x20: the functions the link compiles, after `/OPT:REF`; unreferenced functions do not
+count), of each entry's size word (entry+0x54, the size the `/GL` compile recorded, saturating at 65535).
+`InlInitLtcgSetting` adds a step of it to `_InlNativeByteConsts`' SpeedLimit (+4, 74) and FoldCmpSpeedWeight
+(+8, 30), each bound inclusive:
+
+| link size | SpeedLimit | FoldCmpSpeedWeight |
+|---|---|---|
+| <= 50,000 | +15 (89) | +10 (40) |
+| <= 100,000 | +10 (84) | +5 (35) |
+| <= 500,000 | +5 (79) | 30 |
+| <= 1,500,000 | -3 (71) | 30 |
+| <= 2,500,000 | -5 (69) | 30 |
+| larger | -10 (64) | 30 |
+
+`InlInit` then copies `_InlNativeByteConsts` to `_InlCurConsts` (`_InlNativeConsts`, which the step does not
+touch, when `_PogoMasterFlag` is set). Module and function counts enter only through the size: 40 tiny modules
+(4,813) give 89, 1,000 one-block functions in one module (64,032) 84, the same 74.6k in 1 or 20 modules 84
+(`tools/ltcg_probes.py` P14 sweep). The other constants that differ from a plain compile's (OneCallSizeAdj1/4
+45, FewCallSizeAdj 5; SizeLimit stays 9) are `InlInitNativeByte`'s. With `--link-rsp` the decoder of
+`InlInitLtcgSetting` writes `extra.json` `ltcg_setting` (`link_size`, the rule's `delta`, SpeedLimit and
+FoldCmpSpeedWeight `before`/`after`, and the `entries`, `bodies` and `bodies_size` it recounts from
+`_Eentry_list`) and the tool prints it as `InlInitLtcgSetting: link size N (...) -> SpeedLimit S, ...`.
 `_InlCurConsts` at the first `InlCallGraphDecision` is written with the call-graph counts to `<out>.extra.json`
 (`consts`), in both modes.
 
@@ -148,7 +170,7 @@ below), `budget`, `depth_limit`, `func_size`, and `numbers`:
 | `speed_cap.cost` | cost before the speed path; > 450 refuses |
 | `speed_small.cost`/`limit` | cost after the speed weights; < SizeLimit+5 (14) accepts |
 | `speed_loop.loop_term` | the callee's loop share added before the frequency weighting |
-| `speed_ratio.weighted`/`limit` | frequency-weighted cost; < SpeedLimit (74) accepts |
+| `speed_ratio.weighted`/`limit` | frequency-weighted cost; < SpeedLimit (74 plain, the link-size step under `/LTCG`) accepts |
 | `size_end.cost` | size path (no /Ot): cost < SizeLimit (9) accepts |
 | `InlCallGraphDecision.site_weight` | the call block's estimated frequency, 100000000 = once per caller entry |
 | `InlCallGraphDecision.cg_callsites` | call sites of the callee in the unit (entry+0x90) |
@@ -171,9 +193,10 @@ below), `budget`, `depth_limit`, `func_size`, and `numbers`:
   goes to `InlCallGraphDecision`.
 - **InlCallGraphDecision**, speed path: `cost = size68 - arg_cost - credit + caller_penalty
   - NoBranchSizeAdj(10, branch-free callee)`; cost > 450 refuses; cost -= the fold/argument speed weights
-  (FoldCmpSpeedWeight 30 per foldable compare against a constant argument); if < 14 accept (InlBadCandidate
+  (FoldCmpSpeedWeight 30 plain per foldable compare against a constant argument); if < 14 accept (InlBadCandidate
   permitting); else `cost += loop_term`, then weighted = `(cost*1e8/site_weight + (c-1)*cost)/c` with c = 3 if the
-  block runs more than once per entry, else 7; weighted < 74 accepts. Cold call sites (low `site_weight`) cost more.
+  block runs more than once per entry, else 7; weighted < SpeedLimit (74 plain; under `/LTCG` the link-size
+  step above) accepts. Cold call sites (low `site_weight`) cost more.
 - The constants are `_InlCurConsts` (45 dwords; names from `InlInitUsrSetting`, defaults from
   `InlInitNativeByte`), all printed by `read_consts` in the module.
 

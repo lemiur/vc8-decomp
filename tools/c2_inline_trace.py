@@ -45,6 +45,7 @@ ROOT = Path(__file__).resolve().parents[1]
 # count InlCollectInfo stored when the callee was compiled), +0x88 the call
 # graph node (Globopt only).
 ENTRY_NAME, ENTRY_FLAGS20, ENTRY_FLAGS50, ENTRY_SIZE, ENTRY_CGNODE = 0x04, 0x20, 0x50, 0x54, 0x88
+ENTRY_NEXT = 0x80   # _Eentry_list link (dop2, LtcgInlClassify)
 
 # Entry+0x50 bits named from the routines that test them.
 FLAGS50 = {
@@ -659,6 +660,60 @@ class CollectInfoDecoder(c2_trace.Decoder):
 
 CAPTURED_CONSTS = {}
 
+# InlInitLtcgSetting (inline.obj, __stdcall, one unsigned __int64 argument, ret 8), called once by InlInit
+# under /LTCG with LtcgInlClassify's result: the sum of the entry+0x54 sizes (the instruction counts the /GL
+# compiles recorded) of every _Eentry_list entry with a body (entry+0x50 bit 0x20). It adds a step of that
+# link size to _InlNativeByteConsts' SpeedLimit (+4) and FoldCmpSpeedWeight (+8); InlInit then copies
+# _InlNativeByteConsts to _InlCurConsts (_InlNativeConsts, untouched, when _PogoMasterFlag is set).
+LTCG_SETTING_BREAK = "InlInitLtcgSetting"
+LTCG_SETTING_STEPS = ((50000, 15, 10), (100000, 10, 5), (500000, 5, 0), (1500000, -3, 0), (2500000, -5, 0))
+LTCG_SETTING = {}
+
+
+def ltcg_setting_delta(link_size):
+    """(SpeedLimit, FoldCmpSpeedWeight) added by InlInitLtcgSetting for a link size (unsigned 64-bit
+    compares, each bound inclusive; above 2500000: SpeedLimit -10)."""
+    for bound, speed, fold in LTCG_SETTING_STEPS:
+        if link_size <= bound:
+            return speed, fold
+    return -10, 0
+
+
+def _setting_consts(model):
+    va = model.sym("_InlNativeByteConsts")
+    if va is None:
+        return {}
+    return {"SpeedLimit": signed(model.u32(va + 4)), "FoldCmpSpeedWeight": signed(model.u32(va + 8))}
+
+
+class LtcgSettingDecoder(c2_trace.Decoder):
+    """InlInitLtcgSetting([esp+4] low, [esp+8] high dword of the link size): the link size, the rule's
+    delta, and _InlNativeByteConsts' SpeedLimit / FoldCmpSpeedWeight before and after."""
+
+    def entry(self, model, regs, stack):
+        size = (stack[1] & 0xFFFFFFFF) | ((stack[2] & 0xFFFFFFFF) << 32)
+        speed, fold = ltcg_setting_delta(size)
+        info = {"link_size": size, "delta": {"SpeedLimit": speed, "FoldCmpSpeedWeight": fold},
+                "before": _setting_consts(model)}
+        head = model.sym("_Eentry_list")
+        if head is not None:   # what LtcgInlClassify summed: entries with a body, their +0x54 sizes
+            entries, bodies, total, entry = 0, 0, 0, model.u32(head)
+            while entry and entries < 1000000:
+                entries += 1
+                if model.u32(entry + ENTRY_FLAGS50) & 0x20:
+                    bodies += 1
+                    total += model.u32(entry + ENTRY_SIZE) & 0xFFFF
+                entry = model.u32(entry + ENTRY_NEXT)
+            info.update({"entries": entries, "bodies": bodies, "bodies_size": total})
+        LTCG_SETTING.clear()
+        LTCG_SETTING.update(info)
+        return info, None
+
+    def exit(self, model, regs, state):
+        after = _setting_consts(model)
+        LTCG_SETTING["after"] = after
+        return {"after": after}
+
 
 class CallGraphDecoder(c2_trace.Decoder):
     """InlCallGraphDecision([esp+4]=callee's call-graph node (+4 callee entry),
@@ -770,7 +825,7 @@ class InlineTracer(c2_trace.Tracer):
 
     def _on_entry(self, dbg, model, regs, tid, address, bp, bps, pending):
         name = c2_trace.plain_name(bp["entry"])
-        conv = name in CONV_BREAKS or name == REGUSE_RECORD
+        conv = name in CONV_BREAKS or name in (REGUSE_RECORD, LTCG_SETTING_BREAK)
         unfiltered = conv or self._wanted_by_callee(dbg, model, regs, tid, name)
         saved = self.entry_only, self.filter, self.max_events
         if name.startswith("probe:"):
@@ -808,6 +863,7 @@ def install_decoders():
         "ShouldInlineInlinee": lambda: GenericSiteDecoder(("reg", "edx")),
         "InlineInlinee": lambda: GenericSiteDecoder(("reg", "ecx")),
         "InlCollectInfo": CollectInfoDecoder,
+        LTCG_SETTING_BREAK: LtcgSettingDecoder,
     })
     c2_trace.DECODERS.update({
         "MscAllowCallingConventionChange": RawConvGateDecoder,
@@ -986,7 +1042,8 @@ def main(argv=None):
         breaks = [c2_trace.resolve_name(name, table) for name in BREAKS]
         breaks += probe_breaks(table)
         if args.link_rsp:
-            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS + CONV_BREAKS + REGUSE_BREAKS]
+            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS + CONV_BREAKS + REGUSE_BREAKS +
+                                                             (LTCG_SETTING_BREAK,)]
         tracer = InlineTracer(table, data["image_base"], breaks, args.function, (), args.max_events)
         env = probe_toolchain.toolchain_environment(toolchain)
         if args.link_rsp:
@@ -1001,7 +1058,8 @@ def main(argv=None):
     except (c2_trace.TraceError, OSError, ValueError, KeyError) as error:
         print("c2_inline_trace: " + str(error), file=sys.stderr)
         return 1
-    sites = build_sites([e for e in tracer.events if e["break"] not in LTCG_BREAKS + CONV_BREAKS + REGUSE_BREAKS])
+    sites = build_sites([e for e in tracer.events if e["break"] not in LTCG_BREAKS + CONV_BREAKS + REGUSE_BREAKS +
+                         (LTCG_SETTING_BREAK,)])
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", encoding="utf-8") as stream:
         for site in sites:
@@ -1019,6 +1077,7 @@ def main(argv=None):
     if args.link_rsp:
         conventions = build_conventions(tracer.events, sites)
         extra["conventions"] = conventions
+        extra["ltcg_setting"] = dict(LTCG_SETTING)
         extra["reg_use"] = build_reg_use(tracer.events, args.function)
         if args.function:
             extra["function_status"] = {name: function_status(name, conventions, sites)
@@ -1033,6 +1092,13 @@ def main(argv=None):
     for line in format_sites(sites):
         print(line)
     if args.link_rsp:
+        if LTCG_SETTING:
+            print("InlInitLtcgSetting: link size %d (%s bodies of %s entries) -> SpeedLimit %s, "
+                  "FoldCmpSpeedWeight %s (delta %+d, %+d)" % (
+                LTCG_SETTING["link_size"], LTCG_SETTING.get("bodies"), LTCG_SETTING.get("entries"),
+                LTCG_SETTING.get("after", {}).get("SpeedLimit"),
+                LTCG_SETTING.get("after", {}).get("FoldCmpSpeedWeight"),
+                LTCG_SETTING["delta"]["SpeedLimit"], LTCG_SETTING["delta"]["FoldCmpSpeedWeight"]))
         custom = sum(1 for c in conventions if c["custom"])
         print("conventions: %d functions compiled, %d with a custom convention, %d refused; registers, dead and "
               "constant parameters:" % (len(conventions), custom, sum(1 for c in conventions if c["refused"])))

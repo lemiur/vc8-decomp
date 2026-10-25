@@ -163,6 +163,41 @@ class Sites(unittest.TestCase):
         self.assertIn("inlined", lines[0])
 
 
+class LtcgSetting(unittest.TestCase):
+    def test_delta_steps_are_inclusive_bounds_of_the_link_size(self):
+        self.assertEqual(it.ltcg_setting_delta(0), (15, 10))
+        self.assertEqual(it.ltcg_setting_delta(50000), (15, 10))
+        self.assertEqual(it.ltcg_setting_delta(50001), (10, 5))
+        self.assertEqual(it.ltcg_setting_delta(100001), (5, 0))
+        self.assertEqual(it.ltcg_setting_delta(500001), (-3, 0))
+        self.assertEqual(it.ltcg_setting_delta(1500001), (-5, 0))
+        self.assertEqual(it.ltcg_setting_delta(2500001), (-10, 0))
+        self.assertEqual(it.ltcg_setting_delta(1 << 32), (-10, 0))
+
+    def test_decoder_reads_the_64_bit_size_and_the_native_byte_constants(self):
+        mem = FakeMemory()
+        mem.put(0x5000, 9, 74, 30)
+        mem.put(0x6000, 0x7000)                       # _Eentry_list -> two entries, one with a body
+        mem.put(0x7000 + 0x50, 0x22)
+        mem.put(0x7000 + 0x54, 0x10123)               # a word: 0x123
+        mem.put(0x7000 + 0x80, 0x7100)
+        mem.put(0x7100 + 0x50, 0x2)
+        mem.put(0x7100 + 0x54, 50)
+        m = model(mem, {"_InlNativeByteConsts": 0x5000, "_Eentry_list": 0x6000})
+        info, _ = it.LtcgSettingDecoder().entry(m, {}, [0, 120000, 0, 0])
+        self.assertEqual(info["link_size"], 120000)
+        self.assertEqual((info["entries"], info["bodies"], info["bodies_size"]), (2, 1, 0x123))
+        self.assertEqual(info["delta"], {"SpeedLimit": 5, "FoldCmpSpeedWeight": 0})
+        self.assertEqual(info["before"], {"SpeedLimit": 74, "FoldCmpSpeedWeight": 30})
+        mem.put(0x5004, 79)
+        self.assertEqual(it.LtcgSettingDecoder().exit(m, {}, None), {"after": {"SpeedLimit": 79,
+                                                                                "FoldCmpSpeedWeight": 30}})
+        self.assertEqual(it.LTCG_SETTING["after"]["SpeedLimit"], 79)
+        info, _ = it.LtcgSettingDecoder().entry(m, {}, [0, 5, 1, 0])
+        self.assertEqual(info["link_size"], (1 << 32) + 5)
+        self.assertEqual(info["delta"]["SpeedLimit"], -10)
+
+
 class LinkMode(unittest.TestCase):
     def test_raw_gate_decoder_names_the_entry_of_the_context(self):
         mem = FakeMemory()
