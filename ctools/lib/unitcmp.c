@@ -6,15 +6,49 @@
 #include "dk/args.h"
 #include "dk/fmt.h"
 #include "dk/fs.h"
+#include "frame_slots.h"
 #include "insn_text.h"
+#include "residue.h"
 
 #include <stdio.h>
 #include <string.h>
 
 /* ---- hooks -------------------------------------------------------------------------------------------------------
- * Each entry adds one flag and one per-result report. The frame and residue reports (docs/c-toolkit-design.md
- * section 6, WP14) are added here as entries; nothing else in this file changes for them. */
+ * Each entry adds one flag and one per-result report: --frame (frame.h: the prologues, the slots, the slot map) and
+ * --residue (residue.h: the register renames and difference classes). */
+static bool has_reference(const DkResult *r) {
+    return r->status != DK_ERROR && r->status != DK_MISSING && r->theirs_va != 0;
+}
+
+static void frame_report(DkProject *p, const DkUnitcmpRow *row, const DkImage *im, DkBuf *out) {
+    if (!has_reference(row->r)) return;
+    dk_frame_report(out, p, row->r, im);
+    dk_buf_putc(out, '\n');
+}
+
+static DkJson *frame_json(DkProject *p, const DkUnitcmpRow *row, const DkImage *im, DkArena *a) {
+    if (!has_reference(row->r)) return NULL;
+    return dk_frame_json(a, p, row->r, im);
+}
+
+static ResidueReport *residue_of(const DkProject *p, const DkUnitcmpRow *row, const DkImage *im) {
+    return residue_compare(row->r, im, dk_project_target(p, row->r->target)->name);
+}
+
+static void residue_report(DkProject *p, const DkUnitcmpRow *row, const DkImage *im, DkBuf *out) {
+    if (row->r->status == DK_ERROR || row->r->status == DK_MISSING) return;
+    residue_format(out, residue_of(p, row, im));
+}
+
+static DkJson *residue_member(DkProject *p, const DkUnitcmpRow *row, const DkImage *im, DkArena *a) {
+    if (row->r->status == DK_ERROR || row->r->status == DK_MISSING) return NULL;
+    return residue_json(a, residue_of(p, row, im));
+}
+
 static const DkUnitcmpHook HOOKS[] = {
+    {"--frame", "frame", "the stack frames of ours and the reference's, and their slot map", frame_report, frame_json},
+    {"--residue", "residue", "the register renames and difference classes of a non-matching function", residue_report,
+     residue_member},
     {NULL, NULL, NULL, NULL, NULL},
 };
 

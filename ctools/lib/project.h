@@ -76,6 +76,8 @@ typedef struct {
     DkStrVec include;                /* /I folders, absolute */
     DkStrVec identity_files;         /* the files whose digests identify the compiler (objcache keys) */
     bool show_includes;
+    DkStrVec cdecl_import_dlls;      /* frame: import libraries (shell patterns) whose functions are cdecl; unset: "msvcr*" */
+    bool cdecl_import_dlls_set;
     DkStrVec *flag_variants;         /* flag_sweep's one-option variants; NULL when not configured */
     size_t n_flag_variants;
 } DkCompiler;

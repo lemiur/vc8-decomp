@@ -523,7 +523,7 @@ static bool get_list(Ld *L, const DkJson *o, const char *key, const char *kpath,
 static bool read_compiler(Ld *L, const DkJson *o, const char *kpath, DkCompiler *c) {
     if (!want_obj(L, o, kpath) ||
         !CHECK_KEYS(L, o, kpath, "cl", "env", "path_prepend", "base_flags", "c_flags", "cpp_flags", "include",
-                    "identity_files", "show_includes", "flag_variants"))
+                    "identity_files", "show_includes", "flag_variants", "cdecl_import_dlls"))
         return false;
     if (!get_str(L, o, "cl", kpath, true, &c->cl) || !get_list(L, o, "path_prepend", kpath, true, &c->path_prepend) ||
         !get_list(L, o, "base_flags", kpath, false, &c->base_flags) ||
@@ -531,8 +531,10 @@ static bool read_compiler(Ld *L, const DkJson *o, const char *kpath, DkCompiler 
         !get_list(L, o, "cpp_flags", kpath, false, &c->cpp_flags) ||
         !get_list(L, o, "include", kpath, true, &c->include) ||
         !get_list(L, o, "identity_files", kpath, true, &c->identity_files) ||
-        !get_bool(L, o, "show_includes", kpath, &c->show_includes, NULL))
+        !get_bool(L, o, "show_includes", kpath, &c->show_includes, NULL) ||
+        !get_list(L, o, "cdecl_import_dlls", kpath, false, &c->cdecl_import_dlls))
         return false;
+    c->cdecl_import_dlls_set |= dk_json_getz(o, "cdecl_import_dlls") != NULL;
     DkJson *env = dk_json_getz(o, "env");
     if (env) {
         const char *ep = kpz(L, kpath, "env");
