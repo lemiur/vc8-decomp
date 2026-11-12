@@ -71,7 +71,7 @@
 
 #define DK_CACHE_FORMAT 1u
 #define DK_CACHE_SEED 0x444B434143484521ull /* "DKCACHE!" */
-#define DK_LOG_SEED 0x4156504C4F472121ull
+#define DK_LOG_SEED 0x444B4C4F47212121ull /* "DKLOG!!!" */
 
 /* ================================================================================================================
  * writing a payload
