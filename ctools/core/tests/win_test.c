@@ -119,7 +119,7 @@ DK_TEST(named_mutex) {
 
 DK_TEST(file_byte_range_locks) {
     DkArena *a = dk_arena_new(0);
-    char *dir = dk_mkdtemp(a, "avpwin_", "", NULL);
+    char *dir = dk_mkdtemp(a, "dkwin_", "", NULL);
     char *path = dk_path_join(a, dir, ".lock");
     /* matchlib.lock_folder: open(".lock", "a+"), seek(0), msvcrt.locking(fd, LK_NBLCK, 1) */
     DkFile *f1 = dk_fopen(path, "a+", DK_TM_UTF8), *f2 = dk_fopen(path, "a+", DK_TM_UTF8);
@@ -185,7 +185,7 @@ DK_TEST(host_and_user) {
 
 DK_TEST(volume_queries) {
     DkArena *a = dk_arena_new(0);
-    char *dir = dk_mkdtemp(a, "avpwin_", "", NULL);
+    char *dir = dk_mkdtemp(a, "dkwin_", "", NULL);
     u32 serial = 0;
     char *fs = NULL;
     CHECK(dk_volume_info(a, dir, &serial, &fs));

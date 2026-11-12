@@ -13,7 +13,7 @@ static char *g_root;
 
 static void setup(void) {
     g_a = dk_arena_new(0);
-    g_root = dk_mkdtemp(g_a, "avpio_", "", NULL);
+    g_root = dk_mkdtemp(g_a, "dkio_", "", NULL);
 }
 
 static void teardown(void) {

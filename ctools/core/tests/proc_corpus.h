@@ -90,7 +90,7 @@
  * w('};')
  *
  * # --- shutil.which on a layout ---
- * T = tempfile.mkdtemp(prefix='avpwhich')
+ * T = tempfile.mkdtemp(prefix='dkwhich')
  * for d in ('bin1', 'bin2', 'bin3', 'cwd', 'bin2/xdir.exe'):
  *     os.makedirs(os.path.join(T, d), exist_ok=True)
  * for f in ('bin1/tool.exe', 'bin1/tool.bat', 'bin1/script.cmd', 'bin1/readme.txt', 'bin2/tool.com', 'bin2/other.EXE', 'cwd/here.exe', 'bin2/noext', 'bin1/dup.exe'):

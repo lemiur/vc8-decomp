@@ -32,7 +32,7 @@ static void put(const char *r, const char *data) {
 
 static void make_tree(void) {
     g_a = dk_arena_new(0);
-    char *r = dk_mkdtemp(g_a, "avptest_", "", NULL);
+    char *r = dk_mkdtemp(g_a, "dktest_", "", NULL);
     snprintf(g_root, sizeof g_root, "%s", r);
     put("a.txt", "abc");
     put("B.txt", "");

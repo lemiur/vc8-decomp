@@ -327,14 +327,14 @@ static bool replace_file(const char *path, const void *const *parts, const size_
 
 void dk_cache_encode(DkBytes *out, const char *kind, u32 schema, const void *stamp, size_t stamp_n,
                       const void *payload, size_t payload_n) {
-    header_build(out, "AVPC", kind, schema, stamp, stamp_n, payload_n, dk_hash64(payload, payload_n, DK_CACHE_SEED));
+    header_build(out, "DKCC", kind, schema, stamp, stamp_n, payload_n, dk_hash64(payload, payload_n, DK_CACHE_SEED));
     if (payload_n) dk_vec_extend(out, (const u8 *)payload, payload_n);
 }
 
 bool dk_cache_write(const char *path, const char *kind, u32 schema, const void *stamp, size_t stamp_n,
                      const void *payload, size_t payload_n) {
     DkBytes hdr = {0};
-    header_build(&hdr, "AVPC", kind, schema, stamp, stamp_n, payload_n, dk_hash64(payload, payload_n, DK_CACHE_SEED));
+    header_build(&hdr, "DKCC", kind, schema, stamp, stamp_n, payload_n, dk_hash64(payload, payload_n, DK_CACHE_SEED));
     const void *parts[2] = {hdr.v, payload};
     size_t lens[2] = {hdr.n, payload_n};
     bool ok = replace_file(path, parts, lens, payload_n ? 2 : 1);
@@ -351,7 +351,7 @@ bool dk_cache_open_mem(DkCache *c, const void *image, size_t n, const char *kind
                         size_t stamp_n) {
     memset(c, 0, sizeof *c);
     Header h;
-    if (!header_parse((const u8 *)image, n, "AVPC", kind, schema, stamp, stamp_n, &h)) return false;
+    if (!header_parse((const u8 *)image, n, "DKCC", kind, schema, stamp, stamp_n, &h)) return false;
     if (h.payload_len != (u64)(n - h.body_off)) return false; /* truncated, or a tail that is not ours */
     const u8 *payload = (const u8 *)image + h.body_off;
     if (dk_hash64(payload, (size_t)h.payload_len, DK_CACHE_SEED) != h.payload_hash) return false;
@@ -417,7 +417,7 @@ void dk_log_frame(DkBytes *out, const void *body, size_t n) {
 bool dk_log_write_file(const char *path, const char *kind, u32 schema, const void *stamp, size_t stamp_n,
                         const void *frames, size_t frames_n) {
     DkBytes hdr = {0};
-    header_build(&hdr, "AVPL", kind, schema, stamp, stamp_n, 0, 0);
+    header_build(&hdr, "DKCL", kind, schema, stamp, stamp_n, 0, 0);
     const void *parts[2] = {hdr.v, frames};
     size_t lens[2] = {hdr.n, frames_n};
     bool ok = replace_file(path, parts, lens, frames_n ? 2 : 1);
@@ -435,7 +435,7 @@ bool dk_log_open(DkLog *l, const char *path, const char *kind, u32 schema, const
     memset(&h, 0, sizeof h);
     bool ok;
     __try {
-        ok = header_parse(base, size, "AVPL", kind, schema, stamp, stamp_n, &h);
+        ok = header_parse(base, size, "DKCL", kind, schema, stamp, stamp_n, &h);
     } __except (GetExceptionCode() == EXCEPTION_IN_PAGE_ERROR ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) {
         ok = false;
     }
@@ -508,7 +508,7 @@ bool dk_log_append_open(DkLogAppender *a, const char *path, const char *kind, u3
             HANDLE c = CreateFileW(w, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
             if (c != INVALID_HANDLE_VALUE) {
                 DkBytes hdr = {0};
-                header_build(&hdr, "AVPL", kind, schema, stamp, stamp_n, 0, 0);
+                header_build(&hdr, "DKCL", kind, schema, stamp, stamp_n, 0, 0);
                 DWORD written = 0;
                 bool ok = WriteFile(c, hdr.v, (DWORD)hdr.n, &written, NULL) && written == hdr.n;
                 dk_vec_free(&hdr);

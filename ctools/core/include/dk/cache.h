@@ -9,7 +9,7 @@
  * ---- Format 1 (all integers little-endian, the same on every machine) ----------------------------------------------
  *
  *   offset  size  field
- *        0     4  magic "AVPC"                  (a log file has "AVPL", see below)
+ *        0     4  magic "DKCC"                  (a log file has "DKCL", see below)
  *        4     4  u32 format = 1                this container; any other value is "no cache"
  *        8     4  u32 schema                    the caller's version of the payload layout (bump it when a record
  *                                               changes); must equal what the reader expects
@@ -55,7 +55,7 @@
  * ---- Append-only variant: the log ---------------------------------------------------------------------------------------
  * For tables that grow by a few entries per run and are shared by processes (objcache's PickleMemo: a key -> answer
  * table that Python re-read, merged and rewrote whole at exit), a log file avoids the read-merge-write race and the
- * rewrite of a large table: one header like the cache's but with magic "AVPL" (payload_len and payload_hash 0, the
+ * rewrite of a large table: one header like the cache's but with magic "DKCL" (payload_len and payload_hash 0, the
  * header_crc covers it), then framed records appended one at a time:
  *        u32 marker 0x01525641 ("AVR\1"), u32 body_len, u32 check, body (one record of the typed fields above)
  *        check = low 32 bits xor high 32 bits of dk_hash64(body, body_len, DK_LOG_SEED)
@@ -70,7 +70,7 @@
 #include "str.h"
 
 #define DK_CACHE_FORMAT 1u
-#define DK_CACHE_SEED 0x4156504341434845ull /* "AVPCACHE" */
+#define DK_CACHE_SEED 0x444B434143484521ull /* "DKCACHE!" */
 #define DK_LOG_SEED 0x4156504C4F472121ull
 
 /* ================================================================================================================
@@ -171,7 +171,7 @@ void dk_cache_encode(DkBytes *out, const char *kind, u32 schema, const void *sta
  * log files (append-only)
  * ================================================================================================================ */
 
-/* Reading: maps the file, validates the header (magic "AVPL", format, kind, schema, stamp), then yields records. */
+/* Reading: maps the file, validates the header (magic "DKCL", format, kind, schema, stamp), then yields records. */
 typedef struct {
     DkCache c;       /* c.base / c.size; the header fields */
     size_t pos;       /* next unread offset */

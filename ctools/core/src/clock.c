@@ -110,7 +110,7 @@ void dk_sleep(double seconds) {
 
 /* ---- struct_time ---- */
 
-static void tm_to_avp(const struct tm *t, DkTm *out) {
+static void tm_to_dk(const struct tm *t, DkTm *out) {
     out->year = t->tm_year + 1900;
     out->mon = t->tm_mon + 1;
     out->mday = t->tm_mday;
@@ -147,7 +147,7 @@ bool dk_gmtime(double t, DkTm *out) {
     __time64_t s;
     struct tm tmv;
     if (!seconds_floor(t, &s) || _gmtime64_s(&tmv, &s) != 0) return false;
-    tm_to_avp(&tmv, out);
+    tm_to_dk(&tmv, out);
     return true;
 }
 
@@ -155,7 +155,7 @@ bool dk_localtime(double t, DkTm *out) {
     __time64_t s;
     struct tm tmv;
     if (!seconds_floor(t, &s) || _localtime64_s(&tmv, &s) != 0) return false;
-    tm_to_avp(&tmv, out);
+    tm_to_dk(&tmv, out);
     return true;
 }
 
@@ -163,14 +163,14 @@ void dk_localtime_now(DkTm *out) {
     __time64_t s = dk_time_ns() / NS_PER_SEC;
     struct tm tmv;
     DK_ASSERT(_localtime64_s(&tmv, &s) == 0);
-    tm_to_avp(&tmv, out);
+    tm_to_dk(&tmv, out);
 }
 
 void dk_gmtime_now(DkTm *out) {
     __time64_t s = dk_time_ns() / NS_PER_SEC;
     struct tm tmv;
     DK_ASSERT(_gmtime64_s(&tmv, &s) == 0);
-    tm_to_avp(&tmv, out);
+    tm_to_dk(&tmv, out);
 }
 
 bool dk_mktime(const DkTm *tm, double *out) {

@@ -311,7 +311,7 @@ DK_TEST(which_matches_python) {
     char tmp[1024];
     WideCharToMultiByte(CP_UTF8, 0, wtmp, -1, tmp, sizeof tmp, NULL, NULL);
     char T[1024];
-    snprintf(T, sizeof T, "%savpwhich%lu", tmp, (unsigned long)GetCurrentProcessId());
+    snprintf(T, sizeof T, "%sdkwhich%lu", tmp, (unsigned long)GetCurrentProcessId());
     /* the layout of the expectation records */
     const char *dirs[] = {"", "\\bin1", "\\bin2", "\\bin3", "\\cwd", "\\bin2\\xdir.exe"};
     const char *files[] = {"\\bin1\\tool.exe", "\\bin1\\tool.bat", "\\bin1\\script.cmd", "\\bin1\\readme.txt", "\\bin2\\tool.com",

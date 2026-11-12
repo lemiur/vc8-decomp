@@ -8,7 +8,7 @@ Expected orders are those of NTFS (the test skips the order checks on other file
 import glob, os, shutil, stat, subprocess, sys, tempfile, errno
 
 BS = chr(92)
-root = os.path.join(tempfile.mkdtemp(prefix="avpgen_"))
+root = os.path.join(tempfile.mkdtemp(prefix="dkgen_"))
 root = os.path.realpath(root)
 
 

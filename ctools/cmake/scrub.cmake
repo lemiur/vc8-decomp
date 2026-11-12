@@ -11,7 +11,7 @@ endif()
 # Blocking patterns (the short tokens d3d9, d3d11, x360 and ps3 must not follow a letter or digit: hex data holds them),
 # matched on the lower-cased text with CMake regular expressions.
 set(blocking
-    "(^|[^a-z0-9_])avp([^a-z0-9]|$)" "avp3" "avp_" "avpcore" "avptools"
+    "avp"
     "(^|[^a-z0-9_])dx9([^a-z0-9]|$)" "(^|[^a-z0-9_])dx11([^a-z0-9]|$)" "_dx9" "_dx11" "(^|[^a-z0-9])d3d9" "(^|[^a-z0-9])d3d11" "direct3d"
     "asura" "rebellion" "predator" "(^|[^a-z0-9_])alien" "marine" "xeno" "sniper" "simpsons" "rogue warrior"
     "shellshock"
