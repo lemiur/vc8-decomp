@@ -13,15 +13,12 @@
 
 /* ---- the reference image ---------------------------------------------------------------------------------------- */
 typedef struct Eq2Image Eq2Image;
-typedef struct {
-    DkStr name;      /* ".rdata" */
-    u32 va;          /* absolute (image base added) */
-    u32 vsize, raw_size, raw;
-    u32 chars;       /* the section's characteristics */
-} Eq2ImageSection;
+typedef DkImageSection Eq2ImageSection;
 
 /* A PE32 file read whole; NULL with *err when it cannot be read or is not a PE32 image. */
 Eq2Image *eq2_image_open(DkArena *a, const char *path, DkErr *err);
+/* The engine's view of an image the adapter already opened (a target's reference image). */
+Eq2Image *eq2_image_of(DkArena *a, const DkImage *image);
 /* The first section (table order) holding va, i.e. va <= x < va + max(virtual size, raw size), or NULL. */
 const Eq2ImageSection *eq2_image_section_of(const Eq2Image *im, u32 va);
 /* The file offset of va; false with the text "address %08X is not in <file name>" in *err (may be NULL). */

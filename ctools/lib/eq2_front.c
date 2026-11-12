@@ -62,8 +62,10 @@ static bool starts_with(const char *s, const char *prefix) { return strncmp(s, p
 /* The reference images the engine reads constants and jump tables from, one per target. */
 static const Eq2Image *engine_image(DkProject *p, int target, DkErr *err) {
     static const Eq2Image *images[DK_MAX_TARGETS];
-    if (!images[target])
-        images[target] = eq2_image_open(dk_project_arena(p), dk_project_target(p, target)->image_path, err);
+    if (!images[target]) {
+        const DkImage *image = dk_target_image(p, target, err);
+        if (image) images[target] = eq2_image_of(dk_project_arena(p), image);
+    }
     return images[target];
 }
 

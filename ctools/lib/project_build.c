@@ -521,7 +521,7 @@ static u32 map_extent(const BuildCtx *ctx, size_t i) {
     u32 start = ctx->map[i].va;
     for (size_t j = i + 1; j < ctx->nmap; j++)
         if (ctx->map[j].seg == ctx->map[i].seg && ctx->map[j].va > start) return ctx->map[j].va - start;
-    u32 end = dk__image_section_end(ctx->img, start);
+    u32 end = dk_image_section_end(ctx->img, start);
     return end > start ? end - start : 0;
 }
 

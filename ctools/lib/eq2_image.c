@@ -2,7 +2,8 @@
 // Copyright (c) lemiur, TheCloakedCoder and contributors
 /* The reference image as the symbolic engine reads it: the file's bytes by virtual address, the section holding an
  * address (its name and characteristics, which decide whether a load reads constant data), and the dwords of a jump
- * table. A PE32 file read whole; reads follow the section table, not the loaded layout. */
+ * table. The adapter's DkImage (lib/project.h) parses the file; reads follow the section table, not the loaded
+ * layout. */
 #include "eq2.h"
 #include "dk/dk.h"
 #include "dk/fs.h"
@@ -11,51 +12,30 @@
 
 struct Eq2Image {
     const char *path;
-    DkBytes data;
-    DkPe *pe;
-    u32 base;
-    Eq2ImageSection *sections; /* in the file's section-table order */
-    size_t n_sections;
+    const DkImage *image;
+    const u8 *data;
+    size_t size;
     char err[512];
 };
 
-Eq2Image *eq2_image_open(DkArena *a, const char *path, DkErr *err) {
+Eq2Image *eq2_image_of(DkArena *a, const DkImage *image) {
     Eq2Image *im = DK_NEW(a, Eq2Image);
-    im->path = dk_strdup(a, path);
-    if (!dk_read_all(a, path, &im->data)) {
-        dk_err_set(err, DK_ERR_IO, "%s: %.*s", path, DK_SF(dk_io_err_str(a)));
-        return NULL;
-    }
-    DkTry tr;
-    if (DK_TRY(&tr)) {
-        im->pe = dk_pe_parse(a, im->data.v, im->data.n);
-        if (im->pe->pe_type != DK_PE_MAGIC_PE32 || im->pe->image_base > 0xFFFFFFFFull)
-            dk_throw(DK_ERR_FORMAT, "not a PE32 image");
-        dk_try_end(&tr);
-    } else {
-        dk_err_set(err, DK_ERR_FORMAT, "%s: %s", path, tr.msg);
-        return NULL;
-    }
-    im->base = (u32)im->pe->image_base;
-    size_t n = im->pe->n_sections;
-    im->sections = DK_NEWN(a, Eq2ImageSection, n ? n : 1);
-    for (size_t i = 0; i < n; i++) {
-        const DkPeSection *s = &im->pe->sections[i];
-        Eq2ImageSection *o = &im->sections[s->index < n ? s->index : i];
-        o->name = s->name;
-        o->va = im->base + s->virtual_address;
-        o->vsize = s->virtual_size;
-        o->raw_size = s->size_of_raw_data;
-        o->raw = s->pointer_to_raw_data;
-        o->chars = s->characteristics;
-    }
-    im->n_sections = n;
+    im->path = dk_image_path(image);
+    im->image = image;
+    im->data = dk_image_file(image, &im->size);
     return im;
 }
 
+Eq2Image *eq2_image_open(DkArena *a, const char *path, DkErr *err) {
+    DkImage *image = dk_image_open(a, path, err);
+    return image ? eq2_image_of(a, image) : NULL;
+}
+
 const Eq2ImageSection *eq2_image_section_of(const Eq2Image *im, u32 va) {
-    for (size_t i = 0; i < im->n_sections; i++) {
-        const Eq2ImageSection *s = &im->sections[i];
+    size_t n = 0;
+    const DkImageSection *sections = dk_image_sections(im->image, &n);
+    for (size_t i = 0; i < n; i++) {
+        const DkImageSection *s = &sections[i];
         u32 span = s->vsize > s->raw_size ? s->vsize : s->raw_size;
         if (va >= s->va && (u64)va < (u64)s->va + span) return s;
     }
@@ -80,8 +60,8 @@ bool eq2_image_offset_of(const Eq2Image *im, u32 va, u32 *offset, const char **e
 bool eq2_image_read(const Eq2Image *im, u32 va, u32 size, DkStr *out, const char **err) {
     u32 off;
     if (!eq2_image_offset_of(im, va, &off, err)) return false;
-    size_t avail = off < im->data.n ? im->data.n - off : 0;
-    out->p = (const char *)im->data.v + (avail ? off : 0);
+    size_t avail = off < im->size ? im->size - off : 0;
+    out->p = (const char *)im->data + (avail ? off : 0);
     out->n = size < avail ? size : avail;
     return true;
 }

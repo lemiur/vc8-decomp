@@ -313,6 +313,30 @@ const char *dk_image_name_at(const DkImage *im, u32 va, u32 *start);
 bool dk_image_function_size(const DkImage *im, u32 va, u32 *size);
 const DkReloc *dk_image_relocs(const DkImage *im, u32 va, size_t n, size_t *count);
 
+/* The structure of an image, for tools that walk it (disassemblers, simulators) without parsing the file again. */
+typedef struct DkImageSection {
+    DkStr name;          /* ".text" (the name without its NUL padding) */
+    u32 va;              /* absolute (image base added) */
+    u32 vsize, raw_size; /* virtual size, size of the raw data */
+    u32 raw;             /* file offset of the raw data */
+    u32 chars;           /* the section's characteristics */
+} DkImageSection;
+/* Any PE32 file, read whole: no hash check and no symbols (dk_target_image is the configured, verified one). */
+DkImage *dk_image_open(DkArena *a, const char *path, DkErr *err);
+u32 dk_image_base(const DkImage *im);
+const char *dk_image_path(const DkImage *im);
+const u8 *dk_image_file(const DkImage *im, size_t *n);                  /* the whole file */
+const DkImageSection *dk_image_sections(const DkImage *im, size_t *n); /* in the file's section-table order */
+/* The section mapping va (its virtual extent as the loader maps it), NULL when none does. */
+const DkImageSection *dk_image_section_of(const DkImage *im, u32 va);
+/* The end VA of the section holding va, cut to its raw data; 0 when no section holds va. */
+u32 dk_image_section_end(const DkImage *im, u32 va);
+/* Whether a section maps va (its raw data or the zero-filled rest: .bss counts). */
+bool dk_image_has_va(const DkImage *im, u32 va);
+const u32 *dk_image_base_relocs(const DkImage *im, size_t *n); /* the VAs of the HIGHLOW words, sorted */
+const char *dk_image_import_at(const DkImage *im, u32 va);      /* "__imp_<import>" for an IAT slot, else NULL */
+u32 dk_image_security_cookie(const DkImage *im);                /* the load config's cookie VA, 0 when none */
+
 typedef struct {
     DkStrVec extra_flags;            /* appended to the unit's options */
     DkStrVec remove_flags;           /* options left out of the unit's own list first (case-insensitive, exact token) */

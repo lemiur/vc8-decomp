@@ -17,6 +17,18 @@
 
 #include <io.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* Whether out says "heartbeat Ns ago" with N under a minute: a heartbeat written moments before, without assuming
+ * how many seconds a loaded build machine took in between. */
+static bool recent_heartbeat(const char *out) {
+    const char *h = strstr(out, "heartbeat ");
+    if (!h) return false;
+    char *end = NULL;
+    long n = strtol(h + 10, &end, 10);
+    return end != h + 10 && n >= 0 && n < 60 && strncmp(end, "s ago", 5) == 0;
+}
 
 static DkJson *sample_lock(DkArena *a) {
     const char *text =
@@ -140,11 +152,11 @@ DK_TEST(branch_warn_and_write) {
     dk_set_root(dir);
     double t = dk_time();
     text = dk_sprintf(a, "{\"agent\": \"zz\", \"branch\": \"main\", \"started_at\": %.3f, \"heartbeat\": %.3f, \"started\": \"s\"}",
-                       t - 100, t - 100);
+                       t - 990, t - 990);
     dk_slot_write(a, dk_json_parse(a, dk_str(text), &err), dir);
     char *out = capture_stdout(a, dk_path_join(a, dir, "out.txt"), call_warn, "mytool");
     CHECK(strstr(out, "WARNING: slot lock: zz holds ") == out);
-    CHECK(strstr(out, " (100s ago, heartbeat 100s ago); the lock's branch is main but other is checked out: another agent may have switched it (slot_lock status)") != NULL);
+    CHECK(strstr(out, " (16min ago, heartbeat 16min ago); the lock's branch is main but other is checked out: another agent may have switched it (slot_lock status)") != NULL);
 
     text = dk_sprintf(a, "{\"agent\": \"zz\", \"branch\": \"other\", \"started_at\": %.3f, \"heartbeat\": %.3f, \"started\": \"s\"}",
                        t - 100, t - 100);
@@ -159,7 +171,7 @@ DK_TEST(branch_warn_and_write) {
     dk_setenv("SLOT_AGENT", "intruder");
     out = capture_stdout(a, dk_path_join(a, dir, "out.txt"), call_warn, "mytool");
     CHECK(strstr(out, "; SLOT_AGENT is intruder (slot_lock status)\n") != NULL);
-    CHECK(strstr(out, "heartbeat 0s ago") != NULL);
+    CHECK(recent_heartbeat(out)); /* refreshed above: seconds ago, however loaded the machine */
     dk_unsetenv("SLOT_AGENT");
 
     /* no lock: nothing, and no file is created */
