@@ -95,7 +95,10 @@ typedef struct {
 typedef struct {
     const char *path;                /* repository-relative, forward slashes */
     DkStrVec compile_flags, remove_flags, link_flags;
-    bool gl, gl_set;                 /* "gl" of the unit map; gl_set false when the map does not say */
+    DkStrVec link_with;              /* link backend: the other sources compiled and linked with this one
+                                      * (repository-relative, without the unit itself, sorted, unique) */
+    DkStrVec link_roots;             /* link backend: extra decorated link roots (/INCLUDE:) */
+    bool gl, gl_set;              /* "gl" of the unit map; gl_set false when the map does not say */
     bool flags_line;                 /* the unit's flags line (annotations.flags) is applied (default true) */
     bool per_target;                 /* the unit's text names a target define: compiled once per target */
     u32 target_mask;                 /* bit t: listed in target t's unit map; all targets' bits otherwise */

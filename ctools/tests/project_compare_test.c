@@ -457,6 +457,131 @@ DK_TEST(manifest_backend) {
     dk_tempdir_cleanup(root);
 }
 
+/* ---- link dependencies (units.link_with, targets.<t>.link_with, a unit map's link_with / link_roots) ---------- */
+
+static const char LW_UNIT[] = "// FUNCTION: beta 0x20001000\nint w_main(void) { return w_dep(); }\n";
+static const char LW_DEP[] = "int w_dep(void) { return 0; }\n";
+
+/* w_main calls w_dep, which only the dependency defines: the fake linker fails without it. */
+static DkStr lw_unit_object(void) {
+    static const u8 code[6] = {0xE8, 0, 0, 0, 0, 0xC3};
+    SynthCoff sc;
+    synth_coff_init(&sc);
+    u32 t = synth_coff_section(&sc, ".text", 0x60501020u, code, sizeof code);
+    synth_coff_symbol(&sc, "_w_main", 0, (i16)t, 0x20, 2, 0);
+    u32 s_dep = synth_coff_symbol(&sc, "_w_dep", 0, 0, 0x20, 2, 0);
+    synth_coff_reloc(&sc, t, 1, s_dep, 0x14);
+    return synth_coff_build(&sc);
+}
+
+static DkStr lw_dep_object(void) {
+    static const u8 code[3] = {0x31, 0xC0, 0xC3};
+    SynthCoff sc;
+    synth_coff_init(&sc);
+    u32 t = synth_coff_section(&sc, ".text", 0x60501020u, code, sizeof code);
+    synth_coff_symbol(&sc, "_w_dep", 0, (i16)t, 0x20, 2, 0);
+    return synth_coff_build(&sc);
+}
+
+static const char *lw_repo(void) {
+    const char *root = repo("project_compare-lw-");
+    write_text(J(root, "src/w.c"), LW_UNIT);
+    write_text(J(root, "src/dep.c"), LW_DEP);
+    DkStr uo = lw_unit_object(), dobj = lw_dep_object();
+    const char *reg = J(root, "fakereg");
+    DK_ASSERT(fake_cl_register(reg, fake_cl_key(dk_str(LW_UNIT), NULL, 0, "/GL-"), uo));
+    DK_ASSERT(fake_cl_register(reg, fake_cl_key(dk_str(LW_UNIT), NULL, 0, "/GL"), uo));
+    DK_ASSERT(fake_cl_register(reg, fake_cl_key(dk_str(LW_DEP), NULL, 0, "/GL"), dobj));
+    dk_makedirs(J(root, "ref"), true);
+    const char *o1 = J(root, "ref/w.obj"), *o2 = J(root, "ref/dep.obj");
+    DK_ASSERT(dk_write_file(o1, uo.p, uo.n) && dk_write_file(o2, dobj.p, dobj.n));
+    const char *objs[2] = {o1, o2};
+    DK_ASSERT(fake_link(objs, 2, 0x20000000u, J(root, "ref/beta.dll"), J(root, "ref/beta.map")) == 0);
+    write_text(J(root, "ref/beta.tsv"), "name\tva\tsize\n_w_main\t0x20001000\t6\n");
+    write_text(J(root, "config/deps.json"), "{\"dependencies\": {\"src/w.c\": [\"src/dep.c\", \"src/w.c\"]}}\n");
+    return root;
+}
+
+/* LINK_CONFIG with its units block replaced, and an optional target-level member after the symbols. */
+static const char *lw_config(const char *root, const char *units, const char *target_links) {
+    DkStr base = dk_str(dk_sprintf(dk_arena(), LINK_CONFIG, sha_of(J(root, "ref/beta.dll")), "link"));
+    DkStr old_units = DK_S("\"units\": {\"roots\": [\"src\"], \"extensions\": [\".c\"]}");
+    i64 at = dk_str_find(base, old_units, 0, DK_END);
+    DK_ASSERT(at >= 0);
+    DkStr old_sym = DK_S("\"${root}/ref/beta.tsv\"}]");
+    i64 st = dk_str_find(base, old_sym, 0, DK_END);
+    DK_ASSERT(st >= 0 && st < at);
+    size_t se = (size_t)st + old_sym.n, ue = (size_t)at + old_units.n;
+    return dk_sprintf(dk_arena(), "%.*s%s%.*s%s%s", (int)se, base.p, target_links ? target_links : "",
+                      (int)((size_t)at - se), base.p + se, units, base.p + ue);
+}
+
+static void check_lw(DkProject *p) {
+    const DkUnit *u = dk_project_unit(p, "src/w.c");
+    REQUIRE(u);
+    CHECK(u->link_with.n == 1 && dk_str_eqz(u->link_with.v[0], "src/dep.c"));
+    size_t n = 0;
+    DkBuildOpts o = {0};
+    DkErr err = {0};
+    DkResult *rs = dk_compare_unit(p, u, 0, &o, &n, &err);
+    REQUIRE(rs);
+    CHECK_EQ_U64(n, 1);
+    CHECK_STATUS(rs, n, "w_main", DK_MATCH);
+    CHECK_VERDICT(&rs[0], "_w_dep", DK_REF_SAME); /* the dependency's function, compared by content */
+}
+
+DK_TEST(link_backend_link_with) {
+    /* the candidate-list form at units level, with an extra root */
+    const char *root = lw_repo();
+    write_text(J(root, "config/ctools.json"),
+               lw_config(root,
+                         "\"units\": {\"roots\": [\"src\"], \"extensions\": [\".c\"], \"link_with\": [{\"unit\": "
+                         "\"src/w.c\", \"dependencies\": [\"./src/dep.c\"], \"roots\": [\"_w_dep\"], \"size\": 6}]}",
+                         NULL));
+    DkProject *p = load(root, NULL);
+    REQUIRE(p);
+    check_lw(p);
+    const DkUnit *u = dk_project_unit(p, "src/w.c");
+    CHECK(u && u->link_roots.n == 1 && dk_str_eqz(u->link_roots.v[0], "_w_dep"));
+    const DkUnit *d = dk_project_unit(p, "src/dep.c");
+    CHECK(d && d->link_with.n == 0);
+
+    /* the map form at target level, by reference to another file: the unit itself is left out */
+    write_text(J(root, "config/ctools.json"),
+               lw_config(root, "\"units\": {\"roots\": [\"src\"], \"extensions\": [\".c\"]}",
+                         ", \"link_with\": {\"$from\": \"config/deps.json#/dependencies\"}"));
+    p = load(root, NULL);
+    REQUIRE(p);
+    check_lw(p);
+
+    /* a unit map entry; without any, the link fails on the undefined symbol */
+    write_text(J(root, "config/ctools.json"),
+               lw_config(root,
+                         "\"units\": {\"roots\": [\"src\"], \"extensions\": [\".c\"], \"map\": {\"src/w.c\": "
+                         "{\"link_with\": [\"src/dep.c\"]}}}",
+                         NULL));
+    p = load(root, NULL);
+    REQUIRE(p);
+    check_lw(p);
+    write_text(J(root, "config/ctools.json"),
+               lw_config(root, "\"units\": {\"roots\": [\"src\"], \"extensions\": [\".c\"]}", NULL));
+    p = load(root, NULL);
+    REQUIRE(p);
+    size_t n = 0;
+    DkBuildOpts o = {0};
+    DkErr err = {0};
+    DkResult *rs = dk_compare_unit(p, dk_project_unit(p, "src/w.c"), 0, &o, &n, &err);
+    REQUIRE(rs && n == 1);
+    CHECK_STATUS(rs, n, "w_main", DK_ERROR);
+
+    /* a malformed list */
+    write_text(J(root, "config/ctools.json"),
+               lw_config(root, "\"units\": {\"roots\": [\"src\"], \"link_with\": [{\"dependencies\": []}]}", NULL));
+    err = (DkErr){0};
+    CHECK(dk_project_load(dk_arena(), root, NULL, &err) == NULL && strstr(err.msg, "units.link_with[0].unit"));
+    dk_tempdir_cleanup(root);
+}
+
 /* The entry point: the fake tools when started under their names, else the tests. */
 static int run(int argc, char **argv) {
     int rc = fake_tool_dispatch(argc, argv);
