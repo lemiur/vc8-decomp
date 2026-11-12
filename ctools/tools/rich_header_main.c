@@ -2,9 +2,10 @@
 // Copyright (c) lemiur, TheCloakedCoder and contributors
 /* rich_header <file> [...]: prints the Rich header of PE files, which Microsoft tools (compiler, linker, assembler...)
  * built how many objects of the image, by their product id and build number. Product ids (the high word of each
- * entry) are those of the Visual Studio 2005 to 2010 tools. The tool has no option parsing: every argument is a
- * path; a path that cannot be read or a malformed header is an internal error. A test defines
- * DK_RICH_HEADER_AS_LIBRARY and includes this file to call rich_header_describe on an in-memory image. */
+ * entry) are those of the Visual Studio 2005 to 2010 tools. Every argument is a path (-h/--help prints the usage);
+ * a path that cannot be read or a malformed header is an internal error. A test defines
+ * DK_RICH_HEADER_AS_LIBRARY and includes this file to call rich_header_describe and rich_header_parser. */
+#include "dk/args.h"
 #include "dk/dk.h"
 
 #include <string.h>
@@ -95,15 +96,27 @@ static void rich_header_describe(DkBuf *out, const char *path, DkBytes data) {
     dk_vec_free(&entries);
 }
 
+static DkArgParser *rich_header_parser(void) {
+    DkArgParser *ap = dk_args_parser(NULL, &(DkArgParserDesc){
+        .prog = "rich_header.exe",
+        .description = "Prints the Rich header of PE files: how many objects of the image each Microsoft tool built, "
+                       "by product id and build number."});
+    dk_arg(ap, &(DkArgDesc){.names = "files", .nargs = DK_NARGS_STAR, .metavar = "file", .help = "PE files to read"});
+    return ap;
+}
+
 #ifndef DK_RICH_HEADER_AS_LIBRARY
 static int run(int argc, char **argv) {
     DkArena *a = dk_arena();
-    for (int i = 1; i < argc; i++) {
+    DkArgs *args = dk_args_parse(rich_header_parser(), argc, argv);
+    DkStrVec files = dk_args_strs(args, "files");
+    for (size_t i = 0; i < files.n; i++) {
+        const char *path = dk_cz(a, files.v[i]);
         DkBytes data = {0};
-        if (!dk_read_all(a, argv[i], &data)) dk_panic(__FILE__, __LINE__, "%.*s", DK_SF(dk_io_err_str(a)));
+        if (!dk_read_all(a, path, &data)) dk_panic(__FILE__, __LINE__, "%.*s", DK_SF(dk_io_err_str(a)));
         DkBuf out;
         dk_buf_init(&out, a);
-        rich_header_describe(&out, argv[i], data);
+        rich_header_describe(&out, path, data);
         fwrite(out.p, 1, out.n, stdout);
     }
     return 0;
