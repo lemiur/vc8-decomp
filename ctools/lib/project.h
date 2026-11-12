@@ -47,7 +47,7 @@ void dk_err_clear(DkErr *err);
 /* ---- configuration model ----------------------------------------------------------------------------------------- */
 typedef enum { DK_ANN_FUNCTION, DK_ANN_DATA, DK_ANN_DECL, DK_ANN_VTABLE } DkAnnKind;
 typedef enum { DK_BACKEND_OBJECT, DK_BACKEND_LINK, DK_BACKEND_MANIFEST } DkBackendKind;
-typedef enum { DK_SYM_TSV, DK_SYM_PDB, DK_SYM_MAP } DkSymKind;
+typedef enum { DK_SYM_TSV, DK_SYM_PDB, DK_SYM_MAP, DK_SYM_CANDIDATES } DkSymKind;
 
 typedef struct DkProject DkProject; /* opaque: configuration, targets, units, caches */
 typedef struct DkImage DkImage;     /* a mapped reference image (project_image.c) */
@@ -56,7 +56,9 @@ typedef struct DkSymbols DkSymbols; /* a target's names by address (project_symb
 /* One symbol source of a target. tsv: a header row, then one row per symbol; the columns named col_name, col_va
  * (a VA; when the file has no such column, col_rva plus the image base) and col_size (empty or missing: unknown).
  * Numbers are decimal or 0x-prefixed hex. pdb: the publics and module procedures of a PDB 7.00. map: the
- * "Publics by Value" and "Static symbols" of an MSVC linker map. */
+ * "Publics by Value" and "Static symbols" of an MSVC linker map. candidates: the "referents" of a candidates file
+ * ({"referents": {"<binary>": {"<name>": {"va", "kind", "size"}}}}; col_name names the binary when the file has
+ * several): its named objects and functions (imports, literals and typed members are not symbols). */
 typedef struct {
     DkSymKind kind;
     const char *path;                                  /* absolute, forward slashes */

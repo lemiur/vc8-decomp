@@ -584,7 +584,8 @@ static bool read_symbols(Ld *L, const DkJson *v, const char *kpath, DkTarget *t)
         if (strcmp(kind, "tsv") == 0) src->kind = DK_SYM_TSV;
         else if (strcmp(kind, "pdb") == 0) src->kind = DK_SYM_PDB;
         else if (strcmp(kind, "map") == 0) src->kind = DK_SYM_MAP;
-        else return fail(L, DK_ERR_FORMAT, "%s: \"%s\" is not tsv, pdb or map", kpz(L, sp, "kind"), kind);
+        else if (strcmp(kind, "candidates") == 0) src->kind = DK_SYM_CANDIDATES;
+        else return fail(L, DK_ERR_FORMAT, "%s: \"%s\" is not tsv, pdb, map or candidates", kpz(L, sp, "kind"), kind);
         src->col_name = "name";
         src->col_va = "va";
         src->col_rva = "rva";

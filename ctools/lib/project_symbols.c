@@ -436,6 +436,63 @@ static bool load_map(DkSymbols *s, const DkSymSource *src, DkErr *err) {
     return true;
 }
 
+/* ---- candidates ----------------------------------------------------------------------------------------------------- */
+
+/* A JSON address or size: a number, or a decimal or 0x string. */
+static bool json_u32(const DkJson *v, u32 *out) {
+    if (!v) return false;
+    if (dk_json_is_int(v)) {
+        i64 x = dk_json_i64(v, -1);
+        if (x < 0 || x > 0xFFFFFFFFll) return false;
+        *out = (u32)x;
+        return true;
+    }
+    return dk_json_is_str(v) && parse_u32(dk_json_str_or(v, DK_S("")), out);
+}
+
+/* A candidates file: {"referents": {"<binary>": {"<name>": {"va": "0x..", "kind": .., "size": ..}, ..}}}. The binary
+ * is the source's col_name when the file has it, else the only one. A named entry is a symbol at its va (its size when
+ * it has one); an entry-alias adds each alias; imports (the image's import table names them), literals (keyed by a
+ * content hash) and typed members (a field of a symbol the file also holds) are not symbols. */
+static bool load_candidates(DkSymbols *s, const DkSymSource *src, DkErr *err) {
+    DkStr text;
+    if (!dk_read_text(s->a, src->path, DK_TM_UTF8_SIG_REPLACE, &text)) {
+        dk_err_set(err, DK_ERR_IO, "%s: cannot read the candidates symbol source", src->path);
+        return false;
+    }
+    DkJsonError je = {0};
+    DkJson *doc = dk_json_parse(s->a, text, &je);
+    DkJson *refs = doc && dk_json_is_obj(doc) ? dk_json_getz(doc, "referents") : NULL;
+    if (!refs || !dk_json_is_obj(refs)) {
+        dk_err_set(err, DK_ERR_FORMAT, "%s: the candidates symbol source has no \"referents\" object", src->path);
+        return false;
+    }
+    DkJson *set = src->col_name ? dk_json_getz(refs, src->col_name) : NULL;
+    if (!set && dk_json_len(refs) == 1) set = dk_json_member(refs, 0)->val;
+    if (!set || !dk_json_is_obj(set)) {
+        dk_err_set(err, DK_ERR_FORMAT, "%s: the candidates symbol source has no referents for \"%s\" (name the binary)",
+                   src->path, src->col_name ? src->col_name : "");
+        return false;
+    }
+    for (size_t i = 0; i < dk_json_len(set); i++) {
+        const DkJsonMember *m = dk_json_member(set, i);
+        if (!m->key.n || !dk_json_is_obj(m->val)) continue;
+        DkStr kind = dk_json_str_or(dk_json_getz(m->val, "kind"), DK_S(""));
+        if (dk_str_eqz(kind, "import") || dk_str_eqz(kind, "literal") || dk_str_eqz(kind, "member")) continue;
+        u32 va, size = 0;
+        if (!json_u32(dk_json_getz(m->val, "va"), &va)) continue;
+        if (!json_u32(dk_json_getz(m->val, "size"), &size)) size = 0;
+        DkJson *aliases = dk_json_getz(m->val, "aliases");
+        if (dk_str_eqz(kind, "entry-alias") && aliases && dk_json_is_arr(aliases)) {
+            for (size_t k = 0; k < dk_json_len(aliases); k++)
+                dk_symbols_add(s, va, size, dk_cz(s->a, dk_json_str_or(dk_json_at(aliases, k), DK_S(""))), false);
+            continue;
+        }
+        dk_symbols_add(s, va, size, dk_cz(s->a, m->key), false);
+    }
+    return true;
+}
+
 /* ---- loading ------------------------------------------------------------------------------------------------------ */
 
 static DkSymbols *load_sources(DkArena *a, const DkSymSource *srcs, size_t n, u32 image_base,
@@ -448,6 +505,7 @@ static DkSymbols *load_sources(DkArena *a, const DkSymSource *srcs, size_t n, u3
         case DK_SYM_TSV: ok = load_tsv(s, &srcs[i], image_base, err, need_base); break;
         case DK_SYM_PDB: ok = load_pdb(s, &srcs[i], image_base, image_path, err, need_base); break;
         case DK_SYM_MAP: ok = load_map(s, &srcs[i], err); break;
+        case DK_SYM_CANDIDATES: ok = load_candidates(s, &srcs[i], err); break;
         default:
             dk_err_set(err, DK_ERR_OTHER, "symbol source %zu: unknown kind %d", i, (int)srcs[i].kind);
             ok = false;

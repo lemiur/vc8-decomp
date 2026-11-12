@@ -569,6 +569,41 @@ DK_TEST(pdb_symbol_store_rejects_an_ambiguous_store) {
     CHECK(err.msg[0] && strstr(err.msg, "symbol store") != NULL);
 }
 
+DK_TEST(candidates_source_names_objects_and_functions) {
+    char *dir = scratch();
+    const char *path = write_text(dir, "cands.json",
+        "{\"schema_version\": 1, \"candidates\": [],\n"
+        " \"referents\": {\"cl\": {\n"
+        "  \"?g_obj@@3HA\": {\"va\": \"0x41a014\", \"kind\": \"symbol\", \"size\": 12},\n"
+        "  \"?g_plain@@3HA\": {\"va\": \"0x41a020\", \"evidence\": \"no kind\"},\n"
+        "  \"member:?g_obj@@3HA.f\": {\"kind\": \"member\", \"va\": \"0x41a018\", \"offset\": 4},\n"
+        "  \"kernel32.dll!Sleep\": {\"kind\": \"import\", \"va\": \"0x40d00c\"},\n"
+        "  \"literal:sha256:ab\": {\"kind\": \"literal\", \"va\": \"0x414990\", \"size\": 4},\n"
+        "  \"entry-alias:a|b\": {\"kind\": \"entry-alias\", \"va\": \"0x40bd30\", \"size\": 43, \"aliases\": [\"a\", \"b\"]},\n"
+        "  \"thunk\": {\"kind\": \"import-thunk\", \"va\": 4242240}}}}\n");
+    DkSymSource src = {DK_SYM_CANDIDATES, path, "cl", NULL, NULL, NULL};
+    DkErr err = {0};
+    DkSymbols *s = dk_symbols_load(NULL, &src, 1, BASE, &err);
+    REQUIRE_PTR(s);
+    CHECK_EQ_U64(dk_symbols_find(s, "?g_obj@@3HA")->va, 0x41a014);
+    CHECK_EQ_U64(dk_symbols_find(s, "?g_obj@@3HA")->size, 12);
+    CHECK_EQ_U64(dk_symbols_find(s, "?g_plain@@3HA")->va, 0x41a020);
+    CHECK_EQ_U64(dk_symbols_find(s, "thunk")->va, 4242240);
+    CHECK(dk_symbols_find(s, "member:?g_obj@@3HA.f") == NULL);
+    CHECK(dk_symbols_find(s, "kernel32.dll!Sleep") == NULL);
+    CHECK(dk_symbols_find(s, "literal:sha256:ab") == NULL);
+    CHECK(dk_symbols_find(s, "entry-alias:a|b") == NULL);
+    CHECK_EQ_U64(dk_symbols_at(s, 0x40bd30)->size, 43); /* both aliases are at one address: the first name holds it */
+    CHECK_CZ(dk_symbols_at(s, 0x40bd30)->name, "a");
+    /* the file's only binary is taken when the name does not match; a two-binary file then needs the name */
+    DkSymSource other = {DK_SYM_CANDIDATES, path, "name", NULL, NULL, NULL};
+    CHECK(dk_symbols_load(NULL, &other, 1, BASE, &err) != NULL);
+    const char *two = write_text(dir, "two.json", "{\"referents\": {\"cl\": {}, \"c1\": {}}}\n");
+    DkSymSource bad = {DK_SYM_CANDIDATES, two, "name", NULL, NULL, NULL};
+    CHECK(dk_symbols_load(NULL, &bad, 1, BASE, &err) == NULL);
+    dk_tempdir_cleanup(dir);
+}
+
 /* An image with .text (at 0x401000: mov eax, [word], relocated) and .data (0x402000, 0x300 bytes), its symbols given
  * as tsv rows. */
 static DkImage *reloc_image(u32 word, const char *tsv_rows) {
