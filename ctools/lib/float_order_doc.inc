@@ -38,7 +38,7 @@
     "Output goes under <build_dir>/float_order/<Name>_<address>/: result.json, state<k>_<tag>.diff.\n"
     "\n"
     "result.json: status exact / improved / none / insensitive / unparsed / no-float / error; base and best\n"
-    "(FScore + score), tried, failed, sites, sensitive, insensitive_sites, states, game_nodes (counts by class\n"
+    "(FScore + score), tried, failed, sites, sensitive, insensitive_sites, states, reference_nodes (counts by class\n"
     "before / after), exact_other (per other target: whether the best body is exact there too), unreached: the\n"
     "reference nodes whose exact operand order appeared in NO built candidate, rendered with their class against the\n"
     "best state. That list is the bounding evidence for a stop reason (\"the reference computes (a*a) + (b*b); N\n"
