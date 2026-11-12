@@ -213,8 +213,17 @@ bool dk_image_function_size(const DkImage *im, u32 va, u32 *size) {
     return true;
 }
 
-/* The name of a relocation's target: an import slot, a symbol starting there, or a sized symbol holding it (never
- * the nearest symbol below: an unnamed target, such as compiler-made data a map does not list, stays unnamed). */
+/* The farthest an address may lie past an unsized symbol and still be named "symbol + offset". A linker map gives no
+ * sizes; the Python matcher binds a field of an object to the object's name only when the field lies within the size
+ * the referents file gives that object (a SECURITY_ATTRIBUTES at offset 4 or 8), and only for a typed memory access.
+ * Here the image has neither the sizes nor the access, so the reach is bounded by the next symbol (the table is
+ * sorted) and by this cap; the comparison then checks the named base plus the offset against the reference's word, so
+ * a wrong binding cannot match. */
+#define NEAR_UNSIZED_LIMIT 0x200u
+
+/* The name of a relocation's target: an import slot, a symbol starting there, a sized symbol holding it, or the
+ * nearest unsized symbol below it in the same section within NEAR_UNSIZED_LIMIT (the offset is the addend). An
+ * address further out stays unnamed: compiler-made data a map does not list. */
 static const char *reloc_target_name(const DkImage *im, u32 va, u32 *start) {
     const char *imp = dk__image_import_at(im, va);
     if (imp) {
@@ -228,7 +237,12 @@ static const char *reloc_target_name(const DkImage *im, u32 va, u32 *start) {
     }
     u32 at = 0;
     const DkSymbol *s = dk_symbols_containing(im->syms, va, &at);
-    if (!s || !(s->size && va < (u64)at + s->size)) return NULL;
+    if (!s) return NULL;
+    if (s->size && va < (u64)at + s->size) {
+        *start = at;
+        return s->name;
+    }
+    if (s->size || va - at > NEAR_UNSIZED_LIMIT || section_of(im, at) != section_of(im, va)) return NULL;
     *start = at;
     return s->name;
 }

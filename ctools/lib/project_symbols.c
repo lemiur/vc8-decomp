@@ -13,7 +13,7 @@
  *
  * Sources. tsv: a header row naming the columns, then one row per symbol; the address is the VA column, else the RVA
  * column plus the image base; numbers are decimal or 0x hex, an empty size is unknown (0), a row with no name or no
- * usable address is skipped, a UTF-8 BOM is dropped. pdb: the publics (decorated names), then the module procedures
+ * usable address is skipped, a UTF-8 BOM is dropped. pdb (a file, or a symbol store folder symbols/<name>.pdb/<GUID><age>/<name>.pdb: the entry for the image's CodeView GUID and age, else its only entry): the publics (decorated names), then the module procedures
  * for the addresses no public names (a procedure's length fills the size of the public at its address); VA = image
  * base + RVA. map: the "Publics by Value" and "Static symbols" tables of an MSVC linker map, whose third column is the
  * VA; sizes are unknown. A name made of several words (a quoted compiler-generated name) is rejoined with single
@@ -284,16 +284,87 @@ static bool load_tsv(DkSymbols *s, const DkSymSource *src, u32 image_base, DkErr
 
 /* ---- pdb ---------------------------------------------------------------------------------------------------------- */
 
-static bool load_pdb(DkSymbols *s, const DkSymSource *src, u32 image_base, DkErr *err, bool *need_base) {
+/* A symbol store entry (symbols/<name>.pdb/<GUID><age>/<name>.pdb): the folder name the image's debug directory asks
+ * for (the CodeView RSDS record: the GUID as 32 upper-case hex digits, then the age in hex), or NULL when the image
+ * has none. */
+static const char *image_store_id(DkArena *a, const char *image_path) {
+    DkBytes bytes = {0};
+    if (!image_path || !dk_read_all(NULL, image_path, &bytes)) return NULL;
+    const char *id = NULL;
+    DkTry tr;
+    if (DK_TRY(&tr)) {
+        const DkPe *pe = dk_pe_parse(a, bytes.v, bytes.n);
+        DkPeDataDir dd = pe->n_data_directory > DK_PE_DIR_DEBUG ? pe->data_directory[DK_PE_DIR_DEBUG] : (DkPeDataDir){0};
+        for (u32 off = 0; off + 28 <= dd.size && !id; off += 28) {
+            DkPeSpan span;
+            if (!dk_pe_try_get_data(pe, (u64)dd.virtual_address + off, 28, &span) || span.n < 28) break;
+            u32 type, raw;
+            memcpy(&type, span.p + 12, 4);
+            memcpy(&raw, span.p + 24, 4);
+            if (type != 2 || (u64)raw + 24 > bytes.n || memcmp(bytes.v + raw, "RSDS", 4) != 0) continue;
+            const u8 *g = bytes.v + raw + 4;
+            u32 d1, age;
+            u16 d2, d3;
+            memcpy(&d1, g, 4);
+            memcpy(&d2, g + 4, 2);
+            memcpy(&d3, g + 6, 2);
+            memcpy(&age, g + 16, 4);
+            id = dk_sprintf(a, "%08X%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X%X", d1, d2, d3, g[8], g[9], g[10], g[11],
+                            g[12], g[13], g[14], g[15], age);
+        }
+        dk_try_end(&tr);
+    }
+    dk_vec_free(&bytes);
+    return id;
+}
+
+/* The PDB inside a symbol store folder: the entry for the image's GUID and age, else the only entry. */
+static bool store_pdb(DkArena *a, const char *dir, const char *image_path, const char **out, DkErr *err) {
+    DkStrVec names = {0};
+    if (!dk_listdir(a, dir, &names)) {
+        dk_err_set(err, DK_ERR_IO, "%s: cannot list the symbol store", dir);
+        return false;
+    }
+    const char *leaf = dk_cz(a, dk_path_basename(dir));
+    const char *id = image_store_id(a, image_path);
+    const char *pick = NULL;
+    size_t entries = 0;
+    for (size_t i = 0; i < names.n; i++) {
+        const char *sub = dk_path_join(a, dir, dk_cz(a, names.v[i]));
+        const char *file = dk_path_join(a, sub, leaf);
+        if (!dk_isdir(sub) || !dk_isfile(file)) continue;
+        entries++;
+        if (id && dk_str_eqz(names.v[i], id)) {
+            pick = file;
+            break;
+        }
+        if (!pick) pick = file;
+    }
+    dk_vec_free(&names);
+    bool exact = id && pick && strstr(pick, id) != NULL;
+    if (!pick || (!exact && entries != 1)) {
+        dk_err_set(err, DK_ERR_IO, "%s: the symbol store has %s%s%s", dir,
+                   entries ? "no entry for " : "no entries", entries && id ? id : "", entries && !id ? "an unknown image" : "");
+        return false;
+    }
+    *out = pick;
+    return true;
+}
+
+
+static bool load_pdb(DkSymbols *s, const DkSymSource *src, u32 image_base, const char *image_path, DkErr *err,
+                     bool *need_base) {
     if (!image_base) {
         dk_err_set(err, DK_ERR_FORMAT, "%s: a pdb symbol source needs the image base, and none is known", src->path);
         *need_base = true;
         return false;
     }
+    const char *path = src->path;
+    if (dk_isdir(path) && !store_pdb(s->a, path, image_path, &path, err)) return false;
     DkPdb pdb;
     DkTry t;
     if (DK_TRY(&t)) {
-        pdb = dk_pdb_read(src->path, false);
+        pdb = dk_pdb_read(path, false);
         dk_try_end(&t);
     } else {
         dk_err_set(err, t.code ? t.code : DK_ERR_FORMAT, "%s: %s", src->path, t.msg);
@@ -365,18 +436,76 @@ static bool load_map(DkSymbols *s, const DkSymSource *src, DkErr *err) {
     return true;
 }
 
+/* ---- candidates ----------------------------------------------------------------------------------------------------- */
+
+/* A JSON address or size: a number, or a decimal or 0x string. */
+static bool json_u32(const DkJson *v, u32 *out) {
+    if (!v) return false;
+    if (dk_json_is_int(v)) {
+        i64 x = dk_json_i64(v, -1);
+        if (x < 0 || x > 0xFFFFFFFFll) return false;
+        *out = (u32)x;
+        return true;
+    }
+    return dk_json_is_str(v) && parse_u32(dk_json_str_or(v, DK_S("")), out);
+}
+
+/* A candidates file: {"referents": {"<binary>": {"<name>": {"va": "0x..", "kind": .., "size": ..}, ..}}}. The binary
+ * is the source's col_name when the file has it, else the only one. A named entry is a symbol at its va (its size when
+ * it has one); an entry-alias adds each alias; imports (the image's import table names them), literals (keyed by a
+ * content hash) and typed members (a field of a symbol the file also holds) are not symbols. */
+static bool load_candidates(DkSymbols *s, const DkSymSource *src, DkErr *err) {
+    DkStr text;
+    if (!dk_read_text(s->a, src->path, DK_TM_UTF8_SIG_REPLACE, &text)) {
+        dk_err_set(err, DK_ERR_IO, "%s: cannot read the candidates symbol source", src->path);
+        return false;
+    }
+    DkJsonError je = {0};
+    DkJson *doc = dk_json_parse(s->a, text, &je);
+    DkJson *refs = doc && dk_json_is_obj(doc) ? dk_json_getz(doc, "referents") : NULL;
+    if (!refs || !dk_json_is_obj(refs)) {
+        dk_err_set(err, DK_ERR_FORMAT, "%s: the candidates symbol source has no \"referents\" object", src->path);
+        return false;
+    }
+    DkJson *set = src->col_name ? dk_json_getz(refs, src->col_name) : NULL;
+    if (!set && dk_json_len(refs) == 1) set = dk_json_member(refs, 0)->val;
+    if (!set || !dk_json_is_obj(set)) {
+        dk_err_set(err, DK_ERR_FORMAT, "%s: the candidates symbol source has no referents for \"%s\" (name the binary)",
+                   src->path, src->col_name ? src->col_name : "");
+        return false;
+    }
+    for (size_t i = 0; i < dk_json_len(set); i++) {
+        const DkJsonMember *m = dk_json_member(set, i);
+        if (!m->key.n || !dk_json_is_obj(m->val)) continue;
+        DkStr kind = dk_json_str_or(dk_json_getz(m->val, "kind"), DK_S(""));
+        if (dk_str_eqz(kind, "import") || dk_str_eqz(kind, "literal") || dk_str_eqz(kind, "member")) continue;
+        u32 va, size = 0;
+        if (!json_u32(dk_json_getz(m->val, "va"), &va)) continue;
+        if (!json_u32(dk_json_getz(m->val, "size"), &size)) size = 0;
+        DkJson *aliases = dk_json_getz(m->val, "aliases");
+        if (dk_str_eqz(kind, "entry-alias") && aliases && dk_json_is_arr(aliases)) {
+            for (size_t k = 0; k < dk_json_len(aliases); k++)
+                dk_symbols_add(s, va, size, dk_cz(s->a, dk_json_str_or(dk_json_at(aliases, k), DK_S(""))), false);
+            continue;
+        }
+        dk_symbols_add(s, va, size, dk_cz(s->a, m->key), false);
+    }
+    return true;
+}
+
 /* ---- loading ------------------------------------------------------------------------------------------------------ */
 
-static DkSymbols *load_sources(DkArena *a, const DkSymSource *srcs, size_t n, u32 image_base, DkErr *err,
-                               bool *need_base) {
+static DkSymbols *load_sources(DkArena *a, const DkSymSource *srcs, size_t n, u32 image_base,
+                               const char *image_path, DkErr *err, bool *need_base) {
     if (err) dk_err_clear(err);
     DkSymbols *s = dk_symbols_new(a);
     for (size_t i = 0; i < n; i++) {
         bool ok;
         switch (srcs[i].kind) {
         case DK_SYM_TSV: ok = load_tsv(s, &srcs[i], image_base, err, need_base); break;
-        case DK_SYM_PDB: ok = load_pdb(s, &srcs[i], image_base, err, need_base); break;
+        case DK_SYM_PDB: ok = load_pdb(s, &srcs[i], image_base, image_path, err, need_base); break;
         case DK_SYM_MAP: ok = load_map(s, &srcs[i], err); break;
+        case DK_SYM_CANDIDATES: ok = load_candidates(s, &srcs[i], err); break;
         default:
             dk_err_set(err, DK_ERR_OTHER, "symbol source %zu: unknown kind %d", i, (int)srcs[i].kind);
             ok = false;
@@ -389,7 +518,7 @@ static DkSymbols *load_sources(DkArena *a, const DkSymSource *srcs, size_t n, u3
 
 DkSymbols *dk_symbols_load(DkArena *a, const DkSymSource *srcs, size_t n, u32 image_base, DkErr *err) {
     bool need_base = false;
-    return load_sources(a, srcs, n, image_base, err, &need_base);
+    return load_sources(a, srcs, n, image_base, NULL, err, &need_base);
 }
 
 /* The image base of the target's executable, from the PE header of its image file; 0 with *err set on failure. */
@@ -425,7 +554,7 @@ DkSymbols *dk_project_symbols(DkProject *p, int target, DkErr *err) {
     if (t->syms) return t->syms;
     DkArena *a = dk_project_arena(p);
     bool need_base = false;
-    DkSymbols *s = load_sources(a, t->symbols, t->n_symbols, t->image_base, err, &need_base);
+    DkSymbols *s = load_sources(a, t->symbols, t->n_symbols, t->image_base, t->image_path, err, &need_base);
     if (!s && need_base && !t->image_base) {
         DkErr e2 = {0};
         u32 base = base_from_image(a, t, &e2);
@@ -433,7 +562,7 @@ DkSymbols *dk_project_symbols(DkProject *p, int target, DkErr *err) {
             if (err) *err = e2;
             return NULL;
         }
-        s = load_sources(a, t->symbols, t->n_symbols, base, err, &need_base);
+        s = load_sources(a, t->symbols, t->n_symbols, base, t->image_path, err, &need_base);
     }
     t->syms = s;
     return s;
