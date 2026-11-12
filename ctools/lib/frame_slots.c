@@ -6,7 +6,6 @@
 #include "cfg_diff.h"
 #include "dk/fmt.h"
 #include "dk/map.h"
-#include "project_backend.h"
 #include "walls.h"
 
 /* DkFrameRetail.read over the target's image: the bytes at va up to the end of its section, so the end of an image
@@ -14,7 +13,7 @@
 static DkStr image_read(void *ctx, i64 va, i64 n) {
     const DkImage *im = ctx;
     if (va < 0 || va > 0xFFFFFFFFll || n <= 0) return (DkStr){"", 0};
-    u32 end = dk__image_section_end(im, (u32)va);
+    u32 end = dk_image_section_end(im, (u32)va);
     if (end <= (u32)va) return (DkStr){"", 0};
     if (n > (i64)(end - (u32)va)) n = (i64)(end - (u32)va);
     DkStr out;

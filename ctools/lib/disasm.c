@@ -19,16 +19,14 @@ struct DkDisasm {
     DkProject *p;
     int target;
     const char *name;
-    DkBytes data;
-    DkPe *pe;
+    const DkImage *im; /* the target's reference image (lib/project.h) */
     u32 base;
-    const DkPeSection *code; /* the code section */
+    const DkImageSection *code; /* the code section */
     u32 code_va, code_vsize;
     const u8 *code_p;
     size_t code_n;
-    u32 *relocs; /* VAs of the HIGHLOW words, sorted */
+    const u32 *relocs; /* VAs of the HIGHLOW words, sorted */
     size_t n_relocs;
-    DkIMap *imports; /* IAT slot VA -> "__imp_<name>" */
     DkIMap *thunks;  /* VA of a `jmp dword ptr [slot]` -> the import's name */
     DkSymbols *syms;
     u32 cookie;
@@ -50,26 +48,17 @@ static i32 rel_at(const u8 *p) {
     return v;
 }
 
-static const DkPeSection *sec_of(const DkDisasm *d, u32 va) {
-    if (va < d->base) return NULL;
-    return dk_pe_section_by_rva(d->pe, (u64)(va - d->base));
-}
+static const DkImageSection *sec_of(const DkDisasm *d, u32 va) { return dk_image_section_of(d->im, va); }
 
 /* n bytes at va, inside one section's raw data. */
 static bool rd(const DkDisasm *d, u32 va, size_t n, DkStr *out) {
-    const DkPeSection *s = sec_of(d, va);
-    if (!s) return false;
-    u64 rva = (u64)(va - d->base);
-    if (rva + n > (u64)s->virtual_address + s->size_of_raw_data) return false;
+    const DkImageSection *s = sec_of(d, va);
+    if (!s || (u64)va + n > (u64)s->va + s->raw_size) return false;
     if (!n) {
-        *out = (DkStr){(const char *)d->data.v, 0};
+        *out = (DkStr){"", 0};
         return true;
     }
-    DkPeSpan span;
-    if (!dk_pe_try_get_data(d->pe, rva, (i64)n, &span) || span.n != n) return false;
-    out->p = (const char *)span.p;
-    out->n = n;
-    return true;
+    return dk_image_read(d->im, va, n, out);
 }
 
 static bool read_u32(const DkDisasm *d, u32 va, u32 *out) {
@@ -109,7 +98,8 @@ u32 dk_disasm_image_base(const DkDisasm *d) { return d->base; }
 /* ---- opening ----------------------------------------------------------------------------------------------------- */
 
 DkDisasm *dk_disasm_open(DkProject *p, int target, DkErr *err) {
-    if (!dk_target_image(p, target, err)) return NULL; /* the pinned sha256, the symbol sources */
+    const DkImage *im = dk_target_image(p, target, err); /* the pinned sha256, the symbol sources */
+    if (!im) return NULL;
     const DkTarget *t = dk_project_target(p, target);
     DkArena *a = dk_project_arena(p);
     DkDisasm *d = DK_NEW(a, DkDisasm);
@@ -117,56 +107,27 @@ DkDisasm *dk_disasm_open(DkProject *p, int target, DkErr *err) {
     d->p = p;
     d->target = target;
     d->name = t->name;
-    if (!dk_read_all(a, t->image_path, &d->data)) {
-        dk_err_set(err, DK_ERR_IO, "%s: %.*s", t->image_path, DK_SF(dk_io_err_str(a)));
-        return NULL;
-    }
-    DkTry tr;
-    if (DK_TRY(&tr)) {
-        d->pe = dk_pe_parse(a, d->data.v, d->data.n);
-        if (d->pe->pe_type != DK_PE_MAGIC_PE32 || d->pe->image_base > 0xFFFFFFFFull)
-            dk_throw(DK_ERR_FORMAT, "not a PE32 image");
-        d->base = (u32)d->pe->image_base;
-        size_t n = 0;
-        bool present = false;
-        u32 *rvas = dk_pe_reloc_rvas(d->pe, a, DK_PE_REL_BASED_HIGHLOW, &n, &present);
-        d->relocs = DK_NEWN(a, u32, n ? n : 1);
-        for (size_t i = 0; i < n; i++) d->relocs[i] = d->base + rvas[i];
-        qsort(d->relocs, n, sizeof *d->relocs, cmp_u32);
-        d->n_relocs = n;
-        d->imports = dk_imap_new();
-        DkPeImports imps = dk_pe_imports(d->pe, a);
-        for (size_t k = 0; k < imps.n; k++) {
-            const DkPeImportDll *dll = &imps.dlls[k];
-            for (size_t i = 0; i < dll->n; i++) {
-                const DkPeImport *imp = &dll->imports[i];
-                if (!imp->name.p || imp->address > 0xFFFFFFFFull) continue;
-                bool created = false;
-                DkVal *v = dk_imap_put(d->imports, (u32)imp->address, &created);
-                if (created) v->p = dk_sprintf(a, "__imp_%.*s", DK_SF(imp->name));
-            }
-        }
-        DkPeLoadConfig lc = dk_pe_load_config(d->pe);
-        if (lc.present && lc.security_cookie <= 0xFFFFFFFFull) d->cookie = (u32)lc.security_cookie;
-        dk_try_end(&tr);
-    } else {
-        dk_err_set(err, DK_ERR_FORMAT, "%s: %s", t->image_path, tr.msg);
-        return NULL;
-    }
-    for (size_t i = 0; i < d->pe->n_sections && !d->code; i++)
-        if (dk_str_eqz(d->pe->sections[i].name, ".text")) d->code = &d->pe->sections[i];
-    for (size_t i = 0; i < d->pe->n_sections && !d->code; i++)
-        if (d->pe->sections[i].characteristics & 0x20000000u) d->code = &d->pe->sections[i];
+    d->im = im;
+    d->base = dk_image_base(im);
+    d->relocs = dk_image_base_relocs(im, &d->n_relocs);
+    d->cookie = dk_image_security_cookie(im);
+    size_t n_sections = 0, file_n = 0;
+    const DkImageSection *sections = dk_image_sections(im, &n_sections);
+    for (size_t i = 0; i < n_sections && !d->code; i++)
+        if (dk_str_eqz(sections[i].name, ".text")) d->code = &sections[i];
+    for (size_t i = 0; i < n_sections && !d->code; i++)
+        if (sections[i].chars & 0x20000000u) d->code = &sections[i];
     if (!d->code) {
         dk_err_set(err, DK_ERR_FORMAT, "%s: no code section", t->image_path);
         return NULL;
     }
-    d->code_va = d->base + d->code->virtual_address;
-    d->code_vsize = d->code->virtual_size ? d->code->virtual_size : d->code->size_of_raw_data;
-    if (d->code->pointer_to_raw_data < d->data.n) {
-        d->code_p = d->data.v + d->code->pointer_to_raw_data;
-        d->code_n = d->code->size_of_raw_data;
-        if (d->code_n > d->data.n - d->code->pointer_to_raw_data) d->code_n = d->data.n - d->code->pointer_to_raw_data;
+    const u8 *file = dk_image_file(im, &file_n);
+    d->code_va = d->code->va;
+    d->code_vsize = d->code->vsize ? d->code->vsize : d->code->raw_size;
+    if (d->code->raw < file_n) {
+        d->code_p = file + d->code->raw;
+        d->code_n = d->code->raw_size;
+        if (d->code_n > file_n - d->code->raw) d->code_n = file_n - d->code->raw;
     }
     d->syms = dk_project_symbols(p, target, err);
     if (!d->syms) return NULL;
@@ -189,8 +150,8 @@ static DkIMap *thunk_map(DkDisasm *d) {
         size_t off = site - d->code_va;
         if (d->code_p[off - 2] != 0xFF || d->code_p[off - 1] != 0x25) continue;
         if (!read_u32(d, site, &slot)) continue;
-        const DkVal *iv = dk_imap_get(d->imports, slot);
-        if (iv) dk_imap_put(d->thunks, site - 2, NULL)->p = (char *)iv->p + 6; /* past "__imp_" */
+        const char *imp = dk_image_import_at(d->im, slot);
+        if (imp) dk_imap_put(d->thunks, site - 2, NULL)->p = (char *)imp + 6; /* past "__imp_" */
     }
     return d->thunks;
 }
@@ -275,12 +236,12 @@ const DkU32Vec *dk_disasm_known_starts(DkDisasm *d) {
 }
 
 bool dk_disasm_guess_size(const DkDisasm *d, u32 address, u32 limit, u32 *size, DkErr *err) {
-    const DkPeSection *s = sec_of(d, address);
+    const DkImageSection *s = sec_of(d, address);
     if (!s) {
         not_in_image(d, address, err);
         return false;
     }
-    u64 avail = (u64)d->base + s->virtual_address + s->size_of_raw_data;
+    u64 avail = (u64)s->va + s->raw_size;
     avail = avail > address ? avail - address : 0;
     if (limit > avail) limit = (u32)avail;
     DkStr code;
@@ -373,13 +334,13 @@ bool dk_disasm_function(DkDisasm *d, u32 address, i64 size, bool show_bytes, DkB
             bool is32 = target <= 0xFFFFFFFFu;
             const char *sym = is32 ? symbol_name_at(d, (u32)target) : NULL;
             const DkVal *tv = is32 ? dk_imap_get(thunks, target) : NULL;
-            const DkVal *iv = is32 ? dk_imap_get(d->imports, target) : NULL;
+            const char *imp = is32 ? dk_image_import_at(d->im, (u32)target) : NULL;
             if (sym) {
                 note = sym;
             } else if (tv) {
                 note = dk_sprintf(d->a, "%s (import thunk)", (const char *)tv->p);
-            } else if (iv) {
-                note = (const char *)iv->p;
+            } else if (imp) {
+                note = imp;
             } else if (d->cookie && target == d->cookie) {
                 note = "__security_cookie";
             } else if (ins->mnemonic[0] == 'j' || strcmp(ins->mnemonic, "call") == 0) {
@@ -485,7 +446,7 @@ static const char *function_text(const DkDisasm *d, u32 va) {
 
 /* Where a site is: the containing function inside the code section, else the section's name. */
 static const char *where_text(const DkDisasm *d, u32 va, const char *f) {
-    const DkPeSection *s = sec_of(d, va);
+    const DkImageSection *s = sec_of(d, va);
     if (f && s && dk_str_eqz(s->name, ".text")) return f;
     return s ? dk_cz(d->a, s->name) : "?";
 }
@@ -651,7 +612,7 @@ void dk_disasm_print_thunks(DkDisasm *d, u32 start, u32 end, bool everything, Dk
 bool dk_disasm_words(DkDisasm *d, u32 address, u32 count, DkBuf *out) {
     annotations_load(d);
     DkIMap *thunks = thunk_map(d);
-    const DkPeSection *sec = sec_of(d, address);
+    const DkImageSection *sec = sec_of(d, address);
     const char *here = symbol_name_at(d, address);
     const DkVal *own = dk_imap_get(d->annotated, address);
     dk_buf_printf(out, "; %s %08X  %u dword(s)  %s\n", d->name, address, count,
@@ -666,17 +627,17 @@ bool dk_disasm_words(DkDisasm *d, u32 address, u32 count, DkBuf *out) {
         }
         bool reloc = has_reloc(d, va);
         const char *note = NULL;
-        const DkPeSection *vs = sec_of(d, value);
+        const DkImageSection *vs = sec_of(d, value);
         if (reloc || vs) {
-            const DkVal *av = dk_imap_get(d->annotated, value), *tv = dk_imap_get(thunks, value),
-                        *iv = dk_imap_get(d->imports, value);
+            const DkVal *av = dk_imap_get(d->annotated, value), *tv = dk_imap_get(thunks, value);
+            const char *imp = dk_image_import_at(d->im, value);
             const char *sym = symbol_name_at(d, value);
             u32 f;
             const char *fname;
             if (av) note = (const char *)av->p;
             else if (sym) note = sym;
             else if (tv) note = dk_sprintf(d->a, "%s (import thunk)", (const char *)tv->p);
-            else if (iv) note = (const char *)iv->p;
+            else if (imp) note = imp;
             else if (dk_disasm_containing_function(d, value, &f, &fname) && *fname)
                 note = dk_sprintf(d->a, "%s+0x%X", fname, value - f);
             else if (vs) note = dk_sprintf(d->a, "(%.*s)", DK_SF(vs->name));

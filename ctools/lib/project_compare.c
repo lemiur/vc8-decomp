@@ -233,7 +233,7 @@ static bool annotation_addr(Cmp *c, const char *symbol, u32 *addr) {
 static bool well_known_addr(Cmp *c, const char *symbol, u32 *addr) {
     /* the linker's image base symbol */
     if (strcmp(symbol, "___ImageBase") == 0 || strcmp(symbol, "__ImageBase") == 0) {
-        *addr = dk__image_base(c->im);
+        *addr = dk_image_base(c->im);
         return true;
     }
     if (dk_project_well_known_imports(c->p) && strncmp(symbol, "__imp_", 6) == 0 &&
@@ -258,7 +258,7 @@ static bool known_type(u16 t) { return t == DK_RELOC_DIR32 || t == DK_RELOC_DIR3
 
 static u32 target_of_actual(const Cmp *c, const DkReloc *r, u32 word, u32 site) {
     switch (r->type) {
-    case DK_RELOC_DIR32NB: return word - (u32)r->addend + dk__image_base(c->im);
+    case DK_RELOC_DIR32NB: return word - (u32)r->addend + dk_image_base(c->im);
     case DK_RELOC_REL32: return word + site + 4 - (u32)r->addend;
     default: return word - (u32)r->addend;
     }
@@ -266,7 +266,7 @@ static u32 target_of_actual(const Cmp *c, const DkReloc *r, u32 word, u32 site) 
 
 static u32 expected_of(const Cmp *c, const DkReloc *r, u32 target, u32 site) {
     switch (r->type) {
-    case DK_RELOC_DIR32NB: return target + (u32)r->addend - dk__image_base(c->im);
+    case DK_RELOC_DIR32NB: return target + (u32)r->addend - dk_image_base(c->im);
     case DK_RELOC_REL32: return target + (u32)r->addend - (site + 4);
     default: return target + (u32)r->addend;
     }

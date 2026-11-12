@@ -25,6 +25,13 @@ per-unit experimental profiles live in `config/cl-candidates.json` and `config/c
 candidates remain explicit open work. `python tools/rulecheck.py matching` reports those as MATCH-PENDING
 and returns nonzero; the gate requires rule admission for each selected function individually.
 
+[`ctools/`](ctools/README.md) is a C diagnostics toolkit (CC BY 4.0) that reads the same configuration through
+`config/ctools.json`: `unitcmp` builds and compares units with the `/GL` + `/LTCG` link backend, and `disasm`,
+`cfg_diff`, `eq2`, `float_order`, `flag_sweep`, `xmatch`, `pdb_dump` and `rich_header` explain a difference
+(control flow, frames, register renames, float order, compiler options, symbolic equivalence). Build it with
+`cmake --workflow --preset ctools` from `ctools/`. It is a diagnostic aid only: `tools/match.py` and
+`tools/gate.py` remain the authority on what matches and what is banked.
+
 Infrastructure checks use `python -m unittest discover -s tests`. Source reconstruction is verified by
 retail comparison and the byte gate, rather than behavioral tests. `tools/symbols.py`, `tools/unitmap.py`,
 and `tools/evidence.py` provide identity-checked, bounded evidence. Generated reports and raw Ghidra

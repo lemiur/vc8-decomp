@@ -21,6 +21,8 @@ struct DkImage {
     DkMap *import_by_name; /* import name (as the PE names it) -> IAT slot VA */
     DkIMap *import_by_va;  /* IAT slot VA -> "__imp_" + name */
     DkSymbols *syms;
+    DkImageSection *sections; /* in the file's section-table order */
+    size_t n_sections;
     SRWLOCK lock;
     void *compare_cache;
 };
@@ -81,6 +83,19 @@ DkImage *dk__image_open(DkArena *a, const char *path, const u8 *sha256, DkErr *e
         qsort(im->relocs, n, sizeof *im->relocs, cmp_u32);
         im->n_relocs = n;
         index_imports(im);
+        size_t ns = im->pe->n_sections;
+        im->sections = DK_NEWN(a, DkImageSection, ns ? ns : 1);
+        for (size_t i = 0; i < ns; i++) {
+            const DkPeSection *s = &im->pe->sections[i];
+            DkImageSection *o = &im->sections[s->index < ns ? s->index : i];
+            o->name = s->name;
+            o->va = im->base + s->virtual_address;
+            o->vsize = s->virtual_size;
+            o->raw_size = s->size_of_raw_data;
+            o->raw = s->pointer_to_raw_data;
+            o->chars = s->characteristics;
+        }
+        im->n_sections = ns;
         dk_try_end(&tr);
     } else {
         dk_err_set(err, DK_ERR_FORMAT, "%s: %s", path, tr.msg);
@@ -92,8 +107,8 @@ DkImage *dk__image_open(DkArena *a, const char *path, const u8 *sha256, DkErr *e
 
 void dk__image_set_symbols(DkImage *im, DkSymbols *syms) { im->syms = syms ? syms : dk_symbols_new(im->a); }
 DkSymbols *dk__image_symbols(const DkImage *im) { return im->syms; }
-u32 dk__image_base(const DkImage *im) { return im->base; }
-const char *dk__image_path(const DkImage *im) { return im->path; }
+u32 dk_image_base(const DkImage *im) { return im->base; }
+const char *dk_image_path(const DkImage *im) { return im->path; }
 void dk__image_lock(DkImage *im) { AcquireSRWLockExclusive(&im->lock); }
 void dk__image_unlock(DkImage *im) { ReleaseSRWLockExclusive(&im->lock); }
 void **dk__image_compare_slot(DkImage *im) { return &im->compare_cache; }
@@ -145,7 +160,7 @@ bool dk_image_read(const DkImage *im, u32 va, size_t n, DkStr *out) {
     return true;
 }
 
-const char *dk__image_import_at(const DkImage *im, u32 va) {
+const char *dk_image_import_at(const DkImage *im, u32 va) {
     const DkVal *v = dk_imap_get(im->import_by_va, va);
     return v ? (const char *)v->p : NULL;
 }
@@ -179,7 +194,7 @@ bool dk__image_import_va(const DkImage *im, const char *name, u32 *va) {
 const char *dk_image_name_at(const DkImage *im, u32 va, u32 *start) {
     if (start) *start = 0;
     if (!im) return NULL;
-    const char *imp = dk__image_import_at(im, va);
+    const char *imp = dk_image_import_at(im, va);
     if (imp) {
         if (start) *start = va;
         return imp;
@@ -225,7 +240,7 @@ bool dk_image_function_size(const DkImage *im, u32 va, u32 *size) {
  * nearest unsized symbol below it in the same section within NEAR_UNSIZED_LIMIT (the offset is the addend). An
  * address further out stays unnamed: compiler-made data a map does not list. */
 static const char *reloc_target_name(const DkImage *im, u32 va, u32 *start) {
-    const char *imp = dk__image_import_at(im, va);
+    const char *imp = dk_image_import_at(im, va);
     if (imp) {
         *start = va;
         return imp;
@@ -323,9 +338,45 @@ void dk__image_branch_relocs(const DkImage *im, u32 va, DkStr code, DkArena *a, 
     dk_dis_iter_end(&it);
 }
 
-u32 dk__image_section_end(const DkImage *im, u32 va) {
+u32 dk_image_section_end(const DkImage *im, u32 va) {
     const DkPeSection *s = section_of(im, va);
     if (!s) return 0;
     u32 size = s->virtual_size && s->virtual_size < s->size_of_raw_data ? s->virtual_size : s->size_of_raw_data;
     return im->base + s->virtual_address + size;
+}
+
+bool dk_image_has_va(const DkImage *im, u32 va) { return im && section_of(im, va) != NULL; }
+
+DkImage *dk_image_open(DkArena *a, const char *path, DkErr *err) { return dk__image_open(a, path, NULL, err); }
+
+const u8 *dk_image_file(const DkImage *im, size_t *n) {
+    *n = im->data.n;
+    return im->data.v;
+}
+
+const DkImageSection *dk_image_sections(const DkImage *im, size_t *n) {
+    *n = im->n_sections;
+    return im->sections;
+}
+
+const DkImageSection *dk_image_section_of(const DkImage *im, u32 va) {
+    const DkPeSection *s = im ? section_of(im, va) : NULL;
+    if (!s) return NULL;
+    return &im->sections[s->index < im->n_sections ? s->index : 0];
+}
+
+const u32 *dk_image_base_relocs(const DkImage *im, size_t *n) {
+    *n = im->n_relocs;
+    return im->relocs;
+}
+
+u32 dk_image_security_cookie(const DkImage *im) {
+    u32 cookie = 0;
+    DkTry tr;
+    if (DK_TRY(&tr)) { /* a malformed load config reads as none */
+        DkPeLoadConfig lc = dk_pe_load_config(im->pe);
+        if (lc.present && lc.security_cookie <= 0xFFFFFFFFull) cookie = (u32)lc.security_cookie;
+        dk_try_end(&tr);
+    }
+    return cookie;
 }

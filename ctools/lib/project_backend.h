@@ -13,14 +13,8 @@ enum { DK_RELOC_DIR32 = 0x06, DK_RELOC_DIR32NB = 0x07, DK_RELOC_REL32 = 0x14 };
 DkImage *dk__image_open(DkArena *a, const char *path, const u8 *sha256, DkErr *err);
 void dk__image_set_symbols(DkImage *im, DkSymbols *syms);
 DkSymbols *dk__image_symbols(const DkImage *im);
-u32 dk__image_base(const DkImage *im);
-const char *dk__image_path(const DkImage *im);
-/* The end VA of the section holding va (its virtual size, cut to its raw data); 0 when no section holds va. */
-u32 dk__image_section_end(const DkImage *im, u32 va);
 /* The IAT slot of an import: name is a decorated "__imp_" name or a plain import name. */
 bool dk__image_import_va(const DkImage *im, const char *name, u32 *va);
-/* The "__imp_" name of the IAT slot at va, NULL when va is none. */
-const char *dk__image_import_at(const DkImage *im, u32 va);
 /* The rel32 branch and call fields (E8, E9, 0F 8x) of code at va whose target leaves [va, va + code.n), as REL32
  * relocations named through the image's symbols (addend: the offset of the target into its symbol). */
 typedef DK_VEC(DkReloc) DkRelocVec;

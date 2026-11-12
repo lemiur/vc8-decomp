@@ -28,7 +28,6 @@
 #include "dk/proc.h"
 #include "dk/re.h"
 #include "dk/sort.h"
-#include "project_backend.h"
 #include "unitcmp.h"
 #include "walls.h"
 
@@ -87,7 +86,7 @@ static const LeverRow LEVER[] = {
     {"duplicated-tail",
      "tail merging: separate returns vs `goto` one exit vs `&&`/`||` collapse"},
     {"merged-tail",
-     "the game merged what ours duplicates: one shared exit/tail (`goto`, a single return, `&&`/`||`) "
+     "the reference merged what ours duplicates: one shared exit/tail (`goto`, a single return, `&&`/`||`) "
      "instead of repeated statements"},
     {"early-return",
      "a `return` from the middle duplicates the destructor/epilogue at "
@@ -96,7 +95,7 @@ static const LeverRow LEVER[] = {
      "`while (c) {}` vs `if (c) do {} while (c);`, `for` vs `do-while` (e.g. "
      "`if (n <= 0) ...; do { } while (++i < n);`)"},
     {"jump-threading",
-     "select wall: game keeps the retest -> `T* p = obj ? obj->Accessor() : 0;` with the "
+     "select wall: reference keeps the retest -> `T* p = obj ? obj->Accessor() : 0;` with the "
      "inline accessor call in the arm; ours keeps it -> `if`/`else` or a "
      "direct member read"},
     {"switch-lowering",
@@ -106,7 +105,7 @@ static const LeverRow LEVER[] = {
      "frame/epilogue differences (EH state, a local still alive after the call): check the code after "
      "the call"},
     {"missing-block", "likely a source difference: a statement, condition or case ours lacks"},
-    {"extra-block", "likely a source difference: a statement, condition or case the game lacks"},
+    {"extra-block", "likely a source difference: a statement, condition or case the reference lacks"},
     {"other", "compare the two disassemblies (the unit's side-by-side diff)"},
 
 };
@@ -545,7 +544,7 @@ static void operand_tokens(const CfgDiffSide *s, const cs_insn *ins, DkCzVec *gl
             for (size_t k = 0; k < consumed.n; k++) hit |= consumed.v[k] == field;
             if (hit) continue;
         }
-        if (!s->ours && value >= 0x400000 && s->image && dk__image_section_end(s->image, (u32)value)) {
+        if (!s->ours && value >= 0x400000 && s->image && dk_image_has_va(s->image, (u32)value)) {
             if (!inside_i(s, value)) dk_vec_push(glob, (char *)PF("0x%X", value));
             continue;
         }
@@ -1705,7 +1704,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             i32 gt = cfg_diff_block_succ_role(gb, "taken"), gf = cfg_diff_block_succ_role(gb, "fall");
             bool straight = (ot >= 0 && al->mo[ot] == gt) || (of >= 0 && al->mo[of] == gf);
             if (straight) continue;
-            const char *ev = PF("ours +%03X j%s / game +%03X j%s   arms swapped: ours fall %s = game taken %s",
+            const char *ev = PF("ours +%03X j%s / reference +%03X j%s   arms swapped: ours fall %s = reference taken %s",
                                 last_off(ours, ob), ob->cond, last_off(game, gb), gb->cond,
                                 of >= 0 ? PF("+%03X", O[of]->start) : "?", gt >= 0 ? PF("+%03X", G[gt]->start) : "?");
             if (strcmp(r, "inv+mir") == 0) {
@@ -1731,7 +1730,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
                     bool inline_o = false, inline_g = false;
                     for (size_t k = 0; k < nro; k++) inline_o |= of >= 0 && ret_o[k] == of;
                     for (size_t k = 0; k < nrg; k++) inline_g |= gf >= 0 && ret_g[k] == gf;
-                    ev = PF("%s; the arm is a return block: ours places it %s, the game %s", ev,
+                    ev = PF("%s; the arm is a return block: ours places it %s, the reference %s", ev,
                             inline_o ? "inline" : "at the end (jumped to)", inline_g ? "inline" : "at the end (jumped to)");
                 }
                 ADD1(&c, "inverted-branch", o, g, ev);
@@ -1747,7 +1746,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             if (gf >= 0) c.exp_g[gf] = 1;
         } else if (r && strcmp(r, "mirrored") == 0) {
             ADD1(&c, "mirrored-compare", o, g,
-                 PF("ours %s %s; j%s / game %s %s; j%s", ob->has_cmp ? ob->cmp_m : "?", ob->has_cmp ? ob->cmp_ops : "", ob->cond,
+                 PF("ours %s %s; j%s / reference %s %s; j%s", ob->has_cmp ? ob->cmp_m : "?", ob->has_cmp ? ob->cmp_ops : "", ob->cond,
                     gb->has_cmp ? gb->cmp_m : "?", gb->has_cmp ? gb->cmp_ops : "", gb->cond));
         }
     }
@@ -1768,7 +1767,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
         dk_vec_free(&no_);
         dk_vec_free(&ng_);
         if (o2 < 0 || g2 < 0) continue;
-        const char *ev = PF("the same tests in another order: game `%s` (+%03X) then `%s` (+%03X); ours `%s` (+%03X) then `%s` (+%03X)",
+        const char *ev = PF("the same tests in another order: reference `%s` (+%03X) then `%s` (+%03X); ours `%s` (+%03X) then `%s` (+%03X)",
                             cmp_text(gb), last_off(game, gb), cmp_text(G[g2]), last_off(game, G[g2]), cmp_text(ob),
                             last_off(ours, ob), cmp_text(O[o2]), last_off(ours, O[o2]));
         i32 ol[2] = {o, o2}, gl[2] = {g, g2};
@@ -1806,7 +1805,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
         if (strcmp(so, sg) != 0 && strcmp(so, "?") != 0 && strcmp(sg, "?") != 0) {
             i32 ol[2] = {lp->header, lp->latch}, gl[2] = {pick->header, pick->latch};
             f_add(&c, "loop-rotation", ol, 2, gl, 2,
-                  PF("ours tests the loop at the %s (header +%03X, latch +%03X), game at the %s (header +%03X, latch +%03X)", so,
+                  PF("ours tests the loop at the %s (header +%03X, latch +%03X), reference at the %s (header +%03X, latch +%03X)", so,
                      O[lp->header]->start, O[lp->latch]->start, sg, G[pick->header]->start, G[pick->latch]->start));
             for (i32 x = 0; x < no; x++) c.exp_o[x] |= lp->body[x];
             for (i32 x = 0; x < ng; x++) c.exp_g[x] |= pick->body[x];
@@ -1818,7 +1817,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
         bool game_side = pass == 0;
         const CfgDiffSide *side = game_side ? game : ours, *other = game_side ? ours : game;
         const i32 *m = game_side ? al->mg : al->mo;
-        const char *own_label = game_side ? "game" : "ours", *other_label = game_side ? "ours" : "game";
+        const char *own_label = game_side ? "reference" : "ours", *other_label = game_side ? "ours" : "reference";
         for (size_t bi = 0; bi < side->blocks.n; bi++) {
             const CfgDiffBlock *b = side->blocks.v[bi];
             const char *reg;
@@ -1869,7 +1868,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             for (size_t k = 0; k < nv; k++) vals[k] = co.v[k].value;
             DkI32Vec ol = {0};
             for (size_t k = 0; k < co.n && k < 4; k++) dk_vec_push(&ol, co.v[k].idx);
-            const char *ev = PF("game has %d jump table(s) (%s), ours %d; ours compare chain cases %s", sg_.n, dk_buf_cz(&tb), so_.n,
+            const char *ev = PF("reference has %d jump table(s) (%s), ours %d; ours compare chain cases %s", sg_.n, dk_buf_cz(&tb), so_.n,
                                 int_list(vals, nv));
             f_add(&c, "switch-lowering", ol.v, ol.n, sg_.v, sg_.n, ev);
             dk_vec_free(&ol);
@@ -1880,7 +1879,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             for (size_t k = 0; k < nv; k++) vals[k] = cg.v[k].value;
             DkI32Vec gl = {0};
             for (size_t k = 0; k < cg.n && k < 4; k++) dk_vec_push(&gl, cg.v[k].idx);
-            const char *ev = PF("ours has %d jump table(s) (%s), game %d; game compare chain cases %s", so_.n, dk_buf_cz(&tb), sg_.n,
+            const char *ev = PF("ours has %d jump table(s) (%s), reference %d; reference compare chain cases %s", so_.n, dk_buf_cz(&tb), sg_.n,
                                 int_list(vals, nv));
             f_add(&c, "switch-lowering", so_.v, so_.n, gl.v, gl.n, ev);
             dk_vec_free(&gl);
@@ -1898,7 +1897,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             const CfgDiffBlock *a = O[so_.v[k]], *b = G[sg_.v[k]];
             if (a->succ.n != b->succ.n)
                 ADD1(&c, "switch-lowering", so_.v[k], sg_.v[k],
-                     PF("jump tables: ours %d entries / %d distinct targets, game %d / %d (a case missing or extra, or the case range differs)",
+                     PF("jump tables: ours %d entries / %d distinct targets, reference %d / %d (a case missing or extra, or the case range differs)",
                         a->table > 0 ? a->table : 0, a->succ.n, b->table > 0 ? b->table : 0, b->succ.n));
         }
     }
@@ -1916,7 +1915,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             for (size_t k = 0; k < co.n; k++) dk_vec_push(&ol, co.v[k].idx);
             for (size_t k = 0; k < cg.n; k++) dk_vec_push(&gl, cg.v[k].idx);
             f_add(&c, "switch-lowering", ol.v, ol.n, gl.v, gl.n,
-                  PF("compare chains test the same cases in another order: ours %s, game %s", int_list(vo, DK_MIN(co.n, (size_t)10)),
+                  PF("compare chains test the same cases in another order: ours %s, reference %s", int_list(vo, DK_MIN(co.n, (size_t)10)),
                      int_list(vg, DK_MIN(cg.n, (size_t)10))));
             dk_vec_free(&ol);
             dk_vec_free(&gl);
@@ -1926,7 +1925,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
     /* tail calls */
     for (int pass = 0; pass < 2; pass++) {
         const CfgDiffSide *side = pass == 0 ? ours : game, *other = pass == 0 ? game : ours;
-        const char *label = pass == 0 ? "ours" : "game";
+        const char *label = pass == 0 ? "ours" : "reference";
         for (size_t bi = 0; bi < side->blocks.n; bi++) {
             const CfgDiffBlock *b = side->blocks.v[bi];
             if (!b->tail || !*b->tail || strcmp(b->tail, "indirect") == 0) continue;
@@ -1949,7 +1948,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             dk_buf_init(&sb, A_);
             for (size_t k = 0; k < obv.n && k < 3; k++) dk_buf_printf(&sb, "%s%03X", k ? ", +" : "", other->blocks.v[obv.v[k]]->start);
             const char *ev = PF("%s +%03X ends with `jmp %s`; %s calls it (+%s) and returns", label, last_off(side, b), b->tail,
-                                pass == 0 ? "game" : "ours", dk_buf_cz(&sb));
+                                pass == 0 ? "reference" : "ours", dk_buf_cz(&sb));
             if (pass == 0)
                 f_add(&c, "tail-call", &(i32){b->idx}, 1, obv.v, DK_MIN(obv.n, (size_t)1), ev);
             else
@@ -1960,7 +1959,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
 
     /* early returns and duplicated / merged tails */
     if (exits_differ) {
-        const char *more = ro.n > rg.n ? "ours" : "game";
+        const char *more = ro.n > rg.n ? "ours" : "reference";
         size_t ndup = 0;
         for (i32 o = 0; o < no; o++) ndup += al->copy_o[o] >= 0 && O[o]->has_ret;
         for (i32 g = 0; g < ng; g++) ndup += al->copy_g[g] >= 0 && G[g]->has_ret;
@@ -1977,7 +1976,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             for (size_t q = 0; q < G[rg.v[k]]->insns.n; q++) pg[k] += strcmp(G[rg.v[k]]->insns.v[q]->mnemonic, "pop") == 0;
         }
         const char *dup_txt = ndup ? PF(" (%d epilogue cop%s)", ndup, ndup == 1 ? "y" : "ies") : "";
-        const char *ev = PF("ret/epilogue blocks: ours %d (%s), game %d (%s); %s returns from the middle%s; pops per exit: ours %s, game %s",
+        const char *ev = PF("ret/epilogue blocks: ours %d (%s), reference %d (%s); %s returns from the middle%s; pops per exit: ours %s, reference %s",
                             ro.n, dk_buf_cz(&ob_), rg.n, dk_buf_cz(&gb_), more, dup_txt, int_list(po, ro.n), int_list(pg, rg.n));
         ADDV(&c, "early-return", ro, rg, ev);
         if (folded_o.n) {
@@ -1989,7 +1988,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
                 dk_buf_printf(&fg, "%s+%03X", k ? " " : "", (u32)last_off(game, G[folded_g.v[k]]));
             }
             Find *last = &c.F.v[c.F.n - 1];
-            last->f.evidence = PF("%s; with %d inverted test%s (ours %s / game %s)", last->f.evidence, folded_o.n,
+            last->f.evidence = PF("%s; with %d inverted test%s (ours %s / reference %s)", last->f.evidence, folded_o.n,
                                   folded_o.n == 1 ? "" : "s", dk_buf_cz(&fo), dk_buf_cz(&fg));
             for (size_t k = 0; k < folded_o.n; k++) dk_vec_push(&last->f.ours, (char *)PF("+%03X", O[folded_o.v[k]]->start));
             for (size_t k = 0; k < folded_g.n; k++) dk_vec_push(&last->f.game, (char *)PF("+%03X", G[folded_g.v[k]]->start));
@@ -2021,7 +2020,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             const char *kind = any_ret ? "early-return" : "merged-tail";
             const char *what = r->n == 1 ? "a block" : PF("a %d-block tail", r->n);
             const char *second = al->mg[twins.v[0]] >= 0 ? PF("%03X", O[al->mg[twins.v[0]]]->start) : "?";
-            const char *ev = PF("ours has %s twice (+%s and +%s); the game once (+%s): %s", what, PF("%03X", O[r->v[0]]->start), second,
+            const char *ev = PF("ours has %s twice (+%s and +%s); the reference once (+%s): %s", what, PF("%03X", O[r->v[0]]->start), second,
                                 PF("%03X", G[twins.v[0]]->start), blk_desc(O[r->v[0]]));
             f_add(&c, kind, olist.v, olist.n, twins.v, twins.n, ev);
             for (size_t k = 0; k < r->n; k++) c.exp_o[r->v[k]] = 1;
@@ -2049,7 +2048,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             const char *kind = any_ret ? "early-return" : "duplicated-tail";
             const char *what = r->n == 1 ? "a block" : PF("a %d-block tail", r->n);
             const char *second = al->mo[twins.v[0]] >= 0 ? PF("%03X", G[al->mo[twins.v[0]]]->start) : "?";
-            const char *ev = PF("the game has %s twice (+%s and +%s); ours once (+%s): %s", what, PF("%03X", G[r->v[0]]->start), second,
+            const char *ev = PF("the reference has %s twice (+%s and +%s); ours once (+%s): %s", what, PF("%03X", G[r->v[0]]->start), second,
                                 PF("%03X", O[twins.v[0]]->start), blk_desc(G[r->v[0]]));
             f_add(&c, kind, twins.v, twins.n, glist.v, glist.n, ev);
             for (size_t k = 0; k < r->n; k++) c.exp_g[r->v[k]] = 1;
@@ -2079,7 +2078,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             DkI32Vec gl = {0};
             for (size_t k = 0; k < moved2.n; k++) {
                 dk_vec_push(&gl, al->mo[moved2.v[k]]);
-                if (k < 6) dk_buf_printf(&mb, "%sours +%03X = game +%03X", k ? ", " : "", O[moved2.v[k]]->start, G[al->mo[moved2.v[k]]]->start);
+                if (k < 6) dk_buf_printf(&mb, "%sours +%03X = reference +%03X", k ? ", " : "", O[moved2.v[k]]->start, G[al->mo[moved2.v[k]]]->start);
             }
             f_add(&c, "block-order", moved2.v, moved2.n, gl.v, gl.n,
                   PF("%d mapped block(s) laid out elsewhere: %s", moved2.n, dk_buf_cz(&mb)));
@@ -2166,7 +2165,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             dk_buf_init(&db, A_);
             for (size_t k = 0; k < r->n && k < 3; k++) dk_buf_printf(&db, "%s%s", k ? " | " : "", blk_desc(G[r->v[k]]));
             f_add(&c, "missing-block", NULL, 0, r->v, r->n,
-                  PF("game +%03X..+%03X (%d block%s) has no counterpart in ours: %s", G[r->v[0]]->start, G[r->v[r->n - 1]]->end, r->n,
+                  PF("reference +%03X..+%03X (%d block%s) has no counterpart in ours: %s", G[r->v[0]]->start, G[r->v[r->n - 1]]->end, r->n,
                      plural(r->n, "", "s"), dk_buf_cz(&db)));
         }
     }
@@ -2178,7 +2177,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             dk_buf_init(&db, A_);
             for (size_t k = 0; k < r->n && k < 3; k++) dk_buf_printf(&db, "%s%s", k ? " | " : "", blk_desc(O[r->v[k]]));
             f_add(&c, "extra-block", r->v, r->n, NULL, 0,
-                  PF("ours +%03X..+%03X (%d block%s) has no counterpart in the game: %s", O[r->v[0]]->start, O[r->v[r->n - 1]]->end, r->n,
+                  PF("ours +%03X..+%03X (%d block%s) has no counterpart in the reference: %s", O[r->v[0]]->start, O[r->v[r->n - 1]]->end, r->n,
                      plural(r->n, "", "s"), dk_buf_cz(&db)));
         }
     }
@@ -2197,7 +2196,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
         static const char *const TERMS[] = {"jcc", "jmp", "fall", "ret", "tail", "switch"};
         if (strcmp(ob->term, gb->term) != 0 && IN_LIST(TERMS, ob->term) && IN_LIST(TERMS, gb->term)) {
             bool jf = (strcmp(ob->term, "jmp") == 0 && strcmp(gb->term, "fall") == 0) || (strcmp(ob->term, "fall") == 0 && strcmp(gb->term, "jmp") == 0);
-            if (!(jf || c.exp_o[o] || c.exp_g[g])) dk_vec_push(&bad, ((Bad){o, g, PF("ours ends in %s, game in %s", ob->term, gb->term)}));
+            if (!(jf || c.exp_o[o] || c.exp_g[g])) dk_vec_push(&bad, ((Bad){o, g, PF("ours ends in %s, reference in %s", ob->term, gb->term)}));
             continue;
         }
         if (strcmp(ob->term, "jcc") == 0 && al->rel[o] && (strcmp(al->rel[o], "same") == 0 || strcmp(al->rel[o], "mirrored") == 0)) {
@@ -2205,7 +2204,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             for (int k = 0; k < 2; k++) {
                 i32 s_o = cfg_diff_block_succ_role(ob, ROLES[k]), s_g = cfg_diff_block_succ_role(gb, ROLES[k]);
                 if (s_o >= 0 && s_g >= 0 && al->mo[s_o] >= 0 && al->mg[s_g] >= 0 && al->mo[s_o] != s_g && !c.exp_o[s_o])
-                    dk_vec_push(&bad, ((Bad){o, g, PF("%s edge: ours -> +%03X (= game +%03X), game -> +%03X", ROLES[k], O[s_o]->start,
+                    dk_vec_push(&bad, ((Bad){o, g, PF("%s edge: ours -> +%03X (= reference +%03X), reference -> +%03X", ROLES[k], O[s_o]->start,
                                                        G[al->mo[s_o]]->start, G[s_g]->start)}));
             }
         }
@@ -2220,10 +2219,10 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
         const CfgDiffBlock *ob = O[o], *gb = G[g];
         if (lat_o[o] && lat_g[g])
             ADD1(&c, "other", o, g,
-                 PF("the loop latches test differently: ours `%s`, game `%s` (the induction variable: counting up vs down, index vs pointer)",
+                 PF("the loop latches test differently: ours `%s`, reference `%s` (the induction variable: counting up vs down, index vs pointer)",
                     cmp_text(ob), cmp_text(gb)));
         else
-            ADD1(&c, "other", o, g, PF("a different test: ours `%s`, game `%s`", cmp_text(ob), cmp_text(gb)));
+            ADD1(&c, "other", o, g, PF("a different test: ours `%s`, reference `%s`", cmp_text(ob), cmp_text(gb)));
     }
     if (bad.n) {
         DkBuf bb;
@@ -2233,7 +2232,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
             dk_vec_push(&bo, bad.v[k].o);
             dk_vec_push(&bg, bad.v[k].g);
             if (k < 4)
-                dk_buf_printf(&bb, "%sours +%03X / game +%03X %s", k ? "; " : "", O[bad.v[k].o]->start, G[bad.v[k].g]->start, bad.v[k].text);
+                dk_buf_printf(&bb, "%sours +%03X / reference +%03X %s", k ? "; " : "", O[bad.v[k].o]->start, G[bad.v[k].g]->start, bad.v[k].text);
         }
         f_add(&c, "other", bo.v, bo.n, bg.v, bg.n,
               PF("edges differ (short-circuit / condition structure): %s", dk_buf_cz(&bb)));
@@ -2242,7 +2241,7 @@ static FindVec find_findings(const CfgDiffSide *ours, const CfgDiffSide *game, c
     }
     if ((trivial_o.n || trivial_g.n) && !c.F.n)
         f_add(&c, "other", trivial_o.v, trivial_o.n, trivial_g.v, trivial_g.n,
-              PF("only jmp-only blocks differ: ours %d, game %d (a jump threaded or added)", trivial_o.n, trivial_g.n));
+              PF("only jmp-only blocks differ: ours %d, reference %d (a jump threaded or added)", trivial_o.n, trivial_g.n));
 
     /* one structural cause once */
     dk_sort(c.F.v, c.F.n, sizeof(Find), find_cmp, NULL, false);
@@ -2351,7 +2350,7 @@ static void sides_of(const DkResult *result, const DkImage *image, i64 game_size
             extent = window.n;
     }
     CfgDiffSide *ours = cfg_diff_side_new("ours", fn->code, base, (u32)fn->code.n, fn, verdicts, image);
-    CfgDiffSide *game = cfg_diff_side_new("game", code, base, (u32)extent, NULL, NULL, image);
+    CfgDiffSide *game = cfg_diff_side_new("reference", code, base, (u32)extent, NULL, NULL, image);
     cfg_diff_build_blocks(ours);
     cfg_diff_build_blocks(game);
     resolve_literals(ours, game);
@@ -2391,7 +2390,7 @@ static CfgDiffAnalysis *analyse_impl(const DkResult *result, const DkImage *imag
     for (i32 g = 0; g < al->ng; g++)
         if (al->copy_g[g] >= 0) {
             CfgDiffMapping m = {PF("+%03X", ours->blocks.v[al->copy_g[g]]->start), PF("+%03X", game->blocks.v[g]->start), "copy",
-                                "game copy", 0.0, false};
+                                "reference copy", 0.0, false};
             dk_vec_push(&an->mapping, m);
         }
     for (size_t i = 0; i < found.n; i++) dk_vec_push(&an->findings, found.v[i].f);
@@ -2453,11 +2452,11 @@ DkStr cfg_diff_format_analysis(const char *name, const CfgDiffAnalysis *a, bool 
     dk_buf_init(&out, A_);
     const CfgDiffSide *ours = a->ours, *game = a->game;
     const AlignS *al = a->align->priv_;
-    dk_buf_pyfmt(&out, "%-4s %s  %s  ours %d bytes / %d blocks, game %d bytes / %d blocks, %d matched\n", a->target, hexaddr_s(a->address), name,
+    dk_buf_pyfmt(&out, "%-4s %s  %s  ours %d bytes / %d blocks, reference %d bytes / %d blocks, %d matched\n", a->target, hexaddr_s(a->address), name,
                  a->size_ours, a->blocks_ours, a->size_game, a->blocks_game, a->matched);
     DkBuf line;
     dk_buf_init(&line, A_);
-    dk_buf_putz(&line, "  blocks (ours -> game):");
+    dk_buf_putz(&line, "  blocks (ours -> reference):");
     for (size_t i = 0; i < a->mapping.n; i++) {
         const CfgDiffMapping *m = &a->mapping.v[i];
         if (strcmp(m->how, "copy") == 0) continue;
@@ -2499,7 +2498,7 @@ DkStr cfg_diff_format_analysis(const char *name, const CfgDiffAnalysis *a, bool 
                     mapped = cpy >= 0 ? PF("copy of +%03X", other->blocks.v[cpy]->start) : "-";
                     how = "";
                 }
-                dk_buf_pyfmt(&out, "  %-5s +%03X %6d %-7s %-22s %-8s %s\n", side->name, b->start, b->end - b->start, term_text(b),
+                dk_buf_pyfmt(&out, "  %-9s +%03X %6d %-7s %-22s %-8s %s\n", side->name, b->start, b->end - b->start, term_text(b),
                              dk_buf_cz(&sb), mapped, how);
             }
         }
@@ -2651,7 +2650,7 @@ const char *cfg_diff_write_html(const char *path, const char *name, const CfgDif
                  "td{vertical-align:top;padding:4px}.blk{border-left:4px solid;margin:4px 0;padding:2px 6px}"
                  "pre{margin:0}.f{margin:2px 0}.lever{color:#666;margin-left:2em}</style></head><body>");
     dk_buf_printf(&out, "\n<h3>%s %s %s</h3>\n", html_esc(a->target), hexaddr_s(a->address), html_esc(name));
-    dk_buf_printf(&out, "<p>ours %lld bytes / %lld blocks, game %lld bytes / %lld blocks, %lld matched</p><h4>findings</h4>",
+    dk_buf_printf(&out, "<p>ours %lld bytes / %lld blocks, reference %lld bytes / %lld blocks, %lld matched</p><h4>findings</h4>",
                    (long long)a->size_ours, (long long)a->blocks_ours, (long long)a->size_game, (long long)a->blocks_game,
                    (long long)a->matched);
     if (!a->findings.n) {
@@ -2662,7 +2661,7 @@ const char *cfg_diff_write_html(const char *path, const char *name, const CfgDif
         dk_buf_printf(&out, "\n<div class='f'><b>%s</b> %s<div class='lever'>%s</div></div>", html_esc(f->kind), html_esc(f->evidence),
                        html_esc(f->lever));
     }
-    dk_buf_putz(&out, "\n<table><tr><th>ours</th><th>game</th></tr><tr>");
+    dk_buf_putz(&out, "\n<table><tr><th>ours</th><th>reference</th></tr><tr>");
     for (int pass = 0; pass < 2; pass++) {
         const CfgDiffSide *side = pass == 0 ? a->ours : a->game, *other = pass == 0 ? a->game : a->ours;
         const char *const *cols = pass == 0 ? col_o : col_g;
@@ -2935,16 +2934,16 @@ static void analyse_record(DkProject *p, BRec *rec, const DkUnitcmpRow *ur) {
     jset(o, "address", dk_json_int(A_, an->address));
     jset(o, "target", jstr(an->target));
     jset(o, "size_ours", dk_json_int(A_, an->size_ours));
-    jset(o, "size_game", dk_json_int(A_, an->size_game));
+    jset(o, "size_reference", dk_json_int(A_, an->size_game));
     jset(o, "blocks_ours", dk_json_int(A_, an->blocks_ours));
-    jset(o, "blocks_game", dk_json_int(A_, an->blocks_game));
+    jset(o, "blocks_reference", dk_json_int(A_, an->blocks_game));
     jset(o, "matched", dk_json_int(A_, an->matched));
     DkJson *ml = dk_json_arr(A_);
     for (size_t k = 0; k < an->mapping.n; k++) {
         const CfgDiffMapping *m = &an->mapping.v[k];
         DkJson *mo = dk_json_obj(A_);
         jset(mo, "ours", jstr(m->ours));
-        jset(mo, "game", jstr(m->game));
+        jset(mo, "reference", jstr(m->game));
         jset(mo, "score", m->has_score ? dk_json_float(A_, m->score) : dk_json_null());
         jset(mo, "how", jstr(m->how));
         jset(mo, "note", jstr(m->note));
@@ -2957,7 +2956,7 @@ static void analyse_record(DkProject *p, BRec *rec, const DkUnitcmpRow *ur) {
         DkJson *fo = dk_json_obj(A_);
         jset(fo, "kind", jstr(f->kind));
         jset(fo, "ours", list_json(&f->ours));
-        jset(fo, "game", list_json(&f->game));
+        jset(fo, "reference", list_json(&f->game));
         jset(fo, "evidence", jstr(f->evidence));
         jset(fo, "lever", jstr(f->lever));
         dk_json_arr_push(A_, fl, fo);
@@ -3077,7 +3076,7 @@ int cfg_diff_batch(DkProject *p, const DkUnitcmpRowVec *urows, const CfgDiffBatc
     {
         DkBuf tsv;
         dk_buf_init(&tsv, A_);
-        dk_buf_putz(&tsv, "unit\tfunction\ttarget\taddress\tblocks_ours\tblocks_game\tmatched\tkinds\tone_liner\n");
+        dk_buf_putz(&tsv, "unit\tfunction\ttarget\taddress\tblocks_ours\tblocks_reference\tmatched\tkinds\tone_liner\n");
         for (size_t ri = 0; ri < rows.n; ri++) {
             const Row *row = &rows.v[ri];
             for (int bi = 0; bi < row->nb; bi++) {

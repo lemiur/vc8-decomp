@@ -63,13 +63,13 @@ typedef struct CfgDiffBlock {
 i32 cfg_diff_block_succ_role(const CfgDiffBlock *b, const char *role);
 DkI32Vec cfg_diff_block_successors(const CfgDiffBlock *b);
 
-/* Side: one side's bytes. ours: the object's code with its relocations and verdicts; else the game's bytes. */
+/* Side: one side's bytes. ours: the object's code with its relocations and verdicts; else the reference bytes. */
 typedef struct CfgDiffSide {
-    const char *name;               /* "ours" / "game" */
+    const char *name;               /* "ours" / "reference" */
     DkStr code;
     u32 base, extent, size;         /* size: the decoded code's length */
-    const DkFunc *fn;               /* NULL for the game */
-    const DkImage *image;           /* the target's image: the game's bytes and globals; may be NULL */
+    const DkFunc *fn;               /* NULL for the reference */
+    const DkImage *image;           /* the target's image: the reference bytes and globals; may be NULL */
     DkIMap *verdicts;              /* {offset: const DkRefCheck* (.p)}: our relocation checks (dk_wall_verdicts) */
     DkIMap *relocs;                /* {offset: const DkReloc* (.p)} */
     bool ours;
