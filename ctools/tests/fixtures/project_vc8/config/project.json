@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "toolchain_root": "toolchain/VC",
+  "binaries": {
+    "cl": {"filename": "cl.exe", "language": "c++", "phase": 1},
+    "c2": {"filename": "c2.dll", "language": "c", "phase": 2},
+    "c1": {"filename": "c1.dll", "language": "c++", "phase": 3},
+    "c1xx": {"filename": "c1xx.dll", "language": "c++", "phase": 4},
+    "link": {"filename": "link.exe", "language": "c++", "phase": 5, "optional": true}
+  },
+  "project": {
+    "binaries": ["cl", "c1", "c1xx", "c2", "link"],
+    "gl": true,
+    "annotation": {
+      "pattern": "^\\s*//\\s*(?P<kind>FUNCTION|DATA):\\s+(?P<binary>[a-zA-Z0-9_]+)\\s+(?P<va>0x[0-9a-fA-F]+)\\s*$",
+      "prefix": "//\\s*(FUNCTION|DATA):",
+      "function": "FUNCTION"
+    },
+    "link_flags": ["/OPT:NOREF,NOICF"]
+  }
+}

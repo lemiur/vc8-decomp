@@ -1,0 +1,48 @@
+{
+  "schema": "decompkit-project/1",
+  "vars": {
+    "tools": "bin",
+    "cl_exe": "${tools}/cl.exe"
+  },
+  "targets": {
+    "alpha": {"image": "images/alpha.bin",
+              "sha256": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+              "image_base": "0x400000",
+              "defines": ["ALPHA=1"],
+              "symbols": [{"kind": "tsv", "path": "syms/alpha.tsv", "name": "Name", "va": "Address"},
+                          {"kind": "pdb", "path": "syms/alpha.pdb"}]},
+    "beta":  {"image": "images/beta.bin",
+              "defines": ["BETA=1"],
+              "symbols": [{"kind": "map", "path": "syms/beta.map"}],
+              "compiler": {"base_flags": ["/nologo", "/c", "/O1"], "env": {"X": "2"}}}
+  },
+  "units": {"roots": ["src"], "exclude": ["src/vendor"], "extensions": [".c", ".cpp"],
+            "map": {"src/both.c": {"compile_flags": ["/Oy"], "flags_line": false, "note": "ignored"}}},
+  "compiler": {
+    "cl": "${cl_exe}",
+    "env": {"X": "1", "Y": "y"},
+    "path_prepend": ["${tools}"],
+    "base_flags": ["/nologo", "/c", "/O2"],
+    "c_flags": ["/TC"],
+    "cpp_flags": ["/EHsc"],
+    "include": ["src/inc"],
+    "identity_files": ["${cl_exe}"],
+    "show_includes": true,
+    "flag_variants": [["/O1"], ["/O2", "/Oy-"]]
+  },
+  "backend": {"kind": "object"},
+  "annotations": {
+    "marker": "^\\s*//\\s*(?P<kind>match|data):\\s+(?P<addr_alpha>[0-9A-Fa-fx]+)\\s+(?P<addr_beta>[0-9A-Fa-fx]+)\\s*$",
+    "kinds": {"match": "function", "data": "data"},
+    "addr_groups": "per-target",
+    "name": "next_line",
+    "stop": "^\\s*//\\s*stop:\\s*(?P<reason>.*)$",
+    "pending": "^\\s*//\\s*pending:\\s*(?P<reason>.*)$",
+    "flags": "^\\s*//\\s*flags:\\s*(.*)$",
+    "flags_lines": 4
+  },
+  "referents": [{"file": "config/refs.tsv", "format": "tsv"}],
+  "well_known": {"imports": false, "symbols": ["_memcpy"]},
+  "build_dir": "out/dk",
+  "text_checks": {"paths": ["src"], "no_bom": ["src/**"]}
+}
