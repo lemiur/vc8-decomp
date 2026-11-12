@@ -1,0 +1,58 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "cacheVariables": { "DK_TOOLS_OUT": "${sourceDir}/../build/ctools/bin" }
+    },
+    {
+      "name": "ctools",
+      "displayName": "ctools (x64, Release)",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/../build/ctools-cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "ctools-debug",
+      "displayName": "ctools (x64, Debug)",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/../build/ctools-cmake-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "DK_TOOLS_OUT": "${sourceDir}/../build/ctools/bin/debug" }
+    },
+    {
+      "name": "ctools-vs2022",
+      "displayName": "ctools (Visual Studio 2022, x64, Release)",
+      "inherits": "ctools",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64"
+    },
+    {
+      "name": "ctools-vs2026",
+      "displayName": "ctools (Visual Studio 2026, x64, Release)",
+      "inherits": "ctools",
+      "generator": "Visual Studio 18 2026",
+      "architecture": "x64"
+    }
+  ],
+  "buildPresets": [
+    { "name": "ctools", "configurePreset": "ctools", "configuration": "Release", "jobs": 8 },
+    { "name": "ctools-debug", "configurePreset": "ctools-debug", "configuration": "Debug", "jobs": 8 }
+  ],
+  "testPresets": [
+    { "name": "ctools", "configurePreset": "ctools", "configuration": "Release",
+      "output": { "outputOnFailure": true }, "execution": { "jobs": 8, "timeout": 600 } },
+    { "name": "ctools-debug", "configurePreset": "ctools-debug", "configuration": "Debug",
+      "output": { "outputOnFailure": true }, "execution": { "timeout": 600 } }
+  ],
+  "workflowPresets": [
+    { "name": "ctools-build", "displayName": "Build every tool (Release, no tests)",
+      "steps": [ { "type": "configure", "name": "ctools" }, { "type": "build", "name": "ctools" } ] },
+    { "name": "ctools", "steps": [ { "type": "configure", "name": "ctools" }, { "type": "build", "name": "ctools" },
+                                   { "type": "test", "name": "ctools" } ] },
+    { "name": "ctools-debug", "steps": [ { "type": "configure", "name": "ctools-debug" },
+                                         { "type": "build", "name": "ctools-debug" },
+                                         { "type": "test", "name": "ctools-debug" } ] }
+  ]
+}

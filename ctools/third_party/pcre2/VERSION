@@ -1,0 +1,1 @@
+PCRE2 10.44 (https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.44/pcre2-10.44.tar.gz): the 8-bit library sources, sljit (JIT); config.h from config.h.generic, pcre2.h from pcre2.h.generic, pcre2_chartables.c from the .dist file; docs, tests, pcre2grep, pcre2test and the POSIX wrapper dropped
