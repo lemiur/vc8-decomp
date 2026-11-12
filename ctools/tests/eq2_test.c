@@ -173,7 +173,7 @@ static DkStr unhex(const char *hex) {
 static void run_progs(DkStr oc, DkStr gc, u32 base, const Eq2RelocVec *rv, const char *o_ret, const Eq2Image *image, DkBuf *out) {
     Eq2RelocVec none = {0};
     Eq2Prog *po = eq2_prog_new("ours", oc, base, rv ? rv : &none, image, true);
-    Eq2Prog *pg = eq2_prog_new("game", gc, base, &none, image, false);
+    Eq2Prog *pg = eq2_prog_new("reference", gc, base, &none, image, false);
     Eq2Checker *ck = eq2_checker_new(po, pg);
     ck->o_ret = o_ret;
     Eq2Sim *so = eq2_sim_new(po, eq2_state_new(po));
@@ -190,7 +190,7 @@ static void run_progs(DkStr oc, DkStr gc, u32 base, const Eq2RelocVec *rv, const
     for (size_t i = 0; i < ck->diffs.n; i++) dk_buf_pyfmt(out, "\ndiff %s", ck->diffs.v[i]);
     for (size_t i = 0; i < ck->notes.n; i++) dk_buf_pyfmt(out, "\nnote %s", ck->notes.v[i]);
     for (size_t i = 0; i < ck->switches.n; i++)
-        dk_buf_pyfmt(out, "\ncase %d ours %X game %X", ck->switches.v[i].value, ck->switches.v[i].ours, ck->switches.v[i].game);
+        dk_buf_pyfmt(out, "\ncase %d ours %X reference %X", ck->switches.v[i].value, ck->switches.v[i].ours, ck->switches.v[i].game);
 }
 
 static void run_eng(const Eq2EngCase *c, DkBuf *out) {

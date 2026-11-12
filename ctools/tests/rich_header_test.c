@@ -54,4 +54,14 @@ DK_TEST(no_rich_header) {
     dk_vec_free(&img);
 }
 
+DK_TEST(help_exits_zero) {
+    DkStr argv[] = {DK_S("--help")};
+    DkArgsExit ex = {0};
+    DkArgs *r = dk_args_try_parse(rich_header_parser(), argv, 1, false, &ex);
+    CHECK(r == NULL);
+    CHECK_EQ_I64(ex.code, 0);
+    CHECK(dk_str_contains(ex.out, DK_S("usage: rich_header.exe")));
+    CHECK(ex.err.n == 0);
+}
+
 DK_TEST_MAIN("rich_header")

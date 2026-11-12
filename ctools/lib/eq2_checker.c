@@ -101,7 +101,7 @@ static bool compare_writes(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const char *w
         }
     }
     EXMAP_FOR(&left, a) {
-        Bad x = {exkey_ex(a->key), "game", a->val.n, a->val.e};
+        Bad x = {exkey_ex(a->key), "reference", a->val.n, a->val.e};
         dk_vec_push(&bad, x);
     }
     /* _ident: a store of the value just loaded from the same address */
@@ -115,7 +115,7 @@ static bool compare_writes(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const char *w
     bool ok = true;
     if (bad.n) {
         DkBuf b = {0};
-        dk_buf_pyfmt(&b, "stores differ %s (ours +%X, game +%X): ", where, so->st->pc - (i64)im->o->base, sg->st->pc - (i64)im->g->base);
+        dk_buf_pyfmt(&b, "stores differ %s (ours +%X, reference +%X): ", where, so->st->pc - (i64)im->o->base, sg->st->pc - (i64)im->g->base);
         for (size_t i = 0; i < bad.n && i < 4; i++) {
             if (i) dk_buf_putz(&b, " / ");
             dk_buf_pyfmt(&b, "    %s-only addr ", bad.v[i].who);
@@ -147,7 +147,7 @@ static void compare_ret(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *i
             DkBuf m = {0};
             dk_buf_putz(&m, "float return value differs: ours ");
             put_short(&m, a);
-            dk_buf_putz(&m, " game ");
+            dk_buf_putz(&m, " reference ");
             put_short(&m, b);
             report_buf(ck, &m);
         }
@@ -157,7 +157,7 @@ static void compare_ret(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *i
             DkBuf m = {0};
             dk_buf_putz(&m, "return value differs: ours ");
             put_short(&m, a);
-            dk_buf_putz(&m, " game ");
+            dk_buf_putz(&m, " reference ");
             put_short(&m, b);
             report_buf(ck, &m);
         }
@@ -168,7 +168,7 @@ static void compare_ret(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *i
             DkBuf m = {0};
             dk_buf_putz(&m, "bool return differs: ours ");
             put_short(&m, a);
-            dk_buf_putz(&m, " game ");
+            dk_buf_putz(&m, " reference ");
             put_short(&m, b);
             report_buf(ck, &m);
         }
@@ -269,7 +269,7 @@ static bool compare_call(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *
     DkArenaMark smk = dk_arena_mark(sa);
     Ex *ko = callee_key(so, io), *kg = callee_key(sg, ig);
     DkBuf wb = {0};
-    dk_buf_pyfmt(&wb, "call at ours +%X / game +%X", (i64)io->address - (i64)im->o->base, (i64)ig->address - (i64)im->g->base);
+    dk_buf_pyfmt(&wb, "call at ours +%X / reference +%X", (i64)io->address - (i64)im->o->base, (i64)ig->address - (i64)im->g->base);
     const char *where = dk_buf_cz(&wb);
     bool result = false;
     DkBuf m = {0};
@@ -284,7 +284,7 @@ static bool compare_call(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *
             cp++;
         }
         dk_buf_putn(&m, s, i);
-        dk_buf_putz(&m, " where the game has ");
+        dk_buf_putz(&m, " where the reference has ");
         put_short(&m, kg);
         dk_buf_putz(&m, " (inline/call set differs)");
         report_buf(ck, &m);
@@ -313,7 +313,7 @@ static bool compare_call(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *
         } else {
             dk_buf_pyfmt(&m, "callee differs %s: ours ", where);
             ex_str_of(&m, ko->el[1]);
-            dk_buf_putz(&m, " game ");
+            dk_buf_putz(&m, " reference ");
             ex_str_of(&m, kg->el[1]);
             report_buf(ck, &m);
             goto done;
@@ -330,7 +330,7 @@ static bool compare_call(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *
         if (!same) {
             dk_buf_pyfmt(&m, "call args differ %s:\n    ours ", where);
             put_short_list(&m, ao, nao);
-            dk_buf_putz(&m, "\n    game ");
+            dk_buf_putz(&m, "\n    reference ");
             put_short_list(&m, ag, nag);
             report_buf(ck, &m);
             goto done;
@@ -359,7 +359,7 @@ static bool compare_call(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *
             if (!eq2_eqv(eq2_subst(so->st->regs[ri], &so->st->facts), eq2_subst(sg->st->regs[ri], &sg->st->facts))) {
                 dk_buf_pyfmt(&m, "%s differs at %s: ours ", regs[i], where);
                 put_short(&m, so->st->regs[ri]);
-                dk_buf_putz(&m, " game ");
+                dk_buf_putz(&m, " reference ");
                 put_short(&m, sg->st->regs[ri]);
                 report_buf(ck, &m);
                 goto done;
@@ -443,7 +443,7 @@ static void do_switch(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg, const cs_insn *io,
             DkBuf m = {0};
             dk_buf_putz(&m, "switch index differs: ours ");
             put_short(&m, vo);
-            dk_buf_putz(&m, " game ");
+            dk_buf_putz(&m, " reference ");
             put_short(&m, vg);
             report_buf(ck, &m);
             return;
@@ -498,7 +498,7 @@ static void walk(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg) {
         Eq2Event ev_g = eq2_step_until_event(sg);
         if (ev_o.kind != ev_g.kind) {
             DkBuf m = {0};
-            dk_buf_pyfmt(&m, "event kind differs: ours %s at +%X, game %s at +%X", eq2_ev_names[ev_o.kind],
+            dk_buf_pyfmt(&m, "event kind differs: ours %s at +%X, reference %s at +%X", eq2_ev_names[ev_o.kind],
                           (i64)ev_o.ins->address - (i64)im->o->base, eq2_ev_names[ev_g.kind], (i64)ev_g.ins->address - (i64)im->g->base);
             report_buf(ck, &m);
             return;
@@ -522,7 +522,7 @@ static void walk(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg) {
                 int rel_ = eq2_cond_eq(co, cg) ? 0 : (eq2_cond_eq(co, eq2_negate_cond(cg)) ? 1 : 2);   /* same, neg, other */
                 if (do_ < 0 || dg < 0 || (rel_ == 0 && do_ != dg) || (rel_ == 1 && do_ == dg)) {
                     DkBuf m = {0};
-                    dk_buf_pyfmt(&m, "condition folds differently: ours +%X %s -> %s; game +%X %s -> %s", (i64)io->address - (i64)im->o->base,
+                    dk_buf_pyfmt(&m, "condition folds differently: ours +%X %s -> %s; reference +%X %s -> %s", (i64)io->address - (i64)im->o->base,
                                   io->mnemonic, tri(do_), (i64)ig->address - (i64)im->g->base, ig->mnemonic, tri(dg));
                     report_buf(ck, &m);
                     return;
@@ -550,7 +550,7 @@ static void walk(Eq2Checker *ck, Eq2Sim *so, Eq2Sim *sg) {
                 put_short(&m, co->el[2]);
                 dk_buf_putc(&m, ' ');
                 put_short(&m, co->el[3]);
-                dk_buf_pyfmt(&m, "]\n    game +%X %s [%s ", (i64)ig->address - (i64)im->g->base, ig->mnemonic, cg->el[0]->s);
+                dk_buf_pyfmt(&m, "]\n    reference +%X %s [%s ", (i64)ig->address - (i64)im->g->base, ig->mnemonic, cg->el[0]->s);
                 put_outs(&m, cg->el[1]);
                 dk_buf_putc(&m, ' ');
                 put_short(&m, cg->el[2]);

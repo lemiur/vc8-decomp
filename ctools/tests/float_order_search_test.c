@@ -43,7 +43,7 @@ DK_TEST(search_finds_the_commuted_spelling) {
     CHECK(dk_json_at(sc, 0) && dk_json_len(sc) == 3);
     DkJson *states = dk_json_getz(res, "states");
     CHECK(states && dk_json_len(states) >= 1);
-    DkJson *gn = dk_json_getz(res, "game_nodes");
+    DkJson *gn = dk_json_getz(res, "reference_nodes");
     CHECK(gn && dk_json_getz(gn, "before") && dk_json_getz(gn, "after"));
     dk_tempdir_cleanup(root);
 }

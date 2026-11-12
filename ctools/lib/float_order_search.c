@@ -870,7 +870,7 @@ int float_order_search(FloatOrderArgs *args) {
     {
         DkJson *gn = dk_json_obj(a);
         JSET(gn, "before", jclasses(base_classes, ng));
-        JSET(result, "game_nodes", gn);
+        JSET(result, "reference_nodes", gn);
     }
     DkStr signature = S(pb.signature);
     s->float_names = float_names_of(signature, &s->body0);
@@ -1092,7 +1092,7 @@ int float_order_search(FloatOrderArgs *args) {
     }
     JSET(result, "tried", jint(s->tried));
     JSET(result, "failed", jint(s->failed));
-    JSET(dk_json_getz(result, "game_nodes"), "after", jclasses(s->best_classes, ng));
+    JSET(dk_json_getz(result, "reference_nodes"), "after", jclasses(s->best_classes, ng));
     DkScore ps_exact = DK_SCORE_EXACT;
     bool exact = dk_score_cmp(s->best_rank.score, ps_exact) == 0;
     if (exact) {
@@ -1123,7 +1123,7 @@ int float_order_search(FloatOrderArgs *args) {
         dk_score_str(s->best_rank.score), tuple3(s->base_f), s->base_x, dk_score_str(base_score));
     LOG("reference nodes: before %s, after %s", fo_class_counts_repr(base_classes, ng), fo_class_counts_repr(s->best_classes, ng));
     if (unreached.n) {
-        LOG("unreached game nodes (%d candidates compiled over %d sites, none produces them):", s->tried, (int)s->sites0.n);
+        LOG("unreached reference nodes (%d candidates compiled over %d sites, none produces them):", s->tried, (int)s->sites0.n);
         for (size_t i = 0; i < unreached.n; i++) LOG("  %s", unreached.v[i].text);
     }
     if (s->frontier && dk_map_len(s->frontier)) LOG("%d distinct better state(s) in %s", (int)n_states, relpath_native(out));
@@ -1407,7 +1407,7 @@ int float_order_batch(FloatOrderArgs *args) {
     for (size_t i = 0; i < keys.n; i++) {
         const DkJson *r = keys.v[i].r;
         if (dk_str_eqz(dk_json_get_str(r, "status", S("")), "no-float")) continue;
-        DkJson *gn = dk_json_getz(r, "game_nodes");
+        DkJson *gn = dk_json_getz(r, "reference_nodes");
         DkJson *states = dk_json_getz(r, "states");
         const char *diff = jtruthy(states) ? jstr_of(dk_json_getz(dk_json_at(states, 0), "diff")) : jstr_of(dk_json_get_or(r, S("error"), jstr("")));
         DkJson *base = dk_json_getz(r, "base"), *best = dk_json_getz(r, "best");

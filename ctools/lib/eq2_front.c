@@ -146,7 +146,7 @@ static void eq2_build(DkProject *p, const DkResult *r, Eq2Built *b) {
     build_relocs(a, r, &relocs);
     b->ours = eq2_prog_new("ours", code, base, &relocs, eim, true);
     Eq2RelocVec none = {0};
-    b->game = eq2_prog_new("game", game, base, &none, eim, false);
+    b->game = eq2_prog_new("reference", game, base, &none, eim, false);
     b->plain = r->ours.symbol ? dk_undecorate_symbol(a, r->ours.symbol, 0) : (DkStr){"", 0};
     b->ok = true;
 }
