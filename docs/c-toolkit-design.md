@@ -196,11 +196,16 @@ interpolate `${name}` from `vars` and the built-ins `${root}`, `${primary}`, `${
                      "defines": [ "NAME=1", ... ],     optional per-target macros
                      "symbols": [ symbol-source ... ], section 5.5
                      "units": unit-map | $from         optional, merged into "units"
+                     "link_with": link-deps | $from    optional, this target's link dependencies
                    } },
   "units":       { "roots": [dir], "exclude": [dir], "extensions": [".c", ".cpp"],
-                   "map": unit-map | $from },          explicit list wins over discovery
+                   "map": unit-map | $from,            explicit list wins over discovery
+                   "link_with": link-deps | $from },
   "unit-map":    { "<path>": { "compile_flags": [..], "remove_compile_flags": [..],
-                               "link_flags": [..], "gl": bool, "flags_line": bool } },
+                               "link_flags": [..], "gl": bool, "flags_line": bool,
+                               "link_with": [path], "link_roots": [symbol] } },
+  "link-deps":   { "<path>": [path] }                  a map, or a list of entries
+               | [ { "unit": path, "dependencies": [path], "roots": [symbol] } ],
   "compiler":    { "cl": path, "env": { NAME: value }, "path_prepend": [dir],
                    "base_flags": [..] | $from, "c_flags": [..], "cpp_flags": [..],
                    "include": [dir], "identity_files": [path], "show_includes": bool,
@@ -227,6 +232,17 @@ The marker regex uses named groups: `kind`; then either `target` and `addr` (one
 or `addr_<target>` per declared target (several addresses per line, the source project's `// match: <a> <b>`,
 where `0` means "no copy in that target"). Python-style `(?P<name>...)` is accepted (PCRE2 supports it; the
 core's `re_translate` covers the rest of Python syntax), so vc8-decomp's existing pattern is used unchanged.
+
+**Link dependencies.** The `link` backend compiles and links more than the unit when the unit's code calls into
+other sources: a unit's `link_with` lists those sources (repository-relative) and `link_roots` lists extra decorated
+link roots (`/INCLUDE:`). They come from a unit map entry, or from a `link_with` block at `units` level or per
+target, in one of two shapes so that a project's existing files are referenced rather than copied: a map
+`{unit: [sources]}` (vc8-decomp's `config/<binary>.json#/dependencies`) or a list of entries `{"unit",
+"dependencies", "roots"}` whose other members are ignored (vc8-decomp's `config/<binary>-candidates.json#/candidates`).
+Every source named for a unit is collected (the unit itself dropped, sorted, unique). Each is compiled with its own
+unit options when it is a unit (else with the compiler's flags alone) and its own `/GL` setting, never with a
+caller's source override or extra flags, and linked after the unit in path order; its `link_flags` join the link's.
+The `object` and `manifest` backends ignore both lists.
 
 Name rules: `declaration` takes the first identifier before `(` between the marker and the body's `{` and binds
 it to a compiled symbol by the MSVC rules vc8-decomp already uses (`_name`, `_name@N`, `?name@...`), an explicit
@@ -391,6 +407,11 @@ publics and module procedures), `{"kind": "map", "path": ...}` (an MSVC linker m
   "text_checks": {"paths": ["matching"], "no_bom": ["matching/**"]}
 }
 ```
+
+Its link dependencies are referenced in place (section 5.2, link dependencies): `"link_with": {"$from":
+"config/cl.json#/dependencies", "default": {}}` on the target and `"link_with": {"$from":
+"config/cl-candidates.json#/candidates", "default": []}` (or the same per target) together give the union of the
+dependencies and roots that `tools/match.py` links for a unit.
 
 The per-binary `compile`/`link` flag lists of `config/<binary>.json` (`flags.compile`, `flags.link`) are joined
 the same way (`"base_flags": {"$from": "config/c2.json#/flags/compile"}` on a target-level `compiler` override,

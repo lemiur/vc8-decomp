@@ -596,11 +596,13 @@ static bool read_symbols(Ld *L, const DkJson *v, const char *kpath, DkTarget *t)
     return true;
 }
 
-static bool read_target(Ld *L, DkStr name, const DkJson *o, const char *kpath, size_t index, DkJson **units) {
+static bool read_target(Ld *L, DkStr name, const DkJson *o, const char *kpath, size_t index, DkJson **units,
+                        DkJson **link_with) {
     DkProject *p = L->p;
     DkTarget *t = &p->targets[index];
     if (!want_obj(L, o, kpath) ||
-        !CHECK_KEYS(L, o, kpath, "image", "sha256", "image_base", "defines", "symbols", "compiler", "units"))
+        !CHECK_KEYS(L, o, kpath, "image", "sha256", "image_base", "defines", "symbols", "compiler", "units",
+                    "link_with"))
         return false;
     t->name = dk_cz(L->a, name);
     if (!get_str(L, o, "image", kpath, true, &t->image_path)) return false;
@@ -637,6 +639,7 @@ static bool read_target(Ld *L, DkStr name, const DkJson *o, const char *kpath, s
         t->compiler = &p->target_compilers[index];
     }
     *units = dk_json_getz(o, "units");
+    *link_with = dk_json_getz(o, "link_with");
     return true;
 }
 
@@ -677,6 +680,8 @@ static bool read_unit_map(Ld *L, Units *U, const DkJson *map, const char *kpath,
         if (!get_list(L, m->val, "compile_flags", ep, false, &tmp.compile_flags) ||
             !get_list(L, m->val, "remove_compile_flags", ep, false, &tmp.remove_flags) ||
             !get_list(L, m->val, "link_flags", ep, false, &tmp.link_flags) ||
+            !get_list(L, m->val, "link_with", ep, false, &tmp.link_with) ||
+            !get_list(L, m->val, "link_roots", ep, false, &tmp.link_roots) ||
             !get_bool(L, m->val, "gl", ep, &tmp.gl, &tmp.gl_set) ||
             !get_bool(L, m->val, "flags_line", ep, &tmp.flags_line, NULL))
             return false;
@@ -684,6 +689,69 @@ static bool read_unit_map(Ld *L, Units *U, const DkJson *map, const char *kpath,
         if (target >= 0) U->recs.v[ri].tmask |= 1u << target;
     }
     return true;
+}
+
+/* A link-dependency list (docs/c-toolkit-design.md section 5.2): either a map unit -> [sources], or a list of entries
+ * {"unit": path, "dependencies": [sources], "roots": [symbols]} (other members ignored). Each source is added to the
+ * unit's link_with, each root to its link_roots. */
+static bool read_link_with(Ld *L, Units *U, const DkJson *v, const char *kpath) {
+    if (dk_json_is_obj(v)) {
+        for (size_t i = 0; i < dk_json_len(v); i++) {
+            const DkJsonMember *m = dk_json_member(v, i);
+            DkStrVec deps = {0};
+            if (!str_list(L, m->val, kp(L, kpath, m->key), false, &deps)) return false;
+            size_t ri = unit_rec(U, rel_norm(L->a, L->p, m->key));
+            for (size_t k = 0; k < deps.n; k++) dk_vec_push(&U->recs.v[ri].u.link_with, deps.v[k]);
+        }
+        return true;
+    }
+    if (!dk_json_is_arr(v)) return fail(L, DK_ERR_FORMAT, "%s: not an object or a list", kpath);
+    for (size_t i = 0; i < dk_json_len(v); i++) {
+        const DkJson *e = dk_json_at(v, i);
+        const char *ep = dk_sprintf(L->a, "%s[%zu]", kpath, i);
+        if (!want_obj(L, e, ep)) return false;
+        const char *unit = NULL;
+        DkStrVec deps = {0}, roots = {0};
+        if (!get_str(L, e, "unit", ep, false, &unit) || !get_list(L, e, "dependencies", ep, false, &deps) ||
+            !get_list(L, e, "roots", ep, false, &roots))
+            return false;
+        if (!unit) return fail(L, DK_ERR_FORMAT, "%s: required", kpz(L, ep, "unit"));
+        size_t ri = unit_rec(U, rel_norm(L->a, L->p, dk_str(unit)));
+        for (size_t k = 0; k < deps.n; k++) dk_vec_push(&U->recs.v[ri].u.link_with, deps.v[k]);
+        for (size_t k = 0; k < roots.n; k++) dk_vec_push(&U->recs.v[ri].u.link_roots, roots.v[k]);
+    }
+    return true;
+}
+
+static int cmp_str(const void *x, const void *y, void *ctx) {
+    DK_UNUSED(ctx);
+    const DkStr *a = x, *b = y;
+    int c = memcmp(a->p, b->p, DK_MIN(a->n, b->n));
+    return c ? c : (a->n > b->n) - (a->n < b->n);
+}
+
+/* Normalises a unit's link_with (repository-relative, without the unit, sorted, unique) and link_roots (unique). */
+static void finish_link_with(Ld *L, DkUnit *u) {
+    DkStrVec *v = &u->link_with;
+    size_t w = 0;
+    for (size_t i = 0; i < v->n; i++) {
+        DkStr s = dk_str(rel_norm(L->a, L->p, v->v[i]));
+        if (strcmp(s.p, u->path) != 0) v->v[w++] = s;
+    }
+    v->n = w;
+    if (v->n > 1) dk_sort(v->v, v->n, sizeof *v->v, cmp_str, NULL, false);
+    w = 0;
+    for (size_t i = 0; i < v->n; i++)
+        if (!w || !dk_str_eq(v->v[w - 1], v->v[i])) v->v[w++] = v->v[i];
+    v->n = w;
+    DkStrVec *r = &u->link_roots;
+    w = 0;
+    for (size_t i = 0; i < r->n; i++) {
+        bool dup = false;
+        for (size_t k = 0; k < w && !dup; k++) dup = dk_str_eq(r->v[k], r->v[i]);
+        if (!dup) r->v[w++] = r->v[i];
+    }
+    r->n = w;
 }
 
 static bool under_dir(const char *rel, const char *dir) {
@@ -749,12 +817,13 @@ static int cmp_unit(const void *x, const void *y, void *ctx) {
     return strcmp(((const DkUnit *)x)->path, ((const DkUnit *)y)->path);
 }
 
-static bool read_units(Ld *L, const DkJson *o, DkJson *const *target_maps) {
+static bool read_units(Ld *L, const DkJson *o, DkJson *const *target_maps, DkJson *const *target_links) {
     DkProject *p = L->p;
     DkStrVec exclude = {0}, exts = {0};
     DkJson *map = NULL;
     if (o) {
-        if (!want_obj(L, o, "units") || !CHECK_KEYS(L, o, "units", "roots", "exclude", "extensions", "map") ||
+        if (!want_obj(L, o, "units") ||
+            !CHECK_KEYS(L, o, "units", "roots", "exclude", "extensions", "map", "link_with") ||
             !get_list(L, o, "roots", "units", false, &p->unit_roots) ||
             !get_list(L, o, "exclude", "units", false, &exclude) ||
             !get_list(L, o, "extensions", "units", false, &exts))
@@ -776,6 +845,11 @@ static bool read_units(Ld *L, const DkJson *o, DkJson *const *target_maps) {
         if (target_maps[t])
             ok = read_unit_map(L, &U, target_maps[t], dk_sprintf(L->a, "targets.%s.units", p->targets[t].name),
                                (int)t);
+    DkJson *links = o ? dk_json_getz(o, "link_with") : NULL;
+    if (ok && links) ok = read_link_with(L, &U, links, "units.link_with");
+    for (size_t t = 0; ok && t < p->ntargets; t++)
+        if (target_links[t])
+            ok = read_link_with(L, &U, target_links[t], dk_sprintf(L->a, "targets.%s.link_with", p->targets[t].name));
     dk_map_free(U.index);
     dk_vec_free(&exclude);
     dk_vec_free(&exts);
@@ -799,6 +873,7 @@ static bool read_units(Ld *L, const DkJson *o, DkJson *const *target_maps) {
         DkUnit *u = &p->units[i];
         *u = U.recs.v[i].u;
         u->target_mask = U.recs.v[i].tmask ? U.recs.v[i].tmask : all;
+        finish_link_with(L, u);
         if (defines.n) {
             DkBytes raw = {0};
             if (dk_read_all(NULL, dk_sprintf(L->a, "%s/%s", p->root, u->path), &raw)) {
@@ -1022,7 +1097,7 @@ static bool load(Ld *L, const char *config) {
     if (comp && !read_compiler(L, comp, "compiler", &p->compiler)) return false;
 
     DkJson *targets = dk_json_getz(rest, "targets");
-    DkJson *target_maps[DK_MAX_TARGETS] = {0};
+    DkJson *target_maps[DK_MAX_TARGETS] = {0}, *target_links[DK_MAX_TARGETS] = {0};
     if (targets) {
         if (!want_obj(L, targets, "targets")) return false;
         size_t n = dk_json_len(targets);
@@ -1031,11 +1106,12 @@ static bool load(Ld *L, const char *config) {
         for (size_t i = 0; i < n; i++) {
             const DkJsonMember *m = dk_json_member(targets, i);
             if (!m->key.n) return fail(L, DK_ERR_FORMAT, "targets: an empty target name");
-            if (!read_target(L, m->key, m->val, kp(L, "targets", m->key), i, &target_maps[i])) return false;
+            if (!read_target(L, m->key, m->val, kp(L, "targets", m->key), i, &target_maps[i], &target_links[i]))
+                return false;
             p->ntargets = i + 1;
         }
     }
-    return read_units(L, dk_json_getz(rest, "units"), target_maps) &&
+    return read_units(L, dk_json_getz(rest, "units"), target_maps, target_links) &&
            read_annotations(L, dk_json_getz(rest, "annotations")) && read_backend(L, dk_json_getz(rest, "backend")) &&
            read_referents(L, dk_json_getz(rest, "referents")) && read_small_blocks(L, rest);
 }

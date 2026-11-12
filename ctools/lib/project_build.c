@@ -9,7 +9,9 @@
  *             symbols the annotations bind to: the link roots), linked with the configured argv; each root found in
  *             the linker map and read from the linked image up to the next map symbol of its section (an unverified
  *             boundary: it may include padding). Relocations come from the image's base relocations and its rel32
- *             branches, named through the map.
+ *             branches, named through the map. The unit's link_with sources are compiled too (each with its own
+ *             unit options when it is a unit, and its /GL setting) and linked after it, in path order, with their
+ *             link_flags; the unit's link_roots are added to the roots.
  *   manifest  the candidates of a build manifest ({"candidates": [{symbol, retail_va, candidate_va, size, image_path,
  *             source_path?, map_path?}], "artifacts": [{path, kind}]}), written by the configured command or read
  *             from the configured path; relocations as for link.
@@ -709,16 +711,52 @@ static DkFunc *build_link(DkProject *p, const DkUnit *u, int target, const DkBui
         if (!seen) dk_vec_push(&roots, (char *)sym);
     }
     dk_vec_free(&names);
+    for (size_t i = 0; i < u->link_roots.n; i++) {
+        bool seen = false;
+        for (size_t k = 0; k < roots.n && !seen; k++) seen = strcmp(roots.v[k], u->link_roots.v[i].p) == 0;
+        if (!seen) dk_vec_push(&roots, (char *)u->link_roots.v[i].p);
+    }
     bool gl = u->gl_set ? u->gl : true;
     const char *obj = fwd(a, dk_join(a, dir, "candidate.obj"));
     if (!compile(p, u, target, o, src, obj, gl ? GL_ON : GL_OFF, log, err)) return NULL;
     DkCzVec objects = {0};
     dk_vec_push(&objects, (char *)obj);
+    /* the sources linked with the unit: their own unit options, never the caller's override or extra flags */
+    DK_VEC(const DkUnit *) deps = {0};
+    DkBuildOpts dep_opts;
+    memset(&dep_opts, 0, sizeof dep_opts);
+    dep_opts.use_cache = o && o->use_cache;
+    for (size_t i = 0; i < u->link_with.n; i++) {
+        const DkUnit *d = dk_project_unit(p, u->link_with.v[i].p);
+        if (!d || strcmp(d->path, u->link_with.v[i].p) != 0) {
+            DkUnit *plain = DK_NEW(a, DkUnit);
+            plain->path = u->link_with.v[i].p;
+            plain->flags_line = true;
+            d = plain;
+        }
+        const char *dsrc = fwd(a, dk_project_path(a, p, d->path));
+        const char *dobj = fwd(a, dk_join(a, dir, dk_sprintf(a, "dep-%03zu.obj", i)));
+        bool dgl = d->gl_set ? d->gl : true;
+        if (!compile(p, d, target, &dep_opts, dsrc, dobj, dgl ? GL_ON : GL_OFF, log, err)) {
+            dk_vec_free(&deps);
+            return NULL;
+        }
+        dk_vec_push(&objects, (char *)dobj);
+        dk_vec_push(&deps, d);
+    }
     DkExpandVars vars = {dk_project_target(p, target)->name, u->path, dir, NULL, NULL};
     DkCzVec argv = {0};
     dk_vec_push(&argv, (char *)b->linker);
     if (!expand_argv(p, &b->link_argv, &vars, &objects, &roots, &argv, err)) return NULL;
     for (size_t i = 0; i < u->link_flags.n; i++) dk_vec_push(&argv, (char *)u->link_flags.v[i].p);
+    for (size_t k = 0; k < deps.n; k++)
+        for (size_t i = 0; i < deps.v[k]->link_flags.n; i++) {
+            const char *f = deps.v[k]->link_flags.v[i].p;
+            bool seen = false;
+            for (size_t j = 1; j < argv.n && !seen; j++) seen = argv.v[j] && strcmp(argv.v[j], f) == 0;
+            if (!seen) dk_vec_push(&argv, (char *)f);
+        }
+    dk_vec_free(&deps);
     const char *image_path = option_value(a, &argv, "/OUT:");
     const char *map_path = option_value(a, &argv, "/MAP:");
     if (!image_path || !map_path) {
