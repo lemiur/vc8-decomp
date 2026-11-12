@@ -169,6 +169,9 @@ bool dk_annot_config_compile(DkAnnotConfig *c, const char *const *target_names, 
  * root NULL: dk_root(). config NULL: <root>/config/ctools.json, merged with <root>/config/ctools.local.json when it
  * exists (objects merged member by member, anything else replaced). Unknown keys are errors. */
 DkProject *dk_project_load(DkArena *a, const char *root, const char *config, DkErr *err);
+/* A second, independent copy of the project (its own arena, so another thread may use it) whose build folder is
+ * build_dir (the scorer's concurrent builds). The caller owns the copy and never frees it. */
+DkProject *dk_project_clone(const DkProject *p, const char *build_dir, DkErr *err);
 DkArena *dk_project_arena(const DkProject *p);
 const char *dk_project_root(const DkProject *p);     /* absolute, forward slashes, no trailing slash */
 const char *dk_project_primary(const DkProject *p);  /* the main checkout (the root itself outside a worktree) */
