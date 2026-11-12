@@ -209,6 +209,16 @@ static DkCzVec compile_options(DkArena *a, DkProject *p, const DkUnit *u, int ta
             }
         }
     }
+    if (o && o->remove_flags.n) {
+        size_t w = 0;
+        for (size_t i = 0; i < flags.n; i++) {
+            bool removed = false;
+            for (size_t r = 0; r < o->remove_flags.n && !removed; r++)
+                removed = _stricmp(flags.v[i], o->remove_flags.v[r].p) == 0;
+            if (!removed) flags.v[w++] = flags.v[i];
+        }
+        flags.n = w;
+    }
     if (o)
         for (size_t i = 0; i < o->extra_flags.n; i++) dk_vec_push(&flags, (char *)o->extra_flags.v[i].p);
     if (gl != GL_NONE) {

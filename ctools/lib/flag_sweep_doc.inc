@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: CC-BY-4.0
+// Copyright (c) lemiur, TheCloakedCoder and contributors
+    "Flag-sweep oracle: does a unit's compiler option set matter, and is it the only one that matches?\n"
+    "\n"
+    "    flag_sweep <unit> [--targets a,b|all] [--variants default|extended] [--no-cache] [--json FILE]\n"
+    "               [--root DIR] [--config FILE]\n"
+    "\n"
+    "The baseline is the unit's effective options for the target (the compiler's base flags and the language's, less\n"
+    "the unit's removed flags, plus its own flags and its flags line). Every other variant changes one thing: drops\n"
+    "/Oy, /GS (the negated option), /Gy, /fp:fast or /arch:SSE2, swaps /EHsc and /EHa, adds /Ob1, replaces /O2 by\n"
+    "/Os, adds /Oi-; `extended` adds /Ob0, /Ob2, /O1, /Ox, /Oi, /Ot, /EHs, /GF, /Gs, /GS-, /fp:precise, /fp:strict,\n"
+    "/arch:SSE, /Zp4, /Zp16. A project's `compiler.flag_variants` (a list of option lists, each applied over the\n"
+    "baseline) replaces the default list. Each variant is built and compared like unitcmp does, once per target.\n"
+    "Cells are MATCH, ERR (the build failed), NOFN (no compiled function), the status of equal bytes, or the byte\n"
+    "score. Functions parked with stop: or pending: are listed apart and do not enter the verdict. Exit code 0 when\n"
+    "the sweep ran, 2 for a usage, configuration or unit error.\n"
