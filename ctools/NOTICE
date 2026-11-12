@@ -1,0 +1,8 @@
+Copyright (c) lemiur, TheCloakedCoder and contributors. Licensed under CC BY 4.0 (see LICENSE).
+
+Scope: this licence covers only the files under ctools/, except ctools/third_party/, which keeps each package's own
+licence (see third_party/NOTICES.txt). It does not cover the reconstructed compiler sources of this repository
+(matching/), its Python tools, its configuration or its documentation outside ctools/. No repository-wide licence is
+added or changed by ctools/.
+
+Third-party code (capstone, PCRE2): see third_party/NOTICES.txt.

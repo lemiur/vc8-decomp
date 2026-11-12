@@ -111,30 +111,62 @@ def scan_referents(image, va, size, symbols=(), bindings=None):
     def add(offset, width, kind, target):
         identity = 'self+0x%x' % (target - va) if va <= target < va + size else None
         aliases = names.get(target, [])
+        alias_meta = None
         if identity is None:
             imported = imports.get(target, set())
             if len(imported) == 1:
                 identity = next(iter(imported))
             elif not imported:
-                literals = []
-                for key, binding in (bindings or {}).items():
-                    if binding.get('kind') != 'literal':
-                        continue
-                    length = binding.get('size', 0)
-                    if not isinstance(length, int) or not 0 < length <= 65536:
-                        continue
-                    try:
-                        data = image.read_va(target, length)
-                    except ValueError:
-                        continue
-                    if hashlib.sha256(data).hexdigest() == binding.get('bytes_sha256'):
-                        literals.append(key)
-                if len(literals) == 1:
-                    identity = literals[0]
-                elif not literals and len(aliases) == 1:
+                if len(aliases) == 1 and not aliases[0].startswith("??_C@"):
+                    # One exact MAP symbol is a stronger identity than a
+                    # content-hash literal: a two-byte L"" binding must never
+                    # shadow a named zero-initialized object such as
+                    # ___rtc_izz/___rtc_tzz. String-literal MAP symbols
+                    # (??_C@...) keep the content-hash identity because the
+                    # registry records literals by exact payload, not by the
+                    # compiler's pooled symbol name.
                     identity = aliases[0]
+                else:
+                    literals = []
+                    for key, binding in (bindings or {}).items():
+                        if binding.get('kind') != 'literal':
+                            continue
+                        length = binding.get('size', 0)
+                        if not isinstance(length, int) or not 0 < length <= 65536:
+                            continue
+                        try:
+                            data = image.read_va(target, length)
+                        except ValueError:
+                            continue
+                        if hashlib.sha256(data).hexdigest() == binding.get('bytes_sha256'):
+                            literals.append(key)
+                    if len(literals) == 1:
+                        identity = literals[0]
+                    elif not literals and len(aliases) > 1:
+                        # A MAP entry with several public names (the CRT stack
+                        # probe exports __alloca_probe/__chkstk at one address)
+                        # is admitted only through an exact reviewed entry-alias
+                        # binding. Never guess from one alias and never accept a
+                        # partial alias set.
+                        shared = set(aliases)
+                        matched = [key for key, binding in (bindings or {}).items()
+                                   if binding.get('kind') == 'entry-alias' and
+                                   set(binding.get('aliases') or []) == shared]
+                        if len(matched) > 1:
+                            raise ValueError('ambiguous entry-alias binding at %#x' % target)
+                        if matched:
+                            binding = bindings[matched[0]]
+                            canonical = 'entry-alias:' + '|'.join(binding['aliases'])
+                            if matched[0] != canonical:
+                                raise ValueError('entry-alias binding key is not its canonical identity')
+                            identity = canonical
+                            alias_meta = {'aliases': list(binding['aliases']),
+                                          'size': binding.get('size'),
+                                          'bytes_sha256': binding.get('bytes_sha256')}
         record = {'offset': offset, 'width': width, 'kind': kind,
                   'target': target, 'identity': identity, 'resolved': identity is not None}
+        if alias_meta is not None:
+            record.update(alias_meta)
         old = refs.get(offset)
         if old is not None and old != record:
             raise ValueError('conflicting reference encodings at offset %#x' % offset)

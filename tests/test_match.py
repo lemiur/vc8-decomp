@@ -13,6 +13,11 @@ import match
 
 
 class MatchContracts(unittest.TestCase):
+    def test_gl_mode_states_one_switch_only(self):
+        self.assertEqual(match.gl_flags(['/nologo', '/GL', '/MD'], False), ['/nologo', '/MD'])
+        self.assertEqual(match.gl_flags(['/nologo', '/gl-', '/MD'], True), ['/nologo', '/MD'])
+        self.assertEqual(match.gl_flags(['/nologo', '/MD'], True), ['/nologo', '/MD'])
+
     def source(self, text):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
@@ -86,6 +91,63 @@ class MatchContracts(unittest.TestCase):
         Image.base_relocations = lambda self: [{'va': 0x1000, 'type': 7, 'width': None}]
         with self.assertRaises(ValueError):
             ltcg.scan_referents(Image(), 0x1000, 1)
+
+    def test_shared_entry_alias_binding_resolves_only_an_exact_map_alias_set(self):
+        code = b'\xe8\x0b\x00\x00\x00\xc3'
+
+        class Image:
+            def read_va(self, va, size):
+                return code[va - 0x10001000:va - 0x10001000 + size]
+
+            def base_relocations(self):
+                return []
+
+        entry = ltcg.MapSymbol('__chkstk', 0x10001010, 1, 16, True, 'msvcrt:chkstk.obj')
+        data = ltcg.MapSymbol('__alloca_probe', 0x10001010, 1, 16, False, 'msvcrt:chkstk.obj')
+        binding = {'kind': 'entry-alias', 'va': '0x40bd30', 'size': 43,
+                   'bytes_sha256': 'f8675b4976f7b8efc0bd917aebab734d11ca90222d20bcd2a166ce9914ed2b6e',
+                   'aliases': ['__alloca_probe', '__chkstk'],
+                   'evidence': 'synthetic test binding'}
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), [entry, data],
+                                   {'entry-alias:__alloca_probe|__chkstk': binding})
+        self.assertEqual(refs[0]['identity'], 'entry-alias:__alloca_probe|__chkstk')
+        self.assertTrue(refs[0]['resolved'])
+        self.assertEqual(refs[0]['aliases'], ['__alloca_probe', '__chkstk'])
+        self.assertEqual((refs[0]['size'], refs[0]['bytes_sha256']),
+                         (43, binding['bytes_sha256']))
+
+        wrong = dict(binding, aliases=['__alloca_probe', '__chkstk64'])
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), [entry, data],
+                                   {'entry-alias:__alloca_probe|__chkstk64': wrong})
+        self.assertIsNone(refs[0]['identity'])
+        self.assertFalse(refs[0]['resolved'])
+
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), [entry, data])
+        self.assertIsNone(refs[0]['identity'])
+        self.assertFalse(refs[0]['resolved'])
+
+        with self.assertRaisesRegex(ValueError, 'ambiguous entry-alias'):
+            ltcg.scan_referents(Image(), 0x10001000, len(code), [entry, data],
+                                {'entry-alias:__alloca_probe|__chkstk': binding, 'other': dict(binding)})
+
+    def test_single_map_alias_is_never_promoted_to_a_shared_entry(self):
+        code = b'\xe8\x0b\x00\x00\x00\xc3'
+
+        class Image:
+            def read_va(self, va, size):
+                return code[va - 0x10001000:va - 0x10001000 + size]
+
+            def base_relocations(self):
+                return []
+
+        symbols = [ltcg.MapSymbol('__chkstk', 0x10001010, 1, 16, True, 'msvcrt:chkstk.obj')]
+        binding = {'kind': 'entry-alias', 'va': '0x40bd30', 'size': 43,
+                   'bytes_sha256': '0f' * 32, 'aliases': ['__alloca_probe', '__chkstk'],
+                   'evidence': 'synthetic test binding'}
+        refs = ltcg.scan_referents(Image(), 0x10001000, len(code), symbols,
+                                   {'entry-alias:__alloca_probe|__chkstk': binding})
+        self.assertEqual(refs[0]['identity'], '__chkstk')
+        self.assertTrue(refs[0]['resolved'])
 
     def test_build_rejects_reusing_nonempty_output(self):
         with tempfile.TemporaryDirectory() as directory:

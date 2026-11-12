@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "binary": "cl",
-  "note": "Independently bounded candidates; only the gate admits counts. append_nosync and strqlen remain disabled. SDK Initialize uses three named members of one canonical object; aliases and referenced data never inflate counts.",
+  "note": "Independently bounded candidates; only the gate admits counts. append_nosync, strqlen and strqcpy remain disabled. SDK Initialize uses three named members of one canonical object; aliases and referenced data never inflate counts.",
   "candidates": [
     {
       "binary": "cl",
@@ -10,8 +10,8 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 13,
-        "end": 16
+        "start": 56,
+        "end": 59
       },
       "boundary": {
         "status": "verified",
@@ -34,8 +34,8 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 20,
-        "end": 23
+        "start": 63,
+        "end": 66
       },
       "boundary": {
         "status": "verified",
@@ -58,8 +58,8 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 27,
-        "end": 30
+        "start": 70,
+        "end": 73
       },
       "boundary": {
         "status": "verified",
@@ -82,8 +82,8 @@
       "size": 9,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 34,
-        "end": 37
+        "start": 77,
+        "end": 80
       },
       "boundary": {
         "status": "verified",
@@ -106,8 +106,8 @@
       "size": 22,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 45,
-        "end": 48
+        "start": 141,
+        "end": 144
       },
       "boundary": {
         "status": "verified",
@@ -127,8 +127,8 @@
       "size": 23,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 52,
-        "end": 57
+        "start": 176,
+        "end": 181
       },
       "boundary": {
         "status": "verified",
@@ -148,8 +148,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 70,
-        "end": 73
+        "start": 306,
+        "end": 309
       },
       "boundary": {
         "status": "verified",
@@ -169,8 +169,8 @@
       "size": 20,
       "unit": "matching/cl/clmain.cpp",
       "source_span": {
-        "start": 77,
-        "end": 80
+        "start": 313,
+        "end": 316
       },
       "boundary": {
         "status": "verified",
@@ -199,7 +199,8 @@
       },
       "dependencies": [
         "matching/cl/clmain.cpp",
-        "matching/cl/util_watson.cpp"
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
       ],
       "roots": [
         "?RedirStderr@@3HA"
@@ -224,7 +225,8 @@
       },
       "dependencies": [
         "matching/cl/clmain.cpp",
-        "matching/cl/util_watson.cpp"
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
       ],
       "roots": [
         "?RedirStderr@@3HA"
@@ -249,7 +251,8 @@
       },
       "dependencies": [
         "matching/cl/clmain.cpp",
-        "matching/cl/util_watson.cpp"
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
       ],
       "roots": [
         "?RedirStderr@@3HA"
@@ -283,8 +286,8 @@
       "size": 1,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 10,
-        "end": 12
+        "start": 13,
+        "end": 15
       },
       "boundary": {
         "status": "verified",
@@ -301,8 +304,8 @@
       "size": 45,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 19,
-        "end": 29
+        "start": 22,
+        "end": 32
       },
       "boundary": {
         "status": "verified",
@@ -319,8 +322,8 @@
       "size": 38,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 34,
-        "end": 47
+        "start": 37,
+        "end": 50
       },
       "boundary": {
         "status": "verified",
@@ -336,8 +339,8 @@
       "size": 61,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 52,
-        "end": 67
+        "start": 54,
+        "end": 69
       },
       "boundary": {
         "status": "verified",
@@ -355,8 +358,8 @@
       "size": 33,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 72,
-        "end": 80
+        "start": 75,
+        "end": 83
       },
       "boundary": {
         "status": "verified",
@@ -372,8 +375,8 @@
       "size": 29,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 87,
-        "end": 94
+        "start": 90,
+        "end": 97
       },
       "boundary": {
         "status": "verified",
@@ -389,8 +392,8 @@
       "size": 53,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 100,
-        "end": 110
+        "start": 103,
+        "end": 113
       },
       "boundary": {
         "status": "verified",
@@ -406,8 +409,8 @@
       "size": 41,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 116,
-        "end": 123
+        "start": 119,
+        "end": 126
       },
       "boundary": {
         "status": "verified",
@@ -423,8 +426,8 @@
       "size": 84,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 129,
-        "end": 146
+        "start": 132,
+        "end": 149
       },
       "boundary": {
         "status": "verified",
@@ -440,8 +443,8 @@
       "size": 20,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 158,
-        "end": 163
+        "start": 161,
+        "end": 166
       },
       "boundary": {
         "status": "verified",
@@ -458,8 +461,8 @@
       "size": 23,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 167,
-        "end": 171
+        "start": 170,
+        "end": 174
       },
       "boundary": {
         "status": "verified",
@@ -475,8 +478,8 @@
       "size": 24,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 175,
-        "end": 180
+        "start": 178,
+        "end": 183
       },
       "boundary": {
         "status": "verified",
@@ -492,8 +495,8 @@
       "size": 35,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 184,
-        "end": 188
+        "start": 187,
+        "end": 191
       },
       "boundary": {
         "status": "verified",
@@ -509,8 +512,8 @@
       "size": 56,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 192,
-        "end": 200
+        "start": 195,
+        "end": 203
       },
       "boundary": {
         "status": "verified",
@@ -526,8 +529,8 @@
       "size": 27,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 204,
-        "end": 208
+        "start": 207,
+        "end": 211
       },
       "boundary": {
         "status": "verified",
@@ -543,8 +546,8 @@
       "size": 61,
       "unit": "matching/cl/mpcl.cpp",
       "source_span": {
-        "start": 212,
-        "end": 219
+        "start": 215,
+        "end": 222
       },
       "boundary": {
         "status": "verified",
@@ -560,8 +563,8 @@
       "size": 26,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 11,
-        "end": 18
+        "start": 15,
+        "end": 22
       },
       "boundary": {
         "status": "verified",
@@ -578,8 +581,8 @@
       "size": 14,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 22,
-        "end": 26
+        "start": 26,
+        "end": 30
       },
       "boundary": {
         "status": "verified",
@@ -595,8 +598,8 @@
       "size": 33,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 30,
-        "end": 35
+        "start": 34,
+        "end": 39
       },
       "boundary": {
         "status": "verified",
@@ -612,8 +615,8 @@
       "size": 98,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 40,
-        "end": 59
+        "start": 44,
+        "end": 63
       },
       "boundary": {
         "status": "verified",
@@ -631,8 +634,8 @@
       "size": 55,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 63,
-        "end": 72
+        "start": 67,
+        "end": 76
       },
       "boundary": {
         "status": "verified",
@@ -648,8 +651,8 @@
       "size": 43,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 76,
-        "end": 81
+        "start": 80,
+        "end": 85
       },
       "boundary": {
         "status": "verified",
@@ -665,8 +668,8 @@
       "size": 43,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 85,
-        "end": 90
+        "start": 89,
+        "end": 94
       },
       "boundary": {
         "status": "verified",
@@ -682,8 +685,8 @@
       "size": 48,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 94,
-        "end": 100
+        "start": 98,
+        "end": 104
       },
       "boundary": {
         "status": "verified",
@@ -699,8 +702,8 @@
       "size": 97,
       "unit": "matching/cl/util.cpp",
       "source_span": {
-        "start": 104,
-        "end": 113
+        "start": 108,
+        "end": 117
       },
       "boundary": {
         "status": "verified",
@@ -850,6 +853,1362 @@
       "compiler_context": {
         "evidence": "Source stop marker removed only after typed SDK member identities and compiler-witness validation became available. Function body and flags are unchanged."
       }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?initscreenline@@YAHXZ",
+      "retail_va": "0x408290",
+      "size": 41,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 152,
+        "end": 157
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independently decoded complete 41-byte retail CFG at 0x408290..0x4082b8; two real screen_length calls are retained by the authentic SDK max macro. Actual owner /GL + /LTCG comparison resolves every ordered referent."
+      },
+      "dependencies": [
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
+      ],
+      "roots": [
+        "?RedirStderr@@3HA",
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"
+      ],
+      "compiler_context": {
+        "evidence": "Real dos/clmain/Watson source dependencies and already proven escaped RedirStderr/standard setter ABI roots preserve actual external context; no replacement bodies or export controls."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?strqcpy@@YAPAGPAGPBG@Z",
+      "retail_va": "0x408072",
+      "size": 211,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 122,
+        "end": 148
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode covers 211 bytes from 0x408072 through RET 0x408144 inclusive, 89 instructions, seven branches, two calls. Complete source candidate is not byte-exact."
+      },
+      "gate_enabled": false,
+      "dependencies": [],
+      "roots": [],
+      "compiler_context": {
+        "evidence": "Parked complete quote-copy reconstruction; wide-character promotion and scheduling differ. No admission or exactness claim."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?starttiming@@YAXXZ",
+      "retail_va": "0x4082b9",
+      "size": 13,
+      "unit": "matching/cl/util.cpp",
+      "source_span": {
+        "start": 165,
+        "end": 168
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode covers complete 13-byte body 0x4082b9..0x4082c5. Pushes the canonical timeb64 object to actual CRT _ftime64_s and returns; source owner actual four-unit /GL + /LTCG comparison is exact after both referents independently resolve."
+      },
+      "dependencies": [
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
+      ],
+      "roots": [
+        "?RedirStderr@@3HA",
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z",
+        "?g_startTime@@3U__timeb64@@A"
+      ],
+      "compiler_context": {
+        "evidence": "Actual CRT sys/timeb.h supplies the single canonical __timeb64 object type. Real object /INCLUDE root preserves externally observable address context alongside the already proven dos/Watson roots; no fake data or body."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??0CConsoleLock@@QAE@XZ",
+      "retail_va": "0x4014d5",
+      "size": 44,
+      "unit": "matching/cl/clmain.cpp",
+      "source_span": {
+        "start": 320,
+        "end": 332
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode covers complete 44-byte constructor 0x4014d5..0x401500; all internal branches return locally. cmderr constructs at EBP-1, proving one-byte class extent; conditional ReleaseMutex cleanup corroborates the real bool and inline destructor."
+      },
+      "dependencies": [
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp"
+      ],
+      "roots": [
+        "?g_hMutex@@3PAXA",
+        "?ErrorReportingSetMode@@YA_NW4ErrorReportingMode@@@Z"
+      ],
+      "compiler_context": {
+        "evidence": "Canonical HANDLE g_hMutex has actual PDB public identity and unique mpcl.obj owner, with loader-zero storage. Its real data root preserves observed external mutability across the partial standalone source context. Real mpcl/Watson bodies are dependencies, setter root preserves previously proven standard ABI; no dummy code or exported controls."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?close_mutex@@YAXXZ",
+      "retail_va": "0x409fae",
+      "size": 17,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 236,
+        "end": 240
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 17 bytes at 0x409FAE..0x409FBE: load of canonical ?g_hMutex@@3PAXA, test, conditional push of that HANDLE into __imp__CloseHandle@4, ret. Complete local CFG with no other referents; source owner compared every byte and both ordered references under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?close_mutex@@YAXXZ, mpcl.obj contribution at 0x409FAE; plain cdecl with no arguments.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?MP_is_server@@YAHXZ",
+      "retail_va": "0x409fbf",
+      "size": 76,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 247,
+        "end": 256
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 76 bytes at 0x409FBF..0x40A00A: real GS-cookie prolog, GetEnvironmentVariableW(...,10) into a 10-element wide buffer, wcscmp against L\"bananana\", neg/sbb/inc equality, store to ?is_server_run@@3HA, __security_check_cookie, leave, ret. Every branch and all five ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?MP_is_server@@YAHXZ, mpcl.obj contribution at 0x409FBF; int return in EAX, no arguments.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ProcessChannel_read_thread@@YGKPAX@Z",
+      "retail_va": "0x40a04c",
+      "size": 86,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 262,
+        "end": 272
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 86 bytes at 0x40A04C..0x40A0A1: __SEH_prolog4, context loads, virtual read through vslot+4, success store, __except filter comparing GetExceptionCode() to 1 at 0x40A075, handler clearing success at 0x40A087, __SEH_epilog4, ret 4. All branches, the filter/handler funclets and every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "gate_enabled": false,
+      "pending": "Complete instruction stream is identical to retail modulo the compiler-generated SEH scope-table immediate (push 0x415CB8) and the CRT __SEH_prolog4/__SEH_epilog4 call displacements: the harness resolves no identity for the scope-table address (no PDB/MAP symbol, so no binding can be applied) and therefore reports referents=unresolved and a raw-byte score of 90.7. Disabled until the central harness can attribute compiler-generated SEH payloads; never counted.",
+      "identity_evidence": "PDB public ?ProcessChannel_read_thread@@YGKPAX@Z; stdcall PGK ABI matches CreateThread's LPTHREAD_START_ROUTINE use at 0x40A809.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?write_string@ProcessChannel@@QAEXPBG@Z",
+      "retail_va": "0x40a0d1",
+      "size": 55,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 279,
+        "end": 284
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 55 bytes at 0x40A0D1..0x40A107: __imp__wcslen on the PBG argument, doubled byte size stored to a local, virtual write of four size bytes, second virtual write of size+2 bytes, ret 4. Complete local CFG; both ordered references and the two vtable calls decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?write_string@ProcessChannel@@QAEXPBG@Z; member __thiscall with one const unsigned short pointer argument, evident from PBG and ret 4.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??3@YAXPAX@Z",
+      "retail_va": "0x40a25a",
+      "size": 5,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 289,
+        "end": 292
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 5 bytes at 0x40A25A..0x40A25E: one E9 rel32 tail transfer to real ?xfree@@YAXPAX@Z at 0x4082DC. No local branch; source owner compared every byte and the single ordered reference under actual /GL + /LTCG with util.cpp as the real defining dependency."
+      },
+      "dependencies": [
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [],
+      "identity_evidence": "PDB public ??3@YAXPAX@Z (global operator delete), mpcl.obj contribution at 0x40A25A; cdecl with one pointer argument.",
+      "compiler_context": {
+        "evidence": "Real util.cpp supplies the canonical xfree body; the published five public bytes are the complete tail-transfer wrapper, so no replacement body is invented. Only /O1 is measured for this unit."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?decode_handle@@YAPAXPBG@Z",
+      "retail_va": "0x40a346",
+      "size": 30,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 298,
+        "end": 303
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 30 bytes at 0x40A346..0x40A363: frame, lea of the pointer local, pushes of the local, the L\"%p\" literal and the wide argument into __imp__swscanf_s, load of the local, add esp,0xc, leave, ret. Complete CFG; all three ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?decode_handle@@YAPAXPBG@Z; cdecl, const unsigned short pointer in, pointer-sized handle out in EAX.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?get_mutex@@YAXXZ",
+      "retail_va": "0x40a496",
+      "size": 103,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 310,
+        "end": 318
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 103 bytes at 0x40A496..0x40A4FC: GS-cookie prolog, g_hMutex null test, 20-character GetEnvironmentVariableW, !=0 normalization pushed into real ?NT_err@@YAHH@Z, swscanf_s into ?g_hMutex@@3PAXA, failed-parse clear, __security_check_cookie. All branches and six ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?get_mutex@@YAXXZ; cdecl with no arguments, void.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z",
+      "retail_va": "0x40a684",
+      "size": 118,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 324,
+        "end": 339
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 118 bytes at 0x40A684..0x40A6F9: first CreatePipe attempt, GetLastError test against ERROR_PIPE_BUSY 0xE7, RaiseException(1,0,0,0) on any other failure, attempt increment to five with Sleep(250) between retries, raise and exit above five. All branches and ordered referents decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z; four cdecl arguments in retail push order (size, attributes, write, read).",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?MP_get_mutex@@YAXXZ",
+      "retail_va": "0x40a6fa",
+      "size": 5,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 344,
+        "end": 347
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 5 bytes at 0x40A6FA..0x40A6FE: one E9 rel32 tail transfer to the real ?get_mutex@@YAXXZ at 0x40A496. No local branch; source owner compared every byte and the single ordered reference under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?MP_get_mutex@@YAXXZ; cdecl with no arguments, void.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?read_robust@ProcessChannel@@QAEXPAXK@Z",
+      "retail_va": "0x40a7d3",
+      "size": 164,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 353,
+        "end": 376
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 164 bytes at 0x40A7D3..0x40A876: __SEH_prolog4, two handles initialized to INVALID_HANDLE_VALUE, four-field read context stores, CreateThread with ProcessChannel_read_thread, NT_err, process_handle as second wait target, WaitForMultipleObjects switch with success test, merged RaiseException paths, __finally funclet closing only the created thread handle at 0x40A867, __SEH_epilog4, ret 8. Every branch and ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "gate_enabled": false,
+      "pending": "Complete instruction stream is identical to retail modulo the compiler-generated SEH scope-table immediate (push 0x415CF8) and the CRT __SEH_prolog4/__SEH_epilog4 call displacements: the harness resolves no identity for the scope-table address (no PDB/MAP symbol, so no binding can be applied) and therefore reports referents=unresolved and a raw-byte score of 81.7. Disabled until the central harness can attribute compiler-generated SEH payloads; never counted.",
+      "identity_evidence": "PDB public ?read_robust@ProcessChannel@@QAEXPAXK@Z; member __thiscall, void pointer and unsigned long arguments, ret 8.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?read_int_robust@ProcessChannel@@QAEHXZ",
+      "retail_va": "0x40a877",
+      "size": 20,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 382,
+        "end": 387
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 20 bytes at 0x40A877..0x40A88A: frame, push 4 and the address of the int local into real ?read_robust@ProcessChannel@@QAEXPAXK@Z, load the local, leave, ret. Complete CFG; both ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?read_int_robust@ProcessChannel@@QAEHXZ; member __thiscall returning int.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?expect_int_robust@ProcessChannel@@QAEXH@Z",
+      "retail_va": "0x40a88b",
+      "size": 27,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 393,
+        "end": 397
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 27 bytes at 0x40A88B..0x40A8A5: call to real ?read_int_robust@ProcessChannel@@QAEHXZ, compare against [esp+4], local skip, RaiseException(1,0,0,0) on mismatch, ret 4. Complete CFG; both ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?expect_int_robust@ProcessChannel@@QAEXH@Z; member __thiscall with one int argument, ret 4.",
+      "compiler_context": {
+        "evidence": "This mpcl.obj unit's only measured flag is /O1; MP_is_server/decode_handle also need the typedef-wchar mode because the public PBG symbols and the wide CRT calls share unsigned-short spelling. All referents are real Windows/CRT imports or real bodies in this translation unit; no stub, dummy data or export control is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "@__security_check_cookie@4",
+      "retail_va": "0x40bba8",
+      "size": 15,
+      "unit": "matching/cl/crt_secchk.c",
+      "source_span": {
+        "start": 12,
+        "end": 28
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40bba8 through the noreturn tail jmp at 0x40bbb2: cmp ecx,[___security_cookie] (6), jne 0x40bbb2 (2), rep ret (2), jmp ___report_gsfailure 0x40c1b0 (5) = 15 bytes; the single 0xcc byte at 0x40bbb7 is padding before the next public at 0x40bbb8. No instruction can continue past the jmp and no alternate terminator exists."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 @__security_check_cookie@4 with unique DBI contribution build/intel/dll_obj/secchk.obj (module 47); fastcall decorated name, cookie in ECX, no stack argument and no caller cleanup, matching the installed source's __fastcall __declspec(naked) UINT_PTR argument.",
+      "gate_enabled": false,
+      "pending": "Byte-exact and fully referent-resolved (15 retail bytes; cmp ecx,___security_cookie; jne +2; rep ret; jmp ___report_gsfailure), but the installed-era source is a __declspec(naked) __asm body and rulecheck R18 blocks it as assembly. Byte evidence that no plain-C form can match: measured VC8 x86 C emits a plain 0xc3 ret and the opposite je/jmp block order for the same semantics, while retail contains f3 c3 (rep ret) between the inverted branch and the noreturn tail jmp. Needs an explicit R18 allow entry in config/rule-exceptions.json (integration owner) plus the // RULE-EXCEPTION marker already present in the unit."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__onexit",
+      "retail_va": "0x40bbc4",
+      "size": 165,
+      "unit": "matching/cl/crt_atonexit.c",
+      "source_span": {
+        "start": 28,
+        "end": 73
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40bbc4 through the ret at 0x40bc68 (the out-of-line __finally funclet at 0x40bc60 belongs to this function and is reached by the decoded call at 0x40bc52): 53 contiguous instructions, every branch decoded, no padding, and the next public _atexit starts immediately at 0x40bc69, so the span is exactly 165 bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 __onexit with unique DBI contribution build/intel/dll_obj/atonexit.obj (module 25); decorated form of the installed source's _onexit_t __cdecl _onexit(_onexit_t), whose [esp+4] argument, caller cleanup, SEH4 prolog/epilog and msvcr80.dll _decode_pointer/_onexit/_encode_pointer references are directly decoded. Source is the installed 8.0.50727.762 crt/src/atonexit.c.",
+      "gate_enabled": false,
+      "pending": "Complete body reproduced exactly by the installed-era source under measured /O1: all 53 instructions, every branch, and 16 of 17 ordered referents match after binding. The only unresolved referent is offset 3, the compiler-generated SEH4 scope-table address (retail 0x415d58): it has no candidate MAP symbol, and its contents embed the funclet address 0x40bc60, so a literal byte binding cannot match a fresh build. It needs a compiler-generated-payload referent kind in tools/gate.py (integration-owner tooling, not editable in this lane)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "_atexit",
+      "retail_va": "0x40bc69",
+      "size": 18,
+      "unit": "matching/cl/crt_atonexit.c",
+      "source_span": {
+        "start": 77,
+        "end": 82
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40bc69 through the ret at 0x40bc7a: 8 contiguous instructions (push, call __onexit, neg, sbb, neg, pop, dec, ret); the only branch is the rel32 call to __onexit at 0x40bbc4. The five 0xcc bytes 0x40bc7b..0x40bc7f are padding before the next public at 0x40bc80, so the function is exactly 18 bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 _atexit with the same unique build/intel/dll_obj/atonexit.obj (module 25) contribution as _onexit; decorated form of the installed source's int __cdecl atexit(_PVFV func), one [esp+4] argument, caller cleanup, and the decoded neg/sbb/neg/dec sequence is exactly the source's (result == NULL) ? -1 : 0."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__ValidateImageBase",
+      "retail_va": "0x40c4f0",
+      "size": 41,
+      "unit": "matching/cl/crt_pesect.c",
+      "source_span": {
+        "start": 16,
+        "end": 43
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40c4f0 through the ret at 0x40c518: 14 contiguous instructions, both local branches (je 0x40c4fe, jne 0x40c4fb) land inside the body, and no data or call referent exists. The seven 0xcc bytes 0x40c519..0x40c51f are inter-function padding before public __FindPESection at 0x40c520, so the function is exactly 41 bytes. Installed-era crt/src/pesect.c source owner compares every emitted byte under measured plain-CRT flags (gl:false, /O1)."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 __ValidateImageBase with unique DBI section contribution to build/intel/dll_obj/pesect.obj (module 34); decorated form of the installed source's BOOL __cdecl _ValidateImageBase(PBYTE pImageBase), whose single [esp+4] argument and caller cleanup are directly decoded. Source is the installed 8.0.50727.762 crt/src/pesect.c (SHA-256 recorded in the unit)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__FindPESection",
+      "retail_va": "0x40c520",
+      "size": 66,
+      "unit": "matching/cl/crt_pesect.c",
+      "source_span": {
+        "start": 47,
+        "end": 83
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40c520 through the ret at 0x40c561: 29 contiguous instructions, four local branches (jbe 0x40c55c, jb 0x40c552, jb 0x40c55e, jb 0x40c542) all land inside the body, the loop walks NumberOfSections and no external data or call referent exists. The fourteen 0xcc bytes 0x40c562..0x40c56f are padding before public __IsNonwritableInCurrentImage at 0x40c570, so the function is exactly 66 bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 __FindPESection with unique DBI section contribution to build/intel/dll_obj/pesect.obj (module 34); decorated form of the installed source's PIMAGE_SECTION_HEADER __cdecl _FindPESection(PBYTE, DWORD_PTR), whose two stack arguments and ret0 caller cleanup are directly decoded."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__IsNonwritableInCurrentImage",
+      "retail_va": "0x40c570",
+      "size": 187,
+      "unit": "matching/cl/crt_pesect.c",
+      "source_span": {
+        "start": 87,
+        "end": 136
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decode from 0x40c570 through the ret at 0x40c62a: 66 contiguous instructions covering the SEH4 body, its inlined __except filter/handler at 0x40c5f9 and the shared epilog; the decoded branches (call __ValidateImageBase 0x40c4f0, je 0x40c610 twice, call __FindPESection 0x40c520) all land inside the body. The single 0xcc byte 0x40c62b is padding before the next public at 0x40c62c, so the span is exactly 187 bytes."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 __IsNonwritableInCurrentImage with unique DBI contribution build/intel/dll_obj/pesect.obj (module 34); decorated form of the installed source's BOOL __cdecl _IsNonwritableInCurrentImage(PBYTE), one [esp+4] argument, caller cleanup, and the source's __try/__except (GetExceptionCode() == STATUS_ACCESS_VIOLATION) structure is directly decoded as the SEH4 frame, filter and handler.",
+      "gate_enabled": false,
+      "pending": "Complete body reproduced exactly by the installed-era pesect.c under measured plain-CRT flags: all 66 instructions match. Not admitted: of the 14 ordered referents, the compiler-generated SEH4 scope table at 0x415df8 has no MAP identity and embeds the filter/handler addresses 0x40c5f9/0x40c60d; four fs:[0] operands (offsets 0x11, 0x2c, 0x7d, 0xaf) decode as absolute zero and three ___ImageBase immediates (offsets 0x3b, 0x4f, 0x55) decode as the linker-defined constant 0x400000, which ltcg.read_map drops as a section-0 symbol. The current referent model has no identity kind for segment-relative zero, the image-base constant or compiler payloads; it needs tooling support before this function can be admitted."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z",
+      "retail_va": "0x409330",
+      "size": 1061,
+      "unit": "matching/cl/loadui.cpp",
+      "source_span": {
+        "start": 13,
+        "end": 114
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 1061 bytes 0x409330..0x409754: complete reachable CFG with prologue 0x409330, all conditional and unconditional branches decoded in both directions, epilogue and ret at 0x409754, immediately followed by the next public start 0x409755. Ordered referents all resolved: __chkstk 0x40bd30, ___security_cookie 0x417c44, @__security_check_cookie@4 0x40bba8, _memset 0x40bbb8, the kernel32/msvcr80 imports, and literals L\"\\\", L\"*.*\", L\".\", L\"..\". Source owner re-decoded the complete body, every branch and every ordered referent before and after the measured build; the candidate object was compiled without /GL (retail prologue is the plain-c2 `lea ebp,[esp-frame]` layout, which the LTCG pass replaces with an aligned esp-relative frame) and matched every byte after independent ordered-referent relocation."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public start 0x409330 with DBI section contribution in module 6 (loadui.obj); decorated name ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z proves __cdecl HRESULT(long) (unsigned short*, unsigned short*, unsigned long, HINSTANCE__**, unsigned short*, unsigned int, unsigned long*)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z",
+      "retail_va": "0x409755",
+      "size": 230,
+      "unit": "matching/cl/loadui.cpp",
+      "source_span": {
+        "start": 120,
+        "end": 152
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 230 bytes 0x409755..0x40983a: complete reachable CFG, frame 0x810 established by the decoded sub esp, all branches decoded, ret at 0x40983a immediately followed by the next public start 0x40983b. Ordered referents resolved: _wdupenv_s 0x40d26c, free 0x40d28c, wcslen 0x40d290, LoadUILibrary 0x409330, literals L\"PATH\", L\"clui.dll\", plus the GS cookie pair. Source owner re-decoded the complete body, every branch and every ordered referent before and after the measured build; the candidate object was compiled without /GL (retail prologue is the plain-c2 `lea ebp,[esp-frame]` layout, which the LTCG pass replaces with an aligned esp-relative frame) and matched every byte after independent ordered-referent relocation."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public start 0x409755 with DBI section contribution in module 6 (loadui.obj); decorated name ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z proves __cdecl HINSTANCE__* (unsigned short*, unsigned int)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z",
+      "retail_va": "0x40983b",
+      "size": 249,
+      "unit": "matching/cl/loadui.cpp",
+      "source_span": {
+        "start": 157,
+        "end": 175
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 249 bytes 0x40983b..0x409933: complete reachable CFG, page-sized frame 0x100c probed through the shared __chkstk/__alloca_probe entry, all branches decoded, ret at 0x409933 immediately followed by the next public start 0x409934. Ordered referents resolved: the entry-alias shared stack probe at 0x40bd30, GetModuleHandleW/GetModuleFileNameW 0x40d0fc/0x40d13c, wcslen 0x40d290, LoadUILibrary 0x409330, LoadSearchPath 0x409755, wcscpy_s 0x40d298, literal L\"clui.dll\" and the GS cookie pair. The candidate object is compiled without /GL (retail prologue is the plain-c2 `lea ebp,[esp-frame]` layout) and matched every byte after independent ordered-referent relocation, including the byte-identical 43-byte stack-probe helper."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public start 0x40983b with DBI section contribution in module 6 (loadui.obj); decorated name ?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z proves __cdecl HINSTANCE__* (unsigned short*, unsigned int)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?limit_batch_files@@YAXPAUcontext_s@@@Z",
+      "retail_va": "0x406082",
+      "size": 221,
+      "unit": "matching/cl/compile.pending.cpp",
+      "gate_enabled": false,
+      "pending": "Complete structural candidate but NOT byte-exact (measured 18.1 percent raw bytes): candidate frame 0x1c versus retail 0x18 because the separator pointer is spilled instead of held in ESI, the MaxBatchId/199 compare operands are swapped, and the conditional limit assignment is scheduled differently. Blocked on ?MaxBatchId@@3HA (0x417838), owned by clmain.obj and not yet defined in matching/cl/clmain.cpp; the wcschr and GetDiskFreeSpaceExW imports and the compiler-generated __aulldiv call are already resolved. Needs a structural/register pass once the foreign definition lands.",
+      "source_span": {
+        "start": 59,
+        "end": 95
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 20610 (VA 0x406082) has size 221; the next contribution starts at 20831 (0x40615f), so the exact body ends at the ret on 0x40615e. Bounded direct retail decoding over exactly 221 bytes: /GS-free frame (sub esp,0x18); MaxBatchId read at 0x406088 and clamped against 199; wide-path form tests (drive-absolute p[1]==':' && p[2]=='\\\\', UNC p[0..1]=='\\\\\\\\' then two wcschr calls); temporary NUL at the separator; GetDiskFreeSpaceExW with two 64-bit outputs; unsigned 64-bit compare and __aulldiv; store back to MaxBatchId at 0x406152. Every local branch target is inside the body."
+      },
+      "dependencies": [
+        "matching/cl/clmain.cpp"
+      ],
+      "roots": [
+        "?limit_batch_files@@YAXPAUcontext_s@@@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x406082 in DBI section contribution module 9 compile.obj; mangled ?limit_batch_files@@YAXPAUcontext_s@@@Z proves one context_s* argument and void result with __cdecl. Two callers (0x407dbd, 0x40b6bd) pass one stack argument and clean 4 bytes."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?module_extension@@YAPAGXZ",
+      "retail_va": "0x4061d2",
+      "size": 35,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 57,
+        "end": 62
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 20946 (VA 0x4061d2) has size 35, exactly the next contribution start (20981/0x4061f5). Bounded direct retail decoding over exactly 35 bytes: cmp dword [0x41913c],0; je 0x4061e1; mov eax,L\"dll\"; ret; cmp dword [0x419648],0; mov eax,L\"netmodule\"; jne 0x4061f4; mov eax,L\"exe\"; ret. Two terminating branches, no other transfers; the ordered referents are the two clmain.obj int flags and the three wide literals, all independently bound. The source owner compared every byte and ordered reference under the actual /GL + /LTCG unit link."
+      },
+      "dependencies": [
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp",
+        "matching/cl/mpcl.cpp",
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp"
+      ],
+      "roots": [
+        "?module_extension@@YAPAGXZ"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x4061d2 in DBI section contribution module 9 compile.obj; mangled ?module_extension@@YAPAGXZ proves a no-argument __cdecl function returning unsigned short*. Sole direct caller 0x406707 calls it with no stack arguments and cleans none."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?basename@@YAPAGPAGIPBG@Z",
+      "retail_va": "0x4061f5",
+      "size": 34,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 21,
+        "end": 26
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 20981 (VA 0x4061f5) has size 34, exactly the next contribution start (21015/0x406217). Bounded direct retail decoding over exactly 34 bytes: xor eax,eax; two zero pushes; push [esp+0x10]=capacity; push [esp+0x10]=output; four zero pushes; push [esp+0x2c]=source; call __imp___wsplitpath_s; mov eax,[esp+0x28] (the buried first argument); add esp,0x24; ret. No internal branch; sole referent is the resolved MSVCR80 _wsplitpath_s IAT slot."
+      },
+      "dependencies": [],
+      "roots": [
+        "?basename@@YAPAGPAGIPBG@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x4061f5 in DBI section contribution module 9 compile.obj; mangled ?basename@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). Four independent call sites (0x4065ed, 0x406725, 0x40676b, 0x406978) pass three stack arguments and clean 12 bytes, corroborating the cdecl ABI."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?filename@@YAPAGPAGIPBG@Z",
+      "retail_va": "0x406217",
+      "size": 109,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 30,
+        "end": 39
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 21015 (VA 0x406217) has size 109, exactly the next contribution start (21124/0x406284). Bounded direct retail decoding over exactly 109 bytes: /GS frame (sub esp,0x404 with cookie at [ebp-4]); 256-WCHAR arrays at [ebp-0x404] and [ebp-0x204]; _wsplitpath_s(source,0,0,0,0,name,256,extension,256); _wmakepath_s(output,capacity,L\"\",L\"\",name,extension); mov eax,esi (output); add esp,0x3c; call __security_check_cookie; leave; ret. All referents resolve: two MSVCR80 IAT slots and the two-byte empty wide literal."
+      },
+      "dependencies": [],
+      "roots": [
+        "?filename@@YAPAGPAGIPBG@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x406217 in DBI section contribution module 9 compile.obj; mangled ?filename@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). All four call sites pass the same three-argument shape and clean 12 bytes: 0x407cb4 and 0x407ea6 lie in this module's private helper 0x407b49, and 0x40a623/0x40b5e5 lie in mpcl.obj, so the declaration is shared across units."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?pathname@@YAPAGPAGIPBG@Z",
+      "retail_va": "0x406284",
+      "size": 115,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 43,
+        "end": 53
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 21124 (VA 0x406284) has size 115, exactly the next contribution start (21239/0x4062f7). Bounded direct retail decoding over exactly 115 bytes: /GS frame (sub esp,0x40c, cookie at [ebp-4]); drive at [ebp-0xc] with proved _MAX_DRIVE=3, directory at [ebp-0x40c] and name at [ebp-0x20c] with proved 256-WCHAR limits; _wsplitpath_s(source,drive,3,directory,256,name,256,0,0); _wmakepath_s(output,capacity,drive,directory,name,L\"\"); mov eax,esi; add esp,0x3c; call __security_check_cookie; leave; ret. All referents resolve: two MSVCR80 IAT slots and the empty wide literal."
+      },
+      "dependencies": [],
+      "roots": [
+        "?pathname@@YAPAGPAGIPBG@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x406284 in DBI section contribution module 9 compile.obj; mangled ?pathname@@YAPAGPAGIPBG@Z proves __cdecl unsigned short* (unsigned short*, unsigned int, const unsigned short*). Both direct callers (0x4067b4, 0x4069b2) pass three stack arguments and clean 12 bytes."
+    },
+    {
+      "binary": "cl",
+      "symbol": "??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z",
+      "retail_va": "0x4062f7",
+      "size": 14,
+      "unit": "matching/cl/compile.cpp",
+      "source_span": {
+        "start": 11,
+        "end": 15
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "DBI section contribution module 9 at .text offset 21239 (VA 0x4062f7) has size 14, exactly the next contribution start (21253/0x406305); direct retail decoding over exactly 14 bytes is mov eax,[esp+4]; test eax,eax; je 0x406302; mov eax,[eax]; ret; xor eax,eax; ret, with both branches terminating and no referents. Public next-public gap is 14 as well."
+      },
+      "dependencies": [],
+      "roots": [
+        "??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x4062f7 in DBI section contribution module 9 compile.obj; mangled template instantiation ??$PstNext@USRCTARG@@@@YAPAUSRCTARG@@PAU0@@Z proves one SRCTARG* argument and SRCTARG* result with __cdecl. Argument read at [esp+4] and plain ret corroborate."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ShutDownDLL@@YAXPAUpassinfo_s@@@Z",
+      "retail_va": "0x408ee3",
+      "size": 33,
+      "unit": "matching/cl/dos.cpp",
+      "source_span": {
+        "start": 48,
+        "end": 56
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 33 bytes 0x408ee3..0x408f03: push esi; load passinfo_s* argument; conditional HMODULE load at +0x10; FreeLibrary import call through IAT 0x40d134; three zero stores at +0x10/+0x14/+0x18; pop esi; ret. Every branch is local and the next public symbol starts at 0x408f04, independently bounding the body. The source owner compared every byte and the ordered FreeLibrary referent under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z, unique DBI contribution module 7 dos.obj, public_flags 2. PAUpassinfo_s argument with caller cleanup and a single stack argument prove the __cdecl ABI. The +0x10/+0x14/+0x18 member offsets are direct retail accesses; member names are reconstructed."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?ExecuteCleanupPass@@YAHPAUpassinfo_s@@PBG@Z",
+      "retail_va": "0x408f1b",
+      "size": 61,
+      "unit": "matching/cl/dos.cpp",
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 61 bytes 0x408f1b..0x408f57: push command; GetModuleHandleW import call; NULL test; GetProcAddress(module, ascii \"_CloseTypeServerPDB@0\" at 0x41554c); NULL branch to noreturn cmderr(8039, L\"_CloseTypeServerPDB@0\", command) using the UTF-16 literal at 0x415520; store the callable at passinfo_s+0x1c and call it; xor eax,eax; ret. The next public symbol starts at 0x408f58, independently bounding the body."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?ExecuteCleanupPass@@YAHPAUpassinfo_s@@PBG@Z, unique DBI contribution module 7 dos.obj. PAUpassinfo_s plus const unsigned-short pointer arguments with caller cleanup prove __cdecl. The _CloseTypeServerPDB@0 export name is read directly from the two retail literals.",
+      "gate_enabled": false,
+      "pending": "Source is byte-exact under an ignored development scaffold (build/dos-lane/draft_dos.cpp): 61/61 bytes, every ordered referent resolved. It cannot be committed yet because the real ?cmderr@@YAXIZZ (0x408a6c, util.obj) body does not exist in the tree, so the unit link fails with LNK2001 unresolved external symbol ?cmderr@@YAXIZZ. Enable after the util owner lands the real cmderr definition and util.h declaration; add the source span then."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?execute@@YAHW4driver_phases@@PAUpassinfo_s@@PBG2PAPAG@Z",
+      "retail_va": "0x408f58",
+      "size": 798,
+      "unit": "matching/cl/dos.cpp",
+      "boundary": {
+        "status": "verified",
+        "evidence": "Direct bounded retail decode covers 0x408f58..0x409275 inclusive (798 bytes): __SEH_prolog4 frame; driver_phases switch (0 environment construction, 1-3 pass execution, default cmderr(0)); _flushall/_errno reset; private control globals 0x41a008/0x41a00c/0x41a010; U/V pass selector branch to ExecuteCleanupPass; LoadLibraryW plus _InvokeCompilerPassW@16/_AbortCompilerPass@4 GetProcAddress loading; argc scan; __try invoke call with FallThroughFilter(GetExceptionCode(), pass, &status) filter at 0x409168 and spawn handler at 0x409180; status post-processing with done(4)/done(6), OpenEventW/SetEvent/CloseHandle, cmderr(8027/8030) and final _wputenv_s(L\"\"). 0x409276 is a separate private handler."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?execute@@YAHW4driver_phases@@PAUpassinfo_s@@PBG2PAPAG@Z, unique DBI contribution module 7 dos.obj; W4driver_phases enum, PAUpassinfo_s, two PBG strings and PAPAG out-pointer with five stack arguments and caller cleanup prove the __cdecl ABI.",
+      "gate_enabled": false,
+      "pending": "Complete 798-byte body decoded and drafted (build/dos-lane/draft_dos.cpp), but the draft compiles to 816 bytes and scores about 7-8%: retail keeps pass/env in ESI/EDI and the flag length in EBX while the draft allocates pass/args to EDI/EBX, spills the length and gives the loop index a register, so the whole block layout shifts. Open levers already tested: switch vs if/else phase dispatch (switch matches the dispatch skeleton), function-scope vs inner-scope locals, declaration order, local proc variables vs early struct stores. Also needs the real util.obj/clmain.obj bodies ?cmderr@@YAXIZZ, ?done@@YAXH@Z, ?xnew@@YAPAXI@Z, ?hUIModule@@3PAUHINSTANCE__@@A and ?EncEventName@@3PAGA, which do not exist yet."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?OS_init@@YAXXZ",
+      "retail_va": "0x4092b0",
+      "size": 14,
+      "unit": "matching/cl/dos.cpp",
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 14 bytes 0x4092b0..0x4092bd: push 1; push the private console-control handler at 0x409276; call SetConsoleCtrlHandler through IAT 0x40d0ec; ret. The next public symbol starts at 0x4092be."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "S_PUB32 ?OS_init@@YAXXZ, unique DBI contribution module 7 dos.obj; no arguments, caller-clean and void result. The pushed 0x409276 handler is a private dos.obj function, independently decoded over 58 bytes 0x409276..0x4092af.",
+      "gate_enabled": false,
+      "pending": "OS_init is byte-exact under the ignored development scaffold (14/14 bytes) once the private handler is present, but the handler must become real source in this unit and it calls ?done@@YAXH@Z (0x4085ce, util.obj), which has no reconstructed body yet. Enable after util lands done; then add the 58-byte private handler, its static/referent binding naming real retail address 0x409276, and the source span."
+    },
+    {
+      "binary": "cl",
+      "symbol": "??0action_t@@QAE@HPAUworklist_s@@H@Z",
+      "retail_va": "0x409ed0",
+      "size": 45,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 403,
+        "end": 413
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 45 bytes at 0x409ED0..0x409EFC: five field stores (kind 0x00, worklist 0x04, source 0x08, pass 0x0C zero, parameter 0x10) and the worklist->source load at +0x04 on the non-null path, ret 0xC. Complete local CFG with no other branches; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ??0action_t@@QAE@HPAUworklist_s@@H@Z; __thiscall with (int, worklist_s *, int), ret 0xC.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??1action_t@@QAE@XZ",
+      "retail_va": "0x409efd",
+      "size": 25,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 418,
+        "end": 422
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 25 bytes at 0x409EFD..0x409F15: load worklist, test, skip free only when it is non-null and worklist->source equals this->source, otherwise push this->source into real xfree, ret. Complete CFG; source owner compared every byte and the ordered xfree reference under actual /GL + /LTCG."
+      },
+      "dependencies": [
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [],
+      "identity_evidence": "PDB public ??1action_t@@QAE@XZ; __thiscall destructor, plain RET.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z",
+      "retail_va": "0x40a12d",
+      "size": 155,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 532,
+        "end": 549
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 155 bytes at 0x40A12D..0x40A1C7: three cached wcslen calls over the source_s wide fields, three lea accumulations with constants 6/6/14 (the fixed trailing field sizes folded into the last), one virtual write of the four-byte size, three real write_string calls, then virtual writes of the 4-byte type and the two trailing 2-byte shorts, ret 4. Complete CFG; every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z; member __thiscall, source_s pointer argument, ret 4.",
+      "compiler_context": {
+        "evidence": "One canonical mpcl.obj identity per object; real util.cpp/dos/clmain/Watson bodies are linked only because the unit's delete path resolves through the registered util dependency. Only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??0?$Queue@Uaction_t@@@@QAE@H@Z",
+      "retail_va": "0x40a364",
+      "size": 61,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 429,
+        "end": 437
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 61 bytes at 0x40A364..0x40A3A0: store synchronized, five zero stores over the sentinel fields 0x00..0x10 (inlined action_t(0,0,0)), conditional InitializeCriticalSection on [this], tail=&sentinel, sentinel.next=&sentinel, count=0, ret 4. Complete CFG; every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ??0?$Queue@Uaction_t@@@@QAE@H@Z; __thiscall constructor with one int, ret 4.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?schedule_next_batch@@YAXXZ",
+      "retail_va": "0x40a647",
+      "size": 51,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 517,
+        "end": 525
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 51 bytes at 0x40A647..0x40A679: load next_batch, compare against num_batches with jae exit, index the batches array by Queue stride 0x3C, load count at +0x38 into current_batch_sources, call real append_nosync with the indexed queue, increment next_batch, ret. Complete CFG; all six ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?schedule_next_batch@@YAXXZ; cdecl, no arguments, void.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      },
+      "gate_enabled": false,
+      "pending": "Diagnosed register/schedule residue: retail loads next_batch into EAX, uses it for the bounds test and the 0x3C batch index, then does inc dword [next_batch] after the call (0x40A673); the candidate keeps the value in callee-saved ESI across the call and stores it back. Levers compiled in the real unit: direct member access, named Queue reference, local index copy, and indexed pointer local, all identical ESI shape; volatile is ruled out by the public identity ?next_batch@@3IA versus the compiler's ?x@@3IC for volatile unsigned int. Never counted."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?get_action_nonbatching@@YAPAUaction_t@@XZ",
+      "retail_va": "0x40a67a",
+      "size": 10,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 508,
+        "end": 511
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 10 bytes at 0x40A67A..0x40A683: mov ecx,&work_queue then one E9 tail transfer to the real Queue::head body at 0x40A3C7. No local branch; source owner compared every byte and both ordered references under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?get_action_nonbatching@@YAPAUaction_t@@XZ; cdecl, no arguments, action_t* in EAX.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?send@action_t@@QAEXPAVProcessChannel@@@Z",
+      "retail_va": "0x40a774",
+      "size": 95,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 566,
+        "end": 581
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 95 bytes at 0x40A774..0x40A7D2: virtual write of the kind, branch on the source pointer writing a 1/0 presence flag through the same virtual slot, write_source on the non-null path, then virtual write of the pass, ret 4. Complete CFG with real write_source callee; every ordered reference decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?send@action_t@@QAEXPAVProcessChannel@@@Z; member __thiscall with one ProcessChannel pointer, ret 4.",
+      "compiler_context": {
+        "evidence": "Real ProcessChannel virtual write slot and the newly recovered write_source body; only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "??1?$Queue@Uaction_t@@@@QAE@XZ",
+      "retail_va": "0x40a994",
+      "size": 65,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 443,
+        "end": 454
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 65 bytes at 0x40A994..0x40A9D4: walk from sentinel.next (0x30) to the sentinel (0x1C), save each next link, call real ~action_t and xfree, conditional DeleteCriticalSection at lock 0x04, then tail-jump to ~action_t on the sentinel. Complete CFG; all ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [],
+      "identity_evidence": "PDB public ??1?$Queue@Uaction_t@@@@QAE@XZ; __thiscall destructor, plain RET tail call.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?clean@?$Queue@Uaction_t@@@@QAEXXZ",
+      "retail_va": "0x40a9d5",
+      "size": 84,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 460,
+        "end": 476
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 84 bytes at 0x40A9D5..0x40AA28: conditional EnterCriticalSection, the same destruct/free walk as the queue destructor, count=0, tail=&sentinel, sentinel.next=&sentinel, conditional LeaveCriticalSection, ret. Complete CFG; all ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [
+        "matching/cl/util.cpp",
+        "matching/cl/dos.cpp",
+        "matching/cl/clmain.cpp",
+        "matching/cl/util_watson.cpp"
+      ],
+      "roots": [],
+      "identity_evidence": "PDB public ?clean@?$Queue@Uaction_t@@@@QAEXXZ; __thiscall with no arguments.",
+      "compiler_context": {
+        "evidence": "This reconstruction encodes the one canonical mpcl.obj identity for each object; free functions address the Queue data members directly, which is why the recovered class exposes them. Real util.cpp/dos/clmain/Watson bodies are linked as dependencies for xfree. Only /O1 is measured for this unit; /Zc:wchar_t- is the unit's proven wide-ABI mode."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "?free_batches@@YAXXZ",
+      "retail_va": "0x40ae65",
+      "size": 59,
+      "unit": "matching/cl/mpcl.cpp",
+      "source_span": {
+        "start": 555,
+        "end": 560
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 59 bytes at 0x40AE65..0x40AE9F: unsigned loop over num_batches calling clean() on batches[i] with the proven 0x3C Queue stride, then the null-tested vector delete of the batches array through the compiler-generated ??_E deleting destructor, ret. Complete CFG; all ordered references decoded; source owner compared every byte under actual /GL + /LTCG."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB public ?free_batches@@YAXXZ; cdecl, no arguments, void.",
+      "compiler_context": {
+        "evidence": "One canonical mpcl.obj identity per object; real util.cpp/dos/clmain/Watson bodies are linked only because the unit's delete path resolves through the registered util dependency. Only /O1 and the unit's proven /Zc:wchar_t- wide ABI are measured."
+      },
+      "gate_enabled": false,
+      "pending": "Real delete[] is tail-transformed in this LTCG context: the candidate emits a 56-byte body ending in jmp to a specialized vector deleting destructor (EAX-carried this) instead of retail's 59-byte push 3 / call ??_E / ret sequence, so the span overruns by 3 bytes and the partial PE relocation is rejected. The clean() loop matches instruction-for-instruction. Tested levers: direct delete[] and a named array-pointer local, both identical. Not counted."
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?OpenClSqmLogFileForWriting@@YAPAU_iobuf@@PBG@Z",
+      "retail_va": "0x401501",
+      "size": 167,
+      "source_span": {
+        "start": 18,
+        "end": 52
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x401501..0x4015a8: the _wfsopen open, size gate, shared fread/fwrite setup, magic/version validation, fseek and the single fclose failure tail all reach the leave/ret epilogue; the next PDB public starts exactly at 0x4015a8."
+      },
+      "compiler_context": {
+        "evidence": "Real unit /GL + /LTCG context with the configured /O1 /Ob1. Only genuine CRT imports are called: no stub, literal or data referent is invented, and the 16-byte header is a real local aggregate whose magic/version literals are the observed image values."
+      }
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?appendflag@@YAPAUflag_s@@PAPAU1@PAU1@@Z",
+      "retail_va": "0x401886",
+      "size": 22,
+      "source_span": {
+        "start": 84,
+        "end": 92
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x401886..0x40189c: the list walk, final store and RET are complete and the next PDB public starts exactly at 0x40189c, so no static helper or alignment fills the span."
+      },
+      "compiler_context": {
+        "evidence": "Real unit /GL + /LTCG context with the configured /O1 /Ob1; the loop keeps the address-of-next induction variable in ECX exactly as retail. No callee, literal or extra root is introduced."
+      }
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?flag_this_pass@@YAHPAUflag_s@@PAUpassinfo_s@@@Z",
+      "retail_va": "0x40189c",
+      "size": 32,
+      "source_span": {
+        "start": 96,
+        "end": 99
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x40189c..0x4018bc: one wcschr import call, the branchless 0/1 result and the final RET end exactly at the next PDB public 0x4018bc."
+      },
+      "compiler_context": {
+        "evidence": "Same-unit /GL + /LTCG rebuild preserves the cdecl argument order (selector, then pass string) and the neg/sbb/neg boolean materialization; only the real wcschr import is referenced."
+      }
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?flag_these_pass_ids@@YAGPAUflag_s@@PBG@Z",
+      "retail_va": "0x4018bc",
+      "size": 29,
+      "source_span": {
+        "start": 101,
+        "end": 109
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x4018bc..0x4018d9 ends at the final RET. The public span continues to 0x4018f0 only because a distinct non-public list-unlink helper with its own RET at 0x4018ef sits at 0x4018d9, so 29 bytes is this public function and the helper is excluded."
+      },
+      "compiler_context": {
+        "evidence": "Same-unit /GL + /LTCG rebuild with the real wcspbrk import; the unsigned-short return keeps the movzx of the found wide code unit. No dummy body is added for the adjacent static helper."
+      },
+      "gate_enabled": false,
+      "note": "Complete 29-byte candidate; the only residue is the null path, where retail returns the zero already in EAX while every tested source spelling materializes it (xor ax, ax). Open lever: the exact return-0 spelling that lets VC8 keep the tested-zero value, or a different null test shape, has not been found yet. Not a match."
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?file_exists@@YAHPBGPAG0@Z",
+      "retail_va": "0x402267",
+      "size": 52,
+      "source_span": {
+        "start": 148,
+        "end": 154
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x402267..0x40229b: two character copies, one _waccess_s import call, the EACCES compare and the two shared 0/1 return tails all return to the next PDB public at 0x40229b."
+      },
+      "compiler_context": {
+        "evidence": "Same-unit /GL + /LTCG rebuild with the real _waccess_s import and EACCES from the installed errno.h; the delayed second store is the observed schedule of the two genuine assignments."
+      }
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?mark_defaults@@YAXXZ",
+      "retail_va": "0x40229b",
+      "size": 78,
+      "source_span": {
+        "start": 156,
+        "end": 172
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x40229b..0x4022e9: both list loops, the EncDefaults parallel walk and the final DefaultsMarked store are complete at the next PDB public 0x4022e9."
+      },
+      "compiler_context": {
+        "evidence": "Canonical clmain-owned public data (Context, EncDefaults, DefaultsMarked) supplies every referent; the flag word and link offsets come from one declared flag_s. No callee is stubbed."
+      },
+      "gate_enabled": false,
+      "note": "Boundary and call set are proven, but the emitted body diverges from the first block: the flag-list walk schedules differently from the current Context->flags/Context->defaults model. Open levers: confirm offset +0x04 role (defaults vs another flag list) and the null-test shape; the two unproven context slots +0x14/+0x18 are still unresolved. Not a match."
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?activate_pass@@YAXPAUflag_s@@@Z",
+      "retail_va": "0x402549",
+      "size": 41,
+      "source_span": {
+        "start": 183,
+        "end": 194
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x402549..0x402572: the ten-row Passinfo loop with its stride-36 increment and signed bound ends in a RET at the next PDB public 0x402572."
+      },
+      "compiler_context": {
+        "evidence": "Passinfo is the public clmain-owned table; stride 0x24 follows from the declared passinfo_s extent (10 evidenced slots). The loop-invariant flag selector load matches the retail schedule without an artificial local."
+      },
+      "gate_enabled": false,
+      "note": "Body is instruction-identical to the complete 41-byte retail decode; only the Passinfo interior references remain unnormalized. Blocked on typed member bindings (passinfo_s::selector +8/2, ::options +0xC/4) backed by a passinfo_s layout witness produced in the integration checkout. gate_enabled false until then. Not a match."
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?deactivate_passes_except@@YAXPAUflag_s@@@Z",
+      "retail_va": "0x402572",
+      "size": 47,
+      "source_span": {
+        "start": 196,
+        "end": 204
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x402572..0x4025a1: the wcschr-per-row loop, conditional AND of the state word and the epilogue end at the next PDB public 0x4025a1."
+      },
+      "compiler_context": {
+        "evidence": "Real wcschr import and the public Passinfo table only; the state word is the evidenced int at passinfo_s +0xc, so the AND constant is the genuine ~1."
+      },
+      "gate_enabled": false,
+      "note": "Body is instruction-identical to the complete 47-byte retail decode; only the Passinfo interior references remain unnormalized. Same passinfo_s member-binding/layout-witness dependency as activate_pass. Not a match."
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?deactivate_passes@@YAXPAUflag_s@@@Z",
+      "retail_va": "0x4025a1",
+      "size": 67,
+      "source_span": {
+        "start": 206,
+        "end": 216
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x4025a1..0x4025e4: the hoisted dot-selector test, the wcschr loop, the conditional AND and the three-register epilogue end at the next PDB public 0x4025e4."
+      },
+      "compiler_context": {
+        "evidence": "Real wcschr import plus the public Passinfo table; the loop-invariant dot test is written as a genuine local so its preheader materialization matches retail without steering."
+      },
+      "gate_enabled": false,
+      "note": "Body is instruction-identical to the complete 67-byte retail decode; only the Passinfo interior references remain unnormalized. Same passinfo_s member-binding/layout-witness dependency as activate_pass. Not a match."
+    },
+    {
+      "binary": "cl",
+      "unit": "matching/cl/clmain.cpp",
+      "dependencies": [],
+      "roots": [],
+      "symbol": "?double_percent@@YAXPAGPBGI@Z",
+      "retail_va": "0x402915",
+      "size": 51,
+      "source_span": {
+        "start": 220,
+        "end": 229
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Independent direct retail decode of 0x402915..0x402948: the counted loop, the doubled percent store and the final RET end at the next PDB public 0x402948."
+      },
+      "compiler_context": {
+        "evidence": "No callee or data referent; the genuine wide-character assignments and counter reuse reproduce the observed pointer increment schedule."
+      }
+    },
+    {
+      "binary": "cl",
+      "symbol": "___security_init_cookie",
+      "retail_va": "0x40c664",
+      "size": 148,
+      "unit": "matching/cl/crt_gs.c",
+      "source_span": {
+        "start": 59,
+        "end": 138
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 148 bytes 0x0040c664..0x0040c6f7: push ebp/mov ebp,esp/sub esp,10, the cookie early-out (cmp 0xBB40E64E, test 0xFFFF0000), the FT zero-init and GetSystemTimeAsFileTime, the four Process/Thread/Tick/Performance xors, the DEFAULT_SECURITY_COOKIE+1 and cookie<<16 fixups, the two cookie stores and the final leave/ret at 0x0040c6f6/0x0040c6f7. The next byte 0x0040c6f8 begins the __crt_debugger_hook import thunk, so the body has no padding and no shared tail. Every byte and ordered referent was compared under the unit's actual /O1 plain-object compile and the group's real link; non-relocation bytes are 112/112 equal and the five kernel32 IAT references plus the two .data cookies are the complete ordered referent list."
+      },
+      "dependencies": [
+        "matching/cl/crt_gs_cookie.c"
+      ],
+      "roots": [
+        "___security_init_cookie"
+      ],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c664, module 31 build\\intel\\dll_obj\\gs_support.obj (DBI section contribution), size 148 from the next public start. Source is the installed-era crt/src/gs_support.c (SHA-256 AD03EE25A3A9DF28A4BD780A99E31C4462ABC036F8FF6D5792495650419FBEE8, file time 2006-12-01), whose release path compiles exactly to this body under /O1; the debug late-init check is absent from retail, proving _DEBUG was not defined. The cookie objects are PDB data publics owned by gs_cookie.obj (module 29)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__setdefaultprecision",
+      "retail_va": "0x40c638",
+      "size": 41,
+      "unit": "matching/cl/crt_fp8.c",
+      "source_span": {
+        "start": 26,
+        "end": 29
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 41 bytes 0x0040c638..0x0040c660: push esi; push _PC_53 (0x30000); push _MCW_PC (0x10000); push NULL; call the msvcr80.dll _controlfp_s import thunk; add esp,0xc; test eax,eax; the _invoke_watson path with five NULL pushes plus add esp,0x14; pop esi; ret. The next byte 0x0040c661 starts merr.obj's __matherr, so the body ends exactly at the ret. Every byte is 33/33 equal outside relocation operands; the ordered referents are the _controlfp_s and _invoke_watson thunks only."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c638, module 44 build\\intel\\dll_obj\\fp8.obj, 41 bytes to the next public start. Source is the installed-era crt/src/intel/fp8.c (SHA-256 FC1AF3276F8C97BAB88A78B3A8B16A408EFF214ACA73F132AA6F049BF8DB5D6B, file time 2005-09-22), compiled under the CRT's real _CRTBLD context with an empty _CRTIMP so the internal calls are non-dllimport and resolve to the msvcr80.dll import thunks exactly as retail does."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__RTC_Initialize",
+      "retail_va": "0x40c49c",
+      "size": 36,
+      "unit": "matching/cl/crt_initsect.c",
+      "source_span": {
+        "start": 37,
+        "end": 46
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 36 bytes 0x0040c49c..0x0040c4bf: push esi; push edi; mov eax,iaa+4; mov edi,izz; cmp eax,edi; mov esi,eax; jae exit; loop over [esi,edi) with mov eax,[esi]/test/je/call eax/add esi,4/cmp/jb; pop edi; pop esi; ret. The next public start 0x0040c4c0 is __RTC_Terminate, so no padding follows. Non-relocation bytes are 28/28 equal under /O1; the two ordered absolute references are iaa+4 and izz, which coincide at 0x00415c68 because the four 4-byte sentinels are laid out izz=iaa+4."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c49c, module 52 ..\\build\\intel\\dll_obj\\initsect.obj, 36 bytes to the next public start. The installed source tree does not ship initsect.c, so the body and the table markers are decoded from retail and from the PDB data publics ___rtc_iaa/___rtc_izz/___rtc_taa/___rtc_tzz in the same module. C decoration maps the source spellings _RTC_Initialize/_RTC_Terminate to the public decorations.",
+      "referent_note": "Referent precedence regression after merging master: the candidate's two absolute table references resolve to ___rtc_izz/___rtc_tzz in the candidate MAP, but ltcg.scan_referents consults literal bindings before MAP aliases, and master's 2-byte literal binding for L\"\" at 0x415a48 matches any two zero bytes, so the table bounds are reported as that literal and the ordered target check fails (score stays 77.78 = 28/36 with the two 4-byte operands unnormalized). Before the merge this candidate measured 100 with boundary=verified referents=resolved (build/cl/39425d2c..., 657a840a...). The unit source and bytes are unchanged; the fix belongs in the scanner (prefer an exact MAP symbol over a content-hash literal)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "__RTC_Terminate",
+      "retail_va": "0x40c4c0",
+      "size": 36,
+      "unit": "matching/cl/crt_initsect.c",
+      "source_span": {
+        "start": 50,
+        "end": 59
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 36 bytes 0x0040c4c0..0x0040c4e3: identical runner shape over the term table, mov eax,taa+4; mov edi,tzz; the [esi,edi) loop; pop edi; pop esi; ret. The next public start is 0x0040c4e4, so the body has no padding. Non-relocation bytes are 28/28 equal under /O1; the ordered references are taa+4 and tzz, which coincide at 0x00415c70 for the same sentinel-layout reason."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c4c0, module 52 ..\\build\\intel\\dll_obj\\initsect.obj, 36 bytes to the next public start. Same provenance and declaration basis as __RTC_Initialize; both runners are decoded bodies with no installed-era source available.",
+      "referent_note": "Referent precedence regression after merging master: the candidate's two absolute table references resolve to ___rtc_izz/___rtc_tzz in the candidate MAP, but ltcg.scan_referents consults literal bindings before MAP aliases, and master's 2-byte literal binding for L\"\" at 0x415a48 matches any two zero bytes, so the table bounds are reported as that literal and the ordered target check fails (score stays 77.78 = 28/36 with the two 4-byte operands unnormalized). Before the merge this candidate measured 100 with boundary=verified referents=resolved (build/cl/39425d2c..., 657a840a...). The unit source and bytes are unchanged; the fix belongs in the scanner (prefer an exact MAP symbol over a content-hash literal)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?__CxxUnhandledExceptionFilter@@YGJPAU_EXCEPTION_POINTERS@@@Z",
+      "retail_va": "0x40c44b",
+      "size": 61,
+      "unit": "matching/cl/crt_unhandld.cpp",
+      "source_span": {
+        "start": 27,
+        "end": 44
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 61 bytes 0x0040c44b..0x0040c487: mov eax,[esp+4]; mov eax,[eax]; cmp dword [eax],0xE06D7363; jne return-0; cmp dword [eax+0x10],3; jne return-0; mov eax,[eax+0x14]; four compares against 0x19930520/0x19930521/0x19930522/0x01994000 each jumping to the terminate call; call terminate; xor eax,eax; ret 4. The next public start 0x0040c488 is __CxxSetUnhandledExceptionFilter, so there is no padding and no shared tail. All 57 non-relocation bytes are identical under the unit's /O1 build; the ordered referents are the terminate thunk and no data."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c44b, module 36 build\\intel\\dll_obj\\unhandld.obj, 61 bytes to the next public start. The installed tree does not ship unhandld.cpp, so the body is decoded from retail. C++ linkage is proven by the mangled spelling ?__CxxUnhandledExceptionFilter@@YGJ... (J = long return, PAU_EXCEPTION_POINTERS = struct pointer); the source must not be extern \"C\"."
+    },
+    {
+      "binary": "cl",
+      "symbol": "___CxxSetUnhandledExceptionFilter",
+      "retail_va": "0x40c488",
+      "size": 14,
+      "unit": "matching/cl/crt_unhandld.cpp",
+      "source_span": {
+        "start": 48,
+        "end": 52
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 14 bytes 0x0040c488..0x0040c495: push offset 0x0040c44b; call dword ptr [0x40d038] (SetUnhandledExceptionFilter); xor eax,eax; ret. The following six bytes 0x0040c496..0x0040c49b are the separate __amsg_exit import thunk (jmp dword ptr [0x40d1a8]) and 0x0040c49c is __RTC_Initialize, so the body ends exactly at the ret. All 6 non-relocation bytes are identical under /O1."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c488, module 36 build\\intel\\dll_obj\\unhandld.obj, 14 bytes. The three leading underscores are the C decoration of the source spelling __CxxSetUnhandledExceptionFilter (cdecl, no parameters). The decoded literal zero return (`xor eax,eax` after the call) proves a non-void LONG return of 0, not a void function."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?__ArrayUnwind@@YGXPAXIHP6EX0@Z@Z",
+      "retail_va": "0x40c38a",
+      "size": 94,
+      "gate_enabled": false,
+      "pending": "Byte-exact but not admissible: the 94-byte body reproduces retail exactly outside relocation operands (78/78 non-relocation bytes, every relative branch included; 82/94 bytes equal with no normalization). The blocking referent is the compiler-generated SEH scope table: the prolog's `push 0x00415db8` targets a table with no PDB public name and no candidate MAP symbol, so its identity cannot be independently resolved, and the table's own entries are absolute filter/handler addresses so a content-hash literal binding cannot match either. The remaining referents are resolvable (__SEH_prolog4, __SEH_epilog4, ?terminate@@YAXXZ). Re-enable only if the harness gains a compiler-generated-SEH-table identity rule.",
+      "unit": "matching/cl/crt_ehvecdtr.cpp",
+      "source_span": {
+        "start": 33,
+        "end": 47
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 94 bytes 0x0040c38a..0x0040c3e7: push 0x14; push sehtable 0x00415db8; call __SEH_prolog4; and [ebp-4],0; loop dec [ebp+0x10]/js with ptr-size store and indirect destructor call; the inlined except filter (ExceptionCode == 0xE06D7363 -> terminate, else return CONTINUE_SEARCH) emitted between the loop and the epilog at 0x0040c3ad..0x0040c3d6; shared epilog mov [ebp-4],-2; call __SEH_epilog4; ret 0x10 at 0x0040c3d9..0x0040c3e7. The next public start 0x0040c3e8 is ??_M, so the span is exactly this COMDAT. All 78 non-relocation bytes are identical under /O1; /O2 was tested and rejected."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c38a, module 28 build\\intel\\dll_obj\\ehvecdtr.obj, 94 bytes to the next public start. The mangled name proves void __stdcall __ArrayUnwind(void *, unsigned int, int, void (__thiscall *)(void *)); the callback convention is independently proven by the decoded call sites, which pass the element address in ECX and push nothing. The era object is prebuilt and its source is not installed, so the body is decoded from retail and matched against the installed libcmt.lib member copy (byte-identical outside relocations)."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?_AtlGetThreadACPFake@ATL@@YGIXZ",
+      "retail_va": "0x40c716",
+      "size": 101,
+      "unit": "matching/cl/crt_atl.cpp",
+      "source_span": {
+        "start": 26,
+        "end": 50
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 101 bytes 0x0040c716..0x0040c77a: push ebp/mov ebp,esp/sub esp,0Ch, the /GS cookie load + xor ebp store at [ebp-4], push esi, xor esi,esi, GetThreadLocale, GetLocaleInfoA(thread, LOCALE_IDEFAULTANSICODEPAGE, char[7], 7), the digit parse loop (imul 10/add -'0'/movsx) and the GetACP fallback, then the cookie check and leave/ret at 0x0040c779/0x0040c77a. The next public start 0x0040c77b is _AtlGetThreadACPReal, so the body is contiguous with no padding. All 81 non-relocation bytes are identical under /O1."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c716, module 54 INTEL\\Release_1\\atltrace.obj; 101 bytes to the next public start. The body is the installed-era atlmfc/include/atlconv.h inline definition at lines 104-128 (SHA-256 recorded in include/cl/crt_atl.h), emitted out of line because _AtlGetThreadACPThunk takes its address."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?_AtlGetThreadACPReal@ATL@@YGIXZ",
+      "retail_va": "0x40c77b",
+      "size": 4,
+      "unit": "matching/cl/crt_atl.cpp",
+      "source_span": {
+        "start": 54,
+        "end": 57
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 4 bytes 0x0040c77b..0x0040c77e: push 3; pop eax; ret, the /O1 form of `return CP_THREAD_ACP;`. The next public start 0x0040c77f is _AtlGetThreadACPThunk, so nothing follows. All 4 bytes are identical."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c77b, module 54 atltrace.obj, 4 bytes. Body is atlconv.h lines 130-133; emitted out of line because the thunk takes its address."
+    },
+    {
+      "binary": "cl",
+      "symbol": "?_AtlGetThreadACPThunk@ATL@@YGIXZ",
+      "retail_va": "0x40c77f",
+      "size": 100,
+      "unit": "matching/cl/crt_atl.cpp",
+      "source_span": {
+        "start": 61,
+        "end": 83
+      },
+      "boundary": {
+        "status": "verified",
+        "evidence": "Bounded direct retail decoding over exactly 100 bytes 0x0040c77f..0x0040c7e2: push ebp/mov ebp,esp/sub esp,98h, /GS cookie, lea eax,[ebp-98h] + push with dwOSVersionInfoSize=94h, GetVersionExA, compare dwPlatformId==2 and dwMajorVersion>=5 with the Real/Fake address materialization (mov eax,0x40c77b / 0x40c716), then the InterlockedExchange store to g_pfnGetThreadACP and the indirect call through that pointer, probe, cookie check, leave, ret. The next byte 0x0040c7e3 is outside the module; the function ends at the ret. All 68 non-relocation bytes are identical under /O1."
+      },
+      "dependencies": [],
+      "roots": [],
+      "identity_evidence": "PDB S_PUB32 public start 0x0040c77f, module 54 atltrace.obj, 100 bytes (next public start absent; end verified by the complete decode). Body is atlconv.h lines 137-156, with ATL's own InterlockedExchangePointer inline (lines 90-93) reduced to its single ::InterlockedExchange call; the defining atltrace.cpp initializer sets g_pfnGetThreadACP to this function."
     }
   ],
   "referents": {
@@ -1211,6 +2570,835 @@
           "sha256": "daf53a8a6b7006817af98cd8620507e541b8dc443ed0a658b6c130923f1a2023"
         },
         "evidence": "One canonical SDK SECURITY_ATTRIBUTES object and its named field, independently compiled offsetof/sizeof witness and direct retail memory access. Source/retail base plus this field offset must agree; no independent field storage or referent masking is allowed."
+      },
+      "?screen_length@@YAHXZ": {
+        "kind": "symbol",
+        "va": "0x4092d4",
+        "evidence": "Actual PDB public function in dos.obj; complete real source body is linked as the candidate dependency. Both emitted direct calls and retail direct calls resolve this exact canonical symbol."
+      },
+      "msvcr80.dll!_isatty": {
+        "kind": "import",
+        "va": "0x40d220",
+        "dll": "MSVCR80.dll",
+        "name": "_isatty",
+        "evidence": "Actual retail PE import slot resolves MSVCR80.dll!_isatty; gate independently verifies candidate PE import DLL/name and source uses canonical era io.h."
+      },
+      "?g_startTime@@3U__timeb64@@A": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "__timeb64",
+        "size": 16,
+        "va": "0x419fe8",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/timeb64-sp1-v1/layout-witness.json",
+          "sha256": "0ded27c705a9e4efe54b59e3687dc53198be14073c08daeec7962c80dba0b2b0"
+        },
+        "evidence": "Invented private object name, original name/grouping unresolved. Real _ftime64_s pointer API and independently decoded later time/millitm accesses prove one canonical CRT __timeb64 object. Compiler-produced era header witness proves size16/alignment8; data bytes are not counted."
+      },
+      "msvcr80.dll!_ftime64_s": {
+        "kind": "import",
+        "va": "0x40d21c",
+        "dll": "MSVCR80.dll",
+        "name": "_ftime64_s",
+        "evidence": "Actual PE IAT slot binds MSVCR80.dll!_ftime64_s; source uses installed era CRT sys/timeb.h declaration, gate independently verifies candidate and retail import identity."
+      },
+      "?g_hMutex@@3PAXA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "HANDLE",
+        "size": 4,
+        "va": "0x41aaf0",
+        "evidence": "Actual public PDB ?g_hMutex@@3PAXA uniquely attributed to mpcl.obj; retail loader-zero tail contains the complete four-byte HANDLE slot. Canonical extern/definition in mpcl header/unit, actual constructor reads it and passes it to WaitForSingleObject. Source and retail MAP/public identities independently bound; data is not counted."
+      },
+      "?is_server_run@@3HA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "int",
+        "size": 4,
+        "va": "0x41a2b4",
+        "evidence": "Actual public PDB ?is_server_run@@3HA in loader-zero .data; MP_is_server stores EAX to exactly this address and no other access contradicts one int entity. Canonical extern/definition lives in mpcl header/unit; data bytes are not counted."
+      },
+      "?get_mutex@@YAXXZ": {
+        "va": "0x40a496",
+        "evidence": "Actual public ?get_mutex@@YAXXZ body decoded over 103 bytes; MP_get_mutex tail-transfers to this exact address."
+      },
+      "?ProcessChannel_read_thread@@YGKPAX@Z": {
+        "va": "0x40a04c",
+        "evidence": "Actual public stdcall thread callback decoded over 86 bytes; CreateThread receives its address as the start routine."
+      },
+      "?read_robust@ProcessChannel@@QAEXPAXK@Z": {
+        "va": "0x40a7d3",
+        "evidence": "Actual public ProcessChannel member decoded over 164 bytes; read_int_robust passes its buffer and size to this exact address."
+      },
+      "?read_int_robust@ProcessChannel@@QAEHXZ": {
+        "va": "0x40a877",
+        "evidence": "Actual public ProcessChannel member decoded over 20 bytes; expect_int_robust compares the value returned from this exact address."
+      },
+      "?xfree@@YAXPAX@Z": {
+        "va": "0x4082dc",
+        "evidence": "Actual public util.obj deallocator; real source body exists in matching/cl/util.cpp and the global operator delete tail-transfers to this exact address."
+      },
+      "msvcr80.dll!wcscmp": {
+        "kind": "import",
+        "va": "0x40d2b0",
+        "dll": "MSVCR80.dll",
+        "name": "wcscmp",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds MSVCR80.dll!wcscmp; canonical era wide-string declaration supplies the source interface."
+      },
+      "msvcr80.dll!swscanf_s": {
+        "kind": "import",
+        "va": "0x40d240",
+        "dll": "MSVCR80.dll",
+        "name": "swscanf_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds MSVCR80.dll!swscanf_s; canonical era stdio wide-scan declaration supplies the source interface."
+      },
+      "kernel32.dll!CreateThread": {
+        "kind": "import",
+        "va": "0x40d078",
+        "dll": "KERNEL32.dll",
+        "name": "CreateThread",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!CreateThread; canonical windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!WaitForMultipleObjects": {
+        "kind": "import",
+        "va": "0x40d07c",
+        "dll": "KERNEL32.dll",
+        "name": "WaitForMultipleObjects",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!WaitForMultipleObjects; canonical windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!CreatePipe": {
+        "kind": "import",
+        "va": "0x40d080",
+        "dll": "KERNEL32.dll",
+        "name": "CreatePipe",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!CreatePipe; canonical windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetLastError": {
+        "kind": "import",
+        "va": "0x40d148",
+        "dll": "KERNEL32.dll",
+        "name": "GetLastError",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!GetLastError; canonical windows.h declaration supplies the source interface."
+      },
+      "literal:sha256:7fac38354d455438b8c86706a608a77d8d2477c48a78b2ac737fb36782dc057d": {
+        "kind": "literal",
+        "va": "0x4157b0",
+        "encoding": "utf-16le",
+        "size": 6,
+        "bytes_sha256": "7fac38354d455438b8c86706a608a77d8d2477c48a78b2ac737fb36782dc057d",
+        "source_literal": "L\"%p\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "literal:sha256:8dd455e5d8d8f6e296d3944f01bede99b3c456179fa00fea088bae3a28c17665": {
+        "kind": "literal",
+        "va": "0x415788",
+        "encoding": "utf-16le",
+        "size": 38,
+        "bytes_sha256": "8dd455e5d8d8f6e296d3944f01bede99b3c456179fa00fea088bae3a28c17665",
+        "source_literal": "L\"MPCL_SERVER_373011\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "literal:sha256:ce6721340017140e0a648021617054538a33eeb3ef5fef16d7221c6e1d0b666b": {
+        "kind": "literal",
+        "va": "0x415774",
+        "encoding": "utf-16le",
+        "size": 18,
+        "bytes_sha256": "ce6721340017140e0a648021617054538a33eeb3ef5fef16d7221c6e1d0b666b",
+        "source_literal": "L\"bananana\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "literal:sha256:0ab3e081862091413e821cdc2d77ee41a72d42384238a2ebfb80f860ac4a86b2": {
+        "kind": "literal",
+        "va": "0x415728",
+        "encoding": "utf-16le",
+        "size": 36,
+        "bytes_sha256": "0ab3e081862091413e821cdc2d77ee41a72d42384238a2ebfb80f860ac4a86b2",
+        "source_literal": "L\"MPCL_MUTEX_HANDLE\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "__onexit": {
+        "kind": "symbol",
+        "va": "0x40bbc4",
+        "evidence": "Actual PDB S_PUB32 __onexit with unique DBI contribution build/intel/dll_obj/atonexit.obj (module 25); decorated form of the reconstructed source _onexit. atexit at 0x40bc69 calls it with a direct e8 rel32 to exactly 0x40bbc4, and the candidate links the reconstructed same-unit __onexit, so the candidate MAP identity and this retail target are the same canonical symbol."
+      },
+      "___report_gsfailure": {
+        "kind": "symbol",
+        "va": "0x40c1b0",
+        "evidence": "Actual PDB S_PUB32 ___report_gsfailure with unique DBI contribution build/intel/dll_obj/gs_report.obj (module 30); the retail secchk helper's noreturn tail jmp resolves exactly 0x40c1b0. The candidate link uses the installed 8.0.50727.762 msvcrt.lib gs_report.obj body, whose MAP public is the same decorated symbol; no stub or replacement body."
+      },
+      "kernel32.dll!GetFileAttributesW": {
+        "kind": "import",
+        "va": "0x40d0cc",
+        "dll": "KERNEL32.dll",
+        "name": "GetFileAttributesW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetUserDefaultUILanguage": {
+        "kind": "import",
+        "va": "0x40d0d0",
+        "dll": "KERNEL32.dll",
+        "name": "GetUserDefaultUILanguage",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetLocaleInfoW": {
+        "kind": "import",
+        "va": "0x40d0d4",
+        "dll": "KERNEL32.dll",
+        "name": "GetLocaleInfoW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!FindFirstFileW": {
+        "kind": "import",
+        "va": "0x40d0d8",
+        "dll": "KERNEL32.dll",
+        "name": "FindFirstFileW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!FindNextFileW": {
+        "kind": "import",
+        "va": "0x40d0dc",
+        "dll": "KERNEL32.dll",
+        "name": "FindNextFileW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!FindClose": {
+        "kind": "import",
+        "va": "0x40d0e0",
+        "dll": "KERNEL32.dll",
+        "name": "FindClose",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetModuleHandleW": {
+        "kind": "import",
+        "va": "0x40d0fc",
+        "dll": "KERNEL32.dll",
+        "name": "GetModuleHandleW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetConsoleOutputCP": {
+        "kind": "import",
+        "va": "0x40d110",
+        "dll": "KERNEL32.dll",
+        "name": "GetConsoleOutputCP",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!GetModuleFileNameW": {
+        "kind": "import",
+        "va": "0x40d13c",
+        "dll": "KERNEL32.dll",
+        "name": "GetModuleFileNameW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "kernel32.dll!LoadLibraryExW": {
+        "kind": "import",
+        "va": "0x40d144",
+        "dll": "KERNEL32.dll",
+        "name": "LoadLibraryExW",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!wcsncat_s": {
+        "kind": "import",
+        "va": "0x40d1dc",
+        "dll": "MSVCR80.dll",
+        "name": "wcsncat_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!_itow_s": {
+        "kind": "import",
+        "va": "0x40d1e0",
+        "dll": "MSVCR80.dll",
+        "name": "_itow_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!_wtol": {
+        "kind": "import",
+        "va": "0x40d1e4",
+        "dll": "MSVCR80.dll",
+        "name": "_wtol",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!_wdupenv_s": {
+        "kind": "import",
+        "va": "0x40d26c",
+        "dll": "MSVCR80.dll",
+        "name": "_wdupenv_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "msvcr80.dll!wcsncpy_s": {
+        "kind": "import",
+        "va": "0x40d2a4",
+        "dll": "MSVCR80.dll",
+        "name": "wcsncpy_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot and actual candidate PE import must both bind this exact DLL and symbol; canonical era CRT/SDK header declaration supplies the source interface. The module-6 bodies call it at the decoded site in loadui.obj (module 6)."
+      },
+      "_memset": {
+        "kind": "import-thunk",
+        "va": "0x40bbb8",
+        "dll": "msvcr80.dll",
+        "name": "memset",
+        "evidence": "Retail LoadUILibrary calls the direct linker thunk 0x40bbb8, whose public PDB identity is _memset (DBI module 53 MSVCR80.dll); the thunk jumps through the PE IAT slot that resolves MSVCR80.dll!memset. The compiler-generated zero-fill of the WCHAR[1024] path buffer is the only source of this ordered referent; thunk bytes are library/fallback and never counted."
+      },
+      "literal:sha256:4c2ce59295120259bf8182bf95801b6303a56ddf270184efdec7cccd568f5eef": {
+        "kind": "literal",
+        "va": "0x415610",
+        "encoding": "utf-16le",
+        "size": 18,
+        "bytes_sha256": "4c2ce59295120259bf8182bf95801b6303a56ddf270184efdec7cccd568f5eef",
+        "source_literal": "L\"clui.dll\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"clui.dll\"; the digest above is computed from exactly 18 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:7eb0dde9c1a479596fe2eae9c96bbda9ced05a57d1350e4ad952e3684ed53304": {
+        "kind": "literal",
+        "va": "0x4149f4",
+        "encoding": "utf-16le",
+        "size": 10,
+        "bytes_sha256": "7eb0dde9c1a479596fe2eae9c96bbda9ced05a57d1350e4ad952e3684ed53304",
+        "source_literal": "L\"PATH\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"PATH\"; the digest above is computed from exactly 10 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:b7fc02907b1fe26a09f41a20cbcb2899ecd2b028a973d1997530873bcd349966": {
+        "kind": "literal",
+        "va": "0x415a4c",
+        "encoding": "utf-16le",
+        "size": 4,
+        "bytes_sha256": "b7fc02907b1fe26a09f41a20cbcb2899ecd2b028a973d1997530873bcd349966",
+        "source_literal": "L\"\\\\\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"\\\\\"; the digest above is computed from exactly 4 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:955300dd21e1918444ea5d7dfe3524eb30fe147f6f3b811dd887bf1e2f0d7647": {
+        "kind": "literal",
+        "va": "0x415608",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "955300dd21e1918444ea5d7dfe3524eb30fe147f6f3b811dd887bf1e2f0d7647",
+        "source_literal": "L\"*.*\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"*.*\"; the digest above is computed from exactly 8 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:c245aff91259378234ae88c46d0e6a690a75034a5fc42bd61f2e3d03c9158b33": {
+        "kind": "literal",
+        "va": "0x414b54",
+        "encoding": "utf-16le",
+        "size": 4,
+        "bytes_sha256": "c245aff91259378234ae88c46d0e6a690a75034a5fc42bd61f2e3d03c9158b33",
+        "source_literal": "L\".\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\".\"; the digest above is computed from exactly 4 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "literal:sha256:77eca80e282a795166d31533c55cfba9eac4c92d165ece95443a22d740341101": {
+        "kind": "literal",
+        "va": "0x415600",
+        "encoding": "utf-16le",
+        "size": 6,
+        "bytes_sha256": "77eca80e282a795166d31533c55cfba9eac4c92d165ece95443a22d740341101",
+        "source_literal": "L\"..\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL independently match the genuine source token L\"..\"; the digest above is computed from exactly 6 read-only retail bytes. Referenced data bytes are never counted as recovered source."
+      },
+      "?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z": {
+        "kind": "symbol",
+        "va": "0x409330",
+        "evidence": "Exact public start 0x409330 in DBI module 6 (loadui.obj); both decode-time callers in LoadSearchPath (0x4097fc rel32 target 0x409330) and LoadCLUI (0x4098de rel32 target 0x409330) branch to this exact entry, and the decorated name proves the same seven-parameter __cdecl ABI. The source call is the canonical same-unit function, not a thunk."
+      },
+      "?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z": {
+        "kind": "symbol",
+        "va": "0x409755",
+        "evidence": "Exact public start 0x409755 in DBI module 6 (loadui.obj); the decode-time caller in LoadCLUI (0x4098f2 rel32 target 0x409755) branches to this exact entry, and the decorated name proves the same two-parameter __cdecl ABI. The source call is the canonical same-unit function, not a thunk."
+      },
+      "msvcr80.dll!_wsplitpath_s": {
+        "kind": "import",
+        "va": "0x40d2b4",
+        "dll": "MSVCR80.dll",
+        "name": "_wsplitpath_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot at 0x40d2b4 binds MSVCR80.dll!_wsplitpath_s; the candidate's own PE must bind the same DLL/symbol. Canonical interface is the installed-era <stdlib.h> wide split-path declaration, which also declares the _MAX_* destination limits the retail call sites use."
+      },
+      "msvcr80.dll!_wmakepath_s": {
+        "kind": "import",
+        "va": "0x40d234",
+        "dll": "MSVCR80.dll",
+        "name": "_wmakepath_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot at 0x40d234 binds MSVCR80.dll!_wmakepath_s; the candidate's own PE must bind the same DLL/symbol. Canonical interface is the installed-era <stdlib.h> wide make-path declaration."
+      },
+      "literal:sha256:96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7": {
+        "kind": "literal",
+        "va": "0x415a48",
+        "encoding": "utf-16le",
+        "size": 2,
+        "bytes_sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+        "source_literal": "L\"\"",
+        "evidence": "Full bounded retail literal contents are the single two-byte UTF-16 NUL at 0x415a48 (DBI contribution size 2, module vssqm.obj). basename is called by filename/pathname with the same empty wide literal used for the absent path components; the bytes hash independently binds the candidate's pooled empty literal."
+      },
+      "kernel32.dll!FreeLibrary": {
+        "kind": "import",
+        "va": "0x40d134",
+        "dll": "KERNEL32.dll",
+        "name": "FreeLibrary",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot 0x40d134 and the actual candidate PE import must both bind this exact DLL and symbol; canonical era Windows SDK declaration FreeLibrary(HMODULE) supplies the source interface, and ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z calls it through this slot."
+      },
+      "?work_queue@@3V?$Queue@Uaction_t@@@@A": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "Queue<action_t>",
+        "size": 60,
+        "va": "0x41ab30",
+        "evidence": "Actual public PDB ?work_queue@@3V?$Queue@Uaction_t@@@@A uniquely attributed to mpcl.obj, loader-zero .data. Its real constructor body is recovered in this unit; get_action_nonbatching and schedule_next_batch address the object at exactly this address. One canonical definition, data bytes not counted."
+      },
+      "?batches@@3PAV?$Queue@Uaction_t@@@@A": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "Queue<action_t> *",
+        "size": 4,
+        "va": "0x41a2d4",
+        "evidence": "Actual public PDB ?batches@@3PAV?$Queue@Uaction_t@@@@A, mpcl.obj loader-zero pointer slot. schedule_next_batch loads it and applies the proven 0x3C Queue stride; one canonical definition in mpcl.cpp, data bytes not counted."
+      },
+      "?next_batch@@3IA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "unsigned int",
+        "size": 4,
+        "va": "0x41a2c8",
+        "evidence": "Actual public PDB ?next_batch@@3IA, mpcl.obj loader-zero unsigned int; schedule_next_batch compares, indexes with, and increments exactly this slot. Data bytes not counted."
+      },
+      "?num_batches@@3IA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "unsigned int",
+        "size": 4,
+        "va": "0x41a2cc",
+        "evidence": "Actual public PDB ?num_batches@@3IA, mpcl.obj loader-zero unsigned int; schedule_next_batch bounds next_batch against exactly this slot. Data bytes not counted."
+      },
+      "?current_batch_sources@@3JA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "long",
+        "size": 4,
+        "va": "0x41a298",
+        "evidence": "Actual public PDB ?current_batch_sources@@3JA, mpcl.obj loader-zero long; schedule_next_batch stores the indexed queue's count at exactly this slot. Data bytes not counted."
+      },
+      "?head@?$Queue@Uaction_t@@@@QAEPAUaction_t@@XZ": {
+        "va": "0x40a3c7",
+        "evidence": "Actual public Queue<action_t>::head body already decoded and matched over 84 bytes; get_action_nonbatching tail-transfers to this exact address."
+      },
+      "?append_nosync@?$Queue@Uaction_t@@@@QAEHAAV1@@Z": {
+        "va": "0x40a41b",
+        "evidence": "Actual public Queue<action_t>::append_nosync body already registered over 61 bytes; schedule_next_batch calls this exact address."
+      },
+      "??1action_t@@QAE@XZ": {
+        "va": "0x409efd",
+        "evidence": "Actual public action_t destructor body decoded over 25 bytes in this unit; Queue destructor/clean call this exact address per node."
+      },
+      "kernel32.dll!InitializeCriticalSection": {
+        "kind": "import",
+        "va": "0x40d090",
+        "dll": "KERNEL32.dll",
+        "name": "InitializeCriticalSection",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!InitializeCriticalSection; canonical windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!DeleteCriticalSection": {
+        "kind": "import",
+        "va": "0x40d06c",
+        "dll": "KERNEL32.dll",
+        "name": "DeleteCriticalSection",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot binds KERNEL32.dll!DeleteCriticalSection; canonical windows.h declaration supplies the source interface."
+      },
+      "?write_string@ProcessChannel@@QAEXPBG@Z": {
+        "va": "0x40a0d1",
+        "evidence": "Actual public ProcessChannel::write_string body already registered and matched over 55 bytes; write_source calls this exact address three times."
+      },
+      "?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z": {
+        "va": "0x40a12d",
+        "evidence": "Actual public ProcessChannel::write_source body decoded over 155 bytes; send transfers the source through this exact member."
+      },
+      "?clean@?$Queue@Uaction_t@@@@QAEXXZ": {
+        "va": "0x40a9d5",
+        "evidence": "Actual public Queue<action_t>::clean body decoded over 84 bytes in this unit; free_batches calls this exact address per batch."
+      },
+      "??_E?$Queue@Uaction_t@@@@QAEPAXI@Z": {
+        "va": "0x40ae1c",
+        "evidence": "Actual public vector deleting destructor for Queue<action_t>, emitted by the real delete[] in free_batches and decoded over 73 bytes; the source expression is delete[] batches."
+      },
+      "?Context@@3PAUcontext_s@@A": {
+        "va": "0x417030",
+        "evidence": "Actual S_PUB32 public pointer owned by clmain.obj in .data; consumers load the pointer storage and then dereference the flag-list and pass fields, and the loader-zero initial value is consistent with the zeroed .data tail."
+      },
+      "?EncDefaults@@3PAHA": {
+        "va": "0x4178b8",
+        "evidence": "Actual S_PUB32 public int array owned by clmain.obj in .data; mark_defaults takes its address directly (no pointer load) and advances by four bytes per defaults record, which is the observed array walk."
+      },
+      "?DefaultsMarked@@3HA": {
+        "va": "0x419e6c",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj, written with the immediate 1 at the end of mark_defaults; loader-zero storage outside every reviewed function span."
+      },
+      "?Passinfo@@3PAUpassinfo_s@@A": {
+        "va": "0x417950",
+        "evidence": "Actual S_PUB32 public passinfo_s array owned by clmain.obj in .data; the pass loops take the table address directly, use a 0x24 stride and bound the final row against the adjacent distinct public ?Link_passes at 0x417ab8. Ten rows of the evidenced 36-byte layout."
+      },
+      "msvcr80.dll!wcschr": {
+        "kind": "import",
+        "va": "0x40d2e4",
+        "dll": "MSVCR80.dll",
+        "name": "wcschr",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!wcspbrk": {
+        "kind": "import",
+        "va": "0x40d2e0",
+        "dll": "MSVCR80.dll",
+        "name": "wcspbrk",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!_waccess_s": {
+        "kind": "import",
+        "va": "0x40d27c",
+        "dll": "MSVCR80.dll",
+        "name": "_waccess_s",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "?CX@@3Ucontext_s@@A": {
+        "va": "0x418900",
+        "evidence": "Actual S_PUB32 public context object owned by clmain.obj in .data; the Context pointer word is statically initialized to exactly this address and the next public data object begins at 0x418928, fixing the 40-byte extent. All 40 bytes read zero in the file image."
+      },
+      "?Il_suffix@@3QBUilsuffix_s@@B": {
+        "va": "0x4127c0",
+        "evidence": "Actual S_PUB32 const array in .rdata, owned by clmain.obj; eight 8-byte rows observed (wide suffix pointer plus integer gate) with a null-suffix terminator at 0x4127f8 that the IL cleanup loop tests before iterating."
+      },
+      "?CluiPath@@3PAGA": {
+        "va": "0x419650",
+        "evidence": "Actual S_PUB32 pointer owned by clmain.obj; storage is inside .data past the 0x2000 file-backed bytes, i.e. loader-zero with no observable initializer."
+      },
+      "?Nologo@@3HA": {
+        "va": "0x419178",
+        "evidence": "Actual S_PUB32 int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero."
+      },
+      "?EncEventName@@3PAGA": {
+        "va": "0x41917c",
+        "evidence": "Actual S_PUB32 pointer owned by clmain.obj; storage in the zero-filled .data tail, loader-zero with no file-backed initializer."
+      },
+      "?Keepfiles@@3HA": {
+        "va": "0x419184",
+        "evidence": "Actual S_PUB32 int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero."
+      },
+      "?Preprocess@@3HA": {
+        "va": "0x41918c",
+        "evidence": "Actual S_PUB32 int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero."
+      },
+      "?Cmd_Prefast@@3HA": {
+        "va": "0x4191a0",
+        "evidence": "Actual S_PUB32 int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero."
+      },
+      "?Verbose@@3HA": {
+        "va": "0x419e54",
+        "evidence": "Actual S_PUB32 int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero."
+      },
+      "?g_hCryptProv@@3KA": {
+        "va": "0x419e80",
+        "evidence": "Actual S_PUB32 unsigned-long storage owned by clmain.obj; create_crypto_context passes its address to CryptAcquireContextW and storage is in the zero-filled .data tail, loader-zero."
+      },
+      "msvcr80.dll!_wfsopen": {
+        "kind": "import",
+        "va": "0x40d2bc",
+        "dll": "MSVCR80.dll",
+        "name": "_wfsopen",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!_fileno": {
+        "kind": "import",
+        "va": "0x40d2c0",
+        "dll": "MSVCR80.dll",
+        "name": "_fileno",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!_filelength": {
+        "kind": "import",
+        "va": "0x40d2c4",
+        "dll": "MSVCR80.dll",
+        "name": "_filelength",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "literal:sha256:9b8444c4b5b34f134e3f6f452414e703e761c56ceee7054d61b3fe594a8a474f": {
+        "kind": "literal",
+        "va": "0x41497c",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "9b8444c4b5b34f134e3f6f452414e703e761c56ceee7054d61b3fe594a8a474f",
+        "source_literal": "L\"a+b\"",
+        "evidence": "Full bounded retail literal contents including the final NUL independently match the genuine source token of OpenClSqmLogFileForWriting's _wfsopen mode; strict gate must verify read-only source and retail storage, source token ownership, exact extent, bytes and digest. Referenced data bytes are not counted as recovered source."
+      },
+      "msvcr80.dll!fwrite": {
+        "kind": "import",
+        "va": "0x40d2c8",
+        "dll": "MSVCR80.dll",
+        "name": "fwrite",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!fclose": {
+        "kind": "import",
+        "va": "0x40d2cc",
+        "dll": "MSVCR80.dll",
+        "name": "fclose",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!fread": {
+        "kind": "import",
+        "va": "0x40d2d0",
+        "dll": "MSVCR80.dll",
+        "name": "fread",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "msvcr80.dll!fseek": {
+        "kind": "import",
+        "va": "0x40d2d4",
+        "dll": "MSVCR80.dll",
+        "name": "fseek",
+        "evidence": "Independently parsed retail PE import descriptor and IAT slot; the candidate PE must bind the same msvcr80.dll export."
+      },
+      "___security_cookie_complement": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "UINT_PTR",
+        "size": 4,
+        "va": "0x417c48",
+        "evidence": "Actual PDB data public ___security_cookie_complement uniquely attributed to gs_cookie.obj (module 29) in .data; retail bytes are b1 19 bf 44 (== ~0xBB40E64E). ___security_init_cookie stores it on both the early-out and the full-initialization paths."
+      },
+      "kernel32.dll!GetSystemTimeAsFileTime": {
+        "kind": "import",
+        "va": "0x40d048",
+        "dll": "KERNEL32.dll",
+        "name": "GetSystemTimeAsFileTime",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d048]. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetCurrentProcessId": {
+        "kind": "import",
+        "va": "0x40d0b0",
+        "dll": "KERNEL32.dll",
+        "name": "GetCurrentProcessId",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d0b0]. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetCurrentThreadId": {
+        "kind": "import",
+        "va": "0x40d0b4",
+        "dll": "KERNEL32.dll",
+        "name": "GetCurrentThreadId",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d0b4]. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetTickCount": {
+        "kind": "import",
+        "va": "0x40d02c",
+        "dll": "KERNEL32.dll",
+        "name": "GetTickCount",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d02c]. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "kernel32.dll!QueryPerformanceCounter": {
+        "kind": "import",
+        "va": "0x40d030",
+        "dll": "KERNEL32.dll",
+        "name": "QueryPerformanceCounter",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail body calls dword ptr [0x40d030] with the LARGE_INTEGER address. Canonical era SDK windows.h declaration supplies the source interface."
+      },
+      "msvcr80.dll!_controlfp_s": {
+        "kind": "import",
+        "va": "0x40d1a0",
+        "dll": "MSVCR80.dll",
+        "name": "_controlfp_s",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; retail fp8.obj calls the linker-generated thunk at 0x0040c710, whose only instruction jumps through this slot. The unit's non-dllimport reference through the era import library reproduces the same thunk form. Canonical era crt/src/internal.h declaration supplies the source interface."
+      },
+      "msvcr80.dll!_invoke_watson": {
+        "kind": "import",
+        "va": "0x40d19c",
+        "dll": "MSVCR80.dll",
+        "name": "_invoke_watson",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; retail fp8.obj calls the linker-generated thunk at 0x0040c70a, whose only instruction jumps through this slot. Canonical era crt/src/internal.h declaration supplies the source interface."
+      },
+      "__controlfp_s": {
+        "kind": "symbol",
+        "entity_kind": "thunk",
+        "type": "errno_t (__cdecl *)(unsigned int, unsigned int, unsigned int *)",
+        "size": 6,
+        "va": "0x40c710",
+        "evidence": "PDB public __controlfp_s attributed to the MSVCR80.dll import module, whose complete six-byte body is jmp dword ptr [__imp___controlfp_s] at 0x40d1a0. It is the linker-generated import thunk that retail fp8.obj's call targets, and the candidate's own non-dllimport reference produces the same named thunk, so the identity is the same symbol in both images."
+      },
+      "__invoke_watson": {
+        "kind": "symbol",
+        "entity_kind": "thunk",
+        "type": "void (__cdecl *)(const wchar_t *, const wchar_t *, const wchar_t *, unsigned int, uintptr_t)",
+        "size": 6,
+        "va": "0x40c70a",
+        "evidence": "PDB public __invoke_watson attributed to the MSVCR80.dll import module; complete six-byte body jmp dword ptr [__imp___invoke_watson] at 0x40d19c. Retail fp8.obj's _ERRCHECK expansion calls this thunk, and the candidate produces the same named thunk through the era import library."
+      },
+      "___rtc_izz": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "_PVFV[1]",
+        "size": 4,
+        "va": "0x415c68",
+        "evidence": "Actual PDB data public ___rtc_izz uniquely attributed to initsect.obj (module 52) in .rdata; retail bytes are four zero bytes. It is the end of the .rtc$IAA init table, and because the four four-byte sentinels are laid out back to back it is also iaa+4, which is why the *both* bounds of the retail __RTC_Initialize runner resolve to this one symbol."
+      },
+      "___rtc_tzz": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "_PVFV[1]",
+        "size": 4,
+        "va": "0x415c70",
+        "evidence": "Actual PDB data public ___rtc_tzz uniquely attributed to initsect.obj (module 52) in .rdata; retail bytes are four zero bytes. It is the end of the .rtc$TAA term table and equals taa+4 in the retail sentinel layout, so both bounds of the retail __RTC_Terminate runner resolve to it."
+      },
+      "?terminate@@YAXXZ": {
+        "kind": "symbol",
+        "entity_kind": "thunk",
+        "type": "void (__cdecl *)(void)",
+        "size": 6,
+        "va": "0x40c6fe",
+        "evidence": "PDB public ?terminate@@YAXXZ attributed to the MSVCR80.dll import module; the complete six-byte body at 0x0040c6fe is jmp dword ptr [__imp_?terminate@@YAXXZ] at 0x40d194. Both retail unhandld.obj and fp8.obj call this thunk (E8 rel32), and the candidate's non-dllimport reference through the era import library produces the same named thunk, so the identity is one symbol in both images. Canonical era declaration: crt/src/eh.h:65."
+      },
+      "kernel32.dll!SetUnhandledExceptionFilter": {
+        "kind": "import",
+        "va": "0x40d038",
+        "dll": "KERNEL32.dll",
+        "name": "SetUnhandledExceptionFilter",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; the retail ___CxxSetUnhandledExceptionFilter body pushes the filter address and calls dword ptr [0x40d038]. Canonical era SDK errhandlingapi declaration supplies the source interface."
+      },
+      "?__CxxUnhandledExceptionFilter@@YGJPAU_EXCEPTION_POINTERS@@@Z": {
+        "kind": "symbol",
+        "entity_kind": "function",
+        "type": "LONG (__stdcall *)(struct _EXCEPTION_POINTERS *)",
+        "size": 61,
+        "va": "0x40c44b",
+        "evidence": "The same PDB public function is itself registered as a candidate at 0x0040c44b. ___CxxSetUnhandledExceptionFilter takes its address (push offset 0x0040c44b) and passes it to SetUnhandledExceptionFilter, so the pointer referent identity is the function symbol in both images; no separate data entity is claimed."
+      },
+      "?_AtlGetThreadACPFake@ATL@@YGIXZ": {
+        "kind": "symbol",
+        "entity_kind": "function",
+        "type": "UINT (__stdcall *)(void)",
+        "size": 101,
+        "va": "0x40c716",
+        "evidence": "The same PDB public is registered as a candidate at 0x0040c716. _AtlGetThreadACPThunk materializes its address (mov eax,0x0040c716) as the fallback filter, so the pointer referent identity is the function symbol in both images."
+      },
+      "?_AtlGetThreadACPReal@ATL@@YGIXZ": {
+        "kind": "symbol",
+        "entity_kind": "function",
+        "type": "UINT (__stdcall *)(void)",
+        "size": 4,
+        "va": "0x40c77b",
+        "evidence": "The same PDB public is registered as a candidate at 0x0040c77b. _AtlGetThreadACPThunk materializes its address (mov eax,0x0040c77b) as the Win2K+ filter, so the pointer referent identity is the function symbol in both images."
+      },
+      "?g_pfnGetThreadACP@ATL@@3P6GIXZA": {
+        "kind": "symbol",
+        "entity_kind": "data",
+        "type": "ATLGETTHREADACP (4-byte function pointer)",
+        "size": 4,
+        "va": "0x417c80",
+        "evidence": "Actual PDB data public ?g_pfnGetThreadACP@ATL@@3P6GIXZA uniquely attributed to atltrace.obj (module 54) in .data. The decoded thunk stores the selected filter through InterlockedExchange at this exact slot and then calls through it; the unit defines it with the atltrace.cpp initializer (address of the thunk)."
+      },
+      "kernel32.dll!GetThreadLocale": {
+        "kind": "import",
+        "va": "0x40d160",
+        "dll": "KERNEL32.dll",
+        "name": "GetThreadLocale",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; _AtlGetThreadACPFake calls dword ptr [0x40d160]. Canonical era SDK winnls.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetLocaleInfoA": {
+        "kind": "import",
+        "va": "0x40d028",
+        "dll": "KERNEL32.dll",
+        "name": "GetLocaleInfoA",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; _AtlGetThreadACPFake calls dword ptr [0x40d028] with LOCALE_IDEFAULTANSICODEPAGE and a seven-byte buffer. Canonical era SDK winnls.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetACP": {
+        "kind": "import",
+        "va": "0x40d108",
+        "dll": "KERNEL32.dll",
+        "name": "GetACP",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; _AtlGetThreadACPFake calls dword ptr [0x40d108] on the nACP == 0 fallback. Canonical era SDK winnls.h declaration supplies the source interface."
+      },
+      "kernel32.dll!GetVersionExA": {
+        "kind": "import",
+        "va": "0x40d024",
+        "dll": "KERNEL32.dll",
+        "name": "GetVersionExA",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; _AtlGetThreadACPThunk calls dword ptr [0x40d024] with the 0x94-byte OSVERSIONINFO address. Canonical era SDK winbase.h declaration supplies the source interface."
+      },
+      "kernel32.dll!InterlockedExchange": {
+        "kind": "import",
+        "va": "0x40d054",
+        "dll": "KERNEL32.dll",
+        "name": "InterlockedExchange",
+        "evidence": "Independently parsed retail PE import descriptor/IAT slot; ATL's own InterlockedExchangePointer inline (atlconv.h lines 90-93) reduces to this call in _AtlGetThreadACPThunk. Canonical era SDK winbase.h declaration supplies the source interface."
+      },
+      "entry-alias:__alloca_probe|__chkstk": {
+        "kind": "entry-alias",
+        "va": "0x40bd30",
+        "size": 43,
+        "bytes_sha256": "f8675b4976f7b8efc0bd917aebab734d11ca90222d20bcd2a166ce9914ed2b6e",
+        "aliases": [
+          "__alloca_probe",
+          "__chkstk"
+        ],
+        "proof": {
+          "path": "config/reviews/evidence/chkstk-entry-alias.json",
+          "sha256": "0deceb2e8a8d908ced3a4d14823dd3673a482b2533a5df6df87ec90c7f3e0c74"
+        },
+        "evidence": "Retail 0x40bd30 is one closed 43-byte compiler stack-probe entry whose two public PDB aliases __alloca_probe/__chkstk share DBI module 20 (chkstk.obj); the fresh candidate MAP independently binds the same two aliases at one address to msvcrt:chkstk.obj and the 43 helper bytes are identical to retail. The pinned proof reopens the retail PDB and the candidate MAP. Toolchain bytes are fallback and never counted as source."
+      },
+      "member:?Passinfo@@3PAUpassinfo_s@@A.selector": {
+        "kind": "member",
+        "base_identity": "?Passinfo@@3PAUpassinfo_s@@A",
+        "member": "selector",
+        "offset": 8,
+        "size": 2,
+        "va": "0x417958",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/passinfo-sp1-v1/layout-witness.json",
+          "sha256": "034d68cbd343ae37a1e6505bd11f50e28399ffb39ed7d263adef037e7b8cc367"
+        },
+        "evidence": "One canonical clmain.obj Passinfo table and its named selector field. The compiler-produced offsetof/sizeof witness reports size 36 with selector at offset 8, width 2, and the pass loops load exactly that word relative to the table row; source and retail base plus field offset must agree. No independent field storage or referent masking."
+      },
+      "member:?Passinfo@@3PAUpassinfo_s@@A.options": {
+        "kind": "member",
+        "base_identity": "?Passinfo@@3PAUpassinfo_s@@A",
+        "member": "options",
+        "offset": 12,
+        "size": 4,
+        "va": "0x41795c",
+        "layout_witness": {
+          "path": "E:/vc8-decomp/build/toolchain-layout/passinfo-sp1-v1/layout-witness.json",
+          "sha256": "034d68cbd343ae37a1e6505bd11f50e28399ffb39ed7d263adef037e7b8cc367"
+        },
+        "evidence": "One canonical clmain.obj Passinfo table and its named options field. The compiler-produced offsetof/sizeof witness reports size 36 with options at offset 12, width 4, and the pass loops OR 1 into / AND ~1 out of exactly that dword relative to the table row; source and retail base plus field offset must agree. No independent field storage or referent masking."
+      },
+      "?DllFlg@@3HA": {
+        "va": "0x41913c",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj; storage sits in .data past the 0x2000 file-backed bytes, i.e. loader-zero with no observable initializer. Written by the DLL option path and read by compile.obj module_extension."
+      },
+      "?NoAssembly@@3HA": {
+        "va": "0x419648",
+        "evidence": "Actual S_PUB32 public int owned by clmain.obj; storage in the zero-filled .data tail, loader-zero. The assembly switch option path consumes it."
+      },
+      "?Exefilename@@3PAGA": {
+        "va": "0x419164",
+        "evidence": "Actual S_PUB32 public pointer owned by clmain.obj; storage sits in .data past the 0x2000 file-backed bytes, i.e. loader-zero with no file initializer. The /Fe option-table row (name \"Fe\", tag 3, target 0x419164) stores the output name through the dispatcher, and compile.obj replaca/dopass/post_compile push the pointer value."
+      },
+      "literal:sha256:4c802cf01894262a37a793c16c1b76c54ca99868c9b2c7228e153a32d24fbe52": {
+        "kind": "literal",
+        "va": "0x4152d4",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "4c802cf01894262a37a793c16c1b76c54ca99868c9b2c7228e153a32d24fbe52",
+        "source_literal": "L\"dll\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; compile.obj .data contribution (section 3 offset 3060, size 8); module_extension (0x4061d2) loads this exact address in its L\"dll\" arm, and the bytes hash independently binds the candidate literal."
+      },
+      "literal:sha256:3a15df958adccdad08247be73e208b540cf5e93e42a4924610c147b277f9317d": {
+        "kind": "literal",
+        "va": "0x40d3a4",
+        "encoding": "utf-16le",
+        "size": 20,
+        "bytes_sha256": "3a15df958adccdad08247be73e208b540cf5e93e42a4924610c147b277f9317d",
+        "source_literal": "L\"netmodule\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; clmain.obj .rdata contribution (0x40d3a4, size 20); module_extension (0x4061d2) loads this exact address in its L\"netmodule\" arm, and the bytes hash independently binds the candidate literal."
+      },
+      "literal:sha256:d5b988e0271d0a83b35e173301ebe36e8bdf42ff62fddba0c5ad8ae676e8f0f4": {
+        "kind": "literal",
+        "va": "0x40d39c",
+        "encoding": "utf-16le",
+        "size": 8,
+        "bytes_sha256": "d5b988e0271d0a83b35e173301ebe36e8bdf42ff62fddba0c5ad8ae676e8f0f4",
+        "source_literal": "L\"exe\"",
+        "evidence": "Full bounded retail literal contents including the final UTF-16 NUL; clmain.obj .rdata contribution (0x40d39c, size 8); module_extension (0x4061d2) loads this exact address in its L\"exe\" arm, and the bytes hash independently binds the candidate literal."
       }
     }
   }

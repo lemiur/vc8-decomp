@@ -9,6 +9,10 @@ run the gate, change a baseline, or update the tracked ledger. Use `--gate`,
 `--ledger`, `--evidence-dir`, `--output-dir`, and `--project` to select inputs.
 Repeat `--binary cl` to limit selected binaries.
 
+For the campaign-wide gate, phase, export, open-source and bootstrap view, run
+`python tools/campaign.py`; see [campaign-status.md](campaign-status.md). Score
+observations in the progress report are not an inventory of pending source work.
+
 ## Banked coverage
 
 The producer is `tools/gate.py`, schema version 1, `gate_kind: retail-splice`.

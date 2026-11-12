@@ -1,0 +1,5 @@
+capstone 5.0.7 (https://github.com/capstone-engine/capstone/archive/refs/tags/5.0.7.tar.gz): core + arch/X86 (the other architectures keep only their *Module.h, which cs.c includes; PowerPC removed); the *_reduce tables dropped (CAPSTONE_X86_REDUCE off)
+
+Local patch: arch/X86/X86IntelInstPrinter.c and X86ATTInstPrinter.c initialise `uint8_t encsize` to 0. It was
+read uninitialised for the far-pointer operands of LCALL/LJMP (detail x86.encoding.imm_size: 0xCC in Debug builds); 0
+is what the Python capstone wheel reports.

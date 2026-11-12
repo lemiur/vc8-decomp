@@ -135,8 +135,14 @@ def source_path(root, path):
     return path.resolve() if path.is_absolute() else (root / path).resolve()
 
 
+def gl_flags(flags, gl):
+    """Strip the opposite whole-program switch so the argv states one /GL mode only."""
+    opposite = '/GL-' if gl else '/GL'
+    return [flag for flag in flags if flag.lower() != opposite.lower()]
+
+
 def compile_unit(source, output, toolroot, flags, env, commands, compiler, gl=True):
-    argv = [str(toolroot / 'bin' / compiler), '/nologo', '/c', '/showIncludes'] + list(flags)
+    argv = [str(toolroot / 'bin' / compiler), '/nologo', '/c', '/showIncludes'] + gl_flags(flags, gl)
     argv += ['/GL' if gl else '/GL-', '/Fo' + str(output), str(source)]
     result = ltcg.run_command(argv, output.parent, env, commands, [output])
     if not output.is_file():

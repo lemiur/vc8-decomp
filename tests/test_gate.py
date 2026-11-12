@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import struct
+import sys
 import tempfile
 import types
 import unittest
@@ -559,6 +560,109 @@ class GateTests(unittest.TestCase):
         emitted.data = emitted.data[:16] + b"\x90" + emitted.data[17:]
         with self.assertRaisesRegex(gate.GateError, "six-byte absolute IAT jump"):
             gate.compare_candidate(retail, emitted, claim, request, bindings, identities)
+
+
+    def test_shared_entry_exact_alias_owner_flags_and_closed_bytes(self):
+        helper = b"\x85\xc0\x74\x02\x90\xc3\xc3"
+        image = Image(0x4000, helper)
+        binding = {"kind": "entry-alias", "aliases": ["alias_a", "alias_b"], "va": 0x1000,
+                   "size": len(helper), "bytes_sha256": gate.digest(helper), "proof": {"path": "proof", "sha256": "a" * 64}}
+        rows = [{"name": name, "va": 0x4000, "is_function": flag, "object_name": "CRT:helper.obj"}
+                for name, flag in (("alias_a", True), ("alias_b", False))]
+        proof = {"binding": binding, "source_rows": rows}
+        identities = gate.MapIdentities()
+        identities[0x4000] = set(binding["aliases"])
+        identities.rows = copy.deepcopy(rows)
+        gate.verify_entry_alias(binding, proof, image, 0x4000, identities)
+        for change in (lambda d: d[0x4000].add("unreviewed"),
+                       lambda d: d[0x4000].remove("alias_b"),
+                       lambda d: d.rows[0].update(object_name="other.obj"),
+                       lambda d: d.rows[0].update(va=0x4001),
+                       lambda d: d.rows[1].update(is_function=True)):
+            altered = copy.deepcopy(identities)
+            change(altered)
+            with self.assertRaises(gate.GateError):
+                gate.verify_entry_alias(binding, proof, image, 0x4000, altered)
+        image.data = helper[:-1] + b"\x90"
+        with self.assertRaisesRegex(gate.GateError, "bytes differ"):
+            gate.verify_entry_alias(binding, proof, image, 0x4000, identities)
+        for bad in (b"\xc3\x90", b"\xeb\x7f", b"\xff\xe0", b"\xe8\x00\x00\x00\x00\xc3"):
+            with self.assertRaises(gate.GateError):
+                gate.verify_closed_helper(Image(0x4000, bad), 0x4000, len(bad), gate.digest(bad))
+
+    def test_shared_entry_reopens_exact_retail_pdb_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            image = Image(0x1000, b"\xc3")
+            image.path = str(root / "retail.exe")
+            pdb = root / "retail.pdb"
+            pdb.write_bytes(b"synthetic PDB")
+            rows = [{"name": name, "va": 0x1000, "module": "helper.obj", "module_index": 2,
+                     "module_candidates": [2], "public_flags": flag}
+                    for name, flag in (("alias_a", 2), ("alias_b", 0))]
+            extracted = {"functions": [rows[0]], "data": [rows[1]]}
+            proof_rows = [dict(rows[0], group="functions"), dict(rows[1], group="data")]
+            proof = {"schema_version": 1, "kind": "compiler-stack-probe-shared-entry-identity",
+                     "compared_cfg_extent": 1, "retail_bytes_sha256": image.sha256(), "candidate_bytes_sha256": image.sha256(),
+                     "retail_identity": {"binary_sha256": image.sha256(), "pdb_path": str(pdb), "pdb_sha256": gate.digest(pdb.read_bytes())},
+                     "retail_public_alias_records": proof_rows,
+                     "candidate_alias_records": [{"name": r["name"], "va": 0x4000} for r in rows]}
+            path = root / "proof.json"
+            path.write_text(json.dumps(proof))
+            binding = {"aliases": ["alias_a", "alias_b"], "va": 0x1000, "size": 1, "bytes_sha256": image.sha256(),
+                       "proof": {"path": str(path), "sha256": gate.digest(path.read_bytes())}}
+            with patch.dict(sys.modules, {"symbols": types.SimpleNamespace(extract=lambda *_: extracted)}):
+                gate.load_entry_alias(binding, image, root)
+                rows[1]["public_flags"] = 2
+                with self.assertRaisesRegex(gate.GateError, "public alias identity/owner"):
+                    gate.load_entry_alias(binding, image, root)
+                rows[1]["public_flags"] = 0
+                binding["aliases"].append("invented")
+                with self.assertRaises(gate.GateError):
+                    gate.load_entry_alias(binding, image, root)
+                binding["aliases"].pop()
+                pdb.write_bytes(b"tampered")
+                with self.assertRaisesRegex(gate.GateError, "provenance hash"):
+                    gate.load_entry_alias(binding, image, root)
+
+    def test_shared_entry_resolves_only_the_reviewed_call_without_counting_helper(self):
+        helper = b"\x85\xc0\x74\x02\x90\xc3\xc3"
+        retail = Image(0x1000, b"\xe8" + struct.pack("<i", 16 - 5) + b"\xc3" + bytes(10) + helper)
+        emitted = Image(0x4000, b"\xe8" + struct.pack("<i", 24 - 5) + b"\xc3" + bytes(18) + helper)
+        identity = "entry-alias:alias_a|alias_b"
+        binding = {"kind": "entry-alias", "aliases": ["alias_a", "alias_b"], "va": 0x1010, "size": len(helper),
+                   "bytes_sha256": gate.digest(helper), "proof": {"path": "proof", "sha256": "a" * 64}, "evidence": "fixture"}
+        aliases = gate.MapIdentities()
+        aliases[0x4018] = set(binding["aliases"])
+        aliases.rows = [{"name": name, "va": 0x4018, "is_function": flag, "object_name": "CRT:helper.obj"}
+                        for name, flag in (("alias_a", True), ("alias_b", False))]
+        verified = {identity: {"binding": binding, "source_rows": copy.deepcopy(aliases.rows)}}
+        boundary = {"status": "verified", "evidence": "complete synthetic caller"}
+        claim = {"candidate_va": 0x4000, "retail_va": 0x1000, "size": 6, "boundary": boundary,
+                 "bytes_sha256": gate.digest(emitted.data[:6]), "referents": [
+                     {"offset": 1, "width": 4, "kind": "rel32", "target": 0x4018, "identity": identity, "resolved": True}]}
+        request = {"retail_va": 0x1000, "size": 6, "boundary": boundary}
+        code, refs = gate.compare_candidate(retail, emitted, claim, request, {identity: binding}, aliases, entry_aliases=verified)
+        self.assertEqual((code, refs), (retail.data[:6], 1))
+        with self.assertRaisesRegex(gate.GateError, "not independently verified"):
+            gate.compare_candidate(retail, emitted, claim, request, {identity: binding}, aliases)
+
+    def test_current_r2_review_must_pin_exact_entry_alias_proof(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config").mkdir()
+            record = {"path": "helper-proof.json", "sha256": "a" * 64}
+            evidence = root / "review.json"
+            evidence.write_text(json.dumps({"entry_alias_proofs": [record]}))
+            admission = {"binary": "cl", "va": 0x1000, "source_path": "matching/cl/unit.cpp",
+                         "source_sha256": "b" * 64, "scope_sha256": "c" * 64}
+            review = dict(admission, checks={"R2": {"evidence": [{"path": str(evidence), "sha256": gate.digest(evidence.read_bytes())}]}})
+            policy = root / "config/rule-exceptions.json"
+            policy.write_text(json.dumps({"reviews": [review]}))
+            rules = {"policy_sha256": gate.digest(policy.read_bytes())}
+            gate.require_evidence_review([record], admission, rules, root, "entry_alias_proofs", "shared-entry proof")
+            with self.assertRaisesRegex(gate.GateError, "not pinned by current R2"):
+                gate.require_evidence_review([dict(record, sha256="d" * 64)], admission, rules, root, "entry_alias_proofs", "shared-entry proof")
 
 
 if __name__ == "__main__":

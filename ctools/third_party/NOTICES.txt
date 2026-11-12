@@ -1,0 +1,7 @@
+Third-party code vendored in ctools/third_party. These libraries are not covered by the toolkit's CC BY 4.0 licence;
+each keeps its own licence, whose text is in its folder. Each folder's VERSION file names the release and its source.
+
+capstone 5.0.7      capstone/     (x86 only) BSD-3-Clause (LICENSE.TXT); the LLVM-derived parts: LICENSE_LLVM.TXT;
+                                  authors: CREDITS.TXT
+PCRE2 10.44         pcre2/        BSD-3-Clause with the PCRE2 exception for binary-like distributions (LICENCE);
+                                  authors: AUTHORS

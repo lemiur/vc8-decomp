@@ -93,6 +93,10 @@ class ToolchainTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "layout output must be empty"):
                     probe.build_layout_witness({}, temp, *LAYOUT)
 
+    def test_layout_witness_rejects_unregistered_type(self):
+        with self.assertRaisesRegex(ValueError, "unsupported layout witness type"):
+            probe.build_layout_witness({}, "unused", type_name="invented-layout")
+
     def test_layout_witness_requires_included_header_provenance(self):
         import ltcg
         with tempfile.TemporaryDirectory() as temp:

@@ -155,7 +155,8 @@ def markdown(reports):
         if report.get("gate_run_id"):
             lines.append(f"- Coverage snapshot: gate `{report['gate_run_id']}` at {report.get('gate_observed_at') or 'unspecified time'}.")
         candidates = report["candidate_scores"]
-        lines.append(f"- Score observations: {len(candidates)}; MATCH-PENDING: {sum(row['candidate_status'] == 'MATCH-PENDING' for row in candidates)}; lost matches: {sum(row['lost_match'] for row in candidates)}.")
+        lines.append(f"- Score observations: {len(candidates)}; pending score observations: {sum(row['candidate_status'] == 'MATCH-PENDING' for row in candidates)}; lost matches: {sum(row['lost_match'] for row in candidates)}.")
+        lines.append("- Open source functions are inventoried separately by `python tools/campaign.py`; missing score observations do not imply no pending work.")
     return "\n".join(lines) + "\n"
 
 

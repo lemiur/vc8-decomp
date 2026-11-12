@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "binary": "cl",
+  "language": "c++",
+  "units": {
+    "matching/cl/util.cpp": {
+      "compile_flags": ["/O1", "/Zc:wchar_t-", "/GF"],
+      "evidence": "Synthetic: an evidence note the adapter ignores."
+    },
+    "matching/cl/merr.c": {
+      "remove_compile_flags": ["/EHsc"],
+      "compile_flags": ["/O1", "/D_TESTBLD"],
+      "gl": false,
+      "evidence": "Synthetic."
+    },
+    "matching/cl/listed_only.cpp": {
+      "compile_flags": ["/O1"],
+      "link_flags": ["advapi32.lib"],
+      "evidence": "Synthetic: listed, not on disk."
+    }
+  }
+}

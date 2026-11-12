@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <wctype.h>
 #include <wchar.h>
+#include <string.h>
+#include "../../include/cl/dos.h"
+#include <io.h>
+#include <limits.h>
 
 // Reconstruction unit named for PDB contribution owner util.obj.
 // Original source filename and parameter spelling are unresolved.
@@ -110,4 +114,55 @@ int __cdecl IsRunningUnderIDE(HANDLE* output)
         return 1;
     }
     return 0;
+}
+
+// FUNCTION: cl 0x408072
+// SYMBOL: ?strqcpy@@YAPAGPAGPBG@Z
+// stop: complete candidate; wide-character promotion and scheduling differ.
+unsigned short* __cdecl strqcpy(unsigned short* destination, const unsigned short* source)
+{
+    unsigned short* output = destination;
+    const unsigned short* input = source;
+    int backslashes = 0;
+    int quote = 0;
+
+    for (; *input; ++input) {
+        if (iswspace(*input))
+            quote = 1;
+        if (*input == '"')
+            while (backslashes-- >= 0)
+                *output++ = '\\';
+        backslashes = *input == '\\' ? backslashes + 1 : 0;
+        *output++ = *input;
+    }
+    if (quote) {
+        memmove(destination + 1, destination, (output - destination) * sizeof(*output));
+        ++output;
+        *destination = '"';
+        while (backslashes-- > 0)
+            *output++ = '\\';
+        *output++ = '"';
+    }
+    *output = 0;
+    return destination;
+}
+
+// FUNCTION: cl 0x408290
+// SYMBOL: ?initscreenline@@YAHXZ
+int __cdecl initscreenline()
+{
+    if (_isatty(1))
+        return max(screen_length() - 1, 1);
+    return INT_MAX;
+}
+
+// DATA: cl 0x419fe8
+// Invented private object name; the original name and grouping are unresolved.
+struct __timeb64 g_startTime;
+
+// FUNCTION: cl 0x4082b9
+// SYMBOL: ?starttiming@@YAXXZ
+void __cdecl starttiming()
+{
+    _ftime64_s(&g_startTime);
 }

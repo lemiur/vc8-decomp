@@ -17,7 +17,16 @@ table) and `--tuples NAMES` (they carry the function's instruction tuples, `opco
 `--preset NAME` (repeatable) adds a named set of breaks and tuple points: `color` (OrderGlobregs,
 ChoosePhysReg), `immed` (the 64-cycle routines), `reload` (Spill, RegSimpleAssignBody, RegAssign, LoFinalLower,
 SsaPeepsMd, tuples at each), `emit` (CgBottomUpOrder, ReadFunction, EmitFunction; module-level, so without
-`--function`). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset is given.
+`--function`), `stack` (AddStackElement, ColorStackElements, QSortColors: stack packing, see "Stack
+packing"), `globreg` (Spillcosts, SpillcostsFold, OrderGlobregs, ChoosePhysReg: the colouring priority's
+terms, see "Spillcosts"), `reguse` (MscRecordInterProcRegInfo, LoAddCallScratchRegs: the
+interprocedural register-use summary, see c2-inline-trace.md "Register use at calls"), `flexparams` (MdmFlexParams, MdmAllocateFlexParam,
+MdmAllocateXmmFlexParam: each custom-convention parameter register, the callee's entry load that gave it,
+and the parameter loads left on the stack, see c2-inline-trace.md "Parameter registers"). The default `--break ChoosePhysReg` applies only when neither `--break` nor a preset
+is given. `--link-rsp LINK.rsp [--linker link.exe]` instead of `--source` traces link.exe on a /LTCG link's
+response file: its link-time code generation loads the same c2.dll, so every break and preset applies to the
+functions the link compiles (`--function` as for cl.exe). A break name may also be an internal point (`INTERNAL_POINTS`: a public plus an offset, its
+instruction bytes checked against `c2.dll` before the run); internal points are entry-only.
 
 `python tools/c2_trace.py emit-order --source X.cpp [--flags ...] [--include DIR] --out R.json [--all-sections]
 [--no-trace]` compiles the unit with `/Bk` (the IL is kept in `R.work/il_*`), predicts the compile order and
@@ -79,10 +88,46 @@ Called by `Color` for each globreg in that order. Entry: `class`, `globreg`, `sy
 `refs`, `prefs` (the globreg's preference list: other globreg and weight), `allowed` (physical register numbers),
 `interferes` (globreg numbers). Return: `chosen` (register name from `_RegName`), `candidates` (allowed
 registers in `_RegOrders[class]` order with their `_ChoosePhysReg_weights`), `tie` when several share the
-lowest weight. The routine adds interfering globregs' preference weights and 100 x refs of interfering
+lowest weight. The routine adds interfering globregs' preference weights and 100 x cost (+0x40) of interfering
 globregs restricted to one register, subtracts the globreg's own preference weights, and keeps the first
 register in `_RegOrders` order with the strictly lowest weight: on a tie the earlier register (esi before edi
 before ebx before ebp for class 0) wins, so the coloring order decides.
+
+### `Spillcosts` (color.obj): the priority
+
+`Spillcosts([esp+4]=function, [esp+8]=class, [esp+0xC]=bv)`, `ret 0xC`; `Color` calls it per class before
+`SpillObvious` and `OrderGlobregs` (0x10B0D155), and again in the split loop (0x10B0D2AB). Entry and exit:
+`before` / `after`, every globreg of the class (`_GlobregHash`, 1024 buckets, chain +0x30; class
+`_RegClass[word [sym+0x10] >> 12]`, as `OrderGlobregs`) with the `OrderGlobregs` fields, `pending` (+5 bit 0:
+not yet in `_SortedGlobregs`; only those accumulate) and `assigned` (+0x10).
+
+The block weight w is 1 without `_Speed`, `count x 10000 / _PogoMaxCount + 1` under PGO (`_PogoFlag` 2,
+block+0x190), else `1 << byte [block+0x17E]`, 2^(loop depth) (0x10B10659..0x10B106EC). Per reference (tuple
++9 bit 0, leaf kind 1, the class's globreg of kind 2, unassigned, +5 bit 0) the cost c is added to +0x18
+(the block's C), +0x24 (refs) is incremented and c x w added to +0x40 (cost):
+
+- a source leaf: `CmdCanDirectSubstitute` ? `CmdSubCost` : `CmdLoadCost` (0x10B10966); under `_Speed`
+  `CmdLoadCost` is 2 for a variable and 1 for an immediate (kind 0xD), `CmdSubCost` 2 for a variable;
+- a destination leaf: 2 under `_Speed` when not substitutable (0x10B10FA1);
+- opcode 0x296 (exit copy) and 0x295 (enter copy) subtract their cost x w from +0x40 only.
+
+`SpillcostsFold` (internal point Spillcosts+0x1064 = 0x10B11484, `imul edi, ebp`), once per block, entry
+only: `n` = EDI, N_b (the globregs referenced in the block plus the bv of already ordered ones), `w` = EBP,
+`block` (position from `[[_Function]+8]`), `depth` (byte +0x17E), `loop` (+0x16C), `pgo`, `dead` (ECX: the
+globregs whose last use is in the block) and `live` (EBX: those live through it), both linked by +0x14, each
+`globreg`, `c` (+0x18) and `assigned`, `live` also `referenced` (+6 bit 0x10); and the block's own tuples
+(from its head +0x1C to its end +0x20, linked by +0): `tuples` (instructions), `enter` and `exit` (those with
+opcode 0x295, 0x296) and `syms` (the front-end symbols their leaves name, effective addresses opened, as
+`name$fe` in first-use order: an inlined body's locals keep their callee's descriptors, which tells inlined
+code from the function's own). The code that follows adds
+c x N_b x w_b to +0xC of each dead unassigned entry and each referenced live entry, and subtracts N_b x w_b
+(w_b under PGO) from each live unreferenced one, so at `/O2`:
+
+    priority = sum over blocks b of N_b x 2^depth_b x (C_b, or -1 when live through b unreferenced)
+
+There is no division by span or degree and no callee-save cost. `BetterToDefer` can later set a globreg's
+priority to its components' minimum minus 1 and re-insert it, and `InsertByBenefit` places split globregs, so
+`ChoosePhysReg`'s order can differ from the `OrderGlobregs` snapshot.
 
 ### Symbols, immediates, globregs, tuples
 
@@ -110,8 +155,10 @@ before ebx before ebp for class 0) wins, so the coloring order decides.
 | `globreg` | Globreg+0x1C, `_NextGlobregNum` at creation (`GrgNewGlobreg`) |
 | `sym`, `symnum` | Globreg+0 (c2 symbol), symbol+0x1C: c2's own symbol number, not c1xx's `$N` listing number |
 | `priority` | Globreg+0x0C, the sort key (spill benefit) `InsertInList` compares first |
-| `lastref` | Globreg+0x44: `RewriteAsGlobregs` stores its running tuple ordinal at each rewritten reference, so the ordinal of the last one |
-| `refs` | Globreg+0x40 |
+| `lastref` | Globreg+0x44: `RewriteAsGlobregs` stores its running tuple ordinal at each rewritten def (0x10B5B099; one counter, blocks in list order, tuples backward within a block), so the earliest def in the last block that defines the value |
+| `refs` | Globreg+0x24: references counted by `Spillcosts` |
+| `cost` | Globreg+0x40: the weighted spill cost (`Spillcosts`: each reference's cost x block weight, less the enter/exit copies) |
+| `kind`, `name`, `fe` | the globreg's c2 symbol: kind byte +4 (3 temporary, 4 local, 5 parameter, 0xD immediate), front-end name and number |
 | `allowed` | sparse bit vector at Globreg+0x20 (header -> nodes `{base, lo32, hi32, next}`) |
 | `chosen` | Globreg+0x10 = `&_RegSym[reg]` (stride 0x60) |
 | symbol | `_BESymTab` slot: `[[_BESymTab]+4][n >> 5] + 0xC + (n & 31) * 0x60` (`SymKeyToSym`); +0 front-end descriptor, +4 kind, +8 base symbol, +0x1C number, +0x24 offset in the base |
@@ -359,6 +406,98 @@ global whose constructor calls a later definition, a function-local static with 
 (`compiler`, `lib`, `user`, `".CRT$XCT"`, and the default followed by `lib`, `".CRT$XCV"` or `"mysec"`)
 are predicted exactly at `/O2` and `/Od`, with and without `/Zi`; traced, `f1` and the default-then-`lib`
 probe at `/O2` and `f1` at `/Od` give the modelled `CgBottomUpOrder` and `ReadFunction` order.
+
+## Stack packing
+
+`--preset stack` breaks on `AddStackElement`, `ColorStackElements` and `QSortColors` (stack.obj) and decodes
+how c2 gives the locals and temporaries of an optimised function their frame offsets.
+
+**Gate.** `StkStackAlloc` calls `StackPacking` when `_Globopt_flag` is set and neither `_FNeedFreshStack`
+(`/RTCs`, EnC) nor `_FWvmSafe` is. Otherwise `StkAllocateLocals` gives each local its own slot at its first
+reference in tuple order, with no sharing. `StackPacking` returns early when every element is a parameter.
+
+**Elements.** `CollectStackElements` walks every instruction tuple's source (+0x28) and destination (+0x2C)
+leaves. It skips tuples with +9 bit 0 clear and opcode 0x2D9. It calls `AddStackElement(EDX=sym)` once for
+each counted reference whose base symbol (sym+8) has kind 3 (c2 temporary), 4 (front-end automatic) or
+5 (parameter). The decoder labels each call by its return address:
+
+- `leaf`: a symbol leaf, leaf+0x18.
+- `address`: the base of an address or memory leaf, leaf+0x24.
+- `points-at`: every member of the points-at set (`_PointsAtSets`, through `_PASMap`) of a may-alias leaf
+  of a kind-0x16, opcode-0x2CE tuple. In the avp3 trace these are the inline-assembly blocks, each counted
+  once for its source leaf and once for its destination leaf; every address-taken local the block may
+  touch gets those references.
+- `pogo`: PGO only.
+
+`AddStackElement` keeps the symbols in a list (`_symStackElements`, next sym+0x30, prev +0x34). The list is
+ordered by size (sym+0x20) ascending, then by reference count (sym+0x38) descending:
+
+- A new symbol goes to the front of its size group with count 1.
+- A symbol whose count goes up moves forward past the symbols of its size with a strictly lower count.
+- `_CanonLocal` is skipped.
+- A symbol with sym+6 bit 0x40 gets bit 4 ("can't pack": its `_bvLiveOnDef` set becomes all elements).
+
+`EnumerateStackElements` numbers the list: sym+0x3C = index, `_symNumToSym[index]` = sym. The per-element
+interference set `_bvLiveOnDef[index]` (sparse bit vector) comes from `ComputeLocalLiveness` and
+`ComputeLiveOnDef`.
+
+**Colours.** `ColorStackElements([esp+4]=Function, ...)`, ret 8:
+
+1. Each parameter gets its own colour.
+2. A local may then join a parameter colour: size <= colour + 8, and no interference.
+3. `colorElemental` scans the other colours from the newest down and takes the first that fits: size <=
+   2 x colour + 8, the element not in the colour's interference set (+4), and no common bit between the
+   element's set and the members (+0). Otherwise it opens a new colour.
+
+A merge adds the member's count to the weight (+0xC) and raises the size (+8) and alignment (+0x14) to the
+member's. `_Colort` has a stride of 0x1C:
+
+| offset | field |
+|---|---|
+| +0 | members |
+| +4 | interference set |
+| +8 | size |
+| +0xC | weight |
+| +0x10 | the offset of a parameter colour |
+| +0x14 | alignment |
+| +0x18 | /GS buffer level byte (`StkGSBufferLevel`) |
+
+`_numOfColors` holds the count.
+
+**Sort.** `QSortColors(ECX=lo, EDX=hi, [esp+4]=dir)`, ret 4, sorts `_Colort[_numOfParameters .. _numOfColors-1]`
+with `StkColorCmp`. It runs only when the frame estimate exceeds 0x80 or the function has a /GS buffer
+(`_Module+0x44C & 0x20000` with `Function+0x5C`, or `Function+0xAC & 1`). Otherwise the colours keep their
+creation order. The sort is a recursive quicksort and is not stable. With dir 0 (dir = `Function+0x64` ==
+0x10D0A1B0), lower indices get:
+
+1. a lower /GS level;
+2. within a level, a higher density, `weight * 1000 / size` (signed integer division).
+
+**Offsets.** The colours are allocated from the last index down with `allotemp(size, align)`
+(`_Alloc_local = -alignup(size - _Alloc_local, align)`), so the frame grows downward. The last colour (the
+highest /GS level and lowest density) sits at the top of the frame, and colour 0 sits nearest ESP. Each
+member gets the colour's offset:
+
+- kind 4: in descriptor+0x18, with descriptor+0x20 |= 0x800;
+- otherwise: in sym+0x28.
+
+All members get sym+5 |= 0x20. A non-zero `_EbpAdj` is then added by `FixOffsetsForEbpAdj`.
+
+**Decoders.**
+
+- `ColorStackElements` reads everything at return, before `StackPacking` frees `_Colort`. It returns
+  `elements` and `colors`:
+  - each element: `index` (list position), `symnum`, `kind`, `name`, `fe`, `size`, `align`
+    (1 << (sym+0x2C - 1)), `refs` (sym+0x38), `offset`, `color`, `live_on_def` and the
+    `cant_pack`/`addr_taken`/`allocated` flags;
+  - each colour: `members`, `interferes`, `size`, `weight`, `align`, `gs`, `density` and `param_offset`.
+
+  It also returns `num_parameters`, `ebp_adj`, `alloc_local`, `max_align` (Function+0x48) and `dir`.
+- `QSortColors` logs `lo`, `hi`, `dir` and `outer`. The outermost call (lo = `_numOfParameters`,
+  hi = `_numOfColors - 1`) also carries the colours `before` and `after`.
+- `AddStackElement` logs `symnum`, `name`, `fe`, `site` and `tuple_text`.
+
+The addresses of the return sites and of the `dir` object are those of the pinned c2.dll.
 
 ## Limits
 

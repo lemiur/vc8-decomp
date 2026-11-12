@@ -16,3 +16,6 @@ __pycache__/
 .worktrees/
 ref-rtm/
 tools.local.json
+
+# ctools machine-specific configuration
+config/ctools.local.json

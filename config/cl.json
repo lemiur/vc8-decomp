@@ -15,9 +15,10 @@
     },
     "matching/cl/mpcl.cpp": {
       "compile_flags": [
-        "/O1"
+        "/O1",
+        "/Zc:wchar_t-"
       ],
-      "evidence": "Actual SP1 /GL + /LTCG env_size compile emits all 45 retail bytes with /O1; /O2 differs at offset 13. The empty thread_print body is also exact but does not distinguish optimization flags."
+      "evidence": "Actual SP1 /GL + /LTCG env_size compile emits all 45 retail bytes with /O1; /O2 differs at offset 13. The empty thread_print body is also exact but does not distinguish optimization flags. /Zc:wchar_t- is required by the unit's public wide-string ABI evidence: every PDB parameter spelling is PBG/PAG (unsigned short) rather than PB_W/PB_W, and the real wide CRT calls (wcslen, swscanf_s) take the same const unsigned short pointers."
     },
     "matching/cl/util_watson.cpp": {
       "compile_flags": [
@@ -53,9 +54,164 @@
     },
     "matching/cl/dos.cpp": {
       "compile_flags": [
+        "/O1",
+        "/Zc:wchar_t-"
+      ],
+      "evidence": "Complete Filter23B, screen_length92B and redirect22B probes match; redirect additionally requires its evidence-backed real escaped data root, recorded per candidate. ShutDownDLL's 33 retail bytes also match with /O1. The PBG spelling of ?ExecuteCleanupPass@@YAHPAUpassinfo_s@@PBG@Z and the other dos publics prove the original unit was compiled in typedef-wchar mode, so /Zc:wchar_t- is required for the reconstructed wchar_t declarations to mangle as unsigned-short pointers."
+    },
+    "matching/cl/crt_pesect.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/GL",
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/GS",
+        "/D_CRTBLD",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain CRT object, not compiler-owned /GL code: config/cl.json crt_code requires a separate profile, so the unit is built with gl:false and an explicit /GL- (the common /GL is removed). Installed-era SP1 crt/src/pesect.c (SHA-256 recorded in the unit) is the source; its own pragma optimize(\"t\", on) makes these bodies speed-optimized. Measured: /O1 and /O2 both reproduce the complete non-referent bytes of all three retail bodies; /O1 is pinned, /O2 is not distinguished. /GS is measured required: a /GS- build of the same source changes __IsNonwritableInCurrentImage's SEH frame in 166 of 187 bytes, because retail's frame stores ___security_cookie (xor [ebp-8],eax) and calls __except_handler4. msvcrt.lib (installed 8.0.50727.762, SHA-256 recorded in the unit) supplies the real era __except_handler4 and ___security_cookie members; no stub bodies."
+    },
+    "matching/cl/crt_atonexit.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/GL",
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/GS",
+        "/D_CRTBLD",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain CRT object, not compiler-owned /GL code: built with gl:false and an explicit /GL- (the common /GL is removed). Installed-era SP1 crt/src/atonexit.c (SHA-256 recorded in the unit) is the source; its own client-side _DLL context is reproduced in the header. Measured: /O1 reproduces every non-referent byte of the retail 165-byte _onexit span and the 18-byte atexit span; /O2 differs at the _onexit SEH prolog (it adds a local frame), so /O1 is required. /GS is also measured required: /GS- changes the _onexit SEH prolog in 72 of 165 bytes and even the rel32 call inside atexit. msvcrt.lib (installed 8.0.50727.762) supplies the real era __SEH_prolog4/__SEH_epilog4/__except_handler4 bodies and the _lock/__unlock/__dllonexit client thunks; the msvcr80.dll import slots are the source's own _decode_pointer/_encode_pointer/_onexit references."
+    },
+    "matching/cl/crt_secchk.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/GL",
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/GS",
+        "/D_CRTBLD",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain CRT object, not compiler-owned /GL code: built with gl:false and an explicit /GL- (the common /GL is removed). Installed-era SP1 crt/src/intel/secchk.c (SHA-256 recorded in the unit) is the source; its naked __asm body is the only attributable form of the 15 retail bytes (cmp/jne/rep ret/jmp), because VC8 x86 C emits a plain c3 and the opposite branch/jmp order. /O1 and /O2 are not distinguished by this body. msvcrt.lib supplies the real era ___security_cookie (gs_cookie.obj) and ___report_gsfailure (gs_report.obj) bodies. The R18 exception is recorded as pending in config/cl-candidates.json until the integration owner admits it."
+    },
+    "matching/cl/loadui.cpp": {
+      "gl": false,
+      "compile_flags": [
+        "/O1",
+        "/Zc:wchar_t-"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "PDB module 6 (loadui.obj) bodies, measured with the installed SP1 tools. /Zc:wchar_t- is required: all wide pointers, L\"\" literals and the CRT prototypes mangle as unsigned short (PAG, G) and the retail literal symbols use the typedef-wchar_t spelling. This unit is built with gl=false because the retail bodies are plain-c2 output: their prologues are the non-LTCG `lea ebp,[esp-frame]` layout (0x409331 lea ebp,[esp-0xa38], 0x409756 lea ebp,[esp-0x790], 0x40983c lea ebp,[esp-0xf8c]), while an actual /GL + /LTCG build of the same source emits an aligned esp-relative frame (mov ebp,esp; and esp,-8) and scores 5.66/6.96 instead of 100/100. gl=false is a measured per-unit fact, not a change to the project /GL default. /O1 is the measured optimization for these bodies. msvcrt.lib supplies the MSVCR80.dll import definitions for wcslen/wcscpy_s/wcsncpy_s/wcsncat_s/wcscmp/_itow_s/_wtoi/_wtol/_wdupenv_s/free/memset; the linker-generated __chkstk/__alloca_probe helper is byte-identical to retail. Default /GS supplies the observed ___security_cookie frame checks."
+    },
+    "matching/cl/compile.cpp": {
+      "compile_flags": [
+        "/O1",
+        "/Zc:wchar_t-"
+      ],
+      "evidence": "Measured control for the compile.obj unit. /O1 is required: the default /Od emits a frame-pointer prologue for the 14-byte PstNext template instantiation, while the retail body is the bare compare/indirect-load/return sequence (score 0.0 at /Od, 100.0 at /O1). /Zc:wchar_t- is required for the PAG/PBG unsigned-short manglings shared by basename, filename and pathname; the default native wchar_t (_W) does not decorate. No /GL or /LTCG change is made."
+    },
+    "matching/cl/crt_gs.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/D_CRTBLD"
+      ],
+      "evidence": "Plain C CRT support object (PDB module 31, build\\intel\\dll_obj\\gs_support.obj): no LTCG IL, so /GL- is required and was used for every measured build. Source is the installed-era crt/src/gs_support.c (SHA-256 AD03EE25...FBEE8, file time 2006-12-01). /O1 is measured: the complete 148-byte body is byte-identical outside relocation operands, while /O2 produces a different body. /D_CRTBLD matches the CRT build context; _DEBUG is absent, so the debug late-cookie check is inert, as retail proves."
+    },
+    "matching/cl/crt_gs_cookie.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/D_CRTBLD"
+      ],
+      "evidence": "Data-only defining unit for gs_cookie.obj's two .data cookies (PDB module 29, retail 0x00417c44/0x00417c48). /GL- keeps it a plain object so the group links without LTCG. /O1 matches the measured CRT flag set and has no effect on data."
+    },
+    "matching/cl/crt_fp8.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/EHsc"
+      ],
+      "compile_flags": [
+        "/O1",
+        "/D_CRTBLD",
+        "/D_CRTIMP=",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain C CRT support object (PDB module 44, build\\intel\\dll_obj\\fp8.obj): /GL- required. Source is the installed-era crt/src/intel/fp8.c (SHA-256 FC1AF327...5D6B). /D_CRTBLD plus an empty _CRTIMP reproduce retail's non-dllimport internal CRT calls, which resolve to the msvcr80.dll _controlfp_s/_invoke_watson import thunks through the era import library; crt/src is needed for internal.h. /O1 is measured: all 41 bytes are identical outside the two thunk relocations."
+    },
+    "matching/cl/crt_initsect.c": {
+      "gl": false,
+      "remove_compile_flags": [
+        "/EHsc"
+      ],
+      "compile_flags": [
         "/O1"
       ],
-      "evidence": "Complete Filter23B, screen_length92B and redirect22B probes match; redirect additionally requires its evidence-backed real escaped data root, recorded per candidate."
+      "evidence": "Plain C CRT support object (PDB module 52, ..\\build\\intel\\dll_obj\\initsect.obj): /GL- required. The installed tree does not ship initsect.c, so the body is decoded from retail (two 36-byte table runners). /O1 is measured: both 36-byte runners are identical outside their two absolute table references. /Oy- was also tested and rejected: it changes the runner register allocation without any frame-pointer benefit (the runners have no locals)."
+    },
+    "matching/cl/crt_unhandld.cpp": {
+      "gl": false,
+      "compile_flags": [
+        "/O1",
+        "/D_CRTBLD",
+        "/D_CRTIMP=",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain C++ CRT support object (PDB module 36, build\\intel\\dll_obj\\unhandld.obj): /GL- required; the installed tree does not ship unhandld.cpp, so both bodies are decoded from retail (61 and 14 bytes). /O1 is measured: every non-relocation byte of both bodies matches. /D_CRTBLD enables the crt/src internal headers and an empty _CRTIMP reproduces retail's non-dllimport terminate reference, which resolves to the MSVCR80.dll import thunk through the era import library; the real terminate declaration is crt/src/eh.h:65."
+    },
+    "matching/cl/crt_ehvecdtr.cpp": {
+      "gl": false,
+      "compile_flags": [
+        "/O1",
+        "-d1Binl",
+        "/D_CRTBLD",
+        "/D_CRTIMP=",
+        "/IC:/Program Files (x86)/Microsoft Visual Studio 8/VC/crt/src"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain C++ CRT support object (PDB module 28, build\\intel\\dll_obj\\ehvecdtr.obj): /GL- required. The CRT build consumes a prebuilt ehvecdtr.obj, so the body is decoded from retail (94 bytes) and the unit is reconstructed from that decode. /O1 is measured: all 78 non-relocation bytes are identical, including the classic __SEH_prolog4/__SEH_epilog4 frame and the inlined static filter; /O2 was tested and rejected (it uses the C++ EH frame prolog and a different 93-byte body). -d1Binl is the era CRT C++ flag (crt/src/makefile.sub CXXFLAGS) and is required for the proven void (__thiscall *)(void *) callback type. __SEH_prolog4/__SEH_epilog4 and the terminate import come from the era import library; linking it is the only way to obtain the assembly SEH runtime the original build also linked, whose source is not in the installed tree."
+    },
+    "matching/cl/crt_atl.cpp": {
+      "gl": false,
+      "compile_flags": [
+        "/O1"
+      ],
+      "link_flags": [
+        "msvcrt.lib"
+      ],
+      "evidence": "Plain C++ ATL static object (PDB module 54, INTEL\\Release_1\\atltrace.obj): /GL- required. Bodies are the installed-era atlconv.h inline definitions emitted out of line by atltrace.cpp's address-taking initializer (both file hashes recorded in include/cl/crt_atl.h). /O1 is measured: all three bodies are byte-identical outside relocation operands (101, 4 and 100 bytes) and /GS is active in the Fake/thunk bodies exactly as retail. The era import library supplies the assembly __security_check_cookie and ___security_cookie objects, whose source is secchk.c/gs_cookie.c in another lane; no stub or synthetic byte is used."
     }
   },
   "flags": {
@@ -98,5 +254,37 @@
   "notes": [
     "No probe has pinned optimization, packing, calling convention, RTTI, or exception suboptions.",
     "No function is admitted by this configuration; only the independent byte gate counts source."
-  ]
+  ],
+  "dependencies": {
+    "matching/cl/clmain.cpp": [
+      "matching/cl/mpcl.cpp",
+      "matching/cl/util.cpp",
+      "matching/cl/dos.cpp",
+      "matching/cl/util_watson.cpp"
+    ],
+    "matching/cl/mpcl.cpp": [
+      "matching/cl/clmain.cpp",
+      "matching/cl/util.cpp",
+      "matching/cl/dos.cpp",
+      "matching/cl/util_watson.cpp"
+    ],
+    "matching/cl/util.cpp": [
+      "matching/cl/clmain.cpp",
+      "matching/cl/mpcl.cpp",
+      "matching/cl/dos.cpp",
+      "matching/cl/util_watson.cpp"
+    ],
+    "matching/cl/dos.cpp": [
+      "matching/cl/clmain.cpp",
+      "matching/cl/mpcl.cpp",
+      "matching/cl/util.cpp",
+      "matching/cl/util_watson.cpp"
+    ],
+    "matching/cl/util_watson.cpp": [
+      "matching/cl/clmain.cpp",
+      "matching/cl/mpcl.cpp",
+      "matching/cl/util.cpp",
+      "matching/cl/dos.cpp"
+    ]
+  }
 }

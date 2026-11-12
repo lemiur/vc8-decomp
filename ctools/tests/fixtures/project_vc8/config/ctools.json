@@ -1,0 +1,51 @@
+{
+  "schema": "decompkit-project/1",
+  "vars": {
+    "toolchain_root": {"$from": "config/project.json#/toolchain_root"},
+    "symbols": "${primary}/symbols"
+  },
+  "targets": {
+    "cl":   {"image": "${toolchain_root}/bin/cl.exe",
+             "sha256": {"$from": "config/retail.json#/builds/cl/sha256"},
+             "image_base": {"$from": "config/retail.json#/builds/cl/image_base"},
+             "symbols": [{"kind": "tsv", "path": "${symbols}/cl.functions.tsv"}],
+             "units": {"$from": "config/cl.json#/units"}},
+    "c1":   {"image": "${toolchain_root}/bin/c1.dll",   "sha256": {"$from": "config/retail.json#/builds/c1/sha256"},
+             "symbols": [{"kind": "tsv", "path": "${symbols}/c1.functions.tsv"}]},
+    "c1xx": {"image": "${toolchain_root}/bin/c1xx.dll", "sha256": {"$from": "config/retail.json#/builds/c1xx/sha256"},
+             "symbols": [{"kind": "tsv", "path": "${symbols}/c1xx.functions.tsv"}]},
+    "c2":   {"image": "${toolchain_root}/bin/c2.dll",   "sha256": {"$from": "config/retail.json#/builds/c2/sha256"},
+             "symbols": [{"kind": "tsv", "path": "${symbols}/c2.functions.tsv"}]},
+    "link": {"image": "${toolchain_root}/bin/link.exe", "sha256": {"$from": "config/retail.json#/builds/link/sha256"},
+             "symbols": [{"kind": "tsv", "path": "${symbols}/link.functions.tsv"}]}
+  },
+  "units": {"roots": ["matching"], "extensions": [".c", ".cpp"]},
+  "compiler": {
+    "cl": "${toolchain_root}/bin/cl.exe",
+    "base_flags": ["/nologo", "/c"],
+    "cpp_flags": ["/EHsc"],
+    "identity_files": ["${toolchain_root}/bin/cl.exe", "${toolchain_root}/bin/c1.dll",
+                       "${toolchain_root}/bin/c1xx.dll", "${toolchain_root}/bin/c2.dll"],
+    "show_includes": true
+  },
+  "backend": {
+    "kind": "link",
+    "link": {"linker": "${toolchain_root}/bin/link.exe",
+             "argv": ["/nologo", "/DLL", "/NOENTRY", "/LTCG", "/MACHINE:X86", "/INCREMENTAL:NO",
+                      {"$from": "config/project.json#/project/link_flags"}, "/MANIFEST:NO",
+                      "/OUT:${out}/candidate.dll", "/MAP:${out}/candidate.map", "${roots}", "${objects}",
+                      "kernel32.lib"],
+             "roots": "annotations", "map": "msvc", "discovery_compile": true},
+    "manifest": {"command": ["python", "tools/match.py", "build", "--binary", "${target}"]}
+  },
+  "annotations": {
+    "marker": {"$from": "config/project.json#/project/annotation/pattern"},
+    "kinds": {"FUNCTION": "function", "DATA": "data"},
+    "addr_groups": "target+addr",
+    "name": "declaration",
+    "symbol": "^\\s*//\\s*SYMBOL:\\s*(\\S+)\\s*$",
+    "stop": "^\\s*//\\s*stop:\\s*(?P<reason>.*)$"
+  },
+  "well_known": {"imports": true, "symbols": ["___security_cookie"]},
+  "text_checks": {"paths": ["matching"], "no_bom": ["matching/**"]}
+}

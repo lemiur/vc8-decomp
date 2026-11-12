@@ -40,3 +40,17 @@ void redirect()
     if (RedirStderr)
         _dup2(1, 2);
 }
+
+// FUNCTION: cl 0x408ee3
+// SYMBOL: ?ShutDownDLL@@YAXPAUpassinfo_s@@@Z
+// Member spellings are reconstructed from the decoded offsets; the public PDB
+// proves only the passinfo_s tag and this function's ABI.
+void ShutDownDLL(passinfo_s *pass)
+{
+    if (pass->module != NULL) {
+        FreeLibrary(pass->module);
+        pass->module = NULL;
+        pass->invoke = NULL;
+        pass->abort = NULL;
+    }
+}

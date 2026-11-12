@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "binary": "cl",
+  "lane": "crt-a",
+  "functions": [
+    {
+      "va": "0x40c4f0",
+      "symbol": "__ValidateImageBase",
+      "source_path": "matching/cl/crt_pesect.c",
+      "source_span": {
+        "start": 16,
+        "end": 43
+      },
+      "size": 41,
+      "checks": {
+        "R1": "Canonical PE types IMAGE_DOS_HEADER, IMAGE_NT_HEADERS and IMAGE_OPTIONAL_HEADER come from the installed Platform SDK <windows.h> (SHA-256 c5ae461b1a3cbee914eec883ef55bd7dfd3eb287a8f178c0ed71eb3d1b1fb6f1); the only shared declaration added is the linker-defined extern IMAGE_DOS_HEADER __ImageBase, declared once in include/cl/crt_pesect.h. The unit defines no types.",
+        "R2": "No extern or global definition remains at unit scope; __ImageBase is declared once in include/cl/crt_pesect.h and is the linker-defined symbol recorded in the unit provenance comment. The source's own file-scope extern was moved, not duplicated.",
+        "R4": "The decoded body is a real PE header walk, not offset-cast modelling: mov ecx,[esp+4]; cmp word [ecx],0x5a4d (e_magic); je; mov eax,[ecx+0x3c] (e_lfanew); add eax,ecx; cmp dword [eax],0x4550 (Signature); jne; cmp word [eax+0x18],0x10b (OptionalHeader.Magic); sete cl. Those offsets are the canonical windows.h structure fields accessed through typed pointers in the source.",
+        "R13": "No class, virtual function, vtable or RTTI exists in this MS C89 unit; the annotation covers a plain __cdecl CRT function with a BYTE* argument, and no placeholder virtual is introduced.",
+        "R17": "The three locals pDOSHeader/pNTHeader/pOptHeader are the installed source's real pointer chain, each assigned once and tested; the decoded early exits xor eax,eax; ret at 0x40c4fb and the final sete cl/mov eax,ecx; ret at 0x40c513..0x40c518 are exactly the source's three FALSE returns and final TRUE, with no fake local or padding.",
+        "R18": "The body is ordinary MS C89 text copied from the installed 8.0.50727.762 crt/src/pesect.c (SHA-256 c878dd31d495c21e91ce525f2ca173aac5a63b691c8d819d4a4c5466c3f98833); the source's own #pragma optimize(\"t\", on) is retained and measured. No __asm, emitted bytes, byte arrays or padding appear."
+      }
+    },
+    {
+      "va": "0x40c520",
+      "symbol": "__FindPESection",
+      "source_path": "matching/cl/crt_pesect.c",
+      "source_span": {
+        "start": 47,
+        "end": 83
+      },
+      "size": 66,
+      "checks": {
+        "R1": "IMAGE_NT_HEADERS, IMAGE_SECTION_HEADER and DWORD_PTR all come from the installed Platform SDK <windows.h> recorded in include/cl/crt_pesect.h; the unit defines no type or typedef of its own.",
+        "R2": "No unit-scope extern and no global definition; the include graph's only added declaration is the single __ImageBase extern in include/cl/crt_pesect.h.",
+        "R4": "The decoded loop is the canonical structure walk: mov ecx,[eax+0x3c] (e_lfanew); add ecx,eax; movzx eax,word [ecx+0x14] (FileHeader.SizeOfOptionalHeader); movzx esi,word [ecx+6] (FileHeader.NumberOfSections); lea eax,[eax+ecx+0x18] (IMAGE_FIRST_SECTION); per-entry [eax+0xc] VirtualAddress and [eax+8] Misc.VirtualSize, stride 0x28 = sizeof(IMAGE_SECTION_HEADER). Source accesses only typed fields, never raw offsets.",
+        "R13": "No class, virtual function, vtable or RTTI in this C unit; no placeholder virtual is introduced.",
+        "R17": "pNTHeader/pSection/iSection are the installed source's real locals; the four decoded branches are the loop guard (jbe 0x40c55c), the lower range test (jb 0x40c552), the upper range test (jb 0x40c55e) and the increment back-edge (jb 0x40c542); the not-found xor eax,eax at 0x40c55c merges into the common epilog, matching the source's return NULL. No fake local or padding.",
+        "R18": "Ordinary MS C89 from the installed 8.0.50727.762 crt/src/pesect.c (SHA-256 c878dd31d495c21e91ce525f2ca173aac5a63b691c8d819d4a4c5466c3f98833); no __asm, emitted bytes, byte arrays or padding."
+      }
+    },
+    {
+      "va": "0x40bc69",
+      "symbol": "_atexit",
+      "source_path": "matching/cl/crt_atonexit.c",
+      "source_span": {
+        "start": 77,
+        "end": 82
+      },
+      "size": 18,
+      "checks": {
+        "R1": "_PVFV and _onexit_t are the installed CRT internal.h/stdlib.h types; the unit defines no type, and include/cl/crt_atonexit.h only carries the shared declarations and the source's own client-side _DLL build context.",
+        "R2": "__onexitbegin and __onexitend are defined once in the unit and declared once in include/cl/crt_atonexit.h; the installed source's file-scope __dllonexit and _imp___onexit declarations were moved to that header instead of being duplicated. No extern remains at unit scope.",
+        "R4": "No raw offset access or cast: the decoded sequence is exactly the source expression (result == NULL) ? -1 : 0, i.e. push dword [esp+4]; call __onexit; neg eax; sbb eax,eax; neg eax; pop ecx; dec eax; ret. The comparison is compiled to the NULL-test idiom, not modelled by offsets.",
+        "R13": "No class, virtual function, vtable or RTTI in this C unit; no placeholder virtual is introduced.",
+        "R17": "The body is the single authentic source statement; the three decoded instruction groups (neg, sbb, neg) and the final dec eax are the compiler's own NULL test and -1/0 selection, and the only call is the real __onexit at 0x40bbc4. No fake local, volatile or padding is present.",
+        "R18": "Ordinary MS C89 from the installed 8.0.50727.762 crt/src/atonexit.c (SHA-256 798cf1e69b03b0016726c5cc5148c6a4b4629376909d7645365223c63643430f); no __asm, emitted bytes, byte arrays or padding."
+      }
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "binary": "cl",
+  "lane": "loadui",
+  "reviewer": "loadui matching worker, branch codex/lane-loadui",
+  "review_date": "2026-10-22",
+  "authority_limit": "Source-rule admission only. Compiled bytes, ordered referents, source attribution, verified boundaries and complete image identity still require the fresh whole-binary gate. No bytes are banked by this review.",
+  "retail": {
+    "sha256": "71c93ca5bddc9b2816d0e053cac2b952f926f6b9321fab6b1ab6e8603621324c",
+    "image_base": "0x400000",
+    "version": "14.00.50727.762"
+  },
+  "source_scope": [
+    {
+      "path": "matching/cl/loadui.cpp",
+      "sha256": "16c3d424816703ee42dc6e364c96f4879802066fd9a1e578b164a775a803a7a3"
+    },
+    {
+      "path": "include/cl/loadui.h",
+      "sha256": "dc161b5aeebbd58ce0b9010d22616e414b8b40775427b565dfc4795f991e020f"
+    }
+  ],
+  "method": "Read all three bodies and the single new canonical header in full. Independently decoded the complete bounded retail CFGs (1061/230/249 bytes, 0x409330..0x409754, 0x409755..0x40983a, 0x40983b..0x409933), every branch direction and every ordered referent; then compiled the unit with the installed SP1 tools and compared all bytes with independent ordered-referent relocation. The decoded bodies agree instruction for instruction, including the plain-c2 `lea ebp,[esp-frame]` prologues, the GS cookie stores, the min-macro double-evaluation of wcslen, the signed 1024 comparisons in LoadSearchPath, and the shared 0x100c-page stack probe whose two public aliases resolve through the pinned entry-alias proof. No decompiler output is relied on; the older draft was used only as a hypothesis and every byte was re-verified.",
+  "abi_and_ownership": "Public PDB starts 0x409330/0x409755 in DBI module 6 (loadui.obj) with the decorated names ?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z (__cdecl long, seven parameters), ?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z and ?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z (__cdecl HINSTANCE__*, two parameters). LoadSearchPath and LoadCLUI call LoadUILibrary by its exact mangled entry, and LoadCLUI calls LoadSearchPath; those ordered internal rel32 referents confirm same-unit ownership and the cdecl stack cleanup decoded at every call site (add esp,0x1c / pop).",
+  "preprocessing_abi_and_lines": "The unit includes the installed SDK windows.h through the canonical project header plus the installed CRT stdlib.h/wchar.h/string.h. /Zc:wchar_t- keeps WCHAR/wchar_t as unsigned short, which is what the retail PAG/G manglings and literal symbols require. No body has an assert, __LINE__, __FILE__, line padding or a source-layout claim; the file begins with an explicit statement that the original source filename and line layout are unresolved. Parameter and local names are descriptive placeholders, never claimed as PDB names.",
+  "functions": [
+    {
+      "binary": "cl",
+      "va": "0x409330",
+      "symbol": "?LoadUILibrary@@YAJPAG0KPAPAUHINSTANCE__@@0IPAK@Z",
+      "size": 1061,
+      "source_path": "matching/cl/loadui.cpp",
+      "source_sha256": "16c3d424816703ee42dc6e364c96f4879802066fd9a1e578b164a775a803a7a3",
+      "source_span": {
+        "start": 13,
+        "end": 114
+      },
+      "review_status": "all-six-match-rules-pass",
+      "boundary": "Complete retail extent 0x409330..0x409754 = 1061 bytes; closed reachable CFG ending in ret at 0x409754, immediately followed by the next public start 0x409755. Decoded referents include the ordinary /GS frame cookie ___security_cookie/@__security_check_cookie@4, _memset, the kernel32 (GetFileAttributesW, GetUserDefaultUILanguage, GetConsoleOutputCP, GetLocaleInfoW, FindFirstFileW, FindNextFileW, FindClose, LoadLibraryExW) and msvcr80 (wcsncpy_s, wcslen, wcsncat_s, _itow_s, _wtoi, _wtol, wcscmp, wcscpy_s) imports, and the L\"\\\" L\"*.*\" L\".\" L\"..\" literals.",
+      "checks": {
+        "R1": "One canonical declaration per function lives in the single guarded project header include/cl/loadui.h, which declares exactly the three module-6 entries with the types the decorated names prove (WCHAR=unsigned short pointers, DWORD=unsigned long, UINT=unsigned int, HINSTANCE__**, long return). No type is defined or copied in the .cpp: WCHAR, DWORD, UINT, HRESULT, LCID, LANGID and WIN32_FIND_DATAW come from the installed SDK headers, and there is exactly one view of each. No partial or invented struct is introduced.",
+        "R2": "The unit defines no project global. The only data referents are genuine source string tokens L\"\" (zero-initializer, emitted as compiler zero-fill), L\"\\\", L\"*.*\", L\".\" and L\"..\" whose retail storage bytes and digests are registered as literal identity evidence, and the SDK/CRT imports plus ___security_cookie, which are external declarations owned by the installed headers/libraries. There is no alias, no interior-address model and no duplicate declaration.",
+        "R4": "The only modelled object is the real SDK WIN32_FIND_DATAW local, used directly through its documented members (dwFileAttributes, cFileName) with no field-offset arithmetic; its ebp-relative stack home at ebp-0x48 and cFileName at ebp-0x1c follow the SDK layout and match retail. No reinterpret_cast, no raw offset view, no invented storage. The only casts are (DWORD)-1 for the real \"no language\" sentinel and (LANGID) for the documented MAKELCID truncation; the decoded MAKELCID/MAKELANGID/PRIMARYLANGID/SORTIDFROMLCID bit operations prove those macros.",
+        "R13": "No class, vtable, RTTI or virtual call occurs in this function or its unit. There is no polymorphic object to model, so no dummy virtual slot is invented.",
+        "R17": "Every local has a decoded role: WCHAR path[1024] with its genuine L\"\" zero-fill (first element store plus memset of the remaining 2046 bytes), DWORD selected_language=-1, HRESULT result=E_FAIL, int root_length from the real min(wcslen(path),1023) macro with its observed double wcslen evaluation, LCID candidates[3] built from GetUserDefaultUILanguage/MAKELCID/MAKELANGID, int index with the real duplicate-skip previous loop, WCHAR language_text[10] passed to _itow_s, UINT console_page from GetConsoleOutputCP, WCHAR page_text[12] for the two GetLocaleInfoW queries, int oem_page/ansi_page from the two _wtoi results, WIN32_FIND_DATAW data, HANDLE search and int pattern_length from the second real min macro. Statement order, break/goto/return structure and the FAILED(result) guards reproduce the decoded CFG; no dummy, volatile, padding or force-allocation local exists.",
+        "R18": "Ordinary VC8 C++ source: Windows/CRT API calls through the canonical installed headers, real string literals, loops and returns. No inline assembly, __emit, byte array, binary include, decompiler paste, uncounted helper stub, or padding. /GS cookie and stack-probe code is compiler-generated only. No rule exception is requested."
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x409755",
+      "symbol": "?LoadSearchPath@@YAPAUHINSTANCE__@@PAGI@Z",
+      "size": 230,
+      "source_path": "matching/cl/loadui.cpp",
+      "source_sha256": "16c3d424816703ee42dc6e364c96f4879802066fd9a1e578b164a775a803a7a3",
+      "source_span": {
+        "start": 120,
+        "end": 152
+      },
+      "review_status": "all-six-match-rules-pass",
+      "boundary": "Complete retail extent 0x409755..0x40983a = 230 bytes; closed reachable CFG ending in ret at 0x40983a, immediately followed by the next public start 0x40983b. Decoded referents: ___security_cookie, @__security_check_cookie@4, _wdupenv_s, _free, the internal __cdecl LoadUILibrary entry 0x409330, and literals L\"PATH\" and L\"clui.dll\".",
+      "checks": {
+        "R1": "The function is declared once in include/cl/loadui.h with the exact decorated shape (HINSTANCE__* __cdecl (unsigned short*, unsigned int)). Types WCHAR/UINT/HINSTANCE come from the installed SDK headers; no local typedef or partial type view is introduced.",
+        "R2": "No project global is defined. Data referents are the genuine literal L\"PATH\" passed to _wdupenv_s and L\"clui.dll\" passed to LoadUILibrary, plus the CRT/SDK imports and the GS cookie; all are external or registered literal identities, with no alias and no interior-address model.",
+        "R4": "The only buffer is the real WCHAR directory[1024] local whose address is passed to LoadUILibrary; element stores use authentic pointer increment with no offset cast. environment/module/cursor are typed pointers. No layout is modelled and no reinterpret_cast occurs.",
+        "R13": "No class, vtable, RTTI or virtual call in this unit. Nothing polymorphic is invented.",
+        "R17": "Locals are authentic: WCHAR* environment=NULL and HINSTANCE module=NULL initialized before the real _wdupenv_s call; WCHAR directory[1024]; cursor bound to environment; int length and the output cursor used by the character-copy loop; the loop-terminating *output=0. The decoded signed comparisons (jge against 0x400, twice) prove int length compared with the integer literal 1024, which is why the source spells 1024 rather than _countof; this was the closing structural finding. The outer PATH walk, the \" \"/\";\" skip, the empty-entry break and the module break reproduce the decoded CFG exactly; free() is called on the original environment pointer. No dummy or padding local.",
+        "R18": "Ordinary VC8 C++ source using the installed CRT/SDK declarations. No assembly, emitted bytes, byte arrays, stubs, padding or decompiler text; only compiler-generated GS code. No exception requested."
+      }
+    },
+    {
+      "binary": "cl",
+      "va": "0x40983b",
+      "symbol": "?LoadCLUI@@YAPAUHINSTANCE__@@PAGI@Z",
+      "size": 249,
+      "source_path": "matching/cl/loadui.cpp",
+      "source_sha256": "16c3d424816703ee42dc6e364c96f4879802066fd9a1e578b164a775a803a7a3",
+      "source_span": {
+        "start": 157,
+        "end": 175
+      },
+      "review_status": "all-six-match-rules-pass",
+      "boundary": "Complete retail extent 0x40983b..0x409933 = 249 bytes; closed reachable CFG with the page-sized 0x100c frame probed through the shared __chkstk/__alloca_probe entry, ending in ret at 0x409933 immediately followed by the next public start 0x409934. Ordered referents: the entry-alias shared stack probe 0x40bd30 (43 closed helper bytes identical between source and retail), GetModuleHandleW 0x40d0fc, GetModuleFileNameW 0x40d13c, wcslen 0x40d290, internal LoadUILibrary 0x409330 and LoadSearchPath 0x409755, wcscpy_s 0x40d298, the L\"clui.dll\" literal, ___security_cookie and @__security_check_cookie@4.",
+      "checks": {
+        "R1": "Declared once in the guarded canonical header include/cl/loadui.h with exactly the decorated shape HINSTANCE__* __cdecl (unsigned short*, unsigned int). WCHAR, UINT and HINSTANCE are the installed SDK types; the unit defines no local type, no partial view and no duplicate declaration.",
+        "R2": "No project global is defined. Data referents are the genuine literal L\"clui.dll\" (registered with its exact retail bytes and digest), the kernel32/msvcr80 imports, ___security_cookie, and the shared compiler stack-probe entry 0x40bd30 whose two public aliases are resolved only through the pinned entry-alias proof (config/reviews/evidence/chkstk-entry-alias.json), which reopens the retail PDB and the fresh MAP; no alias, interior-address model or guessed owner is introduced.",
+        "R4": "The function uses only the real stack buffers WCHAR executable[1024] and WCHAR loaded_path[1024], written by GetModuleFileNameW and the UI loader, plus typed WCHAR pointers; no struct layout is modelled and no offset cast appears. The decode shows the buffers at ebp+0x788 and ebp-0x78 and the truncation scan walking typed WCHAR elements, matching the real source.",
+        "R13": "No class, vtable, RTTI or virtual call occurs in this unit. Nothing polymorphic is modelled, so no dummy virtual slot exists.",
+        "R17": "Locals are authentic and all observed: WCHAR executable[1024], WCHAR loaded_path[1024], HINSTANCE module, WCHAR* end computed as executable + min(wcslen(executable),1023) - 1 with the real double wcslen evaluation, the backslash scan `while (*end != L\"\\\\\" && end != executable) --end`, the terminating *end=0, the seven-argument LoadUILibrary call, the LoadSearchPath fallback when module is null, and the guarded wcscpy_s copy. Statements, scopes and guards reproduce the decoded CFG; no dummy, padding, volatile or force-allocation local exists.",
+        "R18": "Ordinary VC8 C++ source using the canonical installed SDK/CRT declarations. No inline assembly, __emit, byte arrays, binary includes, decompiler text, stubs or padding; the GS cookie and the stack probe are compiler-generated, and the probe bytes are library/fallback code that contributes no source bytes. No rule exception is requested."
+      }
+    }
+  ],
+  "entry_alias_proofs": [
+    {
+      "path": "config/reviews/evidence/chkstk-entry-alias.json",
+      "sha256": "0deceb2e8a8d908ced3a4d14823dd3673a482b2533a5df6df87ec90c7f3e0c74"
+    }
+  ]
+}

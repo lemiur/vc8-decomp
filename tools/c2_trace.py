@@ -4,6 +4,7 @@ Usage:
   python tools/c2_trace.py --source X.cpp --flags "/O2 /Oy" --out trace.jsonl
          [--break ChoosePhysReg[,InlBenefit]] [--function NAME] [--dump EXPR:COUNT]
          [--include DIR] [--summary-only]
+  python tools/c2_trace.py --link-rsp LINK.rsp [--linker link.exe] --out trace.jsonl [--preset ...]
 
 cl.exe runs under the Windows debug API (it loads c1xx.dll and c2.dll in its
 own process). Public c2.pdb symbols name the breakpoints; an int3 is written at
@@ -14,7 +15,10 @@ short summary is printed. Decoders for ChoosePhysReg and OrderGlobregs read
 c2's own data structures; the inliner predicates log a signed EAX; any other
 public function gets a generic register/stack record. Layouts the decoders
 read were established from c2.dll disassembly (docs/c2-trace.md); they are not
-public API and only hold for the pinned 14.00.50727.762 c2.dll.
+public API and only hold for the pinned 14.00.50727.762 c2.dll. With
+--link-rsp the traced process is link.exe on that response file: a /LTCG link
+loads the same c2.dll for its link-time code generation, so every break and
+preset works on the functions the link compiles.
 """
 from __future__ import annotations
 
@@ -51,7 +55,40 @@ PRESETS = {
                "doc": "spill reloads, local register assignment, LEA->ADD (tuples at each phase)"},
     "emit": {"breaks": "CgBottomUpOrder,ReadFunction,EmitFunction",
              "doc": "call-graph reordering and the compile/emit loop (unfiltered: omit --function)"},
+    "globreg": {"breaks": "Spillcosts,SpillcostsFold,OrderGlobregs,ChoosePhysReg",
+                "doc": "globreg priorities: Spillcosts per-block terms, the coloring order and choices"},
+    "reguse": {"breaks": "MscRecordInterProcRegInfo,LoAddCallScratchRegs",
+               "doc": "interprocedural register use: each function's summary (node+0x60) and, per call, "
+                      "whether the caller's kill set used the callee's"},
+    "flexparams": {"breaks": "MdmFlexParams,MdmAllocateFlexParam,MdmAllocateXmmFlexParam,"
+                             "MdmWillUseEbxConservative",
+                   "doc": "custom-convention parameter registers: each assignment (the callee's entry load "
+                          "and its register) and the parameter loads left on the stack"},
+    "stack": {"breaks": "AddStackElement,ColorStackElements,QSortColors",
+              "doc": "stack packing: elements, colours (shared slots), the colour sort and frame offsets"},
 }
+
+
+# Break points inside a function (not public entries): name -> (public, offset, the instruction bytes
+# expected there in the pinned c2.dll). Entry-only: no return breakpoint is planted for them.
+INTERNAL_POINTS = {
+    # Spillcosts' per-block fold, at `imul edi, ebp` (S_b = N_b * w_b) before the globregs' +0xC updates.
+    "SpillcostsFold": ("Spillcosts", 0x1064, bytes.fromhex("0FAFFD")),
+}
+
+
+def internal_point(name, table, binary=None):
+    """(name, va) of an INTERNAL_POINTS entry, its bytes checked against c2.dll when binary is given."""
+    public, offset, expected = INTERNAL_POINTS[plain_name(name)]
+    va = resolve_name(public, table)[1] + offset
+    if binary is not None:
+        import pefile
+        pe = pefile.PE(str(binary), fast_load=True)
+        found = pe.get_data(va - pe.OPTIONAL_HEADER.ImageBase, len(expected))
+        if found != expected:
+            raise TraceError("%s: c2.dll has %s at 0x%08X, not %s (not the pinned c2.dll?)"
+                             % (name, found.hex(), va, expected.hex()))
+    return plain_name(name), va
 
 
 def preset_breaks(breaks, tuples, presets):
@@ -292,14 +329,23 @@ class C2Model:
     def globreg(self, ptr):
         """Globreg (GrgNewGlobreg): +0 sym, +0x1c number, +0x20 allowed-physreg
         sparse bv, +0x10 assigned _RegSym entry, +0x38 preference list
-        {next, Globreg*, weight}, +0x40 reference count."""
+        {next, Globreg*, weight}, +0x24 reference count, +0x40 weighted spill
+        cost (Spillcosts: each reference's cost times its block weight, less
+        the enter/exit copies), +0x44 last-reference ordinal. The symbol's
+        kind byte (+4), front-end name and number come from symbol()."""
         if not ptr:
             return None
         sym = self.u32(ptr)
         info = {"globreg": self.u32(ptr + 0x1C), "sym": "0x%08X" % sym}
         if sym:
             info["symnum"] = self.u32(sym + 0x1C)
-            info["name"] = self.cstr(self.u32(sym)) or self.cstr(self.u32(self.u32(sym)))
+            described = self.symbol(sym)
+            info["kind"] = described["kind"]
+            for key in ("name", "fe", "base", "offset"):
+                if key in described:
+                    info[key] = described[key]
+            if "name" not in info:
+                info["name"] = self.cstr(self.u32(sym)) or self.cstr(self.u32(self.u32(sym)))
         info["priority"] = _signed(self.u32(ptr + 0x0C))
         info["lastref"] = self.u32(ptr + 0x44)
         prefs = []
@@ -311,7 +357,8 @@ class C2Model:
             node = self.u32(node)
         if prefs:
             info["prefs"] = prefs
-        info["refs"] = ctypes.c_int32(self.u32(ptr + 0x40)).value
+        info["refs"] = _signed(self.u32(ptr + 0x24))
+        info["cost"] = _signed(self.u32(ptr + 0x40))
         return info
 
     SYM_SIZE = 0x60      # SymAllocPool: getmem(0xC0C) = 0xC header + 32 symbols of 0x60
@@ -466,6 +513,81 @@ class C2Model:
             entry = self.u32(entry + self.ENTRY_NEXT)
         return out
 
+    BLOCK_DEPTH = 0x17E  # Spillcosts: w = 1 << byte [block+0x17E] (loop nesting, LgFindExitBlocks1)
+    BLOCK_LOOP = 0x16C   # the innermost loop of the block (0: none)
+
+    def block_index(self, block, limit=20000):
+        """Position of a flow-graph block in its list ([[_Function]+8] -> first block, next +0)."""
+        node = self.u32(self.u32(self.u32(self.sym("_Function")) + 8))
+        index = 0
+        while node and index < limit:
+            if node == block:
+                return index
+            node = self.u32(node)
+            index += 1
+        return None
+
+    def block_symbols(self, block, limit=4000):
+        """(instruction count, named symbols, enter copies, exit copies) of one flow-graph block: the tuples from the block's head
+        (+0x1C) to its end (+0x20), linked by +0; each instruction's source and destination leaves
+        (effective addresses opened) that name a front-end symbol, as 'name$fe', in first-use order.
+        An inlined body's locals and parameters keep their callee's front-end descriptors, so the
+        names tell the unit's own code from code the inliner copied in."""
+        node, end = self.u32(block + 0x1C), self.u32(block + 0x20)
+        names, count, seen, copies = [], 0, 0, {"enter": 0, "exit": 0}
+
+        def name(leaf, depth=0):
+            kind = self.u32(leaf + 8) & 0xFF
+            if kind == 7:
+                return
+            if kind == 5:
+                if depth < 3:
+                    for part in (self.u32(leaf + 0x2C), self.u32(leaf + 0x30)):
+                        if part:
+                            name(part, depth + 1)
+                return
+            sym = self.u32(leaf + 0x18)
+            if sym and self.physreg_of(sym) is None:
+                info = self.symbol(sym)
+                if "name" in info:
+                    text = "%s$%d" % (info["name"], info["fe"])
+                    if text not in names:
+                        names.append(text)
+
+        def visit(head):
+            hops = 0
+            while head and hops < 8:
+                name(head)
+                head = self.u32(head)
+                hops += 1
+        while node and seen < limit:
+            if self.u32(node + 8) & 0x100:
+                count += 1
+                opcode = self.u32(node + 4)
+                if opcode in (0x295, 0x296):   # Spillcosts: 0x295 enter copy, 0x296 exit copy
+                    copies["enter" if opcode == 0x295 else "exit"] += 1
+                visit(self.u32(node + 0x28))
+                visit(self.u32(node + 0x2C))
+            if node == end:
+                break
+            node = self.u32(node)
+            seen += 1
+        return count, names, copies["enter"], copies["exit"]
+
+    def class_globregs(self, reg_class):
+        """Globreg pointers of one register class, in _GlobregHash order (1024 buckets, chains by +0x30),
+        the class read as OrderGlobregs does: _RegClass[word [sym+0x10] >> 12]."""
+        base, reg_classes = self.sym("_GlobregHash"), self.sym("_RegClass")
+        out = []
+        for bucket in range(1024):
+            node = self.u32(base + 4 * bucket)
+            while node and len(out) < 4096:
+                sym = self.u32(node)
+                if sym and self.u32(reg_classes + 4 * ((self.u32(sym + 0x10) & 0xFFFF) >> 12)) == reg_class:
+                    out.append(node)
+                node = self.u32(node + 0x30)
+        return out
+
     def symtab(self, limit=4096):
         """Every allocated c2 symbol slot ([_BESymTab]+0 = next number)."""
         table = self.u32(self.sym("_BESymTab"))
@@ -494,7 +616,7 @@ class Decoder:
 class ChoosePhysRegDecoder(Decoder):
     """ChoosePhysReg(EAX=sparse bv of interfering globregs, [esp+4]=Globreg*,
     [esp+8]=register class); ret 8. It zeroes _ChoosePhysReg_weights, adds the
-    preference weights of interfering globregs and 100*refs of any whose
+    preference weights of interfering globregs and 100*cost (+0x40) of any whose
     allowed set is a single register, subtracts the globreg's own preference
     weights, then walks _RegOrders[class] keeping the first allowed register
     with the strictly lowest weight, and stores &_RegSym[reg] at Globreg+0x10."""
@@ -521,6 +643,9 @@ class ChoosePhysRegDecoder(Decoder):
         return out
 
 
+GLOBREG_KEYS = ("globreg", "symnum", "kind", "name", "fe", "base", "offset", "priority", "lastref", "refs", "cost")
+
+
 class OrderGlobregsDecoder(Decoder):
     """OrderGlobregs([esp+4]=register class, [esp+8]=bv); ret 8. Walks
     _GlobregHash (bucket = globreg & 0x3FF, chains newest first), and
@@ -536,10 +661,212 @@ class OrderGlobregsDecoder(Decoder):
         order = []
         while node and len(order) < 512:
             info = model.globreg(node)
-            order.append({k: info[k] for k in ("globreg", "symnum", "name", "priority", "lastref", "refs")
-                          if info.get(k) is not None})
+            order.append({k: info[k] for k in GLOBREG_KEYS if info.get(k) is not None})
             node = model.u32(node + 0x14)
         return {"order": order}
+
+
+class SpillcostsDecoder(Decoder):
+    """Spillcosts([esp+4]=function, [esp+8]=register class, [esp+0xC]=bv); ret 0xC. Accumulates, per
+    globreg of the class still to be ordered (+5 bit 0): +0x24 references, +0x40 weighted cost, and at
+    each block's end (SpillcostsFold) the priority +0xC. Entry and exit: every globreg of the class
+    (_GlobregHash), so exit minus entry is this call's share."""
+
+    def snapshot(self, model, reg_class):
+        out = []
+        for ptr in model.class_globregs(reg_class):
+            info = model.globreg(ptr)
+            row = {k: info[k] for k in GLOBREG_KEYS if info.get(k) is not None}
+            row["pending"] = bool(model.u32(ptr + 4) & 0x100)   # +5 bit 0: not yet in _SortedGlobregs
+            row["assigned"] = bool(model.u32(ptr + 0x10))
+            out.append(row)
+        return out
+
+    def entry(self, model, regs, stack):
+        reg_class = stack[2]
+        return {"class": reg_class, "before": self.snapshot(model, reg_class)}, {"class": reg_class}
+
+    def exit(self, model, regs, state):
+        return {"after": self.snapshot(model, state["class"])}
+
+
+class SpillcostsFoldDecoder(Decoder):
+    """Spillcosts at 0x10B11484 (`imul edi, ebp`), once per block: EDI = N_b (the globregs referenced
+    in the block, plus the bv of already-ordered ones), EBP = w_b (block weight: 1 << depth under /O2),
+    [esp+0x1C] = block, ECX = the list of globregs whose last use is in the block, EBX = the list of
+    globregs live through it (both linked by +0x14). Each entry's +0x18 is C_b, its summed reference
+    costs in the block. Next: dead entries with +0x10 == 0 and live entries with +6 bit 0x10
+    (referenced here) get +0xC += C_b * N_b * w_b; live unreferenced ones +0xC -= N_b * w_b (w_b with
+    PGO)."""
+
+    def entries(self, model, head, live):
+        out = []
+        node = head
+        while node and len(out) < 1024:
+            row = {"globreg": model.u32(node + 0x1C), "c": _signed(model.u32(node + 0x18)),
+                   "assigned": bool(model.u32(node + 0x10))}
+            if live:
+                row["referenced"] = bool(model.u32(node + 4) & 0x100000)   # byte +6 bit 0x10
+            out.append(row)
+            node = model.u32(node + 0x14)
+        return out
+
+    def entry(self, model, regs, stack):
+        block = stack[7]   # [esp+0x1C]
+        return {"n": regs["edi"], "w": regs["ebp"], "block": model.block_index(block),
+                "depth": model.bytes(block + model.BLOCK_DEPTH, 1)[0],
+                "loop": bool(model.u32(block + model.BLOCK_LOOP)),
+                "pgo": model.u32(model.sym("_PogoFlag")) == 2,
+                "dead": self.entries(model, regs["ecx"], False), "live": self.entries(model, regs["ebx"], True),
+                **dict(zip(("tuples", "syms", "enter", "exit"), model.block_symbols(block)))}
+
+
+class StackModel:
+    """Stack packing state (stack.obj), read at the return of ColorStackElements,
+    where every frame offset is final (StackPacking frees _Colort after it).
+
+    Elements are c2 symbols: CollectStackElements walks the tuples' leaves and
+    AddStackElement keeps them in a list (_symStackElements, next +0x30, prev
+    +0x34) ordered by size (+0x20) ascending, then by reference count (+0x38,
+    one per leaf AddStackElement saw) descending; a new symbol goes in front of
+    its size group with count 1, a counted-up one moves forward past the ones
+    with a strictly lower count. EnumerateStackElements numbers the list
+    (+0x3C, _symNumToSym[i]). _Colort[c] (stride 0x1C): +0 member set, +4
+    interference set, +8 size, +0xC weight (sum of the members' counts), +0x10
+    a parameter colour's offset, +0x14 alignment, +0x18 /GS buffer level byte.
+    Offsets: kind 4 (front-end automatic) at descriptor+0x18, else sym+0x28."""
+
+    COLOR_SIZE = 0x1C
+    VA_COLORT = 0x10D0FA9C          # pinned c2.dll: slide = sym('_Colort') - this
+    VA_DIR_OBJECT = 0x10D0A1B0      # ColorStackElements: dir = (Function+0x64 == this)
+
+    def __init__(self, model):
+        self.m = model
+
+    def g(self, name):
+        return self.m.u32(self.m.sym(name))
+
+    def element(self, index):
+        m = self.m
+        sym = m.u32(self.g("_symNumToSym") + 4 * index)
+        info = m.symbol(sym)
+        info["index"] = index
+        info["size"] = _signed(m.u32(sym + 0x20))
+        log = m.u32(sym + 0x2C) & 0xFF
+        info["align"] = 1 << (log - 1) if log else 0
+        info["refs"] = _signed(m.u32(sym + 0x38))
+        flags = m.u32(sym + 4)
+        info["cant_pack"] = bool(flags >> 16 & 4)
+        info["addr_taken"] = bool(flags >> 16 & 0x40)
+        info["allocated"] = bool(flags >> 8 & 0x20)
+        desc = m.u32(sym)
+        if info["kind"] == 4 and desc:
+            info["offset"] = _signed(m.u32(desc + 0x18))
+        else:
+            info["offset"] = _signed(m.u32(sym + 0x28))
+        info["live_on_def"] = read_sparse_bv(m.u32, m.u32(self.g("_bvLiveOnDef") + 4 * index))
+        return info
+
+    def colors(self, elements=None):
+        m = self.m
+        base = self.g("_Colort")
+        out = []
+        for c in range(min(self.g("_numOfColors"), 4096)):
+            rec = base + self.COLOR_SIZE * c
+            size, weight = _signed(m.u32(rec + 8)), _signed(m.u32(rec + 0xC))
+            info = {"color": c, "members": read_sparse_bv(m.u32, m.u32(rec)),
+                    "interferes": read_sparse_bv(m.u32, m.u32(rec + 4)),
+                    "size": size, "weight": weight, "align": _signed(m.u32(rec + 0x14)),
+                    "gs": m.u32(rec + 0x18) & 0xFF,
+                    "density": int(weight * 1000 / size) if size else None}
+            if c < self.g("_numOfParameters"):
+                info["param_offset"] = _signed(m.u32(rec + 0x10))
+            out.append(info)
+        return out
+
+
+class ColorStackElementsDecoder(Decoder):
+    """ColorStackElements([esp+4]=Function, [esp+8]=frame estimate in); ret 8.
+    Colours the elements (parameters first, then colorElemental: the newest
+    colour that fits, size <= 2*colour+8, no interference), sorts the colours
+    with QSortColors when the estimate exceeds 0x80 or the function has a /GS
+    buffer, then allocates them from the highest index down (allotemp: the frame
+    grows downward, so colour 0 ends nearest ESP) and applies _EbpAdj."""
+
+    def entry(self, model, regs, stack):
+        return {}, {"function_ptr": stack[1]}
+
+    def exit(self, model, regs, state):
+        sm = StackModel(model)
+        count = min(sm.g("_numOfStackElements"), 4096)
+        elements = [sm.element(i) for i in range(count)]
+        colors = sm.colors()
+        for info in colors:
+            for i in info["members"]:
+                if i < len(elements):
+                    elements[i]["color"] = info["color"]
+        out = {"elements": elements, "colors": colors,
+               "num_parameters": sm.g("_numOfParameters"), "ebp_adj": _signed(sm.g("_EbpAdj")),
+               "alloc_local": _signed(sm.g("_Alloc_local"))}
+        func = state.get("function_ptr") if state else None
+        if func:
+            slide = model.sym("_Colort") - StackModel.VA_COLORT
+            out["max_align"] = model.u32(func + 0x48)
+            out["dir"] = int(model.u32(func + 0x64) == StackModel.VA_DIR_OBJECT + slide)
+        return out
+
+
+class AddStackElementDecoder(Decoder):
+    """AddStackElement(EDX=c2 symbol); CollectStackElements calls it once per
+    reference it counts (+1 to sym+0x38, the colour weight), with EBX = the
+    tuple. The return address says which reference it is (pinned c2.dll):
+    a symbol leaf (leaf+0x18), the base of an address/memory leaf (leaf+0x24),
+    a member of the points-at set of a may-alias leaf (tuple kind 0x16, opcode
+    0x2CE: every address-taken local the pointer may reach), or /GL PGO."""
+
+    SITES = {0x10BE8FC4: "leaf", 0x10BE8FF7: "address", 0x10BE9075: "points-at",
+             0x10BE911E: "pogo", 0x10BE9125: "pogo", 0x10BE9167: "pogo"}
+
+    def entry(self, model, regs, stack):
+        slide = model.sym("_Colort") - StackModel.VA_COLORT
+        info = model.symbol(regs["edx"])
+        out = {k: info[k] for k in ("symnum", "name", "fe", "kind") if k in info}
+        out["site"] = self.SITES.get(stack[0] - slide, "0x%08X" % (stack[0] - slide))
+        tup = regs["ebx"]
+        out["tuple"] = "0x%08X" % tup
+        try:
+            out["tuple_text"] = model.tuple_text(tup)
+        except Exception:
+            out["opcode"] = model.u32(tup + 4)
+        return out
+
+    def exit(self, model, regs, state):
+        return {}
+
+
+class QSortColorsDecoder(Decoder):
+    """QSortColors(ECX=lo, EDX=hi, [esp+4]=dir); ret 4; recursive quicksort of
+    _Colort[lo..hi] by StkColorCmp: /GS level (+0x18) ascending, then weight *
+    1000 / size descending (dir=0; dir=1 reverses both). Not stable. The
+    outermost call (lo=_numOfParameters, hi=_numOfColors-1) logs the colours
+    before and after."""
+
+    @staticmethod
+    def snapshot(model):
+        return [{k: c[k] for k in ("members", "size", "weight", "gs", "density")}
+                for c in StackModel(model).colors()]
+
+    def entry(self, model, regs, stack):
+        sm = StackModel(model)
+        lo, hi = _signed(regs["ecx"]), _signed(regs["edx"])
+        outer = lo == sm.g("_numOfParameters") and hi == sm.g("_numOfColors") - 1
+        info = {"lo": lo, "hi": hi, "dir": stack[1], "outer": outer}
+        if outer:
+            info["before"] = self.snapshot(model)
+        return info, {"outer": outer}
+
+    def exit(self, model, regs, state):
+        return {"after": self.snapshot(model)} if state and state.get("outer") else {}
 
 
 class ReturnDecoder(Decoder):
@@ -614,7 +941,7 @@ class SpillDecoder(Decoder):
 
     def entry(self, model, regs, stack):
         info = model.globreg(regs["eax"]) or {}
-        out = {k: info[k] for k in ("globreg", "symnum", "name", "priority", "refs") if info.get(k) is not None}
+        out = {k: info[k] for k in ("globreg", "symnum", "name", "priority", "refs", "cost") if info.get(k) is not None}
         sym = model.u32(regs["eax"]) if regs["eax"] else 0
         if sym:
             out.update({k: v for k, v in model.symbol(sym).items() if k in ("base", "offset", "fe")})
@@ -687,10 +1014,346 @@ class EntryListDecoder(Decoder):
         return {"entries_after": model.entry_list()}
 
 
+class RegUseModel:
+    """The interprocedural register-use summary (misc.obj, lower.obj).
+
+    MscRecordInterProcRegInfo (dop2_EncodeAndRelated, after the function's code is final) collects
+    with MscCollectUsedRegs the registers the function's tuples write (register destinations and the
+    kill sets of its own calls: a set of register numbers, c2's sparse bv) and, when _BottomOpt is
+    set and the entry (+0x88) has a call-graph node whose +4 is this entry, stores it at node+0x60.
+    LoAddCallScratchRegs (Lower, per call tuple of a later function) builds the call's kill set:
+    with the callee's summary only the scratch registers in it, without it every scratch register
+    (EAX ECX EDX, the XMM and x87 registers). A value kept in a scratch register across the call is
+    therefore reloaded when the summary was not available."""
+
+    ENTRY_NAME, ENTRY_FLAGS20, ENTRY_KIND, ENTRY_FLAGS37 = 0x04, 0x20, 0x30, 0x37
+    ENTRY_CGNODE, ENTRY_AC = 0x88, 0xAC
+    NODE_ENTRY, NODE_REGS = 0x04, 0x60
+
+    def __init__(self, model):
+        self.m = model
+
+    def name(self, entry):
+        return self.m.cstr(self.m.u32(entry + self.ENTRY_NAME), 512) if entry else None
+
+    def regs(self, sbv):
+        return [self.m.reg_name(n) for n in read_sparse_bv(self.m.u32, sbv)]
+
+    def flag(self, name):
+        va = self.m.sym(name)
+        return self.m.u32(va) if va is not None else None
+
+    def node_owner(self, entry, node):
+        """True when node+4 is this entry, or (PGO) entry+0xAC is: the test both routines make."""
+        owner = self.m.u32(node + self.NODE_ENTRY)
+        return owner == entry or (self.flag("_PogoMasterFlag") == 1
+                                  and self.m.u32(entry + self.ENTRY_AC) == owner)
+
+    def callee_entry(self, tup):
+        """(entry, how) of a call tuple's callee as LoAddCallScratchRegs reads it: source leaf +0x28;
+        kind 4 holds the entry at +0x18; kinds 1-3 hold a symbol whose +8 -> +0 is the entry, used
+        only when that entry has +0x37 bit 0x400; anything else is an indirect call."""
+        leaf = self.m.u32(tup + 0x28) if tup else 0
+        if not leaf:
+            return 0, "no callee leaf"
+        kind = self.m.u32(leaf + 8) & 0xFF
+        if kind == 4:
+            return self.m.u32(leaf + 0x18), "direct"
+        if kind in (1, 2, 3):
+            sym = self.m.u32(leaf + 0x18)
+            entry = self.m.u32(self.m.u32(sym + 8)) if sym else 0
+            if entry and self.m.u32(entry + self.ENTRY_FLAGS37) & 0x400:
+                return entry, "through symbol"
+        return 0, "indirect (leaf kind %d)" % kind
+
+
+class CallScratchRegsDecoder(Decoder):
+    """LoAddCallScratchRegs([esp+4] = call tuple): the callee, every field its summary test reads,
+    and the verdict: `summary` (the call kills only the scratch registers in the callee's
+    node+0x60) or the first failed test (every scratch register is killed)."""
+
+    def entry(self, model, regs, stack):
+        ru = RegUseModel(model)
+        tup = stack[1]
+        entry, how = ru.callee_entry(tup)
+        out = {"callee": ru.name(entry), "callee_via": how}
+        if not entry:
+            out["verdict"] = how
+            return out
+        flags37 = model.u32(entry + ru.ENTRY_FLAGS37)
+        node = model.u32(entry + ru.ENTRY_CGNODE)
+        out.update({"callee_flags20": "0x%X" % model.u32(entry + ru.ENTRY_FLAGS20),
+                    "callee_flags37": "0x%X" % flags37, "callee_kind": model.bytes(entry + ru.ENTRY_KIND, 1)[0],
+                    "bottom_opt": ru.flag("_BottomOpt"), "cg_node": bool(node)})
+        summary = 0
+        if node:
+            out["node_is_entry"] = ru.node_owner(entry, node)
+            summary = model.u32(node + ru.NODE_REGS)
+            if summary:
+                out["summary"] = ru.regs(summary)
+        if out["callee_kind"] != 4:
+            out["verdict"] = "entry+0x30 kind %d, not 4" % out["callee_kind"]
+        elif not flags37 & 0x4000:
+            out["verdict"] = "entry+0x37 bit 0x4000 clear"
+        elif not out["bottom_opt"]:
+            out["verdict"] = "_BottomOpt 0"
+        elif not node:
+            out["verdict"] = "no call-graph node (entry+0x88)"
+        elif not out["node_is_entry"]:
+            out["verdict"] = "call-graph node+4 is another entry"
+        elif not summary:
+            out["verdict"] = "no summary at node+0x60 (callee not compiled yet, or not recorded)"
+        else:
+            out["verdict"] = "summary"
+        return out
+
+
+class RecordRegInfoDecoder(Decoder):
+    """MscRecordInterProcRegInfo(EAX = function context; [ctx] = entry). Entry: the tests that skip
+    the record (ctx+0xAC bit 0x100000, set by OtlScanTuplist on OPEHTRY; entry+0x20 bit 0x1000;
+    entry+0x37 & 0x1E0 == 0xA0 with entry+0x20 bit 0x20 and the function's section ([entry+0xC]) of
+    COMDAT selection +0x5B == 2, IMAGE_COMDAT_SELECT_ANY: an inline function) and the store's (_BottomOpt, the
+    call-graph node owning the entry). Exit: node+0x60 (the summary callers will read) and
+    entry+0x20 bit 0x10000 (set when MscCollectUsedRegs found no call of unknown register use)."""
+
+    def entry(self, model, regs, stack):
+        ru = RegUseModel(model)
+        ctx = regs["eax"]
+        entry = model.u32(ctx)
+        flags20, flags37 = model.u32(entry + ru.ENTRY_FLAGS20), model.u32(entry + ru.ENTRY_FLAGS37)
+        node = model.u32(entry + ru.ENTRY_CGNODE)
+        section = model.u32(entry + 0xC)
+        selection = model.bytes(section + 0x5B, 1)[0] if section else None
+        skip = None
+        if model.u32(ctx + 0xAC) & 0x100000:
+            skip = "ctx+0xAC bit 0x100000 (the function has an OPEHTRY: SEH __try)"
+        elif flags20 & 0x1000:
+            skip = "entry+0x20 bit 0x1000"
+        elif (flags37 & 0x1E0) == 0xA0 and flags20 & 0x20 and selection == 2:
+            skip = "COMDAT selection ANY (section [entry+0xC]+0x5B == 2: an inline function's copy may be replaced)"
+        out = {"entry_name": ru.name(entry), "flags20": "0x%X" % flags20, "flags37": "0x%X" % flags37,
+               "comdat_selection": selection, "bottom_opt": ru.flag("_BottomOpt"), "cg_node": bool(node)}
+        if node:
+            out["node_is_entry"] = ru.node_owner(entry, node)
+        if skip:
+            out["skip"] = skip
+        return out, {"entry": entry, "node": node}
+
+    def exit(self, model, regs, state):
+        ru = RegUseModel(model)
+        out = {"flags20_after": "0x%X" % model.u32(state["entry"] + ru.ENTRY_FLAGS20)}
+        if state["node"]:
+            summary = model.u32(state["node"] + ru.NODE_REGS)
+            out["stored"] = bool(summary)
+            if summary:
+                out["summary"] = ru.regs(summary)
+        return out
+
+
+class FlexParamModel:
+    """The register a custom (flex) convention gives each parameter (mdmisc.obj).
+
+    MdmFlexParams (dop2_CodegenUpdate, after the callee's own register allocation, when entry+0xB4 bit 0
+    is set) scans the callee's straight-line entry: the tuples after the formals tuple (kind 0x18) up to
+    the first referenced label (kind 0x1B with byte +0x1C set), kind 0x19 or the end (0x10), at most 4
+    assignments. A load (opcode 0x01, 0x38, 0xC2-0xC5, 0xD0) from a parameter's stack slot (source leaf
+    kind 2 whose symbol has kind 5 at +4, is its own base and has +0x35 clear: no other reference in
+    the function, and among the first 10 formals) into a register (destination leaf kind 1) makes that
+    register the parameter's: the register the callee's own allocator gave the load. It is refused when
+    the register was already written in the scanned prefix (EBP always counts as written; EBX too under
+    MdmWillUseEbxConservative or an 8-aligned frame; EAX under a stack probe), and deferred when the
+    register is callee-saved (_RegAttrib bit 1: EBX EBP ESI EDI) and written more than once in the
+    function or killed by a call, or is EAX/ECX/EDX/EBX once 3 of those (2 with EBX reserved) are
+    taken. MdmAllocateFlexParam records it at entry+0xB4 (3 bits per parameter number at 3n+1, an
+    index into _MdmFlexParamMap) and deletes the load (a plain mov) or turns its source into the
+    register. A deferred parameter then takes the first of EAX ECX EDX (_RegAttrib & 0xB == 0) not
+    written before its load, and the load becomes a copy from it (`moved`). XMM: a movss/movsd-class
+    load (0x125, 0x268, 0x189, 0x269) of a float of at most 8 bytes into an XMM register not written
+    before it: MdmAllocateXmmFlexParam records register - 0x53 at entry+0xB8 (4 bits per number).
+    No caller takes part: callers compiled later read the record (MdmAlloRegParams from LoLowerCall
+    and LoLowerArgplace; MscProcessParams in the callee)."""
+
+    ENTRY_NAME, ENTRY_FLEX, ENTRY_FLEX_XMM = 0x04, 0xB4, 0xB8
+    LOADS = (0x01, 0x38, 0xC2, 0xC3, 0xC4, 0xC5, 0xD0)
+    XMM_LOADS = (0x125, 0x268, 0x189, 0x269)
+    XMM_BASE = 0x53
+
+    def __init__(self, model):
+        self.m = model
+
+    def u8(self, address):
+        return self.m.bytes(address, 1)[0]
+
+    def name(self, entry):
+        return self.m.cstr(self.m.u32(entry + self.ENTRY_NAME), 512) if entry else None
+
+    def leaf_reg(self, leaf):
+        """The register number of a register leaf (kind 1): leaf+0x1C -> +8 (base) -> +0x1C."""
+        if not leaf or self.u8(leaf + 8) != 1:
+            return None
+        return self.m.u32(self.m.u32(self.m.u32(leaf + 0x1C) + 8) + 0x1C)
+
+    def param_sym(self, leaf):
+        """The parameter symbol a memory leaf (kind 2) reads, or 0: leaf+0x18 with kind 5 at +4."""
+        if not leaf or self.u8(leaf + 8) != 2:
+            return 0
+        sym = self.m.u32(leaf + 0x18)
+        return sym if sym and self.u8(sym + 4) == 5 else 0
+
+    def sym_name(self, sym):
+        base = self.m.u32(sym + 8) or sym
+        desc = self.m.u32(base)
+        return self.m.cstr(self.m.u32(desc + 4), 128) if desc else None
+
+    def load(self, tup):
+        """One tuple as MdmFlexParams' scan reads it: opcode, the parameter it reads, its destination."""
+        opcode = self.m.u32(tup + 4)
+        src, dst = self.m.u32(tup + 0x28), self.m.u32(tup + 0x2C)
+        sym = self.param_sym(src)
+        out = {"opcode": "0x%X" % opcode, "param": self.sym_name(sym) if sym else None}
+        reg = self.leaf_reg(dst)
+        if reg is not None:
+            out["dst"] = self.m.reg_name(reg)
+        if sym:
+            base = self.m.u32(sym + 8) or sym
+            out["other_refs"] = bool(self.u8(base + 0x35))
+        return out
+
+    def tuples(self, ctx, limit=100000):
+        tup = self.m.u32(self.m.u32(self.m.u32(self.m.u32(ctx + 8)) + 0x1C))
+        while tup and limit:
+            yield tup
+            tup = self.m.u32(tup)
+            limit -= 1
+
+    def param_loads(self, ctx, limit=32):
+        """Every instruction tuple still reading a parameter slot after MdmFlexParams (the assigned loads
+        are gone or read a register): `entry` when it lies in the scanned straight-line entry."""
+        out, started, entry = [], False, True
+        for tup in self.tuples(ctx):
+            kind = self.u8(tup + 8)
+            if not started:
+                started = kind == 0x18
+                continue
+            if kind == 0x10:
+                break
+            if kind == 0x19 or (kind == 0x1B and self.u8(tup + 0x1C)):
+                entry = False
+            if not self.u8(tup + 9) & 1:
+                continue
+            leaf = self.m.u32(tup + 0x28)
+            while leaf:
+                sym = self.param_sym(leaf)
+                if sym:
+                    item = self.load(tup)
+                    item["param"] = self.sym_name(sym)
+                    item["other_refs"] = bool(self.u8((self.m.u32(sym + 8) or sym) + 0x35))
+                    item["entry"] = entry
+                    out.append(item)
+                    break
+                leaf = self.m.u32(leaf)
+            if len(out) >= limit:
+                break
+        return out
+
+    @staticmethod
+    def new_slot(before, after, width, shift):
+        """The parameter number whose field of WIDTH bits (at width*n + shift) the call set."""
+        new = after & ~before
+        if not new:
+            return None
+        low = (new & -new).bit_length() - 1
+        return (low - shift) // width
+
+
+class FlexAllocateDecoder(Decoder):
+    """MdmAllocateFlexParam([esp+4] = context, [esp+8] = formals tuple, [esp+0xC] = the load tuple,
+    [esp+0x10] = register, [esp+0x14] = its sized register symbol, [esp+0x18] = moved); ret 0x18.
+    Entry: the load (opcode, parameter, its own destination) and the register; exit: the parameter
+    number whose entry+0xB4 field it set."""
+
+    def entry(self, model, regs, stack):
+        fp = FlexParamModel(model)
+        ctx, tup, reg, moved = stack[1], stack[3], stack[4], stack[6]
+        entry = model.u32(ctx)
+        info = {"entry_name": fp.name(entry), "register": model.reg_name(reg), "moved": bool(moved),
+                "how": ("deferred: the load's register was not free, the parameter arrives in %s and is "
+                        "copied" % model.reg_name(reg)) if moved else "the entry load's register"}
+        info.update(fp.load(tup) if tup else {})
+        info["flex_before"] = "0x%08X" % model.u32(entry + fp.ENTRY_FLEX)
+        return info, {"entry": entry, "before": model.u32(entry + fp.ENTRY_FLEX)}
+
+    def exit(self, model, regs, state):
+        after = model.u32(state["entry"] + FlexParamModel.ENTRY_FLEX)
+        return {"flex_after": "0x%08X" % after,
+                "param_number": FlexParamModel.new_slot(state["before"], after, 3, 1)}
+
+
+class FlexAllocateXmmDecoder(Decoder):
+    """MdmAllocateXmmFlexParam(ECX = the load tuple, EAX = XMM register, [esp+4] = context,
+    [esp+8] = formals tuple); ret 8. Records register - 0x53 at entry+0xB8 (4 bits per number)."""
+
+    def entry(self, model, regs, stack):
+        fp = FlexParamModel(model)
+        ctx, tup, reg = stack[1], regs["ecx"], regs["eax"]
+        entry = model.u32(ctx)
+        info = {"entry_name": fp.name(entry), "register": model.reg_name(reg), "moved": False,
+                "how": "the entry load's register"}
+        info.update(fp.load(tup) if tup else {})
+        return info, {"entry": entry, "before": model.u32(entry + fp.ENTRY_FLEX_XMM)}
+
+    def exit(self, model, regs, state):
+        after = model.u32(state["entry"] + FlexParamModel.ENTRY_FLEX_XMM)
+        return {"flex_xmm_after": "0x%08X" % after,
+                "param_number": FlexParamModel.new_slot(state["before"], after, 4, 0)}
+
+
+class EbxConservativeDecoder(Decoder):
+    """MdmWillUseEbxConservative(EDX = context): 1 when the function keeps EBX for its frame (context +0x52
+    bit 0, from +0xAC bit 0x20000000 or +0xB0 bits 0x180, unless FPO is legal). Called by MdmFlexParams
+    (return address MdmFlexParams+0x36E), a 1 or _FHasMustAlign (an 8-aligned frame) reserves EBX: no
+    parameter gets EBX, and only 2 of EAX ECX EDX EBX are given."""
+    FLEX_RETURN = 0x36E
+
+    def entry(self, model, regs, stack):
+        flex = model.sym("MdmFlexParams")
+        out = {"from_flex": flex is not None and stack[0] == flex + self.FLEX_RETURN}
+        if out["from_flex"]:
+            out["entry_name"] = FlexParamModel(model).name(model.u32(regs["edx"]))
+            va = model.sym("_FHasMustAlign")
+            out["must_align"] = model.u32(va) if va is not None else None
+        return out
+
+    def exit(self, model, regs, state):
+        return {"ret": regs["eax"]}
+
+
+class FlexParamsDecoder(Decoder):
+    """MdmFlexParams([esp+4] = context); ret 4. Exit: entry+0xB4/+0xB8 and the loads still reading a
+    parameter slot (why a parameter stayed on the stack: a load outside the entry, one whose register
+    was taken, other references). c2_inline_trace's FlexDecoder extends it."""
+
+    def entry(self, model, regs, stack):
+        ctx = stack[1]
+        return {"entry_name": FlexParamModel(model).name(model.u32(ctx))}, {"ctx": ctx}
+
+    def exit(self, model, regs, state):
+        fp = FlexParamModel(model)
+        entry = model.u32(state["ctx"])
+        return {"flex": model.u32(entry + fp.ENTRY_FLEX), "flex_xmm": model.u32(entry + fp.ENTRY_FLEX_XMM),
+                "param_loads": fp.param_loads(state["ctx"])}
+
+
 DECODERS = {"ChoosePhysReg": ChoosePhysRegDecoder, "OrderGlobregs": OrderGlobregsDecoder,
+            "LoAddCallScratchRegs": CallScratchRegsDecoder, "MscRecordInterProcRegInfo": RecordRegInfoDecoder,
             "SymAlloc": SymAllocDecoder, "SymFree": SymFreeDecoder, "GrgImmedTupleHash": ImmedHashDecoder,
             "GrgNewGlobreg": NewGlobregDecoder, "Spill": SpillDecoder, "RegAssign": RegAssignDecoder,
-            "CgBuildCallGraph": EntryListDecoder, "CgBottomUpOrder": EntryListDecoder}
+            "Spillcosts": SpillcostsDecoder, "SpillcostsFold": SpillcostsFoldDecoder,
+            "CgBuildCallGraph": EntryListDecoder, "CgBottomUpOrder": EntryListDecoder,
+            "ColorStackElements": ColorStackElementsDecoder, "QSortColors": QSortColorsDecoder,
+            "AddStackElement": AddStackElementDecoder, "MdmFlexParams": FlexParamsDecoder,
+            "MdmAllocateFlexParam": FlexAllocateDecoder, "MdmAllocateXmmFlexParam": FlexAllocateXmmDecoder,
+            "MdmWillUseEbxConservative": EbxConservativeDecoder}
 # Inliner predicates: arguments not decoded (LTCG-private conventions), signed EAX logged.
 for _name in ("InlineeIsTooBig", "ShouldInlineCallTuple", "ShouldInlineInlinee", "InlBadCandidate",
               "InlCallTupleIsCandidate", "InlBenefit", "ConsiderCandidate", "InlCallGraphDecision"):
@@ -726,13 +1389,33 @@ def format_event(event):
         prefs = ""
         if event.get("prefs"):
             prefs = " prefs=" + ",".join("g%s:%d" % (p["globreg"], p["weight"]) for p in event["prefs"])
-        return "%s  g%s(sym%s) -> %s  [%s]%s prio=%s lastref=%s refs=%s%s" % (
+        return "%s  g%s(sym%s) -> %s  [%s]%s prio=%s lastref=%s refs=%s cost=%s%s" % (
             func, event.get("globreg"), event.get("symnum"), event["chosen"], cands, tie,
-            event.get("priority"), event.get("lastref"), event.get("refs"), prefs)
+            event.get("priority"), event.get("lastref"), event.get("refs"), event.get("cost"), prefs)
     if name == "OrderGlobregs" and "order" in event:
         return "%s  OrderGlobregs class=%s: %s" % (func, event.get("class"), " ".join(
             "g%s(sym%s,p%s,l%s)" % (g.get("globreg"), g.get("symnum"), g.get("priority"), g.get("lastref"))
             for g in event["order"]))
+    if name == "Spillcosts" and "before" in event:
+        return "%s  Spillcosts class=%s: %s" % (func, event.get("class"), " ".join(
+            "g%s(p%s,r%s,c%s)" % (g.get("globreg"), g.get("priority"), g.get("refs"), g.get("cost"))
+            for g in event.get("after", event["before"]) if g.get("pending", True)))
+    if name == "SpillcostsFold" and "n" in event:
+        return "%s  SpillcostsFold b%s depth=%s N=%s w=%s: %s" % (
+            func, event.get("block"), event.get("depth"), event.get("n"), event.get("w"), " ".join(
+                ["g%s:%s%s" % (g["globreg"], g["c"], "" if g.get("referenced", True) else "(live)")
+                 for g in event.get("dead", []) + event.get("live", []) if not g["assigned"]]))
+    if name == "ColorStackElements" and "colors" in event:
+        return "%s  ColorStackElements: %d element(s), %d colour(s), params=%s ebp_adj=%s alloc_local=%s: %s" % (
+            func, len(event["elements"]), len(event["colors"]), event.get("num_parameters"), event.get("ebp_adj"),
+            event.get("alloc_local"), " ".join("%s@%s" % (e.get("name") or "s%s" % e.get("symnum"), e.get("offset"))
+                                               for e in event["elements"]))
+    if name == "AddStackElement" and "site" in event:
+        return "%s  AddStackElement %s$%s %s [%s]" % (func, event.get("name") or "s%s" % event.get("symnum"),
+                                                     event.get("fe"), event["site"], event.get("tuple_text"))
+    if name == "QSortColors" and "lo" in event:
+        return "%s  QSortColors lo=%s hi=%s dir=%s%s" % (func, event.get("lo"), event.get("hi"), event.get("dir"),
+                                                       " (outer)" if event.get("outer") else "")
     if name == "RegAssign" and "tmpreg" in event:
         return "%s  RegAssign %s [%s] pref=%s next=%s busy=%s conflicts=%s -> %s" % (
             func, event["tmpreg"], event.get("tuple"), event.get("pref_after") or event.get("pref"),
@@ -1842,7 +2525,7 @@ class Tracer:
             self.events.append(event)
         elif wanted:
             self.dropped += 1
-        if event is None or self.entry_only:
+        if event is None or self.entry_only or plain_name(name) in INTERNAL_POINTS:
             return
         ret = stack[0]
         pending.append({"ret": ret, "esp": regs["esp"], "event": event, "decoder": decoder, "state": state})
@@ -1879,7 +2562,11 @@ def main(argv=None):
     if argv[:1] == ["emit-order"]:
         return emit_order_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--source", required=True, type=Path)
+    parser.add_argument("--source", type=Path)
+    parser.add_argument("--link-rsp", type=Path, help="trace link.exe @RSP (a /LTCG link: link-time code "
+                        "generation runs c2.dll) instead of cl.exe on --source")
+    parser.add_argument("--linker", type=Path, help="the link.exe to run with --link-rsp (default: the "
+                        "toolchain's)")
     parser.add_argument("--flags", default="/O2", help="cl options (one string)")
     parser.add_argument("--include", action="append", default=[], type=Path)
     parser.add_argument("--break", dest="breaks", default=None,
@@ -1904,6 +2591,8 @@ def main(argv=None):
     parser.add_argument("--tuples", default="", help="comma-separated break names whose entry events carry "
                         "the function's instruction tuples (opcode, destinations, sources)")
     args = parser.parse_args(argv)
+    if (args.source is None) == (args.link_rsp is None):
+        parser.error("give one of --source and --link-rsp")
     breaks_text, tuples_text = preset_breaks(args.breaks, args.tuples, args.preset)
     if os.name != "nt":
         print("c2_trace: requires Windows", file=sys.stderr)
@@ -1920,7 +2609,10 @@ def main(argv=None):
         for name in breaks_text.split(","):
             if name.strip() and plain_name(name.strip()) not in seen:
                 seen.add(plain_name(name.strip()))
-                breaks.append(resolve_name(name.strip(), table))
+                if plain_name(name.strip()) in INTERNAL_POINTS:
+                    breaks.append(internal_point(name.strip(), table, c2_inputs()[0]))
+                else:
+                    breaks.append(resolve_name(name.strip(), table))
         if args.break_module:
             have = {va for _, va in breaks}
             exclude = {plain_name(n) for n in args.exclude.split(",") if n}
@@ -1929,10 +2621,15 @@ def main(argv=None):
         tracer = Tracer(table, data["image_base"], breaks, args.function, args.dump, args.max_events,
                         entry_only=args.entry_only, symtab_at=symtab_at,
                         tuples_at=[plain_name(n) for n in tuples_text.split(",") if n])
-        command = compile_command(toolchain, args.source, args.flags.split(), args.include, work)
         env = probe_toolchain.toolchain_environment(toolchain)
-        if args.include:
-            env["INCLUDE"] = os.pathsep.join([*map(str, args.include), env["INCLUDE"]])
+        if args.link_rsp:
+            linker = args.linker or Path(toolchain["bin"]) / "link.exe"
+            rsp = args.link_rsp.resolve()
+            command, work = [str(linker), "@" + str(rsp)], rsp.parent
+        else:
+            command = compile_command(toolchain, args.source, args.flags.split(), args.include, work)
+            if args.include:
+                env["INCLUDE"] = os.pathsep.join([*map(str, args.include), env["INCLUDE"]])
         returncode, log_path = tracer.run(command, work, env)
     except (TraceError, OSError, ValueError, KeyError) as error:
         print("c2_trace: " + str(error), file=sys.stderr)
@@ -1941,8 +2638,8 @@ def main(argv=None):
     with args.out.open("w", encoding="utf-8") as stream:
         for event in tracer.events:
             stream.write(json.dumps(event, sort_keys=True) + "\n")
-    print("cl.exe exit %d; %d events -> %s (cl output: %s)%s" % (
-        returncode, len(tracer.events), args.out, log_path,
+    print("%s exit %d; %d events -> %s (output: %s)%s" % (
+        "link.exe" if args.link_rsp else "cl.exe", returncode, len(tracer.events), args.out, log_path,
         "; %d dropped over --max-events" % tracer.dropped if tracer.dropped else ""))
     for line in summarize(tracer.events, args.summary_lines):
         print(line)

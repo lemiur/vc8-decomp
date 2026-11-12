@@ -45,6 +45,7 @@ ROOT = Path(__file__).resolve().parents[1]
 # count InlCollectInfo stored when the callee was compiled), +0x88 the call
 # graph node (Globopt only).
 ENTRY_NAME, ENTRY_FLAGS20, ENTRY_FLAGS50, ENTRY_SIZE, ENTRY_CGNODE = 0x04, 0x20, 0x50, 0x54, 0x88
+ENTRY_NEXT = 0x80   # _Eentry_list link (dop2, LtcgInlClassify)
 
 # Entry+0x50 bits named from the routines that test them.
 FLAGS50 = {
@@ -86,8 +87,17 @@ BREAKS = ("InlCallTupleIsCandidate", "InlMightInlineEntry", "ConsiderCandidate",
 LTCG_BREAKS = ("MscAllowCallingConventionChange", "MscRemoveDeadArguments", "MscParamIsDead")
 # The routines whose results are decoded into per-function conventions (every function, never filtered or
 # capped): MdmAllowFlexParams (the custom-convention gate), MscSetDeadParamMap (the dead-parameter map),
-# WpaGenConstParamInfoUse (constant parameters) and MdmFlexParams (the register assignment).
-CONV_BREAKS = ("MdmAllowFlexParams", "MscSetDeadParamMap", "WpaGenConstParamInfoUse", "MdmFlexParams")
+# WpaGenConstParamInfoUse (constant parameters), MdmFlexParams (the register assignment) and its
+# MdmAllocateFlexParam / MdmAllocateXmmFlexParam (one per parameter given a register: c2_trace FlexParamModel).
+# MdmWillUseEbxConservative: whether MdmFlexParams reserves EBX (c2_trace EbxConservativeDecoder).
+FLEX_ALLOC_BREAKS = ("MdmAllocateFlexParam", "MdmAllocateXmmFlexParam", "MdmWillUseEbxConservative")
+CONV_BREAKS = ("MdmAllowFlexParams", "MscSetDeadParamMap", "WpaGenConstParamInfoUse",
+               "MdmFlexParams") + FLEX_ALLOC_BREAKS
+# The register-use summary (c2_trace RegUseModel) with --link-rsp: MscRecordInterProcRegInfo for every function
+# (never filtered or capped), LoAddCallScratchRegs per call (under --function: the calls compiled in a matching
+# function or to a matching callee).
+REGUSE_RECORD, REGUSE_CALL = "MscRecordInterProcRegInfo", "LoAddCallScratchRegs"
+REGUSE_BREAKS = (REGUSE_RECORD, REGUSE_CALL)
 
 
 def flag_names(value, table=FLAGS50):
@@ -382,12 +392,14 @@ class ConstParamDecoder(c2_trace.Decoder):
         return {"after": const_records(model, state["entry"])}
 
 
-class FlexDecoder(c2_trace.Decoder):
+class FlexDecoder(c2_trace.FlexParamsDecoder):
     """MdmFlexParams([esp+4] = context); ret 4. Runs after register allocation (dop2_CodegenUpdate) when
-    entry+0xB4 bit 0 is set: each formal whose symbol was given a register keeps it, entry+0xB4/+0xB8
+    entry+0xB4 bit 0 is set: a parameter whose only use is a load in the function's straight-line entry
+    takes the register that load was given (c2_trace FlexParamModel; MdmAllocateFlexParam), entry+0xB4/+0xB8
     record the register per parameter number (MdmParamNum: the position in the remaining formal list), and
     MscProcessParams recomputes entry+0x44 for the parameters left on the stack. Callers compiled later
-    pass the arguments by that record. The exit logs the record and the formals it numbers."""
+    pass the arguments by that record. The exit logs the record, the formals it numbers and the parameter
+    loads left (c2_trace.FlexParamsDecoder)."""
 
     def entry(self, model, regs, stack):
         ctx = stack[1]
@@ -398,13 +410,15 @@ class FlexDecoder(c2_trace.Decoder):
         entry = model.u32(ctx)
         table = model.sym("_MdmFlexParamMap")
         flex_map = [model.u32(table + 4 * i) for i in range(8)] if table is not None else list(FLEX_REGS_FALLBACK)
-        return {"flex": model.u32(entry + ENTRY_FLEX), "flex_xmm": model.u32(entry + ENTRY_FLEX_XMM),
+        out = super().exit(model, regs, state)
+        out.update({"flex": model.u32(entry + ENTRY_FLEX), "flex_xmm": model.u32(entry + ENTRY_FLEX_XMM),
                 "conv": model.u32(entry + ENTRY_CONV) & 0x1C, "stack_bytes": model.u32(entry + ENTRY_STACK_BYTES),
                 "flags20": model.u32(entry + ENTRY_FLAGS20), "flags50": model.u32(entry + ENTRY_FLAGS50),
                 "hidden": bool(model.u32(ctx + 4)),
                 "flex_map": [model.reg_name(r) if r else None for r in flex_map],
                 "xmm_names": [model.reg_name(0x53 + i) for i in range(16)],
-                "formals": [formal_info(model, leaf) for leaf in formal_leaves(model, ctx)]}
+                "formals": [formal_info(model, leaf) for leaf in formal_leaves(model, ctx)]})
+        return out
 
 
 class RawConvGateDecoder(c2_trace.Decoder):
@@ -492,6 +506,9 @@ def convention(name, evs, counts):
     dead_ev = evs.get("MscSetDeadParamMap", [{}])[-1]
     allow = evs.get("MdmAllowFlexParams", [None])[-1]
     consts = evs.get("WpaGenConstParamInfoUse", [{}])[-1]
+    allocs = evs.get("MdmAllocateFlexParam", []) + evs.get("MdmAllocateXmmFlexParam", [])
+    alloc_by_number = {a.get("param_number"): a for a in allocs if a.get("param_number") is not None}
+    ebx = [e for e in evs.get("MdmWillUseEbxConservative", []) if e.get("from_flex")]
     hidden = bool(dead_ev.get("hidden", flex.get("hidden")))
     base = 2 if hidden else 1   # the parameter number of the first formal
     formals = dead_ev.get("formals") or flex.get("formals") or []
@@ -527,6 +544,9 @@ def convention(name, evs, counts):
             n = remaining[key]
             field = (flex_word >> (3 * n + 1)) & 7 if allowed and 3 * n + 1 < 32 else 0
             xmm = (xmm_word >> (4 * n)) & 0xF if allowed and 4 * n < 32 else 0
+            if n in alloc_by_number:
+                a = alloc_by_number[n]
+                p["assigned"] = {k: a[k] for k in ("opcode", "dst", "moved") if k in a}
             if field:
                 p["location"] = (flex_map[field] or "?").upper() if field < len(flex_map) else "map%d" % field
             elif xmm:
@@ -545,6 +565,10 @@ def convention(name, evs, counts):
            "flex": None if flex_word is None else "0x%08X" % flex_word}
     if xmm_word:
         rec["flex_xmm"] = "0x%08X" % xmm_word
+    if flex.get("param_loads"):
+        rec["stack_loads"] = flex["param_loads"]
+    if ebx:
+        rec["ebx_reserved"] = bool(ebx[-1].get("ret") or ebx[-1].get("must_align"))
     if allow is not None and allow.get("ret") == 0:
         rec["refused"] = refusal_reason(allow)
     elif not allowed and allow is None:
@@ -569,6 +593,41 @@ def function_status(name, conventions, sites):
     if not any(c["function"] == name for c in conventions):
         return "not compiled by the link: no convention"
     return "out of line (%d of %d traced call sites inlined)" % (inlined, len(calls))
+
+
+def format_flex(conventions, names):
+    """For --function: how each matching function's custom convention placed its parameters (the callee's
+    own entry loads decide; docs/c2-inline-trace.md "Parameter registers")."""
+    lines = []
+    for c in conventions:
+        if c["function"] not in names or not c["custom"]:
+            continue
+        parts = []
+        for p in c["params"]:
+            text = "%s=%s" % (p.get("name") or "#%d" % p["index"], p["location"] or "?")
+            a = p.get("assigned")
+            if a:
+                text += " (%s)" % ("moved: its entry load went to %s" % a.get("dst") if a.get("moved")
+                                   else "entry load %s -> %s" % (a.get("opcode"), a.get("dst")))
+            parts.append(text)
+        lines.append("flex parameters of %s: %s" % (c["function"], "; ".join(parts) or "none"))
+        loads = c.get("stack_loads", [])
+        for param in sorted({load.get("param") for load in loads}, key=str)[:12]:
+            mine = [load for load in loads if load.get("param") == param]
+            first = mine[0]
+            if len(mine) > 1:
+                why = "read %d times" % len(mine)
+            elif not first.get("entry"):
+                why = "read outside the straight-line entry"
+            elif int(first.get("opcode", "0"), 16) not in c2_trace.FlexParamModel.LOADS or "dst" not in first:
+                why = "used in place, not loaded into a register"
+            elif first["dst"].upper() == "EBX" and c.get("ebx_reserved"):
+                why = "EBX is reserved (MdmWillUseEbxConservative or an 8-aligned frame)"
+            else:
+                why = "its load's register was already written before it (or 4 parameters were placed)"
+            lines.append("  left on the stack: %s (%s -> %s: %s)" % (param, first.get("opcode"),
+                                                                      first.get("dst", "memory"), why))
+    return lines
 
 
 def format_conventions(conventions, limit=40):
@@ -600,6 +659,60 @@ class CollectInfoDecoder(c2_trace.Decoder):
 
 
 CAPTURED_CONSTS = {}
+
+# InlInitLtcgSetting (inline.obj, __stdcall, one unsigned __int64 argument, ret 8), called once by InlInit
+# under /LTCG with LtcgInlClassify's result: the sum of the entry+0x54 sizes (the instruction counts the /GL
+# compiles recorded) of every _Eentry_list entry with a body (entry+0x50 bit 0x20). It adds a step of that
+# link size to _InlNativeByteConsts' SpeedLimit (+4) and FoldCmpSpeedWeight (+8); InlInit then copies
+# _InlNativeByteConsts to _InlCurConsts (_InlNativeConsts, untouched, when _PogoMasterFlag is set).
+LTCG_SETTING_BREAK = "InlInitLtcgSetting"
+LTCG_SETTING_STEPS = ((50000, 15, 10), (100000, 10, 5), (500000, 5, 0), (1500000, -3, 0), (2500000, -5, 0))
+LTCG_SETTING = {}
+
+
+def ltcg_setting_delta(link_size):
+    """(SpeedLimit, FoldCmpSpeedWeight) added by InlInitLtcgSetting for a link size (unsigned 64-bit
+    compares, each bound inclusive; above 2500000: SpeedLimit -10)."""
+    for bound, speed, fold in LTCG_SETTING_STEPS:
+        if link_size <= bound:
+            return speed, fold
+    return -10, 0
+
+
+def _setting_consts(model):
+    va = model.sym("_InlNativeByteConsts")
+    if va is None:
+        return {}
+    return {"SpeedLimit": signed(model.u32(va + 4)), "FoldCmpSpeedWeight": signed(model.u32(va + 8))}
+
+
+class LtcgSettingDecoder(c2_trace.Decoder):
+    """InlInitLtcgSetting([esp+4] low, [esp+8] high dword of the link size): the link size, the rule's
+    delta, and _InlNativeByteConsts' SpeedLimit / FoldCmpSpeedWeight before and after."""
+
+    def entry(self, model, regs, stack):
+        size = (stack[1] & 0xFFFFFFFF) | ((stack[2] & 0xFFFFFFFF) << 32)
+        speed, fold = ltcg_setting_delta(size)
+        info = {"link_size": size, "delta": {"SpeedLimit": speed, "FoldCmpSpeedWeight": fold},
+                "before": _setting_consts(model)}
+        head = model.sym("_Eentry_list")
+        if head is not None:   # what LtcgInlClassify summed: entries with a body, their +0x54 sizes
+            entries, bodies, total, entry = 0, 0, 0, model.u32(head)
+            while entry and entries < 1000000:
+                entries += 1
+                if model.u32(entry + ENTRY_FLAGS50) & 0x20:
+                    bodies += 1
+                    total += model.u32(entry + ENTRY_SIZE) & 0xFFFF
+                entry = model.u32(entry + ENTRY_NEXT)
+            info.update({"entries": entries, "bodies": bodies, "bodies_size": total})
+        LTCG_SETTING.clear()
+        LTCG_SETTING.update(info)
+        return info, None
+
+    def exit(self, model, regs, state):
+        after = _setting_consts(model)
+        LTCG_SETTING["after"] = after
+        return {"after": after}
 
 
 class CallGraphDecoder(c2_trace.Decoder):
@@ -674,6 +787,7 @@ SITE_TUPLE = {
     "InlCallGraphDecision": lambda m, r, s: m.u32(s[2] + 4) if s[2] else 0,
     "InlBenefit": lambda m, r, s: r["ecx"], "InlBadCandidate": lambda m, r, s: r["eax"],
     "ShouldInlineInlinee": lambda m, r, s: r["edx"], "InlineInlinee": lambda m, r, s: r["ecx"],
+    REGUSE_CALL: lambda m, r, s: s[1],
 }
 
 
@@ -711,7 +825,7 @@ class InlineTracer(c2_trace.Tracer):
 
     def _on_entry(self, dbg, model, regs, tid, address, bp, bps, pending):
         name = c2_trace.plain_name(bp["entry"])
-        conv = name in CONV_BREAKS
+        conv = name in CONV_BREAKS or name in (REGUSE_RECORD, LTCG_SETTING_BREAK)
         unfiltered = conv or self._wanted_by_callee(dbg, model, regs, tid, name)
         saved = self.entry_only, self.filter, self.max_events
         if name.startswith("probe:"):
@@ -749,6 +863,7 @@ def install_decoders():
         "ShouldInlineInlinee": lambda: GenericSiteDecoder(("reg", "edx")),
         "InlineInlinee": lambda: GenericSiteDecoder(("reg", "ecx")),
         "InlCollectInfo": CollectInfoDecoder,
+        LTCG_SETTING_BREAK: LtcgSettingDecoder,
     })
     c2_trace.DECODERS.update({
         "MscAllowCallingConventionChange": RawConvGateDecoder,
@@ -927,7 +1042,8 @@ def main(argv=None):
         breaks = [c2_trace.resolve_name(name, table) for name in BREAKS]
         breaks += probe_breaks(table)
         if args.link_rsp:
-            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS + CONV_BREAKS]
+            breaks += [c2_trace.resolve_name(name, table) for name in LTCG_BREAKS + CONV_BREAKS + REGUSE_BREAKS +
+                                                             (LTCG_SETTING_BREAK,)]
         tracer = InlineTracer(table, data["image_base"], breaks, args.function, (), args.max_events)
         env = probe_toolchain.toolchain_environment(toolchain)
         if args.link_rsp:
@@ -942,7 +1058,8 @@ def main(argv=None):
     except (c2_trace.TraceError, OSError, ValueError, KeyError) as error:
         print("c2_inline_trace: " + str(error), file=sys.stderr)
         return 1
-    sites = build_sites([e for e in tracer.events if e["break"] not in LTCG_BREAKS + CONV_BREAKS])
+    sites = build_sites([e for e in tracer.events if e["break"] not in LTCG_BREAKS + CONV_BREAKS + REGUSE_BREAKS +
+                         (LTCG_SETTING_BREAK,)])
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", encoding="utf-8") as stream:
         for site in sites:
@@ -960,6 +1077,8 @@ def main(argv=None):
     if args.link_rsp:
         conventions = build_conventions(tracer.events, sites)
         extra["conventions"] = conventions
+        extra["ltcg_setting"] = dict(LTCG_SETTING)
+        extra["reg_use"] = build_reg_use(tracer.events, args.function)
         if args.function:
             extra["function_status"] = {name: function_status(name, conventions, sites)
                                         for name in matching_names(args.function, conventions, sites)}
@@ -973,6 +1092,13 @@ def main(argv=None):
     for line in format_sites(sites):
         print(line)
     if args.link_rsp:
+        if LTCG_SETTING:
+            print("InlInitLtcgSetting: link size %d (%s bodies of %s entries) -> SpeedLimit %s, "
+                  "FoldCmpSpeedWeight %s (delta %+d, %+d)" % (
+                LTCG_SETTING["link_size"], LTCG_SETTING.get("bodies"), LTCG_SETTING.get("entries"),
+                LTCG_SETTING.get("after", {}).get("SpeedLimit"),
+                LTCG_SETTING.get("after", {}).get("FoldCmpSpeedWeight"),
+                LTCG_SETTING["delta"]["SpeedLimit"], LTCG_SETTING["delta"]["FoldCmpSpeedWeight"]))
         custom = sum(1 for c in conventions if c["custom"])
         print("conventions: %d functions compiled, %d with a custom convention, %d refused; registers, dead and "
               "constant parameters:" % (len(conventions), custom, sum(1 for c in conventions if c["refused"])))
@@ -980,7 +1106,54 @@ def main(argv=None):
             print(line)
         for name, status in extra.get("function_status", {}).items():
             print("%s: %s" % (name, status))
+        for line in format_flex(conventions, set(extra.get("function_status", {}))):
+            print(line)
+        for line in format_reg_use(extra["reg_use"]):
+            print(line)
     return 0 if returncode == 0 else 3
+
+
+REGUSE_CALL_KEYS = ("function", "callee", "verdict", "summary", "callee_flags20", "callee_flags37", "node_is_entry")
+REGUSE_RECORD_KEYS = ("skip", "flags20", "flags37", "comdat_selection", "flags20_after", "cg_node",
+                      "node_is_entry", "stored", "summary")
+
+
+def build_reg_use(events, function_filter=None):
+    """extra.json `reg_use`: `summaries` (per function, in compile order: what MscRecordInterProcRegInfo
+    stored; with --function only the matching functions and the callees of the kept calls) and `calls`
+    (each LoAddCallScratchRegs: the caller, the callee and whether the callee's summary was used)."""
+    calls = [{k: e[k] for k in REGUSE_CALL_KEYS if k in e} for e in events if e["break"] == REGUSE_CALL]
+    wanted = {c.get("callee") for c in calls} | {c.get("function") for c in calls}
+    summaries, order = {}, 0
+    for e in events:
+        if e["break"] != REGUSE_RECORD:
+            continue
+        order += 1
+        name = e.get("entry_name")
+        if function_filter and name not in wanted and not (name and function_filter in name):
+            continue
+        record = {k: e[k] for k in REGUSE_RECORD_KEYS if k in e}
+        record["order"] = order
+        summaries[name] = record
+    return {"summaries": summaries, "calls": calls}
+
+
+def format_reg_use(reg_use, limit=40):
+    """One line per (caller, callee, verdict) with its count, then the callees' summaries."""
+    counts = {}
+    for call in reg_use["calls"]:
+        key = (call.get("function"), call.get("callee"), call.get("verdict"))
+        counts[key] = counts.get(key, 0) + 1
+    lines = ["register use at calls (LoAddCallScratchRegs): %d calls" % len(reg_use["calls"])] if counts else []
+    for (function, callee, verdict), count in list(counts.items())[:limit]:
+        lines.append("  %s -> %s x%d: %s" % (function, callee, count, verdict))
+    callees = {c.get("callee") for c in reg_use["calls"]}
+    for name, record in reg_use["summaries"].items():
+        if name in callees:
+            lines.append("  summary of %s (compiled #%d): %s%s" % (
+                name, record["order"], ", ".join(record.get("summary") or []) or "none stored",
+                " (skipped: %s)" % record["skip"] if record.get("skip") else ""))
+    return lines
 
 
 def matching_names(text, conventions, sites):

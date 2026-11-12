@@ -27,8 +27,30 @@ so the same breakpoints and probes see the whole-program inliner and the output 
 names the link.exe (another install of the same version is fine as long as the `c2.dll` it loads is the pinned
 one; the tracer slides the breakpoints to wherever it loads). Exit 3 means link.exe failed.
 
-Under `/LTCG` c2 runs `InlInitLtcgSetting`, and the constants differ from a plain compile's: SpeedLimit **84**
-(74 plain), FoldCmpSpeedWeight 35 (30), OneCallSizeAdj1/4 45, FewCallSizeAdj 5; SizeLimit stays 9 (`_Ltcg` = 1).
+Under `/LTCG` (`_Ltcg` = 1) `InlInit` calls `LtcgInlClassify` and passes its result to `InlInitLtcgSetting`
+(`__stdcall`, one `unsigned __int64`, `ret 8`). **The link size** is the sum, over the `_Eentry_list` entries with
+a body (entry+0x50 bit 0x20: the functions the link compiles, after `/OPT:REF`; unreferenced functions do not
+count), of each entry's size word (entry+0x54, the size the `/GL` compile recorded, saturating at 65535).
+`InlInitLtcgSetting` adds a step of it to `_InlNativeByteConsts`' SpeedLimit (+4, 74) and FoldCmpSpeedWeight
+(+8, 30), each bound inclusive:
+
+| link size | SpeedLimit | FoldCmpSpeedWeight |
+|---|---|---|
+| <= 50,000 | +15 (89) | +10 (40) |
+| <= 100,000 | +10 (84) | +5 (35) |
+| <= 500,000 | +5 (79) | 30 |
+| <= 1,500,000 | -3 (71) | 30 |
+| <= 2,500,000 | -5 (69) | 30 |
+| larger | -10 (64) | 30 |
+
+`InlInit` then copies `_InlNativeByteConsts` to `_InlCurConsts` (`_InlNativeConsts`, which the step does not
+touch, when `_PogoMasterFlag` is set). Module and function counts enter only through the size: 40 tiny modules
+(4,813) give 89, 1,000 one-block functions in one module (64,032) 84, the same 74.6k in 1 or 20 modules 84
+(`tools/ltcg_probes.py` P14 sweep). The other constants that differ from a plain compile's (OneCallSizeAdj1/4
+45, FewCallSizeAdj 5; SizeLimit stays 9) are `InlInitNativeByte`'s. With `--link-rsp` the decoder of
+`InlInitLtcgSetting` writes `extra.json` `ltcg_setting` (`link_size`, the rule's `delta`, SpeedLimit and
+FoldCmpSpeedWeight `before`/`after`, and the `entries`, `bodies` and `bodies_size` it recounts from
+`_Eentry_list`) and the tool prints it as `InlInitLtcgSetting: link size N (...) -> SpeedLimit S, ...`.
 `_InlCurConsts` at the first `InlCallGraphDecision` is written with the call-graph counts to `<out>.extra.json`
 (`consts`), in both modes.
 
@@ -87,6 +109,53 @@ recursive); 62 parameters removed, 50 constant. Checked against the linked image
 `ret 4`), `Map<AnimationEntry>::Walk` (`this` = `g_animations`, callback constant: no arguments, the global
 read directly).
 
+### Parameter registers (`assigned`, `stack_loads`; `c2_trace.py --preset flexparams`)
+
+The register of each parameter of a custom convention is chosen by the **callee alone, from its own
+compiled code**, decoded by c2_trace's `FlexParamModel`:
+
+| routine (when) | what it does |
+|---|---|
+| `MdmFlexParams` ([esp+4] = context; `dop2_CodegenUpdate`, after the function's register allocation, when entry+0xB4 bit 0 is set) | marks every parameter symbol read more than once, or read other than by a register load, as ineligible (symbol +0x35); then scans the straight-line entry: the tuples after the formals tuple (kind 0x18) up to the first label a branch targets (kind 0x1B, byte +0x1C set), kind 0x19 or the end, at most 4 assignments. A load (opcode 0x01, 0x38, 0xC2-0xC5, 0xD0) from an eligible parameter's slot into a register gives the parameter **that register**, the one the callee's allocator gave the load. Refused when the register was already written in the scanned prefix (EBP always; EBX with `MdmWillUseEbxConservative` or an 8-aligned frame; EAX with a stack probe). Deferred when the register is callee-saved (`_RegAttrib` bit 1: EBX EBP ESI EDI) and written more than once or killed by a call in the function, or is EAX/ECX/EDX/EBX once 3 of those (2 with EBX reserved) are used; a deferred parameter then takes the first of EAX, ECX, EDX not written before its load, and the load becomes a copy from it. |
+| `MdmAllocateFlexParam` ([esp+4] context, [esp+0xC] the load, [esp+0x10] register, [esp+0x18] moved; ret 0x18) | records the register at entry+0xB4 (3 bits per parameter number at 3n+1, an index into `_MdmFlexParamMap`) and deletes the load (a plain mov) or turns its source into the register. |
+| `MdmAllocateXmmFlexParam` (ECX the load, EAX register, [esp+4] context; ret 8) | the same for a movss/movsd-class load (0x125, 0x268, 0x189, 0x269) of a float of at most 8 bytes into an XMM register not written before it: register - 0x53 at entry+0xB8. |
+| `MdmAlloRegParams` (from `LoLowerCall`, `LoLowerArgplace` of each caller; `MscProcessParams` of the callee) | reads the record: a custom callee's parameter number n goes in `_MdmFlexParamMap[(entry+0xB4 >> 3n+1) & 7]` or XMM (entry+0xB8); a declared __fastcall/__thiscall takes the standard ECX/EDX. |
+
+No caller takes part: callers are compiled after the callee (bottom-up) and only read the record. What a
+caller can change is the callee's code itself: arguments that are constant or unused at every compiled call
+remove the parameter (`const`, `dead`) and change the callee's register pressure. A parameter's register
+therefore follows its callee's own register allocation (`vc8_trace globreg` on the callee) and is
+`stack` when the callee reads it twice, after a branch target, in place (`cmp [param]`, `push [param]`), or
+into a register already written.
+
+In `conventions`, a register parameter carries `assigned` = `{opcode, dst, moved}` (the entry load and its
+destination; `moved`: the parameter arrives in the location and the load copies it to `dst`), and a
+custom function `stack_loads` = the loads still reading a parameter slot after `MdmFlexParams`
+(`{param, opcode, dst, entry, other_refs}`). Under `--function` the tool prints one `flex parameters of`
+line per matching custom function and a `left on the stack` line per remaining parameter with the reason.
+Check (avp3 group, dx9): `AVP_Brain_Actor_Marine::sub_422C50` gets `_this=EDI` from its entry load
+`mov edi, [this]` where the game's copy keeps `this` in ESI, its own allocation.
+
+### Register use at calls (`extra.json` `reg_use`)
+
+Whether a caller may keep a value in a scratch register (EAX, ECX, EDX, XMM, x87) across a call depends on
+the callee's register-use summary, decoded by c2_trace's `RegUseModel` (also `c2_trace.py --preset reguse`):
+
+| routine (when) | what it does |
+|---|---|
+| `MscRecordInterProcRegInfo` (EAX = context; `dop2_EncodeAndRelated`, once the function's code is final) | `MscCollectUsedRegs` collects the registers its tuples write (register destinations and the kill sets of its own calls); with `_BottomOpt` set and a call-graph node (entry+0x88) whose +4 is this entry (or, under PGO, entry+0xAC), stores the set at **node+0x60** (a sparse bv of register numbers). Skipped when ctx+0xAC bit 0x100000 (an `OPEHTRY`, SEH `__try`), entry+0x20 bit 0x1000, or entry+0x37 & 0x1E0 == 0xA0 with entry+0x20 bit 0x20 and the function's section (entry+0xC) of COMDAT selection (+0x5B) 2, `IMAGE_COMDAT_SELECT_ANY`: an `inline` function, whose copy the linker may take from another object (`comdat_selection` in the record). Not called at all under `#pragma optimize("g", off)` or `/Od`. Sets entry+0x20 bit 0x10000 when no call of unknown register use was found. With `_PogoFlag` == 1 the XMM registers are added; with `_Module`+0x44C bit 0x8000000 and calls, the x87 stack. |
+| `LoAddCallScratchRegs` ([esp+4] = call tuple; Lower of each caller) | builds the call's kill set. The callee's summary is used when the callee entry (source leaf +0x28, kind 4, or a symbol whose entry has +0x37 bit 0x400) has entry+0x30 == 4, **entry+0x37 bit 0x4000** (the function has IL in this compile or link), `_BottomOpt`, a call-graph node owning the entry, and a summary at node+0x60: then only the scratch registers in the summary are killed. Otherwise every scratch register is. |
+
+`reg_use` = `{"summaries": {function: {"order", "stored", "summary", "skip", "flags20", "flags20_after", ...}},
+"calls": [{"function", "callee", "verdict", "summary", ...}]}`: `order` is the compile order (the n-th
+`MscRecordInterProcRegInfo`), `verdict` is `summary` or the first failed test (`entry+0x37 bit 0x4000 clear`,
+`no summary at node+0x60 ...`, `call-graph node+4 is another entry`, `indirect ...`). Under `--function` the
+calls compiled in a matching function or to a matching callee are kept, with the summaries of both ends; the
+tool prints one line per caller, callee and verdict. Probe check (`ltcg_probes.py` P7): `Math_Tan` compiled
+`/GL` stores `esp, ebp, GF0-GF7, ST(0), cc, fcc` and its caller's three calls use it (XMM0 kept across them);
+compiled without `/GL` (P7f) the calls read `entry+0x37 bit 0x4000 clear` and the caller reloads. Defined `inline __declspec(noinline)` in a header (P13), the record is skipped (selection
+ANY): the callers reload g_k before each call while `Math_Tan` keeps the link's body.
+
 ## Output
 
 One JSON object per call site, in the order c2 examined them: `caller` (the function being compiled, decorated),
@@ -101,7 +170,7 @@ below), `budget`, `depth_limit`, `func_size`, and `numbers`:
 | `speed_cap.cost` | cost before the speed path; > 450 refuses |
 | `speed_small.cost`/`limit` | cost after the speed weights; < SizeLimit+5 (14) accepts |
 | `speed_loop.loop_term` | the callee's loop share added before the frequency weighting |
-| `speed_ratio.weighted`/`limit` | frequency-weighted cost; < SpeedLimit (74) accepts |
+| `speed_ratio.weighted`/`limit` | frequency-weighted cost; < SpeedLimit (74 plain, the link-size step under `/LTCG`) accepts |
 | `size_end.cost` | size path (no /Ot): cost < SizeLimit (9) accepts |
 | `InlCallGraphDecision.site_weight` | the call block's estimated frequency, 100000000 = once per caller entry |
 | `InlCallGraphDecision.cg_callsites` | call sites of the callee in the unit (entry+0x90) |
@@ -124,9 +193,10 @@ below), `budget`, `depth_limit`, `func_size`, and `numbers`:
   goes to `InlCallGraphDecision`.
 - **InlCallGraphDecision**, speed path: `cost = size68 - arg_cost - credit + caller_penalty
   - NoBranchSizeAdj(10, branch-free callee)`; cost > 450 refuses; cost -= the fold/argument speed weights
-  (FoldCmpSpeedWeight 30 per foldable compare against a constant argument); if < 14 accept (InlBadCandidate
+  (FoldCmpSpeedWeight 30 plain per foldable compare against a constant argument); if < 14 accept (InlBadCandidate
   permitting); else `cost += loop_term`, then weighted = `(cost*1e8/site_weight + (c-1)*cost)/c` with c = 3 if the
-  block runs more than once per entry, else 7; weighted < 74 accepts. Cold call sites (low `site_weight`) cost more.
+  block runs more than once per entry, else 7; weighted < SpeedLimit (74 plain; under `/LTCG` the link-size
+  step above) accepts. Cold call sites (low `site_weight`) cost more.
 - The constants are `_InlCurConsts` (45 dwords; names from `InlInitUsrSetting`, defaults from
   `InlInitNativeByte`), all printed by `read_consts` in the module.
 
@@ -166,3 +236,5 @@ below), `budget`, `depth_limit`, `func_size`, and `numbers`:
   that carry them, not from the code that sets them; a constant of kind 2 (float) is read as a double; the
   register record covers the first 10 parameters (c2's limit). Pogo (/LTCG:PGO) paths are not decoded.
 - `site_weight` is c2's static block-frequency estimate, not a profile.
+
+Synthetic probes of these decisions: [ltcg-probes.md](ltcg-probes.md).

@@ -1,4 +1,7 @@
 #include "../../include/cl/mpcl.h"
+#include <wchar.h>
+#include <string.h>
+#include "../../include/cl/util.h"
 
 // mpcl.obj attribution: PDB DBI section contribution contains the public start.
 // The original source filename, extension and line positions are unresolved.
@@ -216,4 +219,363 @@ void ProcessChannel::kill()
     expect_int(0x298);
     WaitForSingleObject(process_handle, INFINITE);
     CloseHandle(process_handle);
+}
+
+// DATA: cl 0x41AAF0
+// PDB ?g_hMutex@@3PAXA; loader-zero-initialized .data virtual tail.
+HANDLE g_hMutex;
+
+// DATA: cl 0x41A2B4
+// PDB ?is_server_run@@3HA; loader-zero-initialized int in the .data tail.
+int is_server_run;
+
+// FUNCTION: cl 0x409FAE
+// SYMBOL: ?close_mutex@@YAXXZ
+// Complete 17-byte CFG: conditional CloseHandle of the canonical inherited
+// mutex handle, ret 0x409FBE.
+void __cdecl close_mutex()
+{
+    if (g_hMutex)
+        CloseHandle(g_hMutex);
+}
+
+// FUNCTION: cl 0x409FBF
+// SYMBOL: ?MP_is_server@@YAHXZ
+// Complete 76-byte CFG with the real GS cookie. A 10-character wide buffer is
+// filled by GetEnvironmentVariableW; only a successful read compares against
+// the marker and records the canonical is_server_run global.
+int __cdecl MP_is_server()
+{
+    wchar_t value[10];
+    int result = GetEnvironmentVariableW(L"MPCL_SERVER_373011", value, 10);
+    if (result) {
+        result = wcscmp(value, L"bananana") == 0;
+        is_server_run = result;
+    }
+    return result;
+}
+
+// FUNCTION: cl 0x40A04C
+// SYMBOL: ?ProcessChannel_read_thread@@YGKPAX@Z
+// Complete 86-byte stdcall body including the compiler's SEH prolog, the
+// __except filter at 0x40A075 and the handler at 0x40A087. The context is the
+// real four-field ProcessChannelReadContext described in the header.
+unsigned long __stdcall ProcessChannel_read_thread(void *parameter)
+{
+    ProcessChannelReadContext *context = static_cast<ProcessChannelReadContext *>(parameter);
+    __try {
+        context->channel->read(context->buffer, context->size);
+        context->success = 1;
+    } __except (GetExceptionCode() == 1) {
+        context->success = 0;
+    }
+    return 0;
+}
+
+// FUNCTION: cl 0x40A0D1
+// SYMBOL: ?write_string@ProcessChannel@@QAEXPBG@Z
+// Complete 55-byte CFG: wcslen on the wide value, then the size word and the
+// string including its terminator through the virtual write slot.
+void ProcessChannel::write_string(const unsigned short *value)
+{
+    unsigned long size = wcslen(value) * sizeof *value;
+    write(&size, sizeof size);
+    write(value, size + sizeof *value);
+}
+
+// FUNCTION: cl 0x40A25A
+// SYMBOL: ??3@YAXPAX@Z
+// Complete five-byte body: one tail transfer to the canonical util deallocator.
+void __cdecl operator delete(void *allocation)
+{
+    xfree(allocation);
+}
+
+// FUNCTION: cl 0x40A346
+// SYMBOL: ?decode_handle@@YAPAXPBG@Z
+// Complete 30-byte CFG: swscanf_s fills one pointer-width local from the wide
+// text; no other referent.
+HANDLE __cdecl decode_handle(const unsigned short *value)
+{
+    HANDLE result;
+    swscanf_s(value, L"%p", &result);
+    return result;
+}
+
+// FUNCTION: cl 0x40A496
+// SYMBOL: ?get_mutex@@YAXXZ
+// Complete 103-byte CFG with the real GS cookie. The inherited handle arrives
+// as a wide environment string; a missing or unparsable value clears the
+// canonical global through the real NT_err path.
+void __cdecl get_mutex()
+{
+    if (!g_hMutex) {
+        wchar_t value[20];
+        NT_err(GetEnvironmentVariableW(L"MPCL_MUTEX_HANDLE", value, 20) != 0);
+        if (swscanf_s(value, L"%p", &g_hMutex) != 1)
+            g_hMutex = 0;
+    }
+}
+
+// FUNCTION: cl 0x40A684
+// SYMBOL: ?CreatePipe_robust@@YAXPAPAX0PAU_SECURITY_ATTRIBUTES@@K@Z
+// Complete 118-byte CFG: retry ERROR_PIPE_BUSY at most five attempts with a
+// 250 ms Sleep between attempts; any other failure raises exception code 1.
+void __cdecl CreatePipe_robust(HANDLE *read_handle, HANDLE *write_handle,
+                               SECURITY_ATTRIBUTES *attributes, unsigned long size)
+{
+    int attempts = 1;
+    while (!CreatePipe(read_handle, write_handle, attributes, size)) {
+        if (GetLastError() != ERROR_PIPE_BUSY) {
+            RaiseException(1, 0, 0, 0);
+        } else {
+            if (++attempts > 5) {
+                RaiseException(1, 0, 0, 0);
+                break;
+            }
+            Sleep(250);
+        }
+    }
+}
+
+// FUNCTION: cl 0x40A6FA
+// SYMBOL: ?MP_get_mutex@@YAXXZ
+// Complete five-byte body: one tail transfer to the real loader above.
+void __cdecl MP_get_mutex()
+{
+    get_mutex();
+}
+
+// FUNCTION: cl 0x40A7D3
+// SYMBOL: ?read_robust@ProcessChannel@@QAEXPAXK@Z
+// Complete 164-byte body including the __finally funclet at 0x40A867. The
+// reader runs on a created thread while the process handle is the second wait
+// target; only the thread handle is owned and closed here.
+void ProcessChannel::read_robust(void *buffer, unsigned long size)
+{
+    HANDLE handles[2] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE };
+    __try {
+        ProcessChannelReadContext context = { this, buffer, size, 0 };
+        DWORD thread_id;
+        handles[0] = CreateThread(0, 0, ProcessChannel_read_thread, &context, 0, &thread_id);
+        NT_err(handles[0] != 0);
+        handles[1] = process_handle;
+        switch (WaitForMultipleObjects(2, handles, FALSE, INFINITE)) {
+        case WAIT_OBJECT_0:
+            if (context.success)
+                break;
+        case WAIT_OBJECT_0 + 1:
+            RaiseException(1, 0, 0, 0);
+            break;
+        default:
+            RaiseException(1, 0, 0, 0);
+        }
+    } __finally {
+        if (handles[0] != INVALID_HANDLE_VALUE)
+            CloseHandle(handles[0]);
+    }
+}
+
+// FUNCTION: cl 0x40A877
+// SYMBOL: ?read_int_robust@ProcessChannel@@QAEHXZ
+// Complete 20-byte CFG: robust read of one int into a local, ret 0x40A88A.
+int ProcessChannel::read_int_robust()
+{
+    int result;
+    read_robust(&result, sizeof result);
+    return result;
+}
+
+// FUNCTION: cl 0x40A88B
+// SYMBOL: ?expect_int_robust@ProcessChannel@@QAEXH@Z
+// Complete 27-byte CFG: compare through the robust reader, ret 4; a mismatch
+// raises exception code 1.
+void ProcessChannel::expect_int_robust(int expected)
+{
+    if (expected != read_int_robust())
+        RaiseException(1, 0, 0, 0);
+}
+
+// FUNCTION: cl 0x409ED0
+// SYMBOL: ??0action_t@@QAE@HPAUworklist_s@@H@Z
+// Complete 45-byte CFG: fields 0x00..0x10 are written once; source is copied
+// from the worklist's proven source pointer at +0x04, or zero without one.
+action_t::action_t(int kind_, worklist_s *worklist_, int parameter)
+{
+    kind = kind_;
+    pass = 0;
+    worklist = worklist_;
+    parameter_10 = parameter;
+    if (worklist)
+        source = worklist->source;
+    else
+        source = 0;
+}
+
+// FUNCTION: cl 0x409EFD
+// SYMBOL: ??1action_t@@QAE@XZ
+// Complete 25-byte body: the source is freed only when no worklist owns it.
+action_t::~action_t()
+{
+    if (worklist == 0 || worklist->source != source)
+        xfree(source);
+}
+
+// FUNCTION: cl 0x40A364
+// SYMBOL: ??0?$Queue@Uaction_t@@@@QAE@H@Z
+// Complete 61-byte CFG: synchronized flag, zeroed sentinel fields from the
+// action_t(0,0,0) constructor, conditional critical-section initialization,
+// then the empty intrusive ring (tail and sentinel.next) and zero count.
+template<class T>
+Queue<T>::Queue(int synchronize) : synchronized(synchronize)
+{
+    if (synchronized)
+        InitializeCriticalSection(&lock);
+    tail = &sentinel;
+    sentinel.next = &sentinel;
+    count = 0;
+}
+
+// FUNCTION: cl 0x40A994
+// SYMBOL: ??1?$Queue@Uaction_t@@@@QAE@XZ
+// Complete 65-byte CFG: every queued node is destructed and freed, the lock is
+// deleted when initialized, and the embedded sentinel's destructor tail-runs.
+template<class T>
+Queue<T>::~Queue()
+{
+    T *item = sentinel.next;
+    while (item != &sentinel) {
+        T *next = item->next;
+        delete item;
+        item = next;
+    }
+    if (synchronized)
+        DeleteCriticalSection(&lock);
+}
+
+// FUNCTION: cl 0x40A9D5
+// SYMBOL: ?clean@?$Queue@Uaction_t@@@@QAEXXZ
+// Complete 84-byte CFG: locked node destruction followed by an empty-ring
+// rebuild (count 0, tail and sentinel.next back to the sentinel).
+template<class T>
+void Queue<T>::clean()
+{
+    if (synchronized)
+        EnterCriticalSection(&lock);
+    T *item = sentinel.next;
+    while (item != &sentinel) {
+        T *next = item->next;
+        delete item;
+        item = next;
+    }
+    count = 0;
+    tail = &sentinel;
+    sentinel.next = &sentinel;
+    if (synchronized)
+        LeaveCriticalSection(&lock);
+}
+
+template Queue<action_t>::Queue(int);
+template Queue<action_t>::~Queue();
+template void Queue<action_t>::clean();
+
+// DATA: cl 0x41A298
+// PDB ?current_batch_sources@@3JA; loader-zero-initialized batch accounting.
+long current_batch_sources;
+
+// DATA: cl 0x41A2C8
+// PDB ?next_batch@@3IA
+unsigned int next_batch;
+
+// DATA: cl 0x41A2CC
+// PDB ?num_batches@@3IA
+unsigned int num_batches;
+
+// DATA: cl 0x41A2D4
+// PDB ?batches@@3PAV?$Queue@Uaction_t@@@@A; pointer to the per-batch queues.
+Queue<action_t> *batches;
+
+// DATA: cl 0x41AB30
+// PDB ?work_queue@@3V?$Queue@Uaction_t@@@@A. The queue is used as a
+// synchronized instance: head() takes its critical section unconditionally, so
+// the constructor must have initialized it at startup.
+Queue<action_t> work_queue(1);
+
+// FUNCTION: cl 0x40A67A
+// SYMBOL: ?get_action_nonbatching@@YAPAUaction_t@@XZ
+// Complete ten-byte body: load the global work queue and tail-transfer to the
+// real Queue::head body at 0x40A3C7.
+action_t *__cdecl get_action_nonbatching()
+{
+    return work_queue.head();
+}
+
+// FUNCTION: cl 0x40A647
+// SYMBOL: ?schedule_next_batch@@YAXXZ
+// Complete 51-byte CFG: when another batch exists, seed the batch source count
+// from its queue, splice the queue into the work queue and advance the index.
+void __cdecl schedule_next_batch()
+{
+    if (next_batch < num_batches) {
+        Queue<action_t> *batch = &batches[next_batch];
+        current_batch_sources = batch->count;
+        work_queue.append_nosync(*batch);
+        ++next_batch;
+    }
+}
+
+// FUNCTION: cl 0x40A12D
+// SYMBOL: ?write_source@ProcessChannel@@QAEXPAUsource_s@@@Z
+// Complete 155-byte CFG: the serialized payload length excludes its own
+// four-byte prefix, then the three wide strings, the source type and the two
+// trailing shorts are written through the virtual write slot.
+void ProcessChannel::write_source(source_s *source)
+{
+    unsigned long size = 0;
+    size += wcslen(source->name) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += wcslen(source->object) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += wcslen(source->sbr) * sizeof(unsigned short)
+          + sizeof(unsigned long) + sizeof(unsigned short);
+    size += sizeof(unsigned long) + sizeof(unsigned short) + sizeof(unsigned short);
+    write(&size, sizeof size);
+    write_string(source->name);
+    write_string(source->object);
+    write_string(source->sbr);
+    write(&source->type, sizeof source->type);
+    write(&source->field_18, sizeof source->field_18);
+    write(&source->field_1a, sizeof source->field_1a);
+}
+
+// FUNCTION: cl 0x40AE65
+// SYMBOL: ?free_batches@@YAXXZ
+// Complete 59-byte CFG: clear every batch queue in the array, then release the
+// array through the compiler-generated vector deleting destructor.
+void __cdecl free_batches()
+{
+    for (unsigned int i = 0; i < num_batches; ++i)
+        batches[i].clean();
+    delete[] batches;
+}
+
+// FUNCTION: cl 0x40A774
+// SYMBOL: ?send@action_t@@QAEXPAVProcessChannel@@@Z
+// Complete 95-byte CFG: kind, a source-presence flag, the serialized source
+// when present, and the pass number are written through the virtual slot.
+void action_t::send(ProcessChannel *channel)
+{
+    int kind_value = kind;
+    channel->write(&kind_value, sizeof kind_value);
+    int flag;
+    if (source) {
+        flag = 1;
+        channel->write(&flag, sizeof flag);
+        channel->write_source(source);
+    } else {
+        flag = 0;
+        channel->write(&flag, sizeof flag);
+    }
+    flag = pass;
+    channel->write(&flag, sizeof flag);
 }
