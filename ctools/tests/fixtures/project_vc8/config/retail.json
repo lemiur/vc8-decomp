@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "identity_source": "Synthetic test values.",
+  "builds": {
+    "cl":   {"filename": "cl.exe",   "size": 1000, "sha256": "a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4",
+             "machine": 332, "image_base": 4194304},
+    "c1":   {"filename": "c1.dll",   "size": 2000, "sha256": "0000000000000000000000000000000000000000000000000000000000000001",
+             "machine": 332, "image_base": 268435456},
+    "c1xx": {"filename": "c1xx.dll", "size": 3000, "sha256": "FFEEDDCCBBAA99887766554433221100FFEEDDCCBBAA99887766554433221100",
+             "machine": 332, "image_base": 268500992},
+    "c2":   {"filename": "c2.dll",   "size": 4000, "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+             "machine": 332, "image_base": 268566528},
+    "link": {"filename": "link.exe", "size": 5000, "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+             "machine": 332, "image_base": 4194304}
+  }
+}
