@@ -473,6 +473,39 @@ static void write_in(const char *dir, const char *rel, const char *text) {
 }
 
 /* The folder name of the CodeView record below: GUID 11223344-5566-7788-99AA-BBCCDDEEFF00, age 1. */
+#define GUID_A "112233445566778899AABBCCDDEEFF001"
+#define GUID_B "00000000000000000000000000000000B"
+#define GUID_C "00000000000000000000000000000000C"
+
+/* An image with a debug directory holding an RSDS record: the GUID above, its first byte replaced by first, age 1. */
+static void write_rsds_image(const char *path, u8 first) {
+    FakePe pe;
+    fake_pe_init(&pe, BASE);
+    u8 rdata[0x100];
+    memset(rdata, 0, sizeof rdata);
+    u32 rva = 0x1000;
+    u32 raw = 0x200; /* the first section's file offset: the headers rounded up to 0x200 */
+    put32le(rdata + 12, 2);        /* IMAGE_DEBUG_TYPE_CODEVIEW */
+    put32le(rdata + 16, 24 + 6);   /* size of data */
+    put32le(rdata + 20, rva + 28); /* address of raw data */
+    put32le(rdata + 24, raw + 28); /* pointer to raw data */
+    memcpy(rdata + 28, "RSDS", 4);
+    static const u8 guid[16] = {0x44, 0x33, 0x22, 0x11, 0x66, 0x55, 0x88, 0x77,
+                                0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
+    memcpy(rdata + 32, guid, 16);
+    rdata[32] = first;
+    put32le(rdata + 48, 1); /* age */
+    memcpy(rdata + 52, "x.pdb", 6);
+    fake_pe_section(&pe, ".rdata", 0x40000040u, rdata, sizeof rdata);
+    DK_ASSERT(fake_pe_write(&pe, path));
+    /* the debug entry of the data directory (index 6, at the optional header + 96 + 48) */
+    DkBytes b = {0};
+    DK_ASSERT(dk_read_all(dk_arena(), path, &b));
+    put32le(b.v + 0x98 + 96 + 48, rva);
+    put32le(b.v + 0x98 + 96 + 52, 28);
+    DK_ASSERT(dk_write_file(path, b.v, b.n));
+}
+
 static const char COMMON_CONFIG_TAIL[] =
     " \"units\": {\"roots\": [\"src\"], \"extensions\": [\".c\"]},\n"
     " \"compiler\": {\"cl\": \"${root}/cl.exe\"},\n"
@@ -481,7 +514,60 @@ static const char COMMON_CONFIG_TAIL[] =
     "  \"^//\\\\s*(?P<kind>FUNCTION):\\\\s+(?P<target>\\\\w+)\\\\s+(?P<addr>0x[0-9a-fA-F]+)\\\\s*$\",\n"
     "                 \"kinds\": {\"FUNCTION\": \"function\"}}}\n";
 
+/* A store with the given entries (a folder name per entry, the first holding the real PDB, the others junk) and an
+ * image whose GUID starts with image_first: the symbol table the project loads, or NULL with err set. */
+static DkSymbols *load_store(const char *const *entries, size_t n, u8 image_first, DkErr *err) {
+    char *root = dk_mkdtemp(dk_arena(), "dk_store_test_", "", NULL);
+    const char *r = fwd_path(root);
+    for (size_t i = 0; i < n; i++) {
+        const char *sub = join2(r, dk_sprintf(dk_arena(), "symbols/synth.pdb/%s", entries[i]));
+        dk_makedirs(sub, true);
+        if (i == 0) {
+            write_pdb(sub, "synth.pdb");
+        } else {
+            write_in(sub, "synth.pdb", "this is not a program database");
+        }
+    }
+    write_rsds_image(join2(r, "t.dll"), image_first);
+    write_in(r, "config/ctools.json",
+             dk_sprintf(dk_arena(),
+                        "{\"schema\": \"decompkit-project/1\",\n"
+                        " \"targets\": {\"t\": {\"image\": \"${root}/t.dll\", \"image_base\": 4194304,\n"
+                        "   \"symbols\": [{\"kind\": \"pdb\", \"path\": \"${root}/symbols/synth.pdb\"}]}},\n%s",
+                        COMMON_CONFIG_TAIL));
+    DkProject *p = dk_project_load(dk_arena(), r, NULL, err);
+    if (!p) return NULL;
+    return dk_project_symbols(p, 0, err);
+}
 
+DK_TEST(pdb_symbol_store_picks_the_image_entry) {
+    /* the real pdb sits under the image's id; a second entry (junk) is not picked */
+    const char *both[2] = {GUID_A, GUID_B};
+    DkErr err = {0};
+    DkSymbols *s = load_store(both, 2, 0x44, &err);
+    CHECK_MSG(s != NULL, "%s", err.msg);
+    REQUIRE_PTR(s);
+    CHECK(dk_symbols_find(s, "?Foo@@YAHXZ") != NULL);
+    /* the junk sits under the image's id and the real pdb elsewhere: the image's entry is the one read, and fails */
+    const char *swapped[2] = {GUID_B, GUID_A};
+    DkErr e2 = {0};
+    CHECK(load_store(swapped, 2, 0x44, &e2) == NULL);
+}
+
+DK_TEST(pdb_symbol_store_falls_back_to_the_only_entry) {
+    const char *one[1] = {GUID_B};
+    DkErr err = {0};
+    DkSymbols *s = load_store(one, 1, 0x44, &err); /* the image asks for GUID_A: not there, but the only entry */
+    REQUIRE_PTR(s);
+    CHECK(dk_symbols_find(s, "?Foo@@YAHXZ") != NULL);
+}
+
+DK_TEST(pdb_symbol_store_rejects_an_ambiguous_store) {
+    const char *two[2] = {GUID_C, GUID_B};
+    DkErr err = {0};
+    CHECK(load_store(two, 2, 0x44, &err) == NULL);
+    CHECK(err.msg[0] && strstr(err.msg, "symbol store") != NULL);
+}
 
 /* An image with .text (at 0x401000: mov eax, [word], relocated) and .data (0x402000, 0x300 bytes), its symbols given
  * as tsv rows. */
