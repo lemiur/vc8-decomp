@@ -7,6 +7,7 @@
 #include "dk/dk.h"
 #include "dk/test.h"
 #include "project.h"
+#include "fakecl/fake_pe.h"
 #include "fixtures/synth_pdb.h"
 
 #include <string.h>
@@ -449,6 +450,93 @@ DK_TEST(many_symbols_stay_sorted) {
     for (size_t i = 0; i < n; i++) CHECK_EQ_U64(all[i].va, 0x401000u + i * 16u);
     CHECK_EQ_U64(dk_symbols_containing(s, 0x401000u + 1234 * 16 + 7, NULL)->va, 0x401000u + 1234 * 16);
     CHECK_EQ_U64(dk_symbols_find(s, "f4202048")->size, 16);
+}
+
+/* ---- a symbol store, a candidates file, names past an unsized symbol ----------------------------------------------- */
+
+static const char *fwd_path(const char *p) {
+    char *s = dk_strdup(dk_arena(), p);
+    for (char *c = s; *c; c++)
+        if (*c == '\\') *c = '/';
+    return s;
+}
+
+static const char *join2(const char *a, const char *b) { return dk_join(dk_arena(), a, b); }
+
+static void put32le(u8 *p, u32 v) { memcpy(p, &v, 4); }
+
+/* Writes dir/rel (the folders made first). */
+static void write_in(const char *dir, const char *rel, const char *text) {
+    const char *path = join2(dir, rel);
+    dk_makedirs(dk_cz(dk_arena(), dk_path_dirname(path)), true);
+    DK_ASSERT(dk_write_file(path, text, strlen(text)));
+}
+
+/* The folder name of the CodeView record below: GUID 11223344-5566-7788-99AA-BBCCDDEEFF00, age 1. */
+static const char COMMON_CONFIG_TAIL[] =
+    " \"units\": {\"roots\": [\"src\"], \"extensions\": [\".c\"]},\n"
+    " \"compiler\": {\"cl\": \"${root}/cl.exe\"},\n"
+    " \"backend\": {\"kind\": \"object\"},\n"
+    " \"annotations\": {\"marker\":\n"
+    "  \"^//\\\\s*(?P<kind>FUNCTION):\\\\s+(?P<target>\\\\w+)\\\\s+(?P<addr>0x[0-9a-fA-F]+)\\\\s*$\",\n"
+    "                 \"kinds\": {\"FUNCTION\": \"function\"}}}\n";
+
+
+
+/* An image with .text (at 0x401000: mov eax, [word], relocated) and .data (0x402000, 0x300 bytes), its symbols given
+ * as tsv rows. */
+static DkImage *reloc_image(u32 word, const char *tsv_rows) {
+    char *root = dk_mkdtemp(dk_arena(), "dk_reloc_test_", "", NULL);
+    const char *r = fwd_path(root);
+    FakePe pe;
+    fake_pe_init(&pe, BASE);
+    u8 text[0x20];
+    memset(text, 0xCC, sizeof text);
+    text[0] = 0xA1;
+    put32le(text + 1, word);
+    u32 text_rva = fake_pe_section(&pe, ".text", 0x60000020u, text, sizeof text);
+    u8 data[0x300];
+    memset(data, 0, sizeof data);
+    fake_pe_section(&pe, ".data", 0xC0000040u, data, sizeof data);
+    fake_pe_reloc(&pe, text_rva + 1);
+    DK_ASSERT(fake_pe_write(&pe, join2(r, "t.dll")));
+    write_in(r, "t.tsv", dk_sprintf(dk_arena(), "name\tva\tsize\n%s", tsv_rows));
+    write_in(r, "config/ctools.json",
+             dk_sprintf(dk_arena(),
+                        "{\"schema\": \"decompkit-project/1\",\n"
+                        " \"targets\": {\"t\": {\"image\": \"${root}/t.dll\",\n"
+                        "   \"symbols\": [{\"kind\": \"tsv\", \"path\": \"${root}/t.tsv\"}]}},\n%s",
+                        COMMON_CONFIG_TAIL));
+    DkErr err = {0};
+    DkProject *p = dk_project_load(dk_arena(), r, NULL, &err);
+    DK_ASSERT(p != NULL);
+    DkImage *im = dk_target_image(p, 0, &err);
+    DK_ASSERT(im != NULL);
+    return im;
+}
+
+static const DkReloc *first_reloc(DkImage *im) {
+    size_t n = 0;
+    const DkReloc *r = dk_image_relocs(im, 0x401000, 5, &n);
+    DK_ASSERT(n == 1);
+    return r;
+}
+
+DK_TEST(reloc_names_the_nearest_unsized_symbol_below) {
+    /* _g_obj at 0x402100 has no size: 0x402104 is "_g_obj + 4" */
+    DkImage *im = reloc_image(0x402104, "_g_obj\t0x402100\t\n_g_next\t0x402200\t\n");
+    const DkReloc *r = first_reloc(im);
+    REQUIRE_PTR(r->symbol);
+    CHECK_CZ(r->symbol, "_g_obj");
+    CHECK_EQ_U64(r->addend, 4);
+}
+
+DK_TEST(reloc_stays_unnamed_far_past_an_unsized_symbol) {
+    /* 0x402204 lies 0x204 bytes past _g_obj: beyond the reach given to an unsized symbol */
+    DkImage *im = reloc_image(0x402204, "_g_obj\t0x402000\t\n");
+    const DkReloc *r = first_reloc(im);
+    CHECK(r->symbol == NULL);
+    CHECK_EQ_U64((u32)r->addend, 0x402204);
 }
 
 DK_TEST_MAIN("project_symbols")
