@@ -1134,6 +1134,14 @@ DkProject *dk_project_load(DkArena *a, const char *root, const char *config, DkE
     return p;
 }
 
+DkProject *dk_project_clone(const DkProject *p, const char *build_dir, DkErr *err) {
+    DkArena *a = dk_arena_new(0);
+    DkProject *c = dk_project_load(a, p->root, p->config_path_given ? p->config_path : NULL, err);
+    if (!c) return NULL;
+    c->build_dir = dk_strdup(a, build_dir);
+    return c;
+}
+
 /* ---- accessors --------------------------------------------------------------------------------------------------- */
 DkArena *dk_project_arena(const DkProject *p) { return p->a; }
 const char *dk_project_root(const DkProject *p) { return p->root; }
