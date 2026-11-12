@@ -307,7 +307,8 @@ bool dk_image_function_size(const DkImage *im, u32 va, u32 *size);
 const DkReloc *dk_image_relocs(const DkImage *im, u32 va, size_t n, size_t *count);
 
 typedef struct {
-    DkStrVec extra_flags;
+    DkStrVec extra_flags;            /* appended to the unit's options */
+    DkStrVec remove_flags;           /* options left out of the unit's own list first (case-insensitive, exact token) */
     const char *source_override;
     bool use_cache;
 } DkBuildOpts;

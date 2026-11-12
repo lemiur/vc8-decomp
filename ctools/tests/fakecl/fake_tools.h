@@ -48,6 +48,21 @@ static inline const char *fake_cl_key(DkStr text, const char *const *defines, si
     return dk_hex(dk_arena(), d, 32);
 }
 
+/* The key of an object registered for one exact option list: sha256 hex of the source key and the options (every
+ * option that is not /Fo, /D, /I, /GL[-], /nologo or /c, in command-line order, joined with one space). fakecl
+ * prefers it to the plain key, so a test can answer an option variant with another object. */
+static inline const char *fake_cl_flags_key(const char *key, const char *flags) {
+    DkHasher h;
+    dk_hasher_init(&h, DK_HASH_SHA256);
+    dk_hasher_update(&h, key, strlen(key));
+    dk_hasher_update(&h, "", 1);
+    dk_hasher_update(&h, flags, strlen(flags));
+    u8 d[32];
+    dk_hasher_final(&h, d);
+    dk_hasher_free(&h);
+    return dk_hex(dk_arena(), d, 32);
+}
+
 static inline bool fake_cl_register(const char *registry, const char *key, DkStr obj) {
     dk_makedirs(registry, true);
     return dk_write_file(dk_join(dk_arena(), registry, dk_sprintf(dk_arena(), "%s.obj", key)), obj.p, obj.n);
@@ -56,6 +71,8 @@ static inline bool fake_cl_register(const char *registry, const char *key, DkStr
 static inline int fake_cl_main(int argc, char **argv) {
     const char *fo = NULL, *src = NULL, *gl = "";
     DkCzVec defines = {0};
+    DkBuf flags;
+    dk_buf_init(&flags, dk_arena());
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
         if (a[0] == '/' || a[0] == '-') {
@@ -63,6 +80,10 @@ static inline int fake_cl_main(int argc, char **argv) {
             else if (a[1] == 'D') dk_vec_push(&defines, (char *)a + 2);
             else if (_stricmp(a + 1, "GL") == 0) gl = "/GL";
             else if (_stricmp(a + 1, "GL-") == 0) gl = "/GL-";
+            else if (a[1] != 'I' && _stricmp(a + 1, "nologo") != 0 && _stricmp(a + 1, "c") != 0) {
+                if (flags.n) dk_buf_putc(&flags, ' ');
+                dk_buf_putz(&flags, a);
+            }
         } else {
             src = a;
         }
@@ -88,6 +109,10 @@ static inline int fake_cl_main(int argc, char **argv) {
     const char *key = fake_cl_key(t, (const char *const *)defines.v, defines.n, gl);
     const char *canned = reg ? dk_join(dk_arena(), reg, dk_sprintf(dk_arena(), "%s.obj", key)) : NULL;
     DkBytes obj = {0};
+    if (reg) {
+        const char *fcanned = dk_join(dk_arena(), reg, dk_sprintf(dk_arena(), "%s.obj", fake_cl_flags_key(key, dk_buf_cz(&flags))));
+        if (dk_isfile(fcanned)) canned = fcanned;
+    }
     if (!canned || !dk_read_all(dk_arena(), canned, &obj)) {
         printf("%s(1): error C9999: no canned object for key %s\n", src, key);
         return 2;
